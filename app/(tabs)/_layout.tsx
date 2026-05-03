@@ -1,33 +1,74 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Text } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+
+        tabBarStyle: {
+          backgroundColor: '#000',
+          borderTopColor: 'rgba(255,255,255,0.1)',
+          height: 70,
+          paddingBottom: 10,
+        },
+
+        tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
+
+        tabBarLabelStyle: {
+          fontSize: 10,
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="mirror"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Mirror',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 18 }}>✨</Text>
+          ),
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="journal"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Journal',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 18 }}>📖</Text>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="guidance"
+        options={{
+          title: 'Guidance',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 18 }}>🧭</Text>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="connections"
+        options={{
+          title: 'Connections',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 18 }}>🌐</Text>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="you"
+        options={{
+          title: 'You',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 18 }}>👤</Text>
+          ),
         }}
       />
     </Tabs>
