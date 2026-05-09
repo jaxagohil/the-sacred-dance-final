@@ -1,26 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
   ScrollView,
-  TouchableOpacity,
-  Text,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 
-import { supabase } from "../../services/supabase";
 import { getUserId } from "../../lib/user";
+import { supabase } from "../../services/supabase";
 
-import CosmicTiles from "../../components/mirror/CosmicTiles";
 import EnergyField from "../../components/energy/EnergyField";
+import CosmicTiles from "../../components/mirror/CosmicTiles";
 import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
 
 import { getEnergyFromSignals } from "../../lib/energy/getEnergyFromSignals";
 import { interpretMirror } from "../../lib/interpretMirror";
-import { tMirror } from "../../lib/i18n/index";
 
 import { getCosmicMessage } from "../../lib/getCosmicMessage";
 
@@ -29,8 +28,10 @@ import {
   getAwarenessChakra,
 } from "../../lib/energy";
 
-export default function Mirror() {
+// ✅ NEW
+import { buildMirrorContext } from "../../lib/createContextBuilder";
 
+export default function Mirror() {
   const [signals, setSignals] = useState<any[]>([]);
   const [energy, setEnergy] = useState<any>(null);
   const [mirror, setMirror] = useState<any>(null);
@@ -41,7 +42,9 @@ export default function Mirror() {
   const [cosmicMessage, setCosmicMessage] = useState<string | null>(null);
   const [cosmic, setCosmic] = useState<any>(null);
 
-  // 🔥 NEW STATES
+  const [context, setContext] =
+  useState<any>(null);
+
   const [chakraPatterns, setChakraPatterns] = useState<
     Record<string, { description: string }>
   >({});
@@ -104,11 +107,8 @@ export default function Mirror() {
       }
 
       const patterns = result.patterns;
-
-      // ✅ CHAKRA PATTERNS
       const chakraPatternsResult = result.chakraPatterns || {};
 
-      // 🧠 BUILD DISTORTION BEHAVIOURS
       const masculine: any[] = [];
       const feminine: any[] = [];
 
@@ -124,7 +124,7 @@ export default function Mirror() {
       });
 
       const distortionMap = {
-        masculine: masculine.slice(0, 3), // keep top few
+        masculine: masculine.slice(0, 3),
         feminine: feminine.slice(0, 3),
       };
 
@@ -143,10 +143,32 @@ export default function Mirror() {
       setCosmic(cosmicResult.cosmic);
       setCosmicMessage(cosmicResult.aiMessage);
 
-      setEnergyState("ready");
+      // ---------------------------
+// 🧠 BUILD CONTEXT
+// ---------------------------
 
-      console.log("🧠 chakraPatterns:", chakraPatternsResult);
-      console.log("🔥 distortions:", distortionMap);
+const builtContext =
+  await buildMirrorContext({
+
+    mirror: mirrorResult,
+
+    energy: result.energy,
+
+    cosmic:
+      cosmicResult.cosmic,
+
+    signals,
+
+    activeLens:
+      "general",
+  });
+
+  setContext(
+  builtContext
+);
+
+        setEnergyState("ready");
+
     }
 
     build();
@@ -155,35 +177,16 @@ export default function Mirror() {
   // ---------------------------
   // 🧠 CHAKRA PIPELINE
   // ---------------------------
-let chakraScores: any = {};
-let awarenessChakra: any = null;
+  let chakraScores: any = {};
+  let awarenessChakra: any = null;
 
-if (energy && energy.chakras) {
-  chakraScores = buildFullChakraScores(energy.chakras);
-  awarenessChakra = getAwarenessChakra(chakraScores);
-}
-
-  // ---------------------------
-  // STATIC
-  // ---------------------------
-  const oracle = {
-    title: "Presence",
-    message: "Everything you seek is already here.",
-  };
-
-  const tarot = {
-    title: "The Empress",
-    message: "Notice what this stirs within you.",
-  };
-
-  const energyMessage =
-    cosmicMessage ||
-    (mirror?.key && mirror?.primary
-      ? tMirror(mirror.key)
-      : `You are being invited to soften your grip.`);
+  if (energy && energy.chakras) {
+    chakraScores = buildFullChakraScores(energy.chakras);
+    awarenessChakra = getAwarenessChakra(chakraScores);
+  }
 
   // ---------------------------
-  // LOADING
+  // LOADING STATES
   // ---------------------------
   if (energyState === "loading") {
     return (
@@ -207,7 +210,6 @@ if (energy && energy.chakras) {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.top}>
         <CosmicTiles
           energy={energy}
@@ -220,24 +222,33 @@ if (energy && energy.chakras) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-
         {/* ⚡ ENERGY FIELD */}
-{energy && (
-  <EnergyField
-    dominant={awarenessChakra}
-    scores={chakraScores}
+        {energy && (
+          <EnergyField
+            dominant={awarenessChakra}
+            scores={chakraScores}
+            energy={energy}
+            chakraPatterns={chakraPatterns}
+            distortionBehaviours={distortionBehaviours}
+          />
+        )}
+
+{context && (
+
+  <Lenses
     energy={energy}
-    chakraPatterns={chakraPatterns}
-    distortionBehaviours={distortionBehaviours}
+    context={context}
   />
 )}
-        <Lenses mirror={mirror} energy={energy} />
 
-        <ReadingContainer
-          oracle={oracle}
-          tarot={tarot}
-          energyMessage={energyMessage}
-        />
+        {/* 🔥 UPDATED */}
+{context && (
+
+  <ReadingContainer
+    energy={energy}
+    context={context}
+  />
+)}
 
         <View style={styles.guide}>
           <TouchableOpacity
@@ -249,7 +260,6 @@ if (energy && energy.chakras) {
             </Text>
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </View>
   );
@@ -264,7 +274,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: "white",
     textAlign: "center",
-    marginTop: 100,
+    marginTop: 150,
   },
 
   scroll: {
@@ -272,7 +282,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingBottom: 120,
+    paddingBottom: 150,
   },
 
   top: {

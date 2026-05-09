@@ -1,88 +1,218 @@
+// services/createSignal.ts
+
 import { supabase } from "../services/supabase";
 
-type BehaviourWeight = {
-  id: string;
-  weight: number;
-};
+type CreateSignalInput = {
+  reflection_id: string;
 
-type PatternWeight = {
-  id: string;
-  weight: number;
-};
+  user_id: string;
 
-type SignalPayload = {
-  ai_behaviours: BehaviourWeight[];
-  ai_patterns?: PatternWeight[];
+  sourcetype?: string;
+
+  signal_depth?: number;
+
+  // 🧠 AI / semantic
+  ai_behaviours?: any[];
+
+  ai_patterns?: any[];
+
+  ai_lens?: any;
 
   ai_confidence?: number | null;
+
   ai_intensity?: number | null;
 
-  ai_lens?: {
-    people?: string[];
-    places?: string[];
-    things?: string[];
+  // ⚡ energy
+  energy?: any;
+
+  // 🌍 levels
+  levels?: {
+
+    physical?: number;
+
+    emotional?: number;
+
+    energetic?: number;
   };
 
-  raw_text?: string;
+  // ✨ consciousness movement
+  consciousness_movement?: {
 
-  energy?: any; // 🔥 ADD THIS
+    reactivity?: number;
+
+    awareness?: number;
+
+    responsibility?: number;
+
+    embodiment?: number;
+
+    integration?: number;
+  };
+
+  // 🌈 semantic layers
+  dominant_state?: string;
+
+  energetic_direction?: string;
+
+  nervous_system_state?: string;
+
+  integration_needed?: string;
 };
 
-export async function createSignal(
-  reflectionId: string,
-  userId: string,
-  payload: SignalPayload,
-  sourceType: string,
-  signalDepth: number
-) {
-  const hasBehaviours =
-    payload.ai_behaviours && payload.ai_behaviours.length > 0;
+export async function createSignal({
+  reflection_id,
+  user_id,
 
-  const hasRawText =
-    payload.raw_text && payload.raw_text.trim().length > 0;
+  sourcetype = "unknown",
 
-  if (!hasBehaviours && !hasRawText) {
-    console.warn("⚠️ Empty signal — skipping");
-    return null;
-  }
+  signal_depth = 1,
 
-  const { data, error } = await supabase
-    .from("signals")
-    .insert([
-      {
-        reflection_id: reflectionId,
-        user_id: userId,
+  ai_behaviours = [],
 
-        // ✅ CORE DATA
-        ai_behaviours: payload.ai_behaviours,
-        ai_patterns: payload.ai_patterns || [],
+  ai_patterns = [],
 
-        // ✅ META
-        ai_confidence: payload.ai_confidence ?? null,
+  ai_lens = {
+    people: [],
+    places: [],
+    things: [],
+  },
 
-        ai_lens: payload.ai_lens || {
-          people: [],
-          places: [],
-          things: [],
-        },
+  ai_confidence = null,
 
-        ai_intensity: payload.ai_intensity ?? null,
+  ai_intensity = null,
 
-        energy: payload.energy || null, // 🔥 ADD THIS
+  energy = {},
 
-        sourcetype: sourceType || "unknown",
-        signal_depth: signalDepth ?? 1,
-      },
-    ])
-    .select()
-    .single();
+  // 🌍 levels
+  levels = {
+    physical: 0.5,
+    emotional: 0.5,
+    energetic: 0.5,
+  },
+
+  // ✨ consciousness
+  consciousness_movement = {
+    reactivity: 0.5,
+    awareness: 0.5,
+    responsibility: 0.5,
+    embodiment: 0.5,
+    integration: 0.5,
+  },
+
+  // 🌈 semantic
+  dominant_state = "processing",
+
+  energetic_direction = "inward",
+
+  nervous_system_state = "processing",
+
+  integration_needed = "",
+}: CreateSignalInput) {
+
+  // ---------------------------------
+  // 📦 PAYLOAD
+  // ---------------------------------
+
+  const payload = {
+    reflection_id,
+
+    user_id,
+
+    sourcetype,
+
+    signal_depth,
+
+    // 🧠 AI
+    ai_behaviours,
+
+    ai_patterns,
+
+    ai_lens,
+
+    ai_confidence,
+
+    ai_intensity,
+
+    // ⚡ energy
+    energy,
+
+    // 🌍 levels
+    levels,
+
+    // ✨ consciousness
+    consciousness_movement,
+
+    // 🌈 semantic
+    dominant_state,
+
+    energetic_direction,
+
+    nervous_system_state,
+
+    integration_needed,
+  };
+
+  console.log(
+    "⚡ SIGNAL INSERT:",
+    payload
+  );
+
+  // ---------------------------------
+  // 💾 INSERT
+  // ---------------------------------
+
+  const { data, error } =
+    await supabase
+      .from("signals")
+      .insert([payload])
+      .select()
+      .maybeSingle();
+
+  // ---------------------------------
+  // ❌ ERROR
+  // ---------------------------------
 
   if (error) {
-    console.error("❌ SIGNAL INSERT ERROR:", error);
+
+    console.error(
+      "❌ SIGNAL INSERT ERROR:",
+      error
+    );
+
     throw error;
   }
 
-  console.log("⚡ SIGNAL CREATED:", data);
+  // ---------------------------------
+  // ✅ DONE
+  // ---------------------------------
+
+  console.log(
+    "⚡ SIGNAL CREATED:",
+    {
+      id: data?.id,
+
+      behaviours:
+        data?.ai_behaviours?.length || 0,
+
+      patterns:
+        data?.ai_patterns?.length || 0,
+
+      hasLens:
+        !!data?.ai_lens,
+
+      hasEnergy:
+        !!data?.energy,
+
+      hasLevels:
+        !!data?.levels,
+
+      hasConsciousness:
+        !!data?.consciousness_movement,
+
+      dominant_state:
+        data?.dominant_state,
+    }
+  );
 
   return data;
 }

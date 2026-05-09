@@ -1,301 +1,285 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef } from "react";
+
 import {
-  View,
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
   Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
+  View,
 } from "react-native";
 
-// ⚠️ replace with RN version later
-import EarthField from "../../components/connections/EarthField";
+import { router } from "expo-router";
 
-type Profile = {
-  id: number;
-  name: string;
-  line: string;
-  location?: string;
+import {
+  initUser,
+} from "../../lib/user";
+
+export default function ConnectionsPortal() {
+
+  // 🌊 pulses
+  const pulse1 =
+    useRef(new Animated.Value(0)).current;
+
+  const pulse2 =
+    useRef(new Animated.Value(0)).current;
+
+  const pulse3 =
+    useRef(new Animated.Value(0)).current;
+
+  // 🌍 earth rotation
+  const rotation =
+    useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+
+    const createPulse = (
+      anim: Animated.Value,
+      delay: number
+    ) => {
+
+      Animated.loop(
+
+        Animated.sequence([
+
+          Animated.delay(delay),
+
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 5000,
+
+            easing: Easing.out(
+              Easing.ease
+            ),
+
+            useNativeDriver: true,
+          }),
+
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+
+      ).start();
+    };
+
+    createPulse(pulse1, 0);
+    createPulse(pulse2, 1600);
+    createPulse(pulse3, 3200);
+
+    // 🌍 slow earth rotation
+    Animated.loop(
+
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 90000,
+
+        easing: Easing.linear,
+
+        useNativeDriver: true,
+      })
+
+    ).start();
+
+  }, []);
+
+  const rotateInterpolate =
+    rotation.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["0deg", "360deg"],
+    });
+
+const handleEnter = async () => {
+
+  try {
+
+    console.log(
+      "🌍 ENTER CONNECTIONS"
+    );
+
+    //
+    // 👤 ENSURE USER EXISTS
+    //
+
+    const userId =
+      await initUser();
+
+    console.log(
+      "👤 ACTIVE USER:",
+      userId
+    );
+
+    //
+    // 🌌 ENTER FIELD
+    //
+
+    router.push(
+      "/connections/field"
+    );
+
+  } catch (error) {
+
+    console.log(
+      "❌ CONNECTIONS ENTRY ERROR",
+      error
+    );
+  }
 };
 
-const mockProfiles: Profile[] = [
-  { id: 1, name: "Aisha", line: "i’m learning to speak more honestly", location: "london" },
-  { id: 2, name: "Shabir", line: "i keep saying yes when i mean no", location: "srinagar" },
-  { id: 3, name: "Elena", line: "i feel like i’m holding something in", location: "sydney" },
-];
+  const renderPulse = (
+    anim: Animated.Value,
+    opacity: number
+  ) => (
+    <Animated.View
+      style={[
+        styles.pulse,
 
-export default function Connections() {
-  const [screen, setScreen] = useState<"entry" | "people" | "circles">("entry");
+        {
+          opacity:
+            anim.interpolate({
+              inputRange: [0, 0.2, 1],
 
-  const [index, setIndex] = useState(0);
-  const [connectedIds, setConnectedIds] = useState<number[]>([]);
-  const [message, setMessage] = useState("");
+              outputRange: [
+                0,
+                opacity,
+                0,
+              ],
+            }),
 
-  const [circles, setCircles] = useState([{ name: "Inner Work" }]);
+          transform: [
+            {
+              scale:
+                anim.interpolate({
+                  inputRange: [0, 1],
 
-  const current = mockProfiles[index];
-  const isConnected = connectedIds.includes(current.id);
-
-  const next = () => {
-    if (index < mockProfiles.length - 1) setIndex(index + 1);
-  };
-
-  const prev = () => {
-    if (index > 0) setIndex(index - 1);
-  };
-
-  const connect = () => {
-    if (!isConnected) setConnectedIds([...connectedIds, current.id]);
-  };
-
-  const addCircle = () => {
-    if (circles.length < 3) {
-      setCircles([...circles, { name: "New Circle" }]);
-    }
-  };
+                  outputRange: [
+                    1,
+                    4.5,
+                  ],
+                }),
+            },
+          ],
+        },
+      ]}
+    />
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black" }}>
+    <View style={styles.container}>
 
-      {/* TOP NAV */}
-      {screen !== "entry" && (
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 30,
-            paddingTop: 40,
-            paddingBottom: 20,
+      {/* 🌊 FREQUENCY RINGS */}
+      {renderPulse(pulse1, 0.35)}
+      {renderPulse(pulse2, 0.25)}
+      {renderPulse(pulse3, 0.18)}
+
+      {/* 🌍 CENTER */}
+      <View style={styles.centerWrap}>
+
+        {/* 🌍 rotating earth */}
+        <Animated.Image
+          source={{
+            uri:
+              "https://upload.wikimedia.org/wikipedia/commons/6/6f/Earth_Eastern_Hemisphere.jpg",
           }}
+          style={[
+            styles.earth,
+
+            {
+              transform: [
+                {
+                  rotate:
+                    rotateInterpolate,
+                },
+              ],
+            },
+          ]}
+        />
+
+        {/* ✦ DIAMOND */}
+        <Pressable
+          style={styles.diamondWrap}
+          onPress={handleEnter}
         >
-          <TouchableOpacity onPress={() => setScreen("people")}>
-            <Text style={{ color: screen === "people" ? "white" : "#666" }}>
-              people
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.diamond}>
+            ✦
+          </Text>
+        </Pressable>
 
-          <TouchableOpacity onPress={() => setScreen("circles")}>
-            <Text style={{ color: screen === "circles" ? "white" : "#666" }}>
-              circles
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {/* ✨ YNWA */}
+        <Text style={styles.ynwa}>
+          YNWA
+        </Text>
 
-      {/* MAIN */}
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 20 }}>
-
-        {/* ENTRY */}
-        {screen === "entry" && (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-
-            <EarthField />
-
-            <View style={{ position: "absolute", bottom: 100, alignItems: "center" }}>
-              <Text style={{ color: "#888", fontSize: 12 }}>
-                You’ll Never Walk Alone
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => setScreen("people")}
-                style={{ marginTop: 20 }}
-              >
-                <Text style={{ color: "#666", fontSize: 10, letterSpacing: 2 }}>
-                  enter
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* PEOPLE */}
-        {screen === "people" && (
-          <View style={{ alignItems: "center" }}>
-
-            <View
-              style={{
-                backgroundColor: "#111",
-                borderRadius: 20,
-                padding: 20,
-                width: "100%",
-                alignItems: "center",
-              }}
-            >
-
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: "#222",
-                  marginBottom: 10,
-                }}
-              />
-
-              <Text style={{ color: "white", fontSize: 16 }}>
-                {current.name}
-              </Text>
-
-              <Text style={{ color: "#aaa", fontSize: 12, marginTop: 5, fontStyle: "italic" }}>
-                “{current.line}”
-              </Text>
-
-              {current.location && (
-                <Text style={{ color: "#555", fontSize: 10, marginTop: 4 }}>
-                  {current.location}
-                </Text>
-              )}
-
-              {!isConnected ? (
-                <TouchableOpacity
-                  onPress={connect}
-                  style={{
-                    marginTop: 10,
-                    backgroundColor: "white",
-                    paddingHorizontal: 16,
-                    paddingVertical: 6,
-                    borderRadius: 20,
-                  }}
-                >
-                  <Text style={{ color: "black", fontSize: 12 }}>
-                    connect
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <Text style={{ color: "#aaa", marginTop: 10, fontSize: 10 }}>
-                  connected
-                </Text>
-              )}
-
-            </View>
-
-            {/* NAV */}
-            <View style={{ flexDirection: "row", gap: 40, marginTop: 20 }}>
-              <TouchableOpacity onPress={prev}>
-                <Text style={{ color: "#888" }}>←</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={next}>
-                <Text style={{ color: "#888" }}>→</Text>
-              </TouchableOpacity>
-            </View>
-
-          </View>
-        )}
-
-        {/* CIRCLES */}
-        {screen === "circles" && (
-          <View style={{ gap: 20 }}>
-
-            {circles.map((c, i) => (
-              <View
-                key={i}
-                style={{
-                  backgroundColor: "#111",
-                  borderRadius: 20,
-                  padding: 16,
-                }}
-              >
-                <TextInput
-                  value={c.name}
-                  onChangeText={(text) => {
-                    const updated = [...circles];
-                    updated[i].name = text;
-                    setCircles(updated);
-                  }}
-                  style={{
-                    color: "white",
-                    marginBottom: 10,
-                  }}
-                />
-
-                <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
-                  {[1, 2].map((m) => (
-                    <View
-                      key={m}
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 15,
-                        backgroundColor: "#222",
-                      }}
-                    />
-                  ))}
-
-                  <TouchableOpacity
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 15,
-                      backgroundColor: "#111",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={{ color: "#888" }}>+</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TextInput
-                  placeholder="share something with the circle…"
-                  placeholderTextColor="#666"
-                  multiline
-                  style={{
-                    backgroundColor: "#222",
-                    borderRadius: 10,
-                    padding: 10,
-                    color: "white",
-                  }}
-                />
-              </View>
-            ))}
-
-            {circles.length < 3 && (
-              <TouchableOpacity
-                onPress={addCircle}
-                style={{
-                  padding: 10,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: "#333",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#666" }}>
-                  + create / join another circle
-                </Text>
-              </TouchableOpacity>
-            )}
-
-          </View>
-        )}
-
-      </ScrollView>
-
-      {/* CHAT (ONLY IF CONNECTED) */}
-      {screen === "people" && isConnected && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 40,
-            left: 20,
-            right: 20,
-          }}
-        >
-          <TextInput
-            value={message}
-            onChangeText={setMessage}
-            placeholder="share something true…"
-            placeholderTextColor="#666"
-            multiline
-            style={{
-              backgroundColor: "#111",
-              borderRadius: 12,
-              padding: 12,
-              color: "white",
-            }}
-          />
-        </View>
-      )}
+      </View>
 
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+
+    backgroundColor: "black",
+
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  centerWrap: {
+    alignItems: "center",
+    marginTop: -80,
+  },
+
+  // 🌍 earth
+  earth: {
+    width: 180,
+    height: 180,
+
+    borderRadius: 90,
+
+    zIndex: 10,
+  },
+
+  // 🌊 frequency rings
+  pulse: {
+    position: "absolute",
+
+    width: 220,
+    height: 220,
+
+    borderRadius: 999,
+
+    borderWidth: 2,
+
+    borderColor:
+      "rgba(255,255,255,0.45)",
+  },
+
+  // ✦ diamond
+  diamondWrap: {
+    marginTop: 26,
+  },
+
+  diamond: {
+    color:
+      "rgba(255,255,255,0.9)",
+
+    fontSize: 24,
+  },
+
+  // ✨ ynwa
+  ynwa: {
+    color:
+      "rgba(255,255,255,0.45)",
+
+    marginTop: 18,
+
+    letterSpacing: 4,
+
+    fontSize: 11,
+  },
+});

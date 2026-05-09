@@ -10,34 +10,37 @@ export default function TarotCard({ title, message }: Props) {
   return (
     <View style={styles.wrapper}>
 
-      {/* 🌫 aura (simulated glow) */}
+      {/* 🌫 AURA */}
       <View style={styles.aura} />
 
-      {/* 🃏 card */}
+      {/* 🃏 CARD */}
       <View style={styles.card}>
 
-        {/* TOP */}
-        <View>
+        {/* ✨ INNER LIGHT */}
+        <View style={styles.innerGlow} />
 
-          {/* Symbol */}
+        {/* CONTENT */}
+        <View style={styles.content}>
+
+          {/* SYMBOL */}
           <View style={styles.symbolWrap}>
             <Text style={styles.symbol}>◇</Text>
           </View>
 
-          {/* Title */}
+          {/* TITLE */}
           <Text style={styles.title}>
             {title}
           </Text>
 
-          {/* Message */}
+          {/* MESSAGE */}
           <Text style={styles.message}>
             {message}
           </Text>
 
         </View>
 
-        {/* bottom spacer */}
-        <View />
+        {/* spacer */}
+        <View style={styles.spacer} />
 
       </View>
     </View>
@@ -47,55 +50,75 @@ export default function TarotCard({ title, message }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   aura: {
     position: "absolute",
-    width: 200,
-    height: 180,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    opacity: 0.4,
+    width: 230,
+    height: 300,
+    borderRadius: 28,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    opacity: 0.25,
+    transform: [{ scale: 1.2 }],
   },
 
   card: {
     width: 180,
-    minHeight: 160,
-    borderRadius: 16,
+    minHeight: 250,
 
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-
-    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.05)",
 
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 30,
 
-    justifyContent: "space-between",
+    justifyContent: "flex-start", // 👈 key fix
 
-    // shadow (iOS)
+    overflow: "hidden",
+
     shadowColor: "#fff",
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
 
-    // elevation (Android)
     elevation: 3,
+  },
+
+  innerGlow: {
+    position: "absolute",
+    top: 80, // 👈 fixed
+    left: 0,
+    right: 0,
+    height: 90,
+    borderRadius: 90,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    opacity: 0.12,
+  },
+
+  content: {
+    alignItems: "center",
+    marginTop: 40, // 👈 pushes content down
+  },
+
+  spacer: {
+    height: 20, // 👈 keeps bottom breathing space
   },
 
   symbolWrap: {
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 8,
   },
 
   symbol: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 12,
+    color: "rgba(255,255,255,0.35)",
+    fontSize: 11,
+    letterSpacing: 2,
   },
 
   title: {
     fontSize: 12,
-    fontWeight: "500",
     color: "rgba(255,255,255,0.85)",
     textAlign: "center",
     marginBottom: 6,
@@ -104,9 +127,9 @@ const styles = StyleSheet.create({
 
   message: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.65)",
+    color: "rgba(255,255,255,0.6)",
     textAlign: "center",
-    lineHeight: 16,
+    lineHeight: 17,
     paddingHorizontal: 4,
   },
 });

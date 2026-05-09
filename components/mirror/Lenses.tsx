@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
+  View,
 } from "react-native";
 
 import { generateAIResponse } from "../../lib/generateAIResponse";
@@ -12,88 +12,117 @@ import { generateAIResponse } from "../../lib/generateAIResponse";
 type Props = {
   mirror: any;
   energy: any;
+  signals: any[];
 };
 
-export default function Lenses({ mirror, energy }: Props) {
+export default function Lenses({
+  mirror,
+  energy,
+  signals,
+}: Props) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [response, setResponse] = useState<string>("");
+  const [responses, setResponses] = useState<{
+    people?: string;
+    places?: string;
+    things?: string;
+  }>({});
   const [loading, setLoading] = useState(false);
+
+  // 🔥 REAL LENS DATA
+const latestSignal = signals?.[0];
+
+const lensData = latestSignal?.ai_lens || {
+  people: [],
+  places: [],
+  things: [],
+};
 
   const handlePress = async (lens: "people" | "places" | "things") => {
     if (!mirror?.primary) return;
 
+    // ❌ if no data → do nothing
+    if (!lensData[lens] || lensData[lens].length === 0) return;
+
     setSelected(lens);
+
+    // ✅ already generated → don't regenerate
+    if (responses[lens]) return;
+
     setLoading(true);
-    setResponse("");
 
     try {
-      const res = await generateAIResponse({
-        type: "lens",
-        data: {
-          lens,
-          chakra: energy?.dominant_chakra,
+const behaviours = lensData[lens];
 
-          // 🔥 core truth from engine
-          pattern: mirror.primary.id,
-          patternState: mirror.primary.state,
-          patternTrend: mirror.primary.trend,
-        },
-      });
+const res = await generateAIResponse({
+  type: "lens",
+  data: {
+    lens,
+    chakra: energy?.dominant_chakra,
+    pattern: mirror?.primary?.name || "unknown",
+    patternState: mirror?.primary?.state || "unknown",
+    patternTrend: mirror?.primary?.trend || "stable",
+    behaviours, // ✅ already string[]
+  },
+});
 
-      setResponse(res);
+      setResponses((prev) => ({
+        ...prev,
+        [lens]: res,
+      }));
     } catch (e) {
       console.error("Lens AI error:", e);
-      setResponse("...");
+      setResponses((prev) => ({
+        ...prev,
+        [lens]: "...",
+      }));
     } finally {
       setLoading(false);
     }
   };
 
+  const renderButton = (lens: "people" | "places" | "things") => {
+    const hasData = lensData[lens]?.length > 0;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.button,
+          selected === lens && styles.active,
+          !hasData && styles.disabled,
+        ]}
+        onPress={() => handlePress(lens)}
+        disabled={!hasData}
+      >
+        <Text style={[styles.text, !hasData && styles.disabledText]}>
+          {lens}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
 
-      {/* 🔘 BUTTONS */}
+      {/* 🔘 LENSES */}
       <View style={styles.row}>
-
-        {/* 💗 PEOPLE */}
-        <TouchableOpacity
-          style={[styles.button, styles.things]}
-          onPress={() => handlePress("people")}
-        >
-          <Text style={styles.text}>People</Text>
-        </TouchableOpacity>
-
-        {/* 💙 PLACES */}
-        <TouchableOpacity
-          style={[styles.button, styles.things]}
-          onPress={() => handlePress("places")}
-        >
-          <Text style={styles.text}>Places</Text>
-        </TouchableOpacity>
-
-        {/* ✨ THINGS */}
-        <TouchableOpacity
-          style={[styles.button, styles.things]}
-          onPress={() => handlePress("things")}
-        >
-          <Text style={styles.text}>Things</Text>
-        </TouchableOpacity>
-
+        {renderButton("people")}
+        {renderButton("places")}
+        {renderButton("things")}
       </View>
 
       {/* ✨ LABEL */}
       <Text style={styles.label}>
-        What are your mirrors showing you?
+        what are your mirrors showing you?
       </Text>
 
       {/* 🧠 RESPONSE */}
       {selected && (
         <View style={styles.responseBox}>
-          {loading ? (
+          {loading && !responses[selected] ? (
             <ActivityIndicator color="white" />
           ) : (
             <Text style={styles.responseText}>
-              {response}
+              {responses[selected]}
             </Text>
           )}
         </View>
@@ -114,75 +143,51 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 16,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 14,
   },
 
   button: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
 
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+  active: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+
+  disabled: {
+    opacity: 0.3,
   },
 
   text: {
     color: "rgba(255,255,255,0.7)",
-    fontSize: 13,
+    fontSize: 14,
+  },
+
+  disabledText: {
+    color: "rgba(255,255,255,0.3)",
   },
 
   label: {
-    color: "rgba(255,255,255,0.4)",
-    fontSize: 12,
-    fontStyle: "italic",
+    color: "rgba(255,255,255,0.3)",
+    fontSize: 11,
     textAlign: "center",
-    maxWidth: 220,
+    marginTop: 4,
   },
 
   responseBox: {
-    marginTop: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    marginTop: 18,
+    paddingHorizontal: 20,
     maxWidth: "90%",
   },
 
   responseText: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: "center",
-  },
-
-  // 🎨 COLORS
-
-  people: {
-    backgroundColor: "rgba(255,120,180,0.12)",
-    shadowColor: "#ff78b4",
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-  },
-
-  places: {
-    backgroundColor: "rgba(120,180,255,0.12)",
-    shadowColor: "#78b4ff",
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-  },
-
-  things: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderColor: "rgba(255,255,255,0.1)",
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
   },
 });

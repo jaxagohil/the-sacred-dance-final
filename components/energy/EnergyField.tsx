@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     maxWidth: 260,
     opacity: 0.85,
-    marginBottom: 35,
+    marginBottom: 50,
   },
 
   affirmationText: {

@@ -1,16 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
+  Pressable,
   TextInput,
   TouchableOpacity,
-  FlatList,
+  Keyboard,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 
 import { generateAIResponse } from "../../lib/generateAIResponse";
 
-type Message = {
+type GuideKey = "guide_heart" | "guide_structure" | "guide_cosmic";
+
+type Segment = {
   id: string;
+  guide?: GuideKey;
   role: "user" | "guide";
   text: string;
 };
@@ -22,22 +28,64 @@ const guideConfig = {
 };
 
 export default function Guidance() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [showInput, setShowInput] = useState(false);
+  const [segments, setSegments] = useState<Segment[]>([]);
   const [activeGuide, setActiveGuide] =
-    useState<keyof typeof guideConfig>("guide_heart");
+    useState<GuideKey>("guide_heart");
+
+  const [loading, setLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const hasContent = input.length > 0;
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
+
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (showInput) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [showInput]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [segments]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const text = input;
 
-    setMessages((prev) => [
+    setSegments((prev) => [
       ...prev,
-      { id: Date.now().toString(), role: "user", text },
+      {
+        id: Date.now().toString(),
+        role: "user",
+        text,
+      },
     ]);
 
     setInput("");
+    Keyboard.dismiss();
+    setLoading(true);
 
     try {
       const res = await generateAIResponse({
@@ -49,157 +97,175 @@ export default function Guidance() {
         },
       });
 
-      setMessages((prev) => [
+      setSegments((prev) => [
         ...prev,
         {
           id: Date.now().toString() + "-g",
+          guide: activeGuide,
           role: "guide",
           text: res,
         },
       ]);
     } catch (e) {
-      console.log("AI error:", e);
+      console.log(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black", paddingTop: 90 }}>
-      {/* GUIDES */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: 10,
-          marginBottom: 20,
-        }}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "black" }}
+      behavior={undefined}
+    >
+      <Pressable
+        style={{ flex: 1 }}
+        onPress={() => setShowInput(true)}
       >
-        {Object.entries(guideConfig).map(([key, g]) => {
-          const active = activeGuide === key;
 
-          return (
-            <TouchableOpacity
-              key={key}
-              onPress={() =>
-                setActiveGuide(key as keyof typeof guideConfig)
-              }
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: active ? g.color : "#333",
-              }}
-            >
-              <Text
-                style={{
-                  color: active ? g.color : "#888",
-                  fontSize: 14,
-                }}
-              >
-                {g.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* CHAT */}
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 20,
-        }}
-        renderItem={({ item }) => (
-          <View
+        {/* ✦ (CONSISTENT POSITION) */}
+        <TouchableOpacity
+          onPress={sendMessage}
+          style={{
+            position: "absolute",
+            top: 60,
+            right: 24,
+            zIndex: 20,
+          }}
+        >
+          <Text
             style={{
-              marginBottom: 12,
-              alignSelf:
-                item.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "80%",
+              color: hasContent ? "white" : "#555",
+              fontSize: 18,
             }}
           >
-            <View
-              style={{
-                backgroundColor:
-                  item.role === "user" ? "#222" : "#111",
-                padding: 12,
-                borderRadius: 14,
-              }}
-            >
-              <Text style={{ color: "white" }}>{item.text}</Text>
+            ✦
+          </Text>
+        </TouchableOpacity>
+
+        {/* ✍️ INPUT (MORE SPACE) */}
+        {showInput && (
+          <View
+            style={{
+              position: "absolute",
+              top: 100,   // 👈 slightly lower
+              left: 0,
+              right: 0,
+              alignItems: "center",
+              zIndex: 10,
+            }}
+          >
+            <View style={{ width: "85%" }}>
+              <TextInput
+                ref={inputRef}
+                value={input}
+                onChangeText={setInput}
+                placeholder="..."
+                placeholderTextColor="#555"
+                multiline
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                  minHeight: 80,   // 👈 more breathing room
+                }}
+              />
             </View>
           </View>
         )}
-      />
 
-      {/* INPUT */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-end",
-          padding: 12,
-          borderTopWidth: 1,
-          borderTopColor: "#222",
-           marginBottom: 20,
-        }}
-      >
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="share what’s coming up..."
-          placeholderTextColor="#888"
-          multiline
-          style={{
-            flex: 1,
-            minHeight: 100,
-            maxHeight: 250,
-            color: "white",
-            backgroundColor: "#1a1a1a",
-            borderRadius: 18,
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-          }}
-        />
-
+        {/* 🧿 GUIDES (MOVED DOWN) */}
         <View
           style={{
-            marginLeft: 10,
-            justifyContent: "space-between",
-            height: 78,
+            position: "absolute",
+            top: 200,   // 👈 pushed down
+            left: 0,
+            right: 0,
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 20,
           }}
         >
-          <TouchableOpacity
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              borderWidth: 1,
-              borderColor: "#444",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text>🙂</Text>
-          </TouchableOpacity>
+          {Object.entries(guideConfig).map(([key, g]) => {
+            const active = activeGuide === key;
 
-          <TouchableOpacity
-            onPress={sendMessage}
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: "#333",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "white" }}>↑</Text>
-          </TouchableOpacity>
+            return (
+              <TouchableOpacity
+                key={key}
+                onPress={() =>
+                  setActiveGuide(key as GuideKey)
+                }
+              >
+                <Text
+                  style={{
+                    color: g.color,
+                    opacity: active ? 1 : 0.3,
+                    fontSize: active ? 16 : 13,
+                  }}
+                >
+                  {g.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      </View>
-    </View>
+
+        {/* 🌊 CHAT */}
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1, marginTop: 260 }}
+          contentContainerStyle={{
+            paddingHorizontal: 30,
+            paddingBottom: 120,
+          }}
+        >
+          {segments.map((seg) => {
+            if (seg.role === "guide" && keyboardVisible) return null;
+
+            return (
+              <View
+                key={seg.id}
+                style={{
+                  marginBottom:
+                    seg.role === "user" ? 6 : 18,
+                  maxWidth: "85%",
+                }}
+              >
+                {seg.role === "guide" && (
+                  <Text
+                    style={{
+                      color: guideConfig[seg.guide!].color,
+                      fontSize: 12,
+                      opacity: 0.6,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {guideConfig[seg.guide!].label}
+                  </Text>
+                )}
+
+                <Text
+                  style={{
+                    color: seg.role === "user" ? "#aaa" : "white",
+                    fontSize: 16,
+                    lineHeight: 24,
+                    fontStyle:
+                      seg.role === "user" ? "italic" : "normal",
+                  }}
+                >
+                  {seg.text}
+                </Text>
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        {loading && (
+          <View style={{ position: "absolute", top: "50%" }}>
+            <Text style={{ color: "#555" }}>…</Text>
+          </View>
+        )}
+
+      </Pressable>
+    </KeyboardAvoidingView>
   );
 }

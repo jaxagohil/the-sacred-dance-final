@@ -2,31 +2,45 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
+  Pressable,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
+  Keyboard,
+  KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
-
-import * as ImagePicker from "expo-image-picker";
 
 import { supabase } from "../../services/supabase";
 import { processReflection } from "../../db/flow";
 import { getUserId } from "../../lib/user";
+
 import EmotionCloudSkia from "../../components/signals/EmotionCloudSkia";
 
+const { height } = Dimensions.get("window");
+
+type Mode = "idle" | "writing";
+
+type Emotion = {
+  id: number;
+  word: string;
+};
+
 export default function Journal() {
-  const [emotions, setEmotions] = useState<any[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
+  const [mode, setMode] = useState<Mode>("idle");
+
   const [text, setText] = useState("");
+  const [selected, setSelected] = useState<number[]>([]);
+  
 
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [audioBase64, setAudioBase64] = useState<string | null>(null);
+  const [ack, setAck] = useState(false);
+  const [emotions, setEmotions] = useState<Emotion[]>([]);
 
-  const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // 🔄 Load emotions
+ const hasContent =
+  text.length > 0 ||
+  selected.length > 0;
+
   useEffect(() => {
     const loadEmotions = async () => {
       const { data } = await supabase
@@ -39,226 +53,191 @@ export default function Journal() {
     loadEmotions();
   }, []);
 
-const toggleEmotion = (id: number) => {
-  setSelected((prev: number[]) => {
-    if (prev.includes(id)) {
-      return prev.filter((e) => e !== id);
-    }
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
 
-    if (prev.length >= 3) {
-      return prev; // limit to 3
-    }
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
 
-    return [...prev, id];
-  });
-};
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
-  // 📷 Image Picker
-  const handleImage = async () => {
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) return;
-
-      const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        base64: true,
-        quality: 0.5,
-      });
-
-      if (!res.canceled) {
-        setImageBase64(res.assets[0].base64 || null);
-      }
-    } catch (e) {
-      console.log("Image error:", e);
-    }
+  const toggleEmotion = (id: number) => {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((e) => e !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
   };
 
-  // 🚀 Submit
-  const handleSubmit = async () => {
-    if (
-      !text.trim() &&
-      selected.length === 0 &&
-      !imageBase64 &&
-      !audioBase64
-    )
-      return;
+  const handleTyping = (t: string) => {
+    setText(t);
+  };
 
-    setLoading(true);
+  const handleRelease = async () => {
+    if (!text.trim() && selected.length === 0) return;
 
-    console.log("📓 JOURNAL SUBMIT", { text, selected });
+    const userId = await getUserId();
+    if (!userId) return;
 
-    try {
-      const userId = await getUserId();
+    await processReflection({
+      userId,
+      text,
+      emotions: selected,
+      source: "journal",
+    });
 
-      if (!userId) {
-        console.log("❌ No userId");
-        setLoading(false);
-        return;
-      }
+    Keyboard.dismiss();
 
-      await processReflection({
-        userId,
-        text,
-        emotions: selected,
-        imageBase64: imageBase64 || undefined,
-        audioBase64: audioBase64 || undefined,
-        source: "journal",
-      });
+    setText("");
+    setSelected([]);
+    setMode("idle");
 
-      // 🧹 Reset
-      setText("");
-      setSelected([]);
-      setImageBase64(null);
-      setAudioBase64(null);
-
-      // 💫 subtle feedback
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1200);
-
-      console.log("✅ Journal saved");
-    } catch (e) {
-      console.log("Submit error:", e);
-    } finally {
-      setLoading(false);
-    }
+    setAck(true);
+    setTimeout(() => setAck(false), 1200);
   };
 
   return (
-    <View style={styles.container}>
-      {/* 🌿 EMOTION CLOUD */}
-<View style={styles.emotionContainer}>
-  <EmotionCloudSkia
-    emotions={emotions}
-    selected={selected}
-    onPress={toggleEmotion}
-  />
-</View>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "black" }}
+      behavior={undefined}
+    >
+      {/* ✦ DIAMOND (TOP LAYER - ALWAYS VISIBLE) */}
+ <TouchableOpacity
+  onPress={handleRelease}
+  style={{
+    position: "absolute",
+    top: 60,
+    right: 24,
+    zIndex: 10,
+  }}
+>
+  <Text
+    style={{
+      color: hasContent ? "white" : "#555",
+      fontSize: 18,
+    }}
+  >
+    ✦
+  </Text>
+</TouchableOpacity>
 
-      {/* ✍️ WRITING AREA + ACTIONS */}
-      <View style={styles.contentRow}>
-        {/* TEXT AREA */}
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="write freely..."
-          placeholderTextColor="#888"
-          multiline
-          style={styles.textArea}
-        />
+      {/* MAIN CONTENT */}
+      <Pressable
+        style={{ flex: 1 }}
+        onPress={() => {
+          Keyboard.dismiss();
+          setMode("writing");
+        }}
+      >
 
-        {/* ACTION COLUMN */}
-        <View style={styles.actions}>
-          <TouchableOpacity onPress={handleImage}>
-            <Text style={styles.icon}>📷</Text>
-          </TouchableOpacity>
+        {/* 📷 🎤 MEDIA */}
+        {mode === "writing" && (
+          <View
+            style={{
+              position: "absolute",
+              top: 80,
+              left: 30,
+              flexDirection: "row",
+              gap: 18,
+              opacity: 0.6,
+            }}
+          >
+            <TouchableOpacity>
+              <Text style={{ color: "#666", fontSize: 18 }}>📷</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Text style={styles.icon}>🎤</Text>
-          </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={{ color: "#666", fontSize: 18 }}>🎤</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-          <TouchableOpacity>
-            <Text style={styles.icon}>
-              {loading ? "..." : selected.length > 0 ? "✨" : "❤️"}
+        {/* ✍️ WRITING */}
+        {mode === "writing" && (
+          <View
+            style={{
+              position: "absolute",
+              top: 120,
+              left: 30,
+              right: 30,
+            }}
+          >
+            <TextInput
+              value={text}
+              onChangeText={handleTyping}
+              placeholder="..."
+              placeholderTextColor="#444"
+              multiline
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
+              style={{
+                color: "white",
+                fontSize: 18,
+                lineHeight: 26,
+              }}
+            />
+          </View>
+        )}
+
+        {/* 🌿 EMOTION CLOUD */}
+        {!keyboardVisible && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: height * 0.08,
+              left: 0,
+              right: 0,
+              alignItems: "center",
+            }}
+          >
+            <EmotionCloudSkia
+              emotions={emotions}
+              selected={selected}
+              onPress={toggleEmotion}
+            />
+          </View>
+        )}
+
+        {/* ✨ PROMPT */}
+        {mode === "idle" && (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: height * 0.45,
+              alignSelf: "center",
+            }}
+          >
+            <Text style={{ color: "#666", fontSize: 14 }}>
+              ,,,
             </Text>
-          </TouchableOpacity>
+          </View>
+        )}
 
-          <TouchableOpacity onPress={handleSubmit}>
-            <Text style={styles.icon}>
-              {loading ? "..." : "➤"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* 💫 ACK */}
+        {ack && (
+          <Text
+            style={{
+              position: "absolute",
+              bottom: 40,
+              alignSelf: "center",
+              color: "#888",
+              fontSize: 12,
+            }}
+          >
+            held
+          </Text>
+        )}
 
-      {/* 💫 SAVED FEEDBACK */}
-      {saved && (
-        <Text style={styles.savedText}>saved</Text>
-      )}
-    </View>
+      </Pressable>
+    </KeyboardAvoidingView>
   );
 }
-
-// 🎨 Styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-
-  // 🌿 EMOTIONS
-  emotionContainer: {
-    marginTop: 80,
-    marginLeft: 5,
-    marginRight: 5,
-    //paddingHorizontal: 10,
-  },
-
-  emotionWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    paddingBottom: 100,
-  },
-
-  emotionChip: {
-    borderWidth: 1,
-    borderColor: "rgba(234,179,8,0.25)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    margin: 6,
-  },
-
-  selected: {
-    borderColor: "#facc15",
-    backgroundColor: "rgba(250,204,21,0.1)",
-  },
-
-  emotionText: {
-    fontSize: 12,
-    color: "#facc15",
-  },
-
-  // ✍️ MAIN CONTENT
-  contentRow: {
-    flex: 1,
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 30,
-    gap: 12,
-  },
-
-  textArea: {
-    flex: 1,
-    color: "white",
-    fontSize: 16,
-    textAlignVertical: "top",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 16,
-    padding: 16,
-  },
-
-  // 🔥 ACTION COLUMN
-  actions: {
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: 18,
-    paddingBottom: 10,
-  },
-
-  icon: {
-    fontSize: 20,
-    color: "white",
-  },
-
-  savedText: {
-    position: "absolute",
-    bottom: 30,
-    alignSelf: "center",
-    color: "#888",
-    fontSize: 12,
-  },
-});

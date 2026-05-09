@@ -40,7 +40,7 @@ export default function OracleCard({
   return (
     <View style={styles.wrapper}>
 
-      {/* 🌫 OUTER AURA */}
+      {/* 🌫 AURA */}
       <View
         style={[
           styles.aura,
@@ -81,7 +81,8 @@ const styles = StyleSheet.create({
     width: 260,
     height: 340,
     borderRadius: 30,
-    opacity: 0.4,
+    opacity: 0.25,
+    transform: [{ scale: 1.2 }],
   },
 
   card: {
@@ -89,10 +90,7 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: 30,
 
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-
-    backgroundColor: "rgba(10,10,15,0.95)",
+    backgroundColor: "rgba(10,10,15,0.7)",
 
     paddingHorizontal: 24,
     paddingVertical: 28,
@@ -100,22 +98,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     overflow: "hidden",
 
-    // glow shadow
-    shadowOpacity: 0.4,
-    shadowRadius: 30,
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
     shadowOffset: { width: 0, height: 0 },
 
-    elevation: 6,
+    elevation: 4,
   },
 
   innerGlow: {
     position: "absolute",
-    top: 40,
+    top: 60,
     left: 0,
     right: 0,
-    height: 140,
+    height: 120,
     borderRadius: 100,
-    opacity: 0.2,
+    opacity: 0.12,
   },
 
   content: {
@@ -124,8 +121,8 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 16,
-    color: "white",
+    fontSize: 15,
+    color: "rgba(255,255,255,0.9)",
     marginBottom: 12,
     letterSpacing: 0.5,
     textAlign: "center",
@@ -133,9 +130,9 @@ const styles = StyleSheet.create({
 
   message: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.65)",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 20,
     paddingHorizontal: 8,
   },
 
@@ -145,8 +142,8 @@ const styles = StyleSheet.create({
   },
 
   symbol: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 12,
-    letterSpacing: 2,
+    color: "rgba(255,255,255,0.3)",
+    fontSize: 11,
+    letterSpacing: 3,
   },
 });

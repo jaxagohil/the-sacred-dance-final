@@ -20,11 +20,11 @@ function getPhaseIcon(type: string) {
 export default function CosmicTiles({
   energy,
   patterns,
-  aiMessage, // 🔥 NEW (safe)
+  aiMessage,
 }: {
   energy?: any;
   patterns?: any[];
-  aiMessage?: string; // 🔥 NEW
+  aiMessage?: string;
 }) {
   const [cosmic, setCosmic] = useState<any>(null);
 
@@ -81,7 +81,7 @@ export default function CosmicTiles({
                 key={t.key}
                 style={[
                   styles.tile,
-                  isEnergy ? styles.energyTile : styles.normalTile,
+                  //isEnergy && styles.energyTile,
                 ]}
               >
                 <Text style={styles.icon}>{t.icon}</Text>
@@ -92,7 +92,6 @@ export default function CosmicTiles({
           })}
         </View>
 
-        {/* 🔥 OPTIONAL AI MESSAGE (safe, non-breaking) */}
         {aiMessage && (
           <Text style={styles.aiText}>
             {aiMessage}
@@ -105,17 +104,13 @@ export default function CosmicTiles({
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
 
   container: {
-    backgroundColor: "rgba(255,255,255,0.02)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-    borderRadius: 24,
-    padding: 10,
+    paddingVertical: 6,
   },
 
   row: {
@@ -126,34 +121,27 @@ const styles = StyleSheet.create({
   tile: {
     flex: 1,
     borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 10,
-    minHeight: 90,
+    paddingHorizontal: 6,
+    paddingVertical: 12,
+    minHeight: 85,
     alignItems: "center",
-    marginHorizontal: 2,
-  },
-
-  normalTile: {
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    marginHorizontal: 6,
+    backgroundColor: "rgba(255,255,255,0.02)",
   },
 
   energyTile: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.05)",
   },
 
   icon: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 4,
+    fontSize: 14,
+    opacity: 0.5,
+    marginBottom: 6,
   },
 
   value: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: "rgba(255,255,255,0.85)",
     textAlign: "center",
   },
 
@@ -165,12 +153,12 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
 
-  // 🔥 NEW
   aiText: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 12,
     color: "rgba(255,255,255,0.6)",
     textAlign: "center",
     lineHeight: 18,
+    paddingHorizontal: 10,
   },
 });

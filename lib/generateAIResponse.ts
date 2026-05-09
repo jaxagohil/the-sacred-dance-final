@@ -1,347 +1,985 @@
-const API_URL = "https://wing-manor-unsecured.ngrok-free.dev";
+import { API_URL } from "../lib/config";
 
-type AIType = "tarot" | "energy" | "lens" | "guide" | "distortion" | "cosmic";
-type GuideKey = "guide_heart" | "guide_structure" | "guide_cosmic";
+import { MirrorContext } from "./createContextBuilder";
 
-type Oracle = { title: string; message: string };
-type Tarot = { title: string; message: string };
+// --------------------------------------------------
+// TYPES
+// --------------------------------------------------
+
+type AIType =
+  | "tarot"
+  | "energy"
+  | "lens"
+  | "guide"
+  | "distortion"
+  | "cosmic"
+  | "cards";
+
+type GuideKey =
+  | "guide_heart"
+  | "guide_structure"
+  | "guide_cosmic";
 
 type UserContext = {
   name?: string;
-  energyType?: "feminine" | "masculine";
+
+  energyType?:
+    | "feminine"
+    | "masculine";
 };
 
 type AIInput = {
+
   type: AIType;
-  data: {
-    oracle?: Oracle;
-    tarot?: Tarot;
-    chakra?: string;
-    lens?: string;
-    phase?: string;
 
-    base?: string;
-    moon?: string;
-    sun?: string;
+  context?: MirrorContext;
 
-    pattern?: string;
-    patternState?: string;
-    patternTrend?: string;
+  data?: {
 
+    // tarot/cards
+    cards?: string[];
+
+    // guide
     guide?: GuideKey;
+
     guideName?: string;
+
     message?: string;
 
+    // user
     user?: UserContext;
 
-    cosmic?: {
-      phase?: string;
-      sunEnergy?: string;
-    };
-
-    sunEnergy?: string;
+    // fallback
+    base?: string;
   };
 };
 
-export async function generateAIResponse({ type, data }: AIInput) {
-  const prompt = buildPrompt(type, data);
+// --------------------------------------------------
+// 🚀 MAIN
+// --------------------------------------------------
+
+export async function generateAIResponse({
+
+  type,
+
+  context,
+
+  data,
+
+}: AIInput) {
+
+  const prompt =
+    buildPrompt({
+      type,
+      context,
+      data,
+    });
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
 
-    const response = await fetch(`${API_URL}/api/ai`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-      signal: controller.signal,
-    });
+    const controller =
+      new AbortController();
+
+    const timeout =
+      setTimeout(
+        () =>
+          controller.abort(),
+        12000
+      );
+
+    const response =
+      await fetch(
+        `${API_URL}/api/ai`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify({
+              prompt,
+            }),
+
+          signal:
+            controller.signal,
+        }
+      );
 
     clearTimeout(timeout);
 
-    const text = await response.text();
+    const text =
+      await response.text();
 
-    let result: any = null;
+    let result: any =
+      null;
 
     try {
-      result = JSON.parse(text);
+
+      result =
+        JSON.parse(text);
+
     } catch (e) {
-      console.error("❌ RAW AI RESPONSE (not JSON):", text);
-      return data.base || "...";
+
+      console.error(
+        "❌ RAW AI RESPONSE:",
+        text
+      );
+
+      return (
+        data?.base || "..."
+      );
     }
 
-    console.log("🧠 PROMPT:", prompt);
-    console.log("📦 BACKEND RESULT:", result);
+    console.log(
+      "🧠 PROMPT:",
+      prompt
+    );
+
+    console.log(
+      "📦 BACKEND RESULT:",
+      result
+    );
 
     if (!response.ok) {
-      console.error("AI ERROR:", result);
-      return data.base || "Something didn’t come through.";
+
+      console.error(
+        "AI ERROR:",
+        result
+      );
+
+      return (
+        data?.base ||
+        "Something didn’t come through."
+      );
     }
 
-    return (result?.text || "").trim() || data.base || "...";
+    return (
+      result?.text || ""
+    ).trim() ||
+      data?.base ||
+      "...";
 
   } catch (err: any) {
-    console.error("AI FETCH ERROR:", err?.message || err);
 
-    if (err?.name === "AbortError") {
-      return "Taking a little longer…";
+    console.error(
+      "AI FETCH ERROR:",
+      err?.message || err
+    );
+
+    if (
+      err?.name ===
+      "AbortError"
+    ) {
+
+      return (
+        "Taking a little longer…"
+      );
     }
 
-    return data.base || "...";
+    return (
+      data?.base || "..."
+    );
   }
 }
 
-function buildPrompt(type: AIType, data: AIInput["data"]) {
+// --------------------------------------------------
+// 🧠 PROMPTS
+// --------------------------------------------------
+
+function buildPrompt({
+
+  type,
+
+  context,
+
+  data,
+
+}: {
+
+  type: AIType;
+
+  context?: MirrorContext;
+
+  data?: any;
+
+}) {
+
   const baseTone = `
 Tone:
-- simple
-- human
 - grounded
-- gentle but clear
-- no advice
-- no fixing
-- no jargon
+- emotionally intelligent
+- calm
+- human
+- subtle depth
+- simple language
+- reflective
 `;
 
-  const patternContext = `
-Core Pattern:
-- Pattern: ${data.pattern || "unknown"}
-- State: ${data.patternState || "unknown"}
-- Trend: ${data.patternTrend || "stable"}
-`;
+// --------------------------------------------------
+// 🧠 SAFE HELPERS
+// --------------------------------------------------
+
+const safeEchoes = (
+  context?.voice?.reflectionEchoes || []
+)
+
+  .slice(0, 3)
+
+  .join(". ");
+
+const safeDistortions = (
+  context?.energy?.distortions || []
+)
+
+  .map((d: any) =>
+    d?.name || d
+  )
+
+  .join(", ");
 
   switch (type) {
+// --------------------------------------------------
+// 🪞 LENS
+// --------------------------------------------------
 
-    // ---------------------------
-    // TAROT
-    // ---------------------------
-    case "tarot":
-      return `
-${baseTone}
+case "lens":
 
-Oracle: ${data.oracle?.title} — ${data.oracle?.message}
-Tarot: ${data.tarot?.title}
+  return `
+You are a mirror.
 
-Write ONE short sentence.
+Not a coach.
+Not a therapist.
+Not spiritual advice.
 
-Rules:
-- Start with "I"
-- Very simple language
-- No poetic tone
-- No explanation
+The user is sovereign.
+
+You reflect
+what the user may not
+fully see yet.
+
+The world mirrors
+their relationship
+with themselves.
+
+Respect:
+- emotional reality
+- grounded humanity
+- personal truth
+- all belief systems
+
+Do not:
+- predict
+- create dependency
+- imply hierarchy
+- imply superiority
+- imply certainty
+
+Current Lens:
+${context?.lens?.active || "general"}
+
+Current Patterns:
+${context?.current?.patterns?.join(", ") || "none"}
+
+Current Behaviours:
+${context?.current?.behaviours?.join(", ") || "none"}
+
+Current Emotions:
+${context?.current?.emotions?.join(", ") || "none"}
+
+Baseline Themes:
+${context?.baseline?.corePatterns?.join(", ") || "none"}
+
+Childhood Themes:
+${context?.baseline?.attachmentThemes?.join(", ") || "none"}
+
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
+
+Reflection Echoes:
+${safeEchoes}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Responsibility:
+${context?.consciousness?.responsibility || 0.5}
+
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+- Dominant Movement:
+${context?.consciousness?.dominantMovement || "awakening"}
+
+Energy:
+- Chakra:
+${context?.energy?.dominantChakra || "unknown"}
+
+- Nervous System:
+${context?.current?.nervousSystemState || "unknown"}
+
+The user may currently
+be processing through:
+- physical experience
+- emotional experience
+- energetic/symbolic experience
+
+Meet them where they are.
+Do not force spirituality.
+
+Write:
+- 1 short mirror reflection
+- maximum 120 words
+
+The mirror should:
+- feel emotionally real
+- feel confronting OR loving
+- feel simple
+- feel deeply human
+- feel like recognition
+
+Do not:
+- explain too much
+- become poetic
+- become mystical
+- sound therapeutic
+- give advice
+- use spiritual jargon
+
+Use very simple language.
+
+The user should feel:
+"that is exactly what I do."
 `;
 
-    // ---------------------------
-    // COSMIC
-    // ---------------------------
-    case "cosmic":
-      return `
+  // --------------------------------------------------
+// 🌌 COSMIC
+// --------------------------------------------------
+
+case "cosmic":
+
+  return `
 ${baseTone}
 
-Base message:
-"${data.base || ""}"
+You are writing
+a Sacred Dance
+cosmic reflection.
 
-Context:
-- Moon Phase: ${data.phase || "unknown"}
-- Active Pattern: ${data.pattern || "unknown"}
+The cosmos is not controlling the user.
 
-Subtle influences:
-- Emotional tone (Moon): ${data.moon || "unknown"}
-- Underlying field (Sun): ${data.sunEnergy || data.sun || "unknown"}
+It is reflecting
+the emotional season
+they are already moving through.
 
-Rewrite the base message in 1–2 short sentences.
+The user is sovereign.
+
+Respect:
+- emotional reality
+- grounded humanity
+- personal truth
+- all belief systems
+
+Do not:
+- predict destiny
+- imply hierarchy
+- imply superiority
+- imply certainty
+
+Current Emotional Field:
+${context?.story?.emotionalTheme || ""}
+
+Current Pattern:
+${context?.current?.dominantPattern || "unknown"}
+
+Current Energy:
+- Chakra:
+${context?.energy?.dominantChakra || "unknown"}
+
+- Movement:
+${context?.story?.energeticMovement || "unknown"}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+Cosmic:
+- Moon Phase:
+${context?.cosmic?.phase || "unknown"}
+
+- Moon:
+${context?.cosmic?.moon || "unknown"}
+
+- Sign:
+${context?.cosmic?.sign || "unknown"}
+
+Reflection Echoes:
+${safeEchoes}
+
+The user may currently
+be processing through:
+- physical experience
+- emotional experience
+- energetic/symbolic experience
+
+Meet them where they are.
+Do not force spirituality.
+
+Write:
+1–2 short reflective paragraphs.
 
 Rules:
-- Keep the same meaning
-- Speak directly to the user ("you")
-- Keep it grounded and calm
-- No advice
-- No spiritual jargon
+- grounded
+- spacious
+- emotionally intelligent
+- symbolic but subtle
+
+Do not:
+- predict
+- give certainty
+- sound mystical
+- sound inflated
+- sound like astrology content
+
+The cosmos should feel:
+supportive,
+reflective,
+and spacious.
 `;
 
-    // ---------------------------
-    // ENERGY
-    // ---------------------------
-    case "energy":
-      return `
-${baseTone}
+  // --------------------------------------------------
+// 🃏 CARDS
+// --------------------------------------------------
 
-${patternContext}
+case "cards":
 
-Context:
-- Chakra: ${data.chakra || "unknown"}
-- Lens: ${data.lens || "none"}
+  return `
+You are writing
+a Sacred Dance
+card reflection.
 
-User:
-- Name: ${data.user?.name || "unknown"}
-- EnergyType: ${data.user?.energyType || "unknown"}
+The cards are mirrors.
+Not predictions.
 
-Write 1–2 short sentences.
+They reflect:
+- emotional patterns
+- protection
+- healing
+- cycles
+- self relationship
 
-Rules:
-- Speak directly ("you")
-- Reflect what is happening (not why)
-- Keep it grounded and real
-- Do not generalise
-- No advice
+The user is sovereign.
+
+Respect:
+- emotional reality
+- grounded humanity
+- personal truth
+- all belief systems
+
+Do not:
+- predict destiny
+- imply hierarchy
+- imply superiority
+- create dependency
+- imply certainty
+
+Cards:
+${data?.cards?.join(", ") || "none"}
+
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
+
+Current Patterns:
+${context?.current?.patterns?.join(", ") || "none"}
+
+Current Behaviours:
+${context?.current?.behaviours?.join(", ") || "none"}
+
+Current Emotions:
+${context?.current?.emotions?.join(", ") || "none"}
+
+Baseline Themes:
+${context?.baseline?.corePatterns?.join(", ") || "none"}
+
+Childhood Themes:
+${context?.baseline?.attachmentThemes?.join(", ") || "none"}
+
+Reflection Echoes:
+${safeEchoes}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Responsibility:
+${context?.consciousness?.responsibility || 0.5}
+
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+- Dominant Movement:
+${context?.consciousness?.dominantMovement || "awakening"}
+
+Energy:
+- Dominant Chakra:
+${context?.energy?.dominantChakra || "unknown"}
+
+- Energetic Movement:
+${context?.story?.energeticMovement || "unknown"}
+
+The user may currently
+be processing through:
+- physical experience
+- emotional experience
+- energetic/symbolic experience
+
+Meet them where they are.
+Do not force spirituality.
+
+Write:
+- 1 or 2 short paragraphs
+- emotionally intelligent
+- symbolic but grounded
+- deeply personal
+- simple language
+
+IMPORTANT:
+You MUST reference
+something emotionally specific
+from the user's reflection echoes.
+
+Not word-for-word necessarily,
+but something recognisable.
+
+The user should feel:
+"this reading actually sees me."
+
+Do not:
+- sound mystical
+- sound generic
+- sound like social media tarot
+- become overly poetic
+- give advice lists
+
+The cards should feel:
+quietly honest,
+emotionally precise,
+and deeply reflective.
 `;
 
-    // ---------------------------
-    // LENS
-    // ---------------------------
-    case "lens":
-      return `
+// --------------------------------------------------
+// 🧭 GUIDES
+// --------------------------------------------------
+
+case "guide":
+
+  return `
 ${baseTone}
 
-${patternContext}
+You are a Sacred Dance guide.
 
-Context:
-- Lens: ${data.lens}
-- Chakra: ${data.chakra || "unknown"}
+You are not an authority.
 
-Start with:
-"The pattern is ..."
+You are:
+- reflective
+- emotionally intelligent
+- grounded
+- compassionate
+- honest
+- spacious
 
-Then include:
+The user is sovereign.
 
-Emotion:
-Boundary:
-Behaviour:
-Integration:
+You do not:
+- predict destiny
+- create dependency
+- imply superiority
+- imply hierarchy
+- claim certainty
+- override personal truth
 
-Rules:
-- Each line short
-- Very simple language
-- Specific, not abstract
-- No advice
+Respect:
+- all belief systems
+- emotional reality
+- grounded humanity
+- personal spirituality
+- embodiment
+- nervous system safety
+
+The guide is:
+${data?.guideName || "Guide"}
+
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
+
+Current Patterns:
+${context?.current?.patterns?.join(", ") || "none"}
+
+Current Behaviours:
+${context?.current?.behaviours?.join(", ") || "none"}
+
+Current Emotions:
+${context?.current?.emotions?.join(", ") || "none"}
+
+Baseline Themes:
+${context?.baseline?.corePatterns?.join(", ") || "none"}
+
+Childhood Themes:
+${context?.baseline?.attachmentThemes?.join(", ") || "none"}
+
+Current Nervous System:
+${context?.current?.nervousSystemState || "unknown"}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Responsibility:
+${context?.consciousness?.responsibility || 0.5}
+
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+- Dominant Movement:
+${context?.consciousness?.dominantMovement || "awakening"}
+
+Energy:
+- Dominant Chakra:
+${context?.energy?.dominantChakra || "unknown"}
+
+- Energetic Movement:
+${context?.story?.energeticMovement || "unknown"}
+
+Cosmic:
+- Moon Phase:
+${context?.cosmic?.phase || "unknown"}
+
+- Current Energy:
+${context?.cosmic?.energy || "unknown"}
+
+Reflection Echoes:
+${safeEchoes}
+
+The user may currently
+be processing through:
+- physical experience
+- emotional experience
+- energetic/symbolic experience
+
+Meet them where they are.
+
+Do not force:
+- spirituality
+- symbolism
+- chakra language
+- cosmic language
+
+Use symbolic language ONLY if:
+- emotionally appropriate
+- grounded
+- gentle
+- coherent with the user context
+
+Sacred sexuality,
+relationship mirrors,
+and emotional intimacy
+may arise naturally.
+
+Approach them through:
+- embodiment
+- emotional honesty
+- nervous system awareness
+- compassion
+- sovereignty
+- grounded humanity
+
+Never:
+- shame desire
+- shame sexuality
+- moralize intimacy
+- inflate spirituality
+- encourage dependency
+
+The guide should:
+- feel emotionally safe
+- feel emotionally intelligent
+- feel quietly profound
+- feel deeply human
+- feel like remembering
+
+Write:
+- 1–3 short paragraphs
+- simple language
+- grounded emotional depth
+- subtle symbolic intelligence
+
+The user should feel:
+"I already knew this somewhere inside myself."
 `;
 
-    // ---------------------------
-    // GUIDE
-    // ---------------------------
-    case "guide":
-      return `
+// --------------------------------------------------
+// ⚡ ENERGY
+// --------------------------------------------------
+
+case "energy":
+
+  return `
 ${baseTone}
 
-You are ${data.guideName || "a guide"}.
+You are reflecting
+the user's current energy state.
 
-User said:
-${data.message}
+Not diagnosing.
+Not predicting.
 
-${
-  data.guide === "guide_heart"
-    ? `
-Context (internal, do not name directly):
-- Pattern: ${data.pattern}
-- State: ${data.patternState}
-- Trend: ${data.patternTrend}
+You are helping the user
+gently notice:
+- contraction
+- expansion
+- nervous system movement
+- energetic balance
+- embodiment
 
-You speak from feeling.
+The user is sovereign.
 
-Focus:
-- What is being felt underneath
-- What feels vulnerable or tender
+Current Energy:
+- Feminine:
+${context?.energy?.feminine || 0}
 
-Style:
-- soft, close, human
-- slightly slower tone
+- Masculine:
+${context?.energy?.masculine || 0}
 
-Structure:
-- First sentence reflects emotion
-- Second sentence gently grounds
+- Contraction:
+${context?.energy?.contraction || 0}
 
-Rules:
-- Do NOT name the pattern directly
-- Stay with feeling (not analysis)
-- Use simple emotional language
-- No advice
-- No fixing
-`
-    : data.guide === "guide_structure"
-    ? `
-Core Pattern:
-- Pattern: ${data.pattern}
-- State: ${data.patternState}
-- Trend: ${data.patternTrend}
+- Expansion:
+${context?.energy?.expansion || 0}
 
-You speak from clarity.
+Dominant Chakra:
+${context?.energy?.dominantChakra || "unknown"}
 
-Focus:
-- What pattern is happening
-- What behaviour is repeating
+${safeDistortions || "none"}
 
-Style:
-- direct, clear, grounded
-- precise
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
 
-Structure:
-- One or two sentences only
-- Name what is happening clearly
+Current Nervous System:
+${context?.current?.nervousSystemState || "unknown"}
 
-Rules:
-- You CAN name the pattern directly
-- Be clear, not soft
-- No emotional cushioning
-- No judgement
-- No advice
-`
-    : `
-Context (wider view):
-- Pattern: ${data.pattern}
-- State: ${data.patternState}
-- Trend: ${data.patternTrend}
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
 
-You speak from a wider perspective.
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
 
-Focus:
-- The bigger picture
-- What this might be showing
-- What is opening through this
+- Integration:
+${context?.consciousness?.integration || 0.5}
 
-Style:
-- spacious, calm, reflective
-- slightly abstract but grounded
+Reflection Echoes:
+${safeEchoes}
 
-Structure:
-- One or two sentences
-- Expand the view
+Write:
+1–2 grounded reflective paragraphs.
 
-Rules:
-- Do NOT directly name the pattern
-- Refer to it indirectly
-- Do not become vague
-- No advice
-- No fixing
-`
-}
+The reflection should:
+- feel calming
+- feel clarifying
+- feel embodied
+- feel emotionally intelligent
 
-Write 1–2 short sentences.
+Do not:
+- sound mystical
+- over explain chakras
+- diagnose energy
+- predict outcomes
+- sound inflated
+
+The user should feel:
+"I can feel what is happening inside me more clearly."
 `;
 
-    // ---------------------------
-    // DISTORTION
-    // ---------------------------
-    case "distortion":
-      return `
+// --------------------------------------------------
+// 🪞 DISTORTION
+// --------------------------------------------------
+
+case "distortion":
+
+  return `
 ${baseTone}
 
-${patternContext}
+You are reflecting
+a protective distortion pattern.
 
-Context:
-- Lens: ${data.lens}
-- Chakra: ${data.chakra || "heart"}
-- Expression: ${data.message || "holding something back"}
+Not judging it.
 
-Write ONE short sentence.
+Every distortion
+once protected something.
 
-Rules:
-- Start with "I"
-- Very simple
-- Behaviour only
-- Direct and clear
-- No explanation
+The user is sovereign.
+
+Current Patterns:
+${context?.current?.patterns?.join(", ") || "none"}
+
+Current Behaviours:
+${context?.current?.behaviours?.join(", ") || "none"}
+
+Current Emotions:
+${context?.current?.emotions?.join(", ") || "none"}
+
+Baseline Themes:
+${context?.baseline?.corePatterns?.join(", ") || "none"}
+
+Childhood Themes:
+${context?.baseline?.attachmentThemes?.join(", ") || "none"}
+
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
+
+Reflection Echoes:
+${safeEchoes}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Responsibility:
+${context?.consciousness?.responsibility || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+Write:
+1 short reflection.
+
+The reflection should:
+- feel compassionate
+- feel honest
+- feel emotionally precise
+- reduce shame
+- increase awareness
+
+Do not:
+- blame
+- diagnose
+- moralize
+- pathologize
+- sound clinical
+
+The user should feel:
+"this pattern makes sense."
+`;
+
+// --------------------------------------------------
+// 🃏 TAROT
+// --------------------------------------------------
+
+case "tarot":
+
+  return `
+${baseTone}
+
+You are writing
+a grounded tarot reflection.
+
+The tarot is symbolic.
+Not predictive.
+
+The cards reflect:
+- emotional cycles
+- unconscious patterns
+- relational mirrors
+- inner movement
+
+The user is sovereign.
+
+Cards:
+${data?.cards?.join(", ") || "none"}
+
+Current Emotional Theme:
+${context?.story?.emotionalTheme || ""}
+
+Current Patterns:
+${context?.current?.patterns?.join(", ") || "none"}
+
+Current Behaviours:
+${context?.current?.behaviours?.join(", ") || "none"}
+
+Current Emotions:
+${context?.current?.emotions?.join(", ") || "none"}
+
+Consciousness Movement:
+- Awareness:
+${context?.consciousness?.awareness || 0.5}
+
+- Embodiment:
+${context?.consciousness?.embodiment || 0.5}
+
+- Integration:
+${context?.consciousness?.integration || 0.5}
+
+Reflection Echoes:
+${safeEchoes}
+
+The user may currently
+be processing through:
+- physical experience
+- emotional experience
+- energetic/symbolic experience
+
+Meet them where they are.
+
+Write:
+1–2 reflective paragraphs.
+
+The reading should:
+- feel emotionally intelligent
+- grounded
+- symbolic but human
+- quietly insightful
+
+Do not:
+- predict
+- sound mystical
+- sound dramatic
+- sound like social media tarot
+- imply fate
+
+The user should feel:
+"this mirrors something true inside me."
+`;
+
+default:
+
+  return `
+${baseTone}
+
+Write a grounded,
+emotionally intelligent
+reflection.
+
+Keep it:
+- simple
+- human
+- emotionally aware
+- calm
 `;
   }
 }
