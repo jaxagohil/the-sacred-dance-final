@@ -29,8 +29,16 @@ import {
   supabase,
 } from "../../services/supabase";
 
+import {
+  Colors,
+} from "../../constants/theme";
+
+import LivingField from "../../components/connections/LivingField";
+
 import CompassionNode from "../../components/connections/CompassionNode";
+
 import LoveNode from "../../components/connections/LoveNode";
+
 import UnityConsciousnessNode from "../../components/connections/UnityConsciousnessNode";
 
 import {
@@ -47,6 +55,14 @@ import {
 import {
   deriveFieldEnergy,
 } from "../../services/connections/fieldEnergy";
+
+import {
+  buildConnectionsContext,
+} from "../../lib/context/buildConnectionsContext";
+
+import {
+  generateTransmission,
+} from "../../lib/connections/generateTransmission";
 
 const { width } =
   Dimensions.get("window");
@@ -76,20 +92,42 @@ export default function CircleSpace() {
       ? type
       : "unity";
 
+  //
+  // 🌍 FIELD
+  //
+
   const [humans, setHumans] =
     useState<any[]>([]);
 
   const [messages, setMessages] =
     useState<any[]>([]);
 
+  //
+  // ✍️ INPUT
+  //
+
   const [message, setMessage] =
     useState("");
+
+  //
+  // ✨ UI
+  //
 
   const [loading, setLoading] =
     useState(true);
 
   const [sending, setSending] =
     useState(false);
+
+  //
+  // ✨ TRANSMISSIONS
+  //
+
+  const [transmission, setTransmission] =
+    useState("");
+
+  const [whisperMessage, setWhisperMessage] =
+    useState("");
 
   //
   // 🌊 FIELD ENERGY
@@ -101,14 +139,11 @@ export default function CircleSpace() {
       humans
     );
 
-  const whisper =
-    fieldEnergy.whisper;
-
   const fieldColor =
     fieldEnergy.color;
 
   //
-  // ✨ TITLE
+  // ✨ TITLES
   //
 
   const title =
@@ -119,10 +154,6 @@ export default function CircleSpace() {
       ? "C O M P A S S I O N"
 
       : "U N I T Y\nC O N S C I O U S N E S S";
-
-  //
-  // ✨ PROMPT
-  //
 
   const prompt =
     safeType === "love"
@@ -142,11 +173,6 @@ export default function CircleSpace() {
   async function refreshField() {
 
     try {
-
-      console.log(
-        "🌌 REFRESH FIELD:",
-        safeType
-      );
 
       const [
         presence,
@@ -172,24 +198,39 @@ export default function CircleSpace() {
         }),
       ]);
 
-      console.log(
-        "🌍 ACTIVE HUMANS:",
-        presence?.map(
-          (h) => h.name
-        )
-      );
-
-      console.log(
-        "💬 FIELD MESSAGES:",
-        fieldMessages?.length || 0
-      );
-
       setHumans(
         presence || []
       );
 
       setMessages(
         fieldMessages || []
+      );
+
+      //
+      // ✨ CONTEXT
+      //
+
+      const context =
+        await buildConnectionsContext({
+
+          spaceType:
+            "circle",
+
+          fieldSlug:
+            safeType,
+        });
+
+      const transmissionData =
+        generateTransmission({
+          context,
+        });
+
+      setTransmission(
+        transmissionData.transmission
+      );
+
+      setWhisperMessage(
+        transmissionData.whisper
       );
 
     } catch (error) {
@@ -212,11 +253,6 @@ export default function CircleSpace() {
     async function loadField() {
 
       try {
-
-        console.log(
-          "🌌 LOAD FIELD:",
-          safeType
-        );
 
         //
         // 🌌 ENTER FIELD
@@ -259,16 +295,8 @@ export default function CircleSpace() {
           }),
         ]);
 
-        if (!mounted) {
+        if (!mounted)
           return;
-        }
-
-        console.log(
-          "🌍 ACTIVE HUMANS:",
-          presence?.map(
-            (h) => h.name
-          )
-        );
 
         setHumans(
           presence || []
@@ -276,6 +304,33 @@ export default function CircleSpace() {
 
         setMessages(
           fieldMessages || []
+        );
+
+        //
+        // ✨ CONTEXT
+        //
+
+        const context =
+          await buildConnectionsContext({
+
+            spaceType:
+              "circle",
+
+            fieldSlug:
+              safeType,
+          });
+
+        const transmissionData =
+          generateTransmission({
+            context,
+          });
+
+        setTransmission(
+          transmissionData.transmission
+        );
+
+        setWhisperMessage(
+          transmissionData.whisper
         );
 
       } catch (error) {
@@ -304,23 +359,15 @@ export default function CircleSpace() {
   }, [safeType]);
 
   //
-  // ❤️ PRESENCE HEARTBEAT
+  // ❤️ HEARTBEAT
   //
 
   useEffect(() => {
-
-    console.log(
-      "❤️ START HEARTBEAT"
-    );
 
     const cleanup =
       startPresenceHeartbeat();
 
     return () => {
-
-      console.log(
-        "🧹 STOP HEARTBEAT"
-      );
 
       cleanup();
     };
@@ -328,15 +375,10 @@ export default function CircleSpace() {
   }, []);
 
   //
-  // 🌊 REALTIME FIELD
+  // 🌊 REALTIME
   //
 
   useEffect(() => {
-
-    console.log(
-      "🌊 START REALTIME:",
-      safeType
-    );
 
     const channel =
       supabase.channel(
@@ -362,23 +404,7 @@ export default function CircleSpace() {
 
       async () => {
 
-        console.log(
-          "💬 REALTIME MESSAGE"
-        );
-
-        const updated =
-          await getFieldMessages({
-
-            sourceType:
-              "circle",
-
-            fieldSlug:
-              safeType,
-          });
-
-        setMessages(
-          updated || []
-        );
+        await refreshField();
       }
     );
 
@@ -401,56 +427,13 @@ export default function CircleSpace() {
 
       async () => {
 
-        console.log(
-          "👥 REALTIME PRESENCE"
-        );
-
-        const updated =
-          await getFieldPresence({
-
-            presenceType:
-              "circle",
-
-            fieldSlug:
-              safeType,
-          });
-
-        console.log(
-          "🌍 ACTIVE HUMANS:",
-          updated?.map(
-            (h) => h.name
-          )
-        );
-
-        setHumans(
-          updated || []
-        );
+        await refreshField();
       }
     );
 
-    //
-    // ▶️ SUBSCRIBE
-    //
-
-    channel.subscribe(
-      (status) => {
-
-        console.log(
-          "🌊 CHANNEL STATUS:",
-          status
-        );
-      }
-    );
-
-    //
-    // 🧹 CLEANUP
-    //
+    channel.subscribe();
 
     return () => {
-
-      console.log(
-        "🧹 REMOVE CHANNEL"
-      );
 
       supabase.removeChannel(
         channel
@@ -460,7 +443,7 @@ export default function CircleSpace() {
   }, [safeType]);
 
   //
-  // ✨ SEND MESSAGE
+  // ✨ SEND
   //
 
   async function handleSend() {
@@ -473,25 +456,9 @@ export default function CircleSpace() {
       return;
     }
 
-    if (
-      message.trim().length > 220
-    ) {
-
-      return;
-    }
-
     try {
 
       setSending(true);
-
-      console.log(
-        "💬 SEND MESSAGE:",
-        message
-      );
-
-      //
-      // 🌊 CREATE
-      //
 
       const result =
         await createFieldMessage({
@@ -506,33 +473,13 @@ export default function CircleSpace() {
             message,
         });
 
-      //
-      // ✨ LOCAL REFRESH
-      //
-
       if (
         result.success
       ) {
 
-        const updated =
-          await getFieldMessages({
-
-            sourceType:
-              "circle",
-
-            fieldSlug:
-              safeType,
-          });
-
-        setMessages(
-          updated || []
-        );
+        await refreshField();
 
         setMessage("");
-
-        //
-        // ⌨️ DISMISS
-        //
 
         Keyboard.dismiss();
       }
@@ -567,6 +514,10 @@ export default function CircleSpace() {
       >
 
         <View style={styles.container}>
+
+          {/* 🌌 LIVING FIELD */}
+
+          <LivingField />
 
           {/* 🌌 NODE */}
 
@@ -627,6 +578,10 @@ export default function CircleSpace() {
               {prompt}
             </Text>
 
+            <Text style={styles.transmission}>
+              {transmission}
+            </Text>
+
             {/* ✍️ INPUT */}
 
             <View style={styles.inputContainer}>
@@ -643,15 +598,11 @@ export default function CircleSpace() {
 
                 maxLength={220}
 
-                blurOnSubmit
-
-                onSubmitEditing={
-                  handleSend
-                }
-
                 placeholder="Share into the field..."
 
-                placeholderTextColor="rgba(255,255,255,0.16)"
+                placeholderTextColor={
+                  Colors.subtleText
+                }
 
                 style={[
                   styles.input,
@@ -695,7 +646,7 @@ export default function CircleSpace() {
                   <Text
                     style={{
                       color:
-                        "rgba(255,255,255,0.28)",
+                        Colors.mutedText,
 
                       fontSize: 12,
 
@@ -749,7 +700,7 @@ export default function CircleSpace() {
 
           </View>
 
-          {/* 🌍 ACTIVE HUMANS */}
+          {/* 🌍 HUMANS */}
 
           <View style={styles.bottom}>
 
@@ -771,49 +722,40 @@ export default function CircleSpace() {
                 )
 
                 .map(
-                  (human, index) => {
+                  (human, index) => (
 
-                    const avatar =
-                      human?.avatar_url;
+                    <View
+                      key={
+                        human.id ||
+                        index
+                      }
 
-                    return (
+                      style={[
+                        styles.avatar,
+                        {
+                          borderColor:
+                            `${fieldColor}66`,
+                        },
+                      ]}
+                    >
 
-                      <View
-                        key={
-                          human.id ||
-                          index
-                        }
+                      <Image
 
-                        style={[
-                          styles.avatar,
-                          {
-                            borderColor:
-                              `${fieldColor}66`,
-                          },
-                        ]}
-                      >
+                        source={{
+                          uri:
+                            human.avatar_url,
+                        }}
 
-                        {!!avatar && (
+                        style={{
+                          width: "100%",
+                          height: "100%",
 
-                          <Image
+                          borderRadius: 999,
+                        }}
+                      />
 
-                            source={{
-                              uri: avatar,
-                            }}
-
-                            style={{
-                              width: "100%",
-                              height: "100%",
-
-                              borderRadius: 999,
-                            }}
-                          />
-
-                        )}
-
-                      </View>
-                    );
-                  }
+                    </View>
+                  )
                 )
             )}
 
@@ -832,7 +774,7 @@ export default function CircleSpace() {
                 },
               ]}
             >
-              {whisper}
+              {whisperMessage}
             </Text>
 
           </View>
@@ -868,7 +810,9 @@ const styles = StyleSheet.create({
     flex: 1,
 
     backgroundColor:
-      "#020304",
+      Colors.background,
+
+    overflow: "hidden",
   },
 
   nodeLayer: {
@@ -897,16 +841,13 @@ const styles = StyleSheet.create({
     marginTop: 35,
 
     color:
-      "rgba(255,255,255,1)",
+      Colors.white,
 
     fontSize: 10,
 
     textAlign: "center",
 
     letterSpacing: 2,
-
-    marginLeft: 25,
-    marginRight: 25,
 
     fontWeight: "300",
   },
@@ -915,7 +856,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
 
     color:
-      "rgba(255,255,255,0.46)",
+      Colors.mutedText,
 
     fontSize: 13,
 
@@ -926,6 +867,25 @@ const styles = StyleSheet.create({
     fontWeight: "300",
 
     paddingHorizontal: 54,
+  },
+
+  transmission: {
+    marginTop: 12,
+
+    color:
+      Colors.softText,
+
+    fontSize: 12,
+
+    lineHeight: 22,
+
+    textAlign: "center",
+
+    fontWeight: "300",
+
+    paddingHorizontal: 48,
+
+    opacity: 0.82,
   },
 
   inputContainer: {
@@ -945,14 +905,15 @@ const styles = StyleSheet.create({
 
     paddingVertical: 8,
 
-    color: "white",
+    color:
+      Colors.white,
 
     fontSize: 13,
 
     lineHeight: 22,
 
     backgroundColor:
-      "rgba(255,255,255,0.015)",
+      "rgba(255,255,255,0.01)",
 
     borderWidth: 0.2,
 
@@ -972,6 +933,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
 
     zIndex: 2,
+
+    pointerEvents:
+      "box-none",
   },
 
   reflectionCard: {
@@ -987,12 +951,13 @@ const styles = StyleSheet.create({
       "rgba(255,255,255,0.008)",
 
     borderWidth: 0.6,
+
     opacity: 0.5,
   },
 
   reflectionText: {
     color:
-      "rgba(255,255,255,0.68)",
+      Colors.softText,
 
     fontSize: 12,
 
@@ -1032,7 +997,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
 
     backgroundColor:
-      "rgba(255,255,255,0.018)",
+      "rgba(255,255,255,0.015)",
   },
 
   whisperContainer: {
@@ -1075,9 +1040,9 @@ const styles = StyleSheet.create({
 
   portalText: {
     color:
-      "rgba(255,255,255,0.18)",
+      Colors.portal,
 
-    fontSize: 30,
+    fontSize: 28,
 
     fontWeight: "200",
   },

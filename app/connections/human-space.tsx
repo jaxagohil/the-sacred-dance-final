@@ -29,6 +29,12 @@ import {
 } from "../../services/supabase";
 
 import {
+  Colors,
+} from "../../constants/theme";
+
+import LivingField from "../../components/connections/LivingField";
+
+import {
   getUserId,
 } from "../../lib/user";
 
@@ -36,6 +42,14 @@ import {
   createFieldMessage,
   getFieldMessages,
 } from "../../services/connections/messages";
+
+import {
+  buildConnectionsContext,
+} from "../../lib/context/buildConnectionsContext";
+
+import {
+  generateTransmission,
+} from "../../lib/connections/generateTransmission";
 
 export default function HumanSpace() {
 
@@ -72,6 +86,16 @@ export default function HumanSpace() {
     useState<any[]>([]);
 
   const [message, setMessage] =
+    useState("");
+
+  //
+  // ✨ TRANSMISSIONS
+  //
+
+  const [transmission, setTransmission] =
+    useState("");
+
+  const [whisperMessage, setWhisperMessage] =
     useState("");
 
   const inputRef =
@@ -194,6 +218,33 @@ export default function HumanSpace() {
             : []
         );
 
+        //
+        // ✨ CONTEXT
+        //
+
+        const context =
+          await buildConnectionsContext({
+
+            spaceType:
+              "human",
+
+            connectionId:
+              pairId,
+          });
+
+        const transmissionData =
+          generateTransmission({
+            context,
+          });
+
+        setTransmission(
+          transmissionData.transmission
+        );
+
+        setWhisperMessage(
+          transmissionData.whisper
+        );
+
       } catch (error) {
 
         console.log(
@@ -286,6 +337,32 @@ export default function HumanSpace() {
             ? refreshed
             : []
         );
+
+        //
+        // ✨ REFRESH CONTEXT
+        //
+
+        const context =
+          await buildConnectionsContext({
+
+            spaceType:
+              "human",
+
+            connectionId,
+          });
+
+        const transmissionData =
+          generateTransmission({
+            context,
+          });
+
+        setTransmission(
+          transmissionData.transmission
+        );
+
+        setWhisperMessage(
+          transmissionData.whisper
+        );
       }
 
     } catch (error) {
@@ -306,6 +383,10 @@ export default function HumanSpace() {
     <View
       style={styles.container}
     >
+
+      {/* 🌌 LIVING FIELD */}
+
+      <LivingField />
 
       {/* 👤 ↔️ 🌍 */}
 
@@ -382,15 +463,17 @@ export default function HumanSpace() {
           styles.fieldMessage
         }
       >
+        {transmission}
+      </Text>
 
-        {
-          messages.length > 0
+      {/* ✨ WHISPER */}
 
-            ? "The field is holding your reflections softly."
-
-            : "The field is resting softly today."
+      <Text
+        style={
+          styles.whisper
         }
-
+      >
+        {whisperMessage}
       </Text>
 
       {/* ✨ INPUT */}
@@ -411,7 +494,9 @@ export default function HumanSpace() {
 
           placeholder="Share into the space..."
 
-          placeholderTextColor="rgba(255,255,255,0.18)"
+          placeholderTextColor={
+            Colors.subtleText
+          }
 
           style={
             styles.input
@@ -531,7 +616,9 @@ const styles =
       flex: 1,
 
       backgroundColor:
-        "#020304",
+        Colors.background,
+
+      overflow: "hidden",
     },
 
     top: {
@@ -555,6 +642,11 @@ const styles =
       overflow: "hidden",
 
       backgroundColor:
+        "rgba(255,255,255,0.015)",
+
+      borderWidth: 0.5,
+
+      borderColor:
         "rgba(255,255,255,0.04)",
     },
 
@@ -570,7 +662,7 @@ const styles =
       marginHorizontal: 20,
 
       backgroundColor:
-        "rgba(255,255,255,0.08)",
+        "rgba(216,166,255,0.12)",
     },
 
     fieldMessage: {
@@ -579,11 +671,32 @@ const styles =
       textAlign: "center",
 
       color:
-        "rgba(255,255,255,0.5)",
+        Colors.softText,
 
       fontSize: 14,
 
+      lineHeight: 24,
+
       fontWeight: "300",
+
+      paddingHorizontal: 42,
+    },
+
+    whisper: {
+      marginTop: 10,
+
+      textAlign: "center",
+
+      color:
+        Colors.mutedText,
+
+      fontSize: 11,
+
+      lineHeight: 22,
+
+      fontWeight: "300",
+
+      paddingHorizontal: 52,
     },
 
     reflectionContainer: {
@@ -601,14 +714,15 @@ const styles =
 
       paddingVertical: 16,
 
-      color: "white",
+      color:
+        Colors.white,
 
       fontSize: 13,
 
       lineHeight: 22,
 
       backgroundColor:
-        "rgba(255,255,255,0.015)",
+        "rgba(255,255,255,0.01)",
 
       borderWidth: 0.5,
 
@@ -637,7 +751,7 @@ const styles =
       marginBottom: 8,
 
       backgroundColor:
-        "rgba(255,255,255,0.01)",
+        "rgba(255,255,255,0.008)",
 
       borderWidth: 0.5,
 
@@ -647,7 +761,7 @@ const styles =
 
     messageText: {
       color:
-        "rgba(255,255,255,0.7)",
+        Colors.softText,
 
       fontSize: 12,
 
@@ -670,10 +784,12 @@ const styles =
     },
 
     portalText: {
-      fontSize: 30,
+      fontSize: 28,
 
       color:
-        "rgba(255,255,255,0.18)",
+        Colors.portal,
+
+      fontWeight: "200",
     },
 
   });

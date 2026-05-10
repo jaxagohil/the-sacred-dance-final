@@ -1,149 +1,352 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+
+import {
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 type Props = {
+
+  number?: number;
+
   title: string;
+
   message: string;
-  theme?: "blue" | "gold" | "copper" | "pink" | "black";
+
+  colour?: string;
 };
 
-const themeStyles = {
-  blue: {
-    glow: "rgba(120,180,255,0.25)",
-    tint: "rgba(120,180,255,0.18)",
-  },
-  gold: {
-    glow: "rgba(255,210,120,0.25)",
-    tint: "rgba(255,210,120,0.18)",
-  },
-  copper: {
-    glow: "rgba(249,115,22,0.25)",
-    tint: "rgba(249,115,22,0.18)",
-  },
-  pink: {
-    glow: "rgba(255,120,180,0.25)",
-    tint: "rgba(255,120,180,0.18)",
-  },
-  black: {
-    glow: "rgba(255,215,0,0.12)",
-    tint: "rgba(255,255,255,0.06)",
-  },
+//
+// 🌈 COLOUR MAP
+// supports DB values like:
+// gold / pink / blue / copper
+//
+
+const colourMap: Record<string, string> = {
+
+  gold: "#D4AF37",
+
+  pink: "#EC4899",
+
+  blue: "#60A5FA",
+
+  copper: "#B87333",
+
+  black: "#999999",
 };
 
 export default function OracleCard({
+
+  number,
+
   title,
+
   message,
-  theme = "blue",
+
+  colour = "gold",
+
 }: Props) {
-  const t = themeStyles[theme];
+
+  //
+  // ✨ REAL COLOUR
+  //
+
+  const actualColour =
+    colourMap[colour.toLowerCase()]
+    || colour;
 
   return (
+
     <View style={styles.wrapper}>
 
-      {/* 🌫 AURA */}
+      {/* 🌫 FIELD */}
+
       <View
         style={[
           styles.aura,
-          { backgroundColor: t.glow },
+
+          {
+            backgroundColor:
+              actualColour,
+          },
         ]}
       />
 
       {/* 🃏 CARD */}
-      <View style={[styles.card, { shadowColor: t.glow }]}>
 
-        {/* ✨ INNER LIGHT */}
-        <View style={[styles.innerGlow, { backgroundColor: t.tint }]} />
+      <View
+        style={[
+          styles.card,
 
-        {/* CONTENT */}
+          {
+            borderColor:
+              `${actualColour}55`,
+          },
+        ]}
+      >
+
+        {/* ✨ TOP SIGNATURE */}
+
+        <View
+          style={[
+            styles.topLine,
+
+            {
+              backgroundColor:
+                actualColour,
+            },
+          ]}
+        />
+
+        {/* 🌌 CONTENT */}
+
         <View style={styles.content}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+
+          {/* 🔢 NUMBER */}
+
+          {number !== undefined && (
+
+            <Text style={styles.number}>
+              {number}
+            </Text>
+          )}
+
+          {/* ✨ TITLE */}
+
+          <Text
+            style={[
+              styles.title,
+
+              {
+                color:
+                  actualColour,
+              },
+            ]}
+          >
+            {title}
+          </Text>
+
+          {/* ✧ SYMBOL */}
+
+          <Text
+            style={[
+              styles.symbol,
+
+              {
+                color:
+                  actualColour,
+              },
+            ]}
+          >
+            ✦
+          </Text>
+
+          {/* 🌙 MESSAGE */}
+
+          <Text style={styles.message}>
+            {message}
+          </Text>
+
         </View>
 
-        {/* SYMBOL */}
-        <View style={styles.symbolWrap}>
-          <Text style={styles.symbol}>✧</Text>
-        </View>
+        {/* 🌈 SIGNATURE */}
+
+        <View
+          style={[
+            styles.signature,
+
+            {
+              backgroundColor:
+                actualColour,
+            },
+          ]}
+        />
 
       </View>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
+
+  //
+  // 🌌 WRAPPER
+  //
+
   wrapper: {
     alignItems: "center",
     justifyContent: "center",
   },
 
+  //
+  // 🌫 FIELD
+  //
+
   aura: {
     position: "absolute",
-    width: 260,
-    height: 340,
-    borderRadius: 30,
-    opacity: 0.25,
-    transform: [{ scale: 1.2 }],
+
+    width: 250,
+    height: 380,
+
+    borderRadius: 46,
+
+    opacity: 0.08,
+
+    transform: [
+      {
+        scale: 1.04,
+      },
+    ],
   },
+
+  //
+  // 🃏 CARD
+  //
 
   card: {
-    width: 220,
-    height: 320,
-    borderRadius: 30,
 
-    backgroundColor: "rgba(10,10,15,0.7)",
+    width: 230,
+    height: 370,
 
-    paddingHorizontal: 24,
-    paddingVertical: 28,
+    borderRadius: 36,
 
-    justifyContent: "space-between",
+    backgroundColor:
+      "rgba(4,4,6,0.96)",
+
+    borderWidth: 1.2,
+
+    paddingHorizontal: 30,
+    paddingTop: 30,
+    paddingBottom: 26,
+
+    justifyContent:
+      "space-between",
+
     overflow: "hidden",
 
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 0 },
+    shadowColor:
+      "#000",
 
-    elevation: 4,
+    shadowOpacity: 0.18,
+
+    shadowRadius: 24,
+
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+
+    elevation: 5,
   },
 
-  innerGlow: {
-    position: "absolute",
-    top: 60,
-    left: 0,
-    right: 0,
-    height: 120,
-    borderRadius: 100,
-    opacity: 0.12,
+  //
+  // ✨ TOP LINE
+  //
+
+  topLine: {
+    alignSelf: "center",
+
+    width: 36,
+    height: 1.5,
+
+    borderRadius: 999,
+
+    opacity: 0.9,
+
+    marginBottom: 24,
   },
+
+  //
+  // 🌌 CONTENT
+  //
 
   content: {
     alignItems: "center",
-    marginTop: 20,
+
+    flex: 1,
+
+    justifyContent: "center",
   },
+
+  //
+  // 🔢 NUMBER
+  //
+
+  number: {
+    fontSize: 11,
+
+    color:
+      "rgba(255,255,255,0.24)",
+
+    letterSpacing: 4,
+
+    marginBottom: 15,
+  },
+
+  //
+  // ✨ TITLE
+  //
 
   title: {
-    fontSize: 15,
-    color: "rgba(255,255,255,0.9)",
-    marginBottom: 12,
-    letterSpacing: 0.5,
+    fontSize: 16,
+
+    textTransform:
+      "uppercase",
+
+    letterSpacing: 4,
+
     textAlign: "center",
+
+    marginBottom: 40,
+
+    opacity: 0.92,
   },
 
-  message: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.65)",
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: 8,
-  },
-
-  symbolWrap: {
-    alignItems: "center",
-    marginBottom: 6,
-  },
+  //
+  // ✧ SYMBOL
+  //
 
   symbol: {
-    color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    letterSpacing: 3,
+    fontSize: 12,
+
+    opacity: 0.85,
+
+    marginBottom: 20,
+  },
+
+  //
+  // 🌙 MESSAGE
+  //
+
+  message: {
+    fontSize: 14,
+
+    color:
+      "rgba(255,255,255,0.72)",
+
+    textAlign: "center",
+
+    lineHeight: 26,
+
+    maxWidth: 160,
+        marginBottom: 100,
+  },
+
+  //
+  // 🌈 SIGNATURE
+  //
+
+  signature: {
+    alignSelf: "center",
+
+    width: 60,
+    height: 1.5,
+
+    borderRadius: 999,
+
+    opacity: 0.9,
   },
 });

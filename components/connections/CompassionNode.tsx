@@ -1,32 +1,30 @@
-// components/connections/CompassionNode.tsx
-
 import React, {
-    useEffect,
+  useEffect,
 } from "react";
 
 import {
-    Pressable,
-    View,
+  Pressable,
+  View,
 } from "react-native";
 
 import {
-    Canvas,
-    Circle,
-    Group,
-    Path,
+  Canvas,
+  Circle,
+  Group,
+  Path,
 } from "@shopify/react-native-skia";
 
 import {
-    router,
+  router,
 } from "expo-router";
 
 import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 
 type Props = {
@@ -52,12 +50,16 @@ export default function CompassionNode({
   y,
 }: Props) {
 
-  // 🌊 breathing
+  //
+  // 🌊 BREATHING
+  //
 
   const scale =
     useSharedValue(1);
 
-  // ✨ movement
+  //
+  // ✨ MOVEMENT
+  //
 
   const driftY =
     useSharedValue(0);
@@ -65,12 +67,23 @@ export default function CompassionNode({
   const driftX =
     useSharedValue(0);
 
-  // ✨ glow
+  //
+  // ✨ SACRED ROTATION
+  //
+
+  const rotate =
+    useSharedValue(0);
+
+  //
+  // ✨ GLOW
+  //
 
   const opacity =
     useSharedValue(0.92);
 
-  // ✨ activation
+  //
+  // ✨ ACTIVATION
+  //
 
   const pressScale =
     useSharedValue(1);
@@ -80,7 +93,9 @@ export default function CompassionNode({
 
   useEffect(() => {
 
-    // 🌊 soft breath
+    //
+    // 🌊 SOFT BREATH
+    //
 
     scale.value =
       withRepeat(
@@ -109,7 +124,9 @@ export default function CompassionNode({
         true
       );
 
-    // ✨ vertical drift
+    //
+    // ✨ VERTICAL DRIFT
+    //
 
     driftY.value =
       withRepeat(
@@ -128,7 +145,9 @@ export default function CompassionNode({
         true
       );
 
-    // ✨ horizontal drift
+    //
+    // ✨ HORIZONTAL DRIFT
+    //
 
     driftX.value =
       withRepeat(
@@ -151,18 +170,41 @@ export default function CompassionNode({
         true
       );
 
-    // ✨ pulse
+    //
+    // ✨ SACRED ROTATION
+    //
+
+    rotate.value =
+      withRepeat(
+        withSequence(
+
+          withTiming(0.4, {
+            duration: 18000,
+          }),
+
+          withTiming(-0.4, {
+            duration: 18000,
+          }),
+        ),
+
+        -1,
+        true
+      );
+
+    //
+    // ✨ PULSE
+    //
 
     opacity.value =
       withRepeat(
         withSequence(
 
           withTiming(1, {
-            duration: 5000,
+            duration: 6000,
           }),
 
-          withTiming(0.82, {
-            duration: 5000,
+          withTiming(0.86, {
+            duration: 6000,
           }),
         ),
 
@@ -172,7 +214,9 @@ export default function CompassionNode({
 
   }, []);
 
-  // ✨ stable touch layer
+  //
+  // ✨ FIELD MOVEMENT
+  //
 
   const animatedStyle =
     useAnimatedStyle(() => {
@@ -195,6 +239,11 @@ export default function CompassionNode({
           },
 
           {
+            rotate:
+              `${rotate.value}deg`,
+          },
+
+          {
             scale:
               scale.value *
               pressScale.value,
@@ -203,7 +252,9 @@ export default function CompassionNode({
       };
     });
 
-  // ✨ geometry expansion
+  //
+  // ✨ GEOMETRY EXPANSION
+  //
 
   const canvasStyle =
     useAnimatedStyle(() => {
@@ -221,11 +272,14 @@ export default function CompassionNode({
     });
 
   return (
+
     <AnimatedPressable
 
       onPress={() => {
 
-        // ✨ awaken node
+        //
+        // ✨ AWAKEN NODE
+        //
 
         pressScale.value =
           withTiming(1.18, {
@@ -252,7 +306,9 @@ export default function CompassionNode({
             duration: 500,
           });
 
-        // ✨ enter resonance
+        //
+        // ✨ ENTER RESONANCE
+        //
 
         setTimeout(() => {
 
@@ -268,7 +324,9 @@ export default function CompassionNode({
 
         }, 820);
 
-        // ✨ restore field
+        //
+        // ✨ RESTORE FIELD
+        //
 
         setTimeout(() => {
 
@@ -409,28 +467,32 @@ export default function CompassionNode({
             cx={56}
             cy={64}
             r={1.3}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={126}
             cy={58}
             r={1.3}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={132}
             cy={120}
             r={1.3}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={60}
             cy={130}
             r={1.3}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           {/* ✨ CORE */}
@@ -439,6 +501,7 @@ export default function CompassionNode({
             cx={CENTER}
             cy={CENTER}
             r={4.5}
+
             color="white"
           />
 

@@ -30,6 +30,12 @@ import {
 } from "../../services/supabase";
 
 import {
+    Colors,
+} from "../../constants/theme";
+
+import LivingField from "../../components/connections/LivingField";
+
+import {
     getUserId,
 } from "../../lib/user";
 
@@ -37,6 +43,14 @@ import {
     createFieldMessage,
     getFieldMessages,
 } from "../../services/connections/messages";
+
+import {
+    buildConnectionsContext,
+} from "../../lib/context/buildConnectionsContext";
+
+import {
+    generateTransmission,
+} from "../../lib/connections/generateTransmission";
 
 export default function YouSpace() {
 
@@ -61,6 +75,16 @@ export default function YouSpace() {
 
   const [recentHumans, setRecentHumans] =
     useState<any[]>([]);
+
+  //
+  // ✨ TRANSMISSIONS
+  //
+
+  const [transmission, setTransmission] =
+    useState("");
+
+  const [whisperMessage, setWhisperMessage] =
+    useState("");
 
   //
   // ⌨️ KEYBOARD
@@ -155,6 +179,30 @@ export default function YouSpace() {
           )
             ? loaded
             : []
+        );
+
+        //
+        // ✨ CONTEXT
+        //
+
+        const context =
+          await buildConnectionsContext({
+
+            spaceType:
+              "self",
+          });
+
+        const transmissionData =
+          generateTransmission({
+            context,
+          });
+
+        setTransmission(
+          transmissionData.transmission
+        );
+
+        setWhisperMessage(
+          transmissionData.whisper
         );
 
         //
@@ -284,6 +332,30 @@ export default function YouSpace() {
           profile.user_id
         );
 
+      //
+      // ✨ REFRESH CONTEXT
+      //
+
+      const context =
+        await buildConnectionsContext({
+
+          spaceType:
+            "self",
+        });
+
+      const transmissionData =
+        generateTransmission({
+          context,
+        });
+
+      setTransmission(
+        transmissionData.transmission
+      );
+
+      setWhisperMessage(
+        transmissionData.whisper
+      );
+
     } catch (error) {
 
       console.log(
@@ -369,6 +441,30 @@ export default function YouSpace() {
             ? refreshed
             : []
         );
+
+        //
+        // ✨ REFRESH CONTEXT
+        //
+
+        const context =
+          await buildConnectionsContext({
+
+            spaceType:
+              "self",
+          });
+
+        const transmissionData =
+          generateTransmission({
+            context,
+          });
+
+        setTransmission(
+          transmissionData.transmission
+        );
+
+        setWhisperMessage(
+          transmissionData.whisper
+        );
       }
 
     } catch (error) {
@@ -405,6 +501,10 @@ export default function YouSpace() {
           Keyboard.dismiss()
         }
       >
+
+        {/* 🌌 LIVING FIELD */}
+
+        <LivingField />
 
         {/* 🧿 YOU */}
 
@@ -468,15 +568,15 @@ export default function YouSpace() {
               styles.transmission
             }
           >
+            {transmission}
+          </Text>
 
-            {
-              stillness
-
-                ? "The field is holding you quietly today."
-
-                : "You are softly available to resonance."
+          <Text
+            style={
+              styles.whisper
             }
-
+          >
+            {whisperMessage}
           </Text>
 
         </View>
@@ -501,9 +601,9 @@ export default function YouSpace() {
 Breathe. Write softly...
 "
 
-            placeholderTextColor="
-rgba(255,255,255,0.16)
-"
+            placeholderTextColor={
+              Colors.subtleText
+            }
 
             style={styles.input}
 
@@ -725,7 +825,9 @@ const styles =
       flex: 1,
 
       backgroundColor:
-        "#020304",
+        Colors.background,
+
+      overflow: "hidden",
     },
 
     /* 🧿 YOU */
@@ -748,10 +850,10 @@ const styles =
       borderWidth: 1,
 
       borderColor:
-        "rgba(255,255,255,0.10)",
+        "rgba(255,255,255,0.08)",
 
       backgroundColor:
-        "rgba(255,255,255,0.03)",
+        "rgba(255,255,255,0.015)",
     },
 
     avatarImage: {
@@ -769,7 +871,7 @@ const styles =
 
     transmission: {
       color:
-        "rgba(255,255,255,0.72)",
+        Colors.softText,
 
       fontSize: 16,
 
@@ -778,6 +880,23 @@ const styles =
       textAlign: "center",
 
       fontWeight: "300",
+    },
+
+    whisper: {
+      marginTop: 10,
+
+      color:
+        Colors.mutedText,
+
+      fontSize: 11,
+
+      lineHeight: 22,
+
+      textAlign: "center",
+
+      fontWeight: "300",
+
+      opacity: 0.8,
     },
 
     /* ✍️ REFLECTION */
@@ -796,14 +915,15 @@ const styles =
       paddingHorizontal: 20,
       paddingVertical: 18,
 
-      color: "white",
+      color:
+        Colors.white,
 
       fontSize: 13,
 
       lineHeight: 24,
 
       backgroundColor:
-        "rgba(255,255,255,0.015)",
+        "rgba(255,255,255,0.01)",
 
       borderWidth: 1,
 
@@ -834,7 +954,7 @@ const styles =
       borderRadius: 18,
 
       backgroundColor:
-        "rgba(255,255,255,0.01)",
+        "rgba(255,255,255,0.008)",
 
       borderWidth: 0.5,
 
@@ -844,7 +964,7 @@ const styles =
 
     reflectionText: {
       color:
-        "rgba(255,255,255,0.68)",
+        Colors.softText,
 
       fontSize: 12,
 
@@ -874,10 +994,10 @@ const styles =
       borderWidth: 1,
 
       borderColor:
-        "rgba(255,255,255,0.08)",
+        "rgba(255,255,255,0.06)",
 
       backgroundColor:
-        "rgba(255,255,255,0.02)",
+        "rgba(255,255,255,0.012)",
     },
 
     /* 🌍 HUMANS */
@@ -912,10 +1032,10 @@ const styles =
       borderWidth: 1,
 
       borderColor:
-        "rgba(255,255,255,0.10)",
+        "rgba(255,255,255,0.08)",
 
       backgroundColor:
-        "rgba(255,255,255,0.02)",
+        "rgba(255,255,255,0.015)",
     },
 
     /* ◌ RETURN */
@@ -932,7 +1052,7 @@ const styles =
 
     portalText: {
       color:
-        "rgba(255,255,255,0.18)",
+        Colors.portal,
 
       fontSize: 30,
     },

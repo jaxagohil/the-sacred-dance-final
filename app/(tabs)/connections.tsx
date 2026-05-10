@@ -15,6 +15,10 @@ import {
   initUser,
 } from "../../lib/user";
 
+import {
+  Colors
+} from "../../constants/theme";
+
 export default function ConnectionsPortal() {
 
   // 🌊 pulses
@@ -46,7 +50,7 @@ export default function ConnectionsPortal() {
 
           Animated.timing(anim, {
             toValue: 1,
-            duration: 5000,
+            duration: 6200,
 
             easing: Easing.out(
               Easing.ease
@@ -156,7 +160,7 @@ const handleEnter = async () => {
 
                   outputRange: [
                     1,
-                    4.5,
+                    4.1,
                   ],
                 }),
             },
@@ -209,7 +213,7 @@ const handleEnter = async () => {
 
         {/* ✨ YNWA */}
         <Text style={styles.ynwa}>
-          YNWA
+          You'll Never Walk Alone
         </Text>
 
       </View>
@@ -223,7 +227,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: "black",
+    backgroundColor: Colors.background,
 
     justifyContent: "center",
     alignItems: "center",
@@ -240,7 +244,7 @@ const styles = StyleSheet.create({
     height: 180,
 
     borderRadius: 90,
-
+    opacity: 0.82,
     zIndex: 10,
   },
 
@@ -256,30 +260,31 @@ const styles = StyleSheet.create({
     borderWidth: 2,
 
     borderColor:
-      "rgba(255,255,255,0.45)",
+      Colors.fieldRing,
   },
 
   // ✦ diamond
   diamondWrap: {
-    marginTop: 26,
+    marginTop: 22,
   },
 
   diamond: {
     color:
-      "rgba(255,255,255,0.9)",
+      Colors.diamond,
 
-    fontSize: 24,
+fontSize: 22,
+opacity: 0.82
   },
 
   // ✨ ynwa
   ynwa: {
-    color:
-      "rgba(255,255,255,0.45)",
+    color:Colors.softText,
 
-    marginTop: 18,
+    marginTop: 50,
 
     letterSpacing: 4,
 
     fontSize: 11,
+    opacity: 0.5
   },
 });

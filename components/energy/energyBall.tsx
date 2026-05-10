@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { Dimensions } from "react-native";
 import {
+  BlurMask,
   Canvas,
   Circle,
+  Group,
   RadialGradient,
   vec,
-  Group,
-  BlurMask,
 } from "@shopify/react-native-skia";
+import React, { useEffect, useState } from "react";
+import { Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
 

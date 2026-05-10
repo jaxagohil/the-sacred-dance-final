@@ -1,26 +1,32 @@
 import { useRouter } from "expo-router";
 import "react-native-get-random-values";
 
+import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Pressable,
   Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useState, useEffect } from "react";
 
 import { processReflection } from "../db/flow";
-import { getDailyPrompt } from "../db/prompts";
 import { getOrCreateProfile } from "../db/getProfile";
+import { getDailyPrompt } from "../db/prompts";
 import { setLanguage } from "../lib/i18n/i18n";
-import { initUser, getUserId } from "../lib/user";
+import { getUserId, initUser } from "../lib/user";
 
 import * as ImagePicker from "expo-image-picker";
+
+import {
+  Colors,
+  Fonts,
+  Spacing
+} from "../constants/theme";
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -49,8 +55,12 @@ export default function LandingScreen() {
 
       if (p?.language) setLanguage(p.language);
 
-      const pr = await getDailyPrompt(userId);
-      setPrompt(pr || "Love .. Remembering itself");
+const pr =
+  await getDailyPrompt(
+    userId
+  );
+
+setPrompt(pr);
 
       setLoading(false);
     };
@@ -135,7 +145,7 @@ export default function LandingScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "black", justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, backgroundColor: Colors.background, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ color: "white" }}>Loading...</Text>
       </View>
     );
@@ -143,7 +153,7 @@ export default function LandingScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "black" }}
+      style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Pressable
@@ -160,36 +170,29 @@ export default function LandingScreen() {
             style={{ width: 100, height: 100, marginBottom: 20 }}
           />
 
-          <Text style={{ color: "#aaa", textAlign: "center" }}>
+          <Text
+  style={{
+
+    color:
+      Colors.softText,
+
+    textAlign:
+      "center",
+
+    fontFamily:
+      Fonts.light,
+
+    fontSize: 15,
+
+    lineHeight: 28,
+
+    paddingHorizontal:
+      Spacing.lg,
+  }}
+>
             {prompt}
           </Text>
         </View>
-
-        {/* INPUT */}
-        {showInput && (
-          <View
-            style={{
-              position: "absolute",
-              top: "60%",
-              left: 20,
-              right: 20,
-            }}
-          >
-            <TextInput
-              value={text}
-              onChangeText={handleTyping}
-              placeholder="write freely..."
-              placeholderTextColor="#555"
-              multiline
-              blurOnSubmit={false}
-              style={{
-                color: "white",
-                fontSize: 18,
-                lineHeight: 26,
-              }}
-            />
-          </View>
-        )}
 
         {/* EMOJIS */}
         {showEmojis && (
@@ -217,53 +220,184 @@ export default function LandingScreen() {
           </View>
         )}
 
-        {/* ACTIONS */}
-        {showActions && (
-          <View
-            style={{
-              position: "absolute",
-              bottom: 60,
-              alignSelf: "center",
-              flexDirection: "row",
-              gap: 30,
-              opacity: 0.85,
-            }}
-          >
-            {/* ✍️ OPEN INPUT */}
-            <TouchableOpacity onPress={() => setShowInput(true)}>
-              <Text style={{ color: "#aaa", fontSize: 20 }}>✍️</Text>
-            </TouchableOpacity>
+ {/* ✨ ENTRY */}
 
-            <TouchableOpacity onPress={handleImage}>
-              <Text style={{ color: "#aaa", fontSize: 20 }}>📷</Text>
-            </TouchableOpacity>
+{showActions && (
 
-            <TouchableOpacity>
-              <Text style={{ color: "#aaa", fontSize: 20 }}>🎤</Text>
-            </TouchableOpacity>
+  <View
+    style={{
+      position: "absolute",
 
-            <TouchableOpacity onPress={() => setShowEmojis(!showEmojis)}>
-              <Text style={{ color: "#aaa", fontSize: 20 }}>
-                {selected.length > 0 ? "✨" : "❤️"}
-              </Text>
-            </TouchableOpacity>
+      bottom: 70,
 
-            <TouchableOpacity onPress={handleSubmit}>
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                  opacity:
-                    text || selected.length || imageBase64 || audioBase64
-                      ? 1
-                      : 0.6,
-                }}
-              >
-                ✦
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+      left: 20,
+      right: 20,
+
+      alignItems: "center",
+    }}
+  >
+
+    {/* ✦ ENTER */}
+
+    <TouchableOpacity
+
+      onPress={handleSubmit}
+
+      style={{
+        marginBottom: 26,
+      }}
+    >
+
+<Text
+  style={{
+
+    color: "white",
+
+    fontFamily:
+      Fonts.light,
+
+    fontSize: 24,
+
+    opacity: 0.92,
+
+    marginBottom: 50,
+  }}
+>
+        ✦
+      </Text>
+
+    </TouchableOpacity>
+
+    {/* 🌊 MODALITIES */}
+
+    <View
+      style={{
+        flexDirection: "row",
+
+        gap: 28,
+
+        marginBottom: 24,
+
+        opacity: 0.82,
+      }}
+    >
+
+      <TouchableOpacity
+        onPress={handleImage}
+      >
+
+        <Text
+          style={{
+            color:Colors.mutedText,
+
+            fontSize: 18,
+          }}
+        >
+          📷
+        </Text>
+
+      </TouchableOpacity>
+
+      <TouchableOpacity>
+
+        <Text
+          style={{
+            color:Colors.mutedText,
+
+            fontSize: 18,
+          }}
+        >
+          🎤
+        </Text>
+
+      </TouchableOpacity>
+
+      <TouchableOpacity
+
+        onPress={() =>
+          setShowEmojis(
+            !showEmojis
+          )
+        }
+      >
+
+        <Text
+          style={{
+            color:Colors.mutedText,
+
+            fontSize: 18,
+          }}
+        >
+
+          {
+            selected.length > 0
+
+              ? "✨"
+
+              : "😊"
+          }
+
+        </Text>
+
+      </TouchableOpacity>
+
+    </View>
+
+    {/* ✍️ INPUT */}
+
+    <View
+      style={{
+        width: "82%",
+      }}
+    >
+
+<TextInput
+
+  value={text}
+
+  onChangeText={
+    handleTyping
+  }
+
+  placeholder="
+write freely...
+"
+
+  placeholderTextColor={
+    Colors.subtleText
+  }
+
+  multiline
+
+  blurOnSubmit={false}
+
+  style={{
+
+    color:
+      Colors.softText,
+
+    fontFamily:
+      Fonts.light,
+
+    fontSize: 15,
+
+    lineHeight: 28,
+
+    textAlign:
+      "center",
+
+    minHeight: 70,
+
+    paddingHorizontal:
+      Spacing.md,
+  }}
+/>
+
+    </View>
+
+  </View>
+
+)}
       </Pressable>
     </KeyboardAvoidingView>
   );

@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import { generateAIResponse } from "../../lib/generateAIResponse";
+
+import {
+  Colors,
+} from "../../constants/theme";
 
 type Props = {
   mirror: any;
@@ -119,7 +122,9 @@ const res = await generateAIResponse({
       {selected && (
         <View style={styles.responseBox}>
           {loading && !responses[selected] ? (
-            <ActivityIndicator color="white" />
+            <Text style={styles.loadingText}>
+  listening...
+</Text>
           ) : (
             <Text style={styles.responseText}>
               {responses[selected]}
@@ -147,15 +152,27 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
+ button: {
+  paddingVertical: 12,
+  paddingHorizontal: 18,
+
+  borderRadius: 999,
+
+  backgroundColor:
+    "rgba(255,255,255,0.015)",
+
+  borderWidth: 0.5,
+
+  borderColor:
+    "rgba(255,255,255,0.03)",
+},
 
   active: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+backgroundColor:
+  "rgba(255,255,255,0.045)",
+
+borderColor:
+  "rgba(255,255,255,0.08)",
   },
 
   disabled: {
@@ -163,31 +180,67 @@ const styles = StyleSheet.create({
   },
 
   text: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
+   color:
+  Colors.softText,
+
+fontSize: 13,
+
+fontWeight: "300",
+
+letterSpacing: 0.3,
   },
 
   disabledText: {
-    color: "rgba(255,255,255,0.3)",
+color:
+  Colors.subtleText,
   },
 
-  label: {
-    color: "rgba(255,255,255,0.3)",
-    fontSize: 11,
-    textAlign: "center",
-    marginTop: 4,
-  },
+label: {
+  color:
+    Colors.mutedText,
+
+  fontSize: 10,
+
+  textAlign: "center",
+
+  marginTop: 6,
+
+  opacity: 0.72,
+
+  letterSpacing: 0.4,
+},
 
   responseBox: {
-    marginTop: 18,
-    paddingHorizontal: 20,
-    maxWidth: "90%",
+marginTop: 24,
+
+paddingHorizontal: 32,
+
+maxWidth: "92%",
   },
 
-  responseText: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: "center",
-  },
+responseText: {
+  color:
+    Colors.softText,
+
+  fontSize: 14,
+
+  lineHeight: 28,
+
+  textAlign: "center",
+
+  fontWeight: "300",
+
+  opacity: 0.9,
+},
+
+  loadingText: {
+  color:
+    Colors.mutedText,
+
+  fontSize: 11,
+
+  fontStyle: "italic",
+
+  opacity: 0.72,
+},
 });

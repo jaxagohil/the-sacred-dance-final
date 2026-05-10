@@ -3,8 +3,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import { useFocusEffect } from "@react-navigation/native";
@@ -19,9 +18,8 @@ import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
 
 import { getEnergyFromSignals } from "../../lib/energy/getEnergyFromSignals";
-import { interpretMirror } from "../../lib/interpretMirror";
-
 import { getCosmicMessage } from "../../lib/getCosmicMessage";
+import { interpretMirror } from "../../lib/interpretMirror";
 
 import {
   buildFullChakraScores,
@@ -250,16 +248,6 @@ const builtContext =
   />
 )}
 
-        <View style={styles.guide}>
-          <TouchableOpacity
-            onPress={() => console.log("Go to Guidance")}
-            style={styles.guideButton}
-          >
-            <Text style={styles.guideText}>
-              Speak to a guide
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </View>
   );
@@ -289,16 +277,4 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  guide: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-
-  guideButton: {
-    padding: 12,
-  },
-
-  guideText: {
-    color: "white",
-  },
 });

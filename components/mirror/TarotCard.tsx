@@ -1,135 +1,359 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+
+import {
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+import {
+  Colors,
+  Radius
+} from "../../constants/theme";
 
 type Props = {
+
+  number?: number;
+
   title: string;
+
   message: string;
+
+  archetype?: string;
 };
 
-export default function TarotCard({ title, message }: Props) {
+export default function TarotCard({
+
+  number,
+
+  title,
+
+  message,
+
+  archetype,
+
+}: Props) {
+
   return (
+
     <View style={styles.wrapper}>
 
-      {/* 🌫 AURA */}
+      {/* 🌫 FIELD */}
+
       <View style={styles.aura} />
 
       {/* 🃏 CARD */}
+
       <View style={styles.card}>
 
+        {/* ✨ TOP SIGNATURE */}
+
+        <View style={styles.topLine} />
+
         {/* ✨ INNER LIGHT */}
+
         <View style={styles.innerGlow} />
 
-        {/* CONTENT */}
+        {/* 🌌 CONTENT */}
+
         <View style={styles.content}>
 
-          {/* SYMBOL */}
+          {/* 🔢 NUMBER */}
+
+          {number !== undefined && (
+
+            <Text style={styles.number}>
+              {number}
+            </Text>
+          )}
+
+          {/* ✧ SYMBOL */}
+
           <View style={styles.symbolWrap}>
-            <Text style={styles.symbol}>◇</Text>
+
+            <Text style={styles.symbol}>
+              ◇
+            </Text>
+
           </View>
 
-          {/* TITLE */}
+          {/* ✨ TITLE */}
+
           <Text style={styles.title}>
             {title}
           </Text>
 
-          {/* MESSAGE */}
+          {/* 🌙 ARCHETYPE */}
+
+          {archetype && (
+
+            <Text style={styles.archetype}>
+              {archetype}
+            </Text>
+          )}
+
+          {/* 🌌 MESSAGE */}
+
           <Text style={styles.message}>
             {message}
           </Text>
 
         </View>
 
-        {/* spacer */}
-        <View style={styles.spacer} />
+        {/* 🌈 SIGNATURE */}
+
+        <View style={styles.signature} />
 
       </View>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
+
+  //
+  // 🌌 WRAPPER
+  //
+
   wrapper: {
     position: "relative",
+
     alignItems: "center",
     justifyContent: "center",
   },
 
+  //
+  // 🌫 FIELD
+  //
+
   aura: {
     position: "absolute",
-    width: 230,
-    height: 300,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    opacity: 0.25,
-    transform: [{ scale: 1.2 }],
+
+    width: 210,
+    height: 280,
+
+    borderRadius:
+      Radius.xl,
+
+    backgroundColor:
+      "rgba(255,255,255,0.04)",
+
+    opacity: 0.08,
+
+    transform: [
+      {
+        scale: 1.08,
+      },
+    ],
   },
 
+  //
+  // 🃏 CARD
+  //
+
   card: {
-    width: 180,
-    minHeight: 250,
 
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    width: 190,
 
-    paddingHorizontal: 16,
-    paddingVertical: 30,
+    minHeight: 255,
 
-    justifyContent: "flex-start", // 👈 key fix
+    borderRadius:
+      28,
+
+    backgroundColor:
+      "rgba(5,5,8,0.98)",
+
+    borderWidth: 1,
+
+    borderColor:
+      "rgba(255,255,255,0.06)",
+
+    paddingHorizontal:
+      22,
+
+    paddingTop:
+      24,
+
+    paddingBottom:
+      20,
+
+    justifyContent:
+      "space-between",
 
     overflow: "hidden",
 
-    shadowColor: "#fff",
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 0 },
+    shadowColor:
+      "#000",
 
-    elevation: 3,
+    shadowOpacity: 0.22,
+
+    shadowRadius: 18,
+
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+
+    elevation: 4,
   },
+
+  //
+  // ✨ TOP LINE
+  //
+
+  topLine: {
+    alignSelf: "center",
+
+    width: 26,
+    height: 1,
+
+    borderRadius: 999,
+
+    backgroundColor:
+      "rgba(255,255,255,0.22)",
+
+    marginBottom: 20,
+  },
+
+  //
+  // ✨ INNER LIGHT
+  //
 
   innerGlow: {
     position: "absolute",
-    top: 80, // 👈 fixed
-    left: 0,
-    right: 0,
-    height: 90,
-    borderRadius: 90,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    opacity: 0.12,
+
+    top: 90,
+
+    left: 30,
+    right: 30,
+
+    height: 80,
+
+    borderRadius: 999,
+
+    backgroundColor:
+      "rgba(255,255,255,0.03)",
+
+    opacity: 0.7,
   },
+
+  //
+  // 🌌 CONTENT
+  //
 
   content: {
     alignItems: "center",
-    marginTop: 40, // 👈 pushes content down
+
+    flex: 1,
+
+    justifyContent: "center",
   },
 
-  spacer: {
-    height: 20, // 👈 keeps bottom breathing space
+  //
+  // 🔢 NUMBER
+  //
+
+  number: {
+    color:
+      "rgba(255,255,255,0.18)",
+
+    fontSize: 10,
+
+    letterSpacing: 3,
+
+    marginBottom: 14,
   },
+
+  //
+  // ✧ SYMBOL
+  //
 
   symbolWrap: {
     alignItems: "center",
-    marginBottom: 8,
+
+    marginBottom: 12,
   },
 
   symbol: {
-    color: "rgba(255,255,255,0.35)",
-    fontSize: 11,
+    color:
+      "rgba(255,255,255,0.24)",
+
+    fontSize: 10,
+
     letterSpacing: 2,
   },
 
+  //
+  // ✨ TITLE
+  //
+
   title: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.85)",
+    fontSize: 15,
+
+    color:
+      "rgba(255,255,255,0.90)",
+
     textAlign: "center",
-    marginBottom: 6,
-    letterSpacing: 0.5,
+
+    marginBottom: 10,
+
+    letterSpacing: 0.4,
   },
 
+  //
+  // 🌙 ARCHETYPE
+  //
+
+  archetype: {
+    color:
+      "rgba(255,255,255,0.30)",
+
+    fontSize: 9,
+
+    textTransform:
+      "uppercase",
+
+    letterSpacing: 2.5,
+
+    marginBottom: 16,
+  },
+
+  //
+  // 🌌 MESSAGE
+  //
+
   message: {
-    fontSize: 11,
-    color: "rgba(255,255,255,0.6)",
+    fontSize: 12,
+
+    color:
+      Colors.softText,
+
     textAlign: "center",
-    lineHeight: 17,
+
+    lineHeight: 22,
+
     paddingHorizontal: 4,
+
+    maxWidth: 145,
+  },
+
+  //
+  // 🌈 SIGNATURE
+  //
+
+  signature: {
+    alignSelf: "center",
+
+    width: 40,
+    height: 1,
+
+    borderRadius: 999,
+
+    backgroundColor:
+      "rgba(255,255,255,0.18)",
+
+    opacity: 0.9,
   },
 });

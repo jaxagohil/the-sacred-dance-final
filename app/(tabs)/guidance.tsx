@@ -1,271 +1,1021 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
-  View,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
   Text,
-  Pressable,
   TextInput,
   TouchableOpacity,
-  Keyboard,
-  ScrollView,
-  KeyboardAvoidingView,
+  View,
 } from "react-native";
 
-import { generateAIResponse } from "../../lib/generateAIResponse";
+import {
+  processReflection,
+} from "../../db/flow";
 
-type GuideKey = "guide_heart" | "guide_structure" | "guide_cosmic";
+import {
+  getUserId,
+} from "../../lib/user";
+
+import {
+  generateSacredResponse,
+} from "../../lib/sacredDance/generateSacredResponse";
+
+import {
+  buildUserContext,
+} from "../../lib/context/buildUserContext";
+
+import {
+  saveGuideMessage,
+} from "../../lib/guidance/saveGuideMessage";
+
+import {
+  loadGuideMessages,
+} from "../../lib/guidance/loadGuideMessages";
+
+import {
+  cleanupGuideMessages,
+} from "../../lib/guidance/cleanupGuideMessages";
+
+import {
+  Colors,
+  Fonts,
+} from "../../constants/theme";
+
+type GuideKey =
+  | "guide_heart"
+  | "guide_structure"
+  | "guide_cosmic";
 
 type Segment = {
   id: string;
+
   guide?: GuideKey;
-  role: "user" | "guide";
+
+  role:
+    | "user"
+    | "guide";
+
   text: string;
+
+  createdAt: number;
 };
 
 const guideConfig = {
-  guide_heart: { label: "nani", color: "#ff6b9a" },
-  guide_structure: { label: "lala", color: "#4da6ff" },
-  guide_cosmic: { label: "ammaarah", color: "#ffffff" },
+
+  guide_heart: {
+    color: Colors.pink,
+  },
+
+  guide_structure: {
+    color: Colors.blue,
+  },
+
+  guide_cosmic: {
+    color: Colors.softText,
+  },
 };
 
 export default function Guidance() {
-  const [input, setInput] = useState("");
-  const [showInput, setShowInput] = useState(false);
-  const [segments, setSegments] = useState<Segment[]>([]);
+
+  //
+  // 🌊 STATE
+  //
+
+  const [input, setInput] =
+    useState("");
+
+  const [segments, setSegments] =
+    useState<Segment[]>([]);
+
   const [activeGuide, setActiveGuide] =
-    useState<GuideKey>("guide_heart");
+    useState<GuideKey>(
+      "guide_heart"
+    );
 
-  const [loading, setLoading] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const inputRef = useRef<TextInput>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const [contextState, setContextState] =
+    useState<any>(null);
 
-  const hasContent = input.length > 0;
+  const [contextReady, setContextReady] =
+    useState(false);
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardVisible(true);
+  const [guideNames, setGuideNames] =
+    useState({
+
+      guide_heart:
+        "nani",
+
+      guide_structure:
+        "lala",
+
+      guide_cosmic:
+        "ammaarah",
     });
 
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardVisible(false);
+  //
+  // 🌌 REFS
+  //
+
+  const inputRef =
+    useRef<TextInput>(null);
+
+  const flatListRef =
+    useRef<FlatList>(null);
+
+  //
+  // ✨ DERIVED
+  //
+
+  const hasContent =
+    Boolean(input.trim());
+
+  //
+  // 🌊 AUTO SCROLL
+  //
+
+  const scrollToBottom = () => {
+
+    requestAnimationFrame(() => {
+
+      flatListRef.current
+        ?.scrollToEnd({
+
+          animated: true,
+        });
+
     });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (showInput) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [showInput]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [segments]);
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const text = input;
-
-    setSegments((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role: "user",
-        text,
-      },
-    ]);
-
-    setInput("");
-    Keyboard.dismiss();
-    setLoading(true);
-
-    try {
-      const res = await generateAIResponse({
-        type: "guide",
-        data: {
-          guide: activeGuide,
-          guideName: guideConfig[activeGuide].label,
-          message: text,
-        },
-      });
-
-      setSegments((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString() + "-g",
-          guide: activeGuide,
-          role: "guide",
-          text: res,
-        },
-      ]);
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "black" }}
-      behavior={undefined}
-    >
-      <Pressable
-        style={{ flex: 1 }}
-        onPress={() => setShowInput(true)}
+  //
+  // 🧠 LOAD CONTEXT
+  //
+
+  useEffect(() => {
+
+    async function loadContext() {
+
+      try {
+
+        const userId =
+          await getUserId();
+
+        //
+        // 🧹 CLEANUP
+        //
+
+        await cleanupGuideMessages();
+
+        //
+        // 🧠 CONTEXT
+        //
+
+        const built =
+          await buildUserContext({
+
+            userId,
+
+            source:
+              "guidance",
+
+            activeLens:
+              "general",
+          });
+
+        setContextState(
+          built
+        );
+
+        //
+        // 👤 GUIDE NAMES
+        //
+
+        if (built?.profile) {
+
+          setGuideNames({
+
+            guide_heart:
+
+              built.profile
+                .heart_guide_name ||
+
+              "nani",
+
+            guide_structure:
+
+              built.profile
+                .structure_guide_name ||
+
+              "lala",
+
+            guide_cosmic:
+
+              built.profile
+                .cosmic_guide_name ||
+
+              "ammaarah",
+          });
+        }
+
+        //
+        // 🌊 LOAD MESSAGES
+        //
+
+        const messages =
+          await loadGuideMessages(
+            userId
+          );
+
+        setSegments(
+          messages
+        );
+
+      } catch (e) {
+
+        console.log(
+          "❌ CONTEXT LOAD ERROR",
+          e
+        );
+
+      } finally {
+
+        setContextReady(true);
+      }
+    }
+
+    loadContext();
+
+  }, []);
+
+  //
+  // ✨ SEND
+  //
+
+  const sendMessage =
+    async () => {
+
+      if (!input.trim())
+        return;
+
+      const text =
+        input.trim();
+
+      setInput("");
+
+      Keyboard.dismiss();
+
+      //
+      // 🌌 USER
+      //
+
+      const userId =
+        await getUserId();
+
+      //
+      // 👤 USER MESSAGE
+      //
+
+      const userSegment = {
+
+        id:
+          Date.now().toString(),
+
+        role:
+          "user" as const,
+
+        guide:
+          activeGuide,
+
+        text,
+
+        createdAt:
+          Date.now(),
+      };
+
+      //
+      // 🌊 APPEND
+      //
+
+      setSegments((prev) => [
+
+        ...prev,
+
+        userSegment,
+      ]);
+
+      //
+      // 🌊 SAVE MESSAGE
+      //
+
+      await saveGuideMessage({
+
+        userId,
+
+        guide:
+          activeGuide,
+
+        role:
+          "user",
+
+        content:
+          text,
+
+        source:
+          "guidance",
+
+        contextState,
+      });
+
+      //
+      // 🌊 SAVE REFLECTION
+      //
+
+      await processReflection({
+
+        userId,
+
+        text,
+
+        source:
+          "guidance",
+
+        guide:
+          activeGuide,
+      });
+
+      //
+      // 🧠 REBUILD CONTEXT
+      //
+
+      const updatedContext =
+        await buildUserContext({
+
+          userId,
+
+          source:
+            "guidance",
+
+          activeLens:
+            "general",
+        });
+
+      setContextState(
+        updatedContext
+      );
+
+      //
+      // ✨ LOADING
+      //
+
+      setLoading(true);
+
+      try {
+
+ //
+// 🌌 GUIDE RESPONSE
+//
+
+const sacred =
+  await generateSacredResponse({
+
+    //
+    // 👤 USER
+    //
+
+    user:
+      updatedContext?.profile,
+
+    //
+    // 🧿 GUIDE
+    //
+
+    guide:
+      guideNames[
+        activeGuide
+      ],
+
+    //
+    // 🌙 THEME
+    //
+
+    theme:
+      updatedContext
+        ?.story
+        ?.emotionalTheme,
+
+    //
+    // 👁 LENS
+    //
+
+    lens:
+      "general",
+
+    //
+    // 🌍 LANGUAGE
+    //
+
+    language:
+      "en",
+
+    //
+    // ⚡ ENERGY
+    //
+
+    energy:
+      updatedContext?.energy,
+
+    //
+    // 🪞 MIRROR
+    //
+
+    mirror:
+      updatedContext?.mirror,
+
+    //
+    // 🌌 SIGNALS
+    //
+
+    signals:
+      updatedContext?.signals,
+
+    //
+    // 🌊 LIVING FIELD
+    //
+
+    livingField: {
+
+      emotional:
+        updatedContext
+          ?.story
+          ?.emotionalTheme,
+
+      relational:
+        updatedContext
+          ?.story
+          ?.relationalTheme,
+
+      spiritual:
+        updatedContext
+          ?.story
+          ?.energeticMovement,
+
+      intensity:
+        updatedContext
+          ?.consciousness
+          ?.integration,
+    },
+
+    //
+    // 🌙 CONTEXT
+    //
+
+    context: {
+
+      patterns:
+        updatedContext
+          ?.current
+          ?.patterns,
+
+      distortions:
+        updatedContext
+          ?.energy
+          ?.distortions,
+
+      chakra:
+        updatedContext
+          ?.energy
+          ?.dominantChakra,
+
+      cosmic:
+        updatedContext
+          ?.cosmic,
+    },
+  });
+
+//
+// ✨ TRANSMISSION
+//
+
+const res =
+  sacred.transmission;
+
+//
+// 🌊 GUIDE MESSAGE
+//
+
+const guideSegment = {
+
+  id:
+
+    Date.now()
+      .toString() + "-g",
+
+  guide:
+    activeGuide,
+
+  role:
+    "guide" as const,
+
+  text:
+    res,
+
+  createdAt:
+    Date.now(),
+};
+
+        //
+        // 🌊 APPEND
+        //
+
+        setSegments((prev) => [
+
+          ...prev,
+
+          guideSegment,
+        ]);
+
+        //
+        // 🌊 SAVE GUIDE
+        //
+
+        await saveGuideMessage({
+
+          userId,
+
+          guide:
+            activeGuide,
+
+          role:
+            "guide",
+
+          content:
+            res,
+
+          source:
+            "guidance",
+
+          contextState:
+            updatedContext,
+        });
+
+      } catch (e) {
+
+        console.log(
+          "❌ GUIDANCE ERROR",
+          e
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
+    };
+
+  //
+  // ⏳ LOADING
+  //
+
+  if (!contextReady) {
+
+    return (
+
+      <SafeAreaView
+        style={{
+          flex: 1,
+
+          backgroundColor:
+            Colors.background,
+
+          justifyContent:
+            "center",
+
+          alignItems:
+            "center",
+        }}
       >
 
-        {/* ✦ (CONSISTENT POSITION) */}
-        <TouchableOpacity
-          onPress={sendMessage}
+        <Text
           style={{
-            position: "absolute",
-            top: 60,
-            right: 24,
-            zIndex: 20,
+
+            color:
+              Colors.softText,
+
+            fontFamily:
+              Fonts.light,
+
+            fontSize: 14,
           }}
         >
-          <Text
-            style={{
-              color: hasContent ? "white" : "#555",
-              fontSize: 18,
-            }}
-          >
-            ✦
-          </Text>
-        </TouchableOpacity>
+          attuning...
+        </Text>
 
-        {/* ✍️ INPUT (MORE SPACE) */}
-        {showInput && (
-          <View
-            style={{
-              position: "absolute",
-              top: 100,   // 👈 slightly lower
-              left: 0,
-              right: 0,
-              alignItems: "center",
-              zIndex: 10,
-            }}
-          >
-            <View style={{ width: "85%" }}>
-              <TextInput
-                ref={inputRef}
-                value={input}
-                onChangeText={setInput}
-                placeholder="..."
-                placeholderTextColor="#555"
-                multiline
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                  minHeight: 80,   // 👈 more breathing room
-                }}
-              />
-            </View>
-          </View>
-        )}
+      </SafeAreaView>
+    );
+  }
 
-        {/* 🧿 GUIDES (MOVED DOWN) */}
+  //
+  // 🌌 UI
+  //
+
+  return (
+
+    <SafeAreaView
+      style={{
+        flex: 1,
+
+        backgroundColor:
+          Colors.background,
+      }}
+    >
+
+      <KeyboardAvoidingView
+
+        style={{
+          flex: 1,
+        }}
+
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+
         <View
           style={{
-            position: "absolute",
-            top: 200,   // 👈 pushed down
-            left: 0,
-            right: 0,
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 20,
+            flex: 1,
+
+            paddingTop: 26,
           }}
         >
-          {Object.entries(guideConfig).map(([key, g]) => {
-            const active = activeGuide === key;
 
-            return (
-              <TouchableOpacity
-                key={key}
-                onPress={() =>
-                  setActiveGuide(key as GuideKey)
-                }
-              >
-                <Text
-                  style={{
-                    color: g.color,
-                    opacity: active ? 1 : 0.3,
-                    fontSize: active ? 16 : 13,
-                  }}
-                >
-                  {g.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+          {/* ✦ SEND */}
 
-        {/* 🌊 CHAT */}
-        <ScrollView
-          ref={scrollRef}
-          style={{ flex: 1, marginTop: 260 }}
-          contentContainerStyle={{
-            paddingHorizontal: 30,
-            paddingBottom: 120,
-          }}
-        >
-          {segments.map((seg) => {
-            if (seg.role === "guide" && keyboardVisible) return null;
+          <View
+            style={{
+              alignItems:
+                "flex-end",
 
-            return (
-              <View
-                key={seg.id}
+              paddingHorizontal:
+                28,
+            }}
+          >
+
+            <TouchableOpacity
+
+              onPress={sendMessage}
+
+              disabled={!hasContent}
+            >
+
+              <Text
                 style={{
-                  marginBottom:
-                    seg.role === "user" ? 6 : 18,
-                  maxWidth: "85%",
+
+                  color:
+
+                    hasContent
+
+                      ? Colors.white
+
+                      : Colors.subtleText,
+
+                  opacity:
+
+                    hasContent
+                      ? 0.92
+                      : 0.3,
+
+                  fontSize: 20,
+
+                  fontFamily:
+                    Fonts.light,
                 }}
               >
-                {seg.role === "guide" && (
+                ✦
+              </Text>
+
+            </TouchableOpacity>
+
+          </View>
+
+          {/* ✍️ INPUT */}
+
+          <View
+            style={{
+              paddingHorizontal:
+                28,
+
+              marginTop: 24,
+            }}
+          >
+
+            <TextInput
+
+              ref={inputRef}
+
+              value={input}
+
+              onChangeText={
+                setInput
+              }
+
+              placeholder="..."
+
+              placeholderTextColor={
+                Colors.subtleText
+              }
+
+              multiline
+
+              style={{
+
+                color:
+                  Colors.softText,
+
+                fontFamily:
+                  Fonts.light,
+
+                fontSize: 15,
+
+                lineHeight: 25,
+
+                minHeight: 80,
+
+                maxHeight: 160,
+
+                textAlignVertical:
+                  "top",
+              }}
+            />
+
+          </View>
+
+          {/* 🧿 GUIDES */}
+
+          <View
+            style={{
+              flexDirection:
+                "row",
+
+              justifyContent:
+                "center",
+
+              gap: 24,
+
+              marginTop: 30,
+
+              paddingBottom: 18,
+            }}
+          >
+
+            {Object.entries(
+              guideConfig
+            ).map(([key, g]) => {
+
+              const active =
+                activeGuide === key;
+
+              return (
+
+                <TouchableOpacity
+
+                  key={key}
+
+                  onPress={() =>
+
+                    setActiveGuide(
+                      key as GuideKey
+                    )
+                  }
+                >
+
                   <Text
                     style={{
-                      color: guideConfig[seg.guide!].color,
-                      fontSize: 12,
-                      opacity: 0.6,
-                      marginBottom: 4,
+
+                      color:
+                        g.color,
+
+                      opacity:
+
+                        active
+                          ? 1
+                          : 0.28,
+
+                      fontSize:
+
+                        active
+                          ? 14
+                          : 12,
+
+                      fontFamily:
+                        Fonts.light,
                     }}
                   >
-                    {guideConfig[seg.guide!].label}
+                    {
+
+                      guideNames[
+                        key as GuideKey
+                      ]
+
+                    }
                   </Text>
-                )}
 
-                <Text
-                  style={{
-                    color: seg.role === "user" ? "#aaa" : "white",
-                    fontSize: 16,
-                    lineHeight: 24,
-                    fontStyle:
-                      seg.role === "user" ? "italic" : "normal",
-                  }}
-                >
-                  {seg.text}
-                </Text>
-              </View>
-            );
-          })}
-        </ScrollView>
+                </TouchableOpacity>
+              );
+            })}
 
-        {loading && (
-          <View style={{ position: "absolute", top: "50%" }}>
-            <Text style={{ color: "#555" }}>…</Text>
           </View>
-        )}
 
-      </Pressable>
-    </KeyboardAvoidingView>
+          {/* 🌊 TRANSMISSIONS */}
+
+          <View
+            style={{
+              flex: 1,
+
+              paddingHorizontal:
+                30,
+            }}
+          >
+
+            <FlatList
+
+              ref={flatListRef}
+
+              data={segments}
+
+              keyExtractor={(i) =>
+                i.id
+              }
+
+              onContentSizeChange={
+                scrollToBottom
+              }
+
+              showsVerticalScrollIndicator={
+                false
+              }
+
+              keyboardShouldPersistTaps="handled"
+
+              contentContainerStyle={{
+
+                paddingTop: 12,
+
+                paddingBottom: 40,
+              }}
+
+              renderItem={({ item }) => {
+
+                return (
+
+                  <View
+                    style={{
+
+                      marginBottom:
+
+                        item.role ===
+                        "user"
+
+                          ? 18
+
+                          : 32,
+                    }}
+                  >
+
+                    {/* ✨ GUIDE */}
+
+                    {item.role ===
+                      "guide" && (
+
+                      <Text
+                        style={{
+
+                          color:
+
+                            guideConfig[
+                              item.guide!
+                            ].color,
+
+                          fontSize: 11,
+
+                          opacity: 0.5,
+
+                          marginBottom: 6,
+
+                          fontFamily:
+                            Fonts.light,
+                        }}
+                      >
+                        {
+
+                          guideNames[
+                            item.guide!
+                          ]
+
+                        }
+                      </Text>
+
+                    )}
+
+                    {/* 🌊 MESSAGE */}
+
+                    <Text
+                      style={{
+
+                        color:
+
+                          item.role ===
+                          "user"
+
+                            ? Colors.mutedText
+
+                            : Colors.softText,
+
+                        opacity:
+
+                          item.role ===
+                          "user"
+
+                            ? 0.72
+                            : 1,
+
+                        fontFamily:
+                          Fonts.light,
+
+                        fontSize:
+
+                          item.role ===
+                          "user"
+
+                            ? 14
+                            : 15,
+
+                        lineHeight:
+
+                          item.role ===
+                          "user"
+
+                            ? 24
+                            : 25,
+                      }}
+                    >
+                      {item.text}
+                    </Text>
+
+                  </View>
+                );
+              }}
+            />
+
+          </View>
+
+          {/* ✨ LOADING */}
+
+          {loading && (
+
+            <View
+              style={{
+                alignItems:
+                  "center",
+
+                paddingBottom: 20,
+
+                paddingTop: 10,
+              }}
+            >
+
+              <Text
+                style={{
+
+                  color:
+                    Colors.subtleText,
+
+                  fontFamily:
+                    Fonts.light,
+
+                  fontSize: 13,
+                }}
+              >
+                listening...
+              </Text>
+
+            </View>
+
+          )}
+
+        </View>
+
+      </KeyboardAvoidingView>
+
+    </SafeAreaView>
   );
 }

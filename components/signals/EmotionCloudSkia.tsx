@@ -1,54 +1,110 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import React from "react";
 
-export default function EmotionCloudSimple({ emotions }: any) {
-  const [selected, setSelected] = useState<number[]>([]);
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-  const toggle = (id: number) => {
-    setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((i) => i !== id);
-      if (prev.length >= 3) return prev;
-      return [...prev, id];
-    });
-  };
+import {
+  Colors,
+  Fonts,
+  Opacity,
+} from "../../constants/theme";
+
+export default function EmotionCloudSimple({
+
+  emotions,
+
+  selected,
+
+  onPress,
+
+}: any) {
 
   return (
+
     <View style={styles.container}>
+
       {emotions.map((e: any) => {
-        const isSelected = selected.includes(e.id);
+
+        const isSelected =
+          selected.includes(
+            e.id
+          );
 
         return (
-          <Pressable key={e.id} onPress={() => toggle(e.id)}>
+
+          <Pressable
+
+            key={e.id}
+
+            onPress={() =>
+              onPress(e.id)
+            }
+          >
+
             <Text
               style={[
+
                 styles.text,
-                isSelected && styles.selected,
+
+                isSelected &&
+                  styles.selected,
               ]}
             >
               {e.word}
             </Text>
+
           </Pressable>
         );
       })}
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    padding: 20,
-    gap: 10,
-  },
-  text: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  selected: {
-    color: "#FFD700",
-  },
-});
+const styles =
+  StyleSheet.create({
+
+    container: {
+
+      flexDirection:
+        "row",
+
+      flexWrap:
+        "wrap",
+
+      justifyContent:
+        "center",
+
+      paddingHorizontal: 30,
+    },
+
+    text: {
+
+      color:
+        Colors.mutedText,
+
+      fontFamily:
+        Fonts.light,
+
+      fontSize: 15,
+
+      lineHeight: 28,
+
+      paddingHorizontal: 5,
+
+      paddingVertical: 4,
+    },
+
+    selected: {
+
+      color:
+        Colors.gold,
+
+      opacity:
+        Opacity.strong,
+    },
+  });

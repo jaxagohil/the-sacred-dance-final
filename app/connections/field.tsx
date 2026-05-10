@@ -1,5 +1,3 @@
-// app/(tabs)/connections/field.tsx
-
 import React, {
   useEffect,
   useState,
@@ -25,6 +23,10 @@ import {
   getUserId,
 } from "../../lib/user";
 
+import {
+  Colors,
+} from "../../constants/theme";
+
 import CompassionNode from "../../components/connections/CompassionNode";
 import HumanAvatar from "../../components/connections/HumanAvatar";
 import LivingField from "../../components/connections/LivingField";
@@ -40,7 +42,6 @@ const centerY = height / 2;
 
 //
 // 🌌 FIXED HUMAN CONSTELLATION POSITIONS
-// (UI STAYS IDENTICAL)
 //
 
 const positions = [
@@ -200,11 +201,6 @@ export default function Field() {
           return;
         }
 
-        console.log(
-          "🌍 PROFILES FOUND:",
-          data?.length || 0
-        );
-
         //
         // 👤 FIND ME
         //
@@ -215,16 +211,6 @@ export default function Field() {
               profile.user_id === userId
           );
 
-console.log(
-  "👤 ME:",
-  me?.name
-);
-
-console.log(
-  "👤 MY AVATAR URL:",
-  me?.avatar_url
-);
-
         //
         // 🌍 OTHERS
         //
@@ -234,20 +220,6 @@ console.log(
             (profile) =>
               profile.user_id !== userId
           ) || [];
-
-          console.log(
-  "🌍 OTHER HUMANS:",
-  others
-);
-
-others.forEach((human) => {
-
-  console.log(
-    `🌍 ${human.name} AVATAR:`,
-    human.avatar_url
-  );
-
-});
 
         //
         // ✨ POSITION HUMANS
@@ -325,8 +297,12 @@ others.forEach((human) => {
       return;
     }
 
+    //
+    // 🌊 SPACIOUS EMERGENCE
+    //
+
     const humanDelay =
-      4000 + Math.random() * 2000;
+      5000 + Math.random() * 3000;
 
     let interval:
       ReturnType<typeof setInterval>;
@@ -339,13 +315,13 @@ others.forEach((human) => {
             .sort(() =>
               Math.random() - 0.5
             )
-            .slice(0, 3)
+            .slice(0, 2)
             .map((h) => h.user_id);
 
         setVisibleHumans(initial);
 
         //
-        // 🌊 LIVING FIELD
+        // 🌌 LIVING FIELD ROTATION
         //
 
         interval =
@@ -359,12 +335,12 @@ others.forEach((human) => {
 
             const selected =
               shuffled
-                .slice(0, 3)
+                .slice(0, 2)
                 .map((h) => h.user_id);
 
             setVisibleHumans(selected);
 
-          }, 7000);
+          }, 12000);
 
       }, humanDelay);
 
@@ -449,22 +425,17 @@ others.forEach((human) => {
 
           onPress={() => {
 
-            console.log(
-              "🌍 OPEN HUMAN:",
-              human.name
-            );
+            router.push({
 
-router.push({
+              pathname:
+                "/connections/human-space",
 
-  pathname:
-    "/connections/human-space",
+              params: {
 
-  params: {
-
-    otherUserId:
-      human.user_id,
-  },
-});
+                otherUserId:
+                  human.user_id,
+              },
+            });
           }}
         />
 
@@ -497,7 +468,7 @@ const styles = StyleSheet.create({
     flex: 1,
 
     backgroundColor:
-      "#020304",
+      Colors.background,
   },
 
   //
@@ -525,9 +496,9 @@ const styles = StyleSheet.create({
 
   portalText: {
     color:
-      "rgba(255,255,255,0.18)",
+      Colors.portal,
 
-    fontSize: 30,
+    fontSize: 28,
 
     fontWeight: "200",
   },

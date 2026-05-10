@@ -1,38 +1,39 @@
-// components/connections/LoveNode.tsx
-
 import React, {
-    useEffect,
+  useEffect,
 } from "react";
 
 import {
-    Pressable,
-    View,
+  Pressable,
+  View,
 } from "react-native";
 
 import {
-    Canvas,
-    Circle,
-    Path,
+  Canvas,
+  Circle,
+  Path,
 } from "@shopify/react-native-skia";
 
 import {
-    router,
+  router,
 } from "expo-router";
 
 import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 
 type Props = {
   x: number;
   y: number;
 
-  // ✨ allows decorative usage
+  //
+  // ✨ DECORATIVE MODE
+  //
+
   interactive?: boolean;
 };
 
@@ -56,12 +57,16 @@ export default function LoveNode({
   interactive = true,
 }: Props) {
 
-  // 🌊 breathing
+  //
+  // 🌊 BREATHING
+  //
 
   const scale =
     useSharedValue(1);
 
-  // ✨ movement
+  //
+  // ✨ MOVEMENT
+  //
 
   const driftY =
     useSharedValue(0);
@@ -69,7 +74,9 @@ export default function LoveNode({
   const driftX =
     useSharedValue(0);
 
-  // ✨ activation
+  //
+  // ✨ ACTIVATION
+  //
 
   const pressScale =
     useSharedValue(1);
@@ -77,12 +84,18 @@ export default function LoveNode({
   const auraScale =
     useSharedValue(1);
 
+  //
+  // ✨ FIELD GLOW
+  //
+
   const glowOpacity =
     useSharedValue(0.92);
 
   useEffect(() => {
 
-    // 🌊 breathing pulse
+    //
+    // 🌊 BREATHING PULSE
+    //
 
     scale.value =
       withRepeat(
@@ -111,7 +124,9 @@ export default function LoveNode({
         true
       );
 
-    // ✨ vertical movement
+    //
+    // ✨ VERTICAL MOVEMENT
+    //
 
     driftY.value =
       withRepeat(
@@ -130,21 +145,23 @@ export default function LoveNode({
         true
       );
 
-    // ✨ horizontal movement
+    //
+    // ✨ HORIZONTAL MOVEMENT
+    //
 
     driftX.value =
       withRepeat(
         withSequence(
 
-          withTiming(4, {
+          withTiming(2, {
             duration: 5200,
           }),
 
-          withTiming(-4, {
+          withTiming(-2, {
             duration: 4600,
           }),
 
-          withTiming(2, {
+          withTiming(1, {
             duration: 3800,
           }),
         ),
@@ -153,7 +170,9 @@ export default function LoveNode({
         true
       );
 
-    // ✨ pulse
+    //
+    // ✨ FIELD PULSE
+    //
 
     glowOpacity.value =
       withRepeat(
@@ -163,7 +182,7 @@ export default function LoveNode({
             duration: 5000,
           }),
 
-          withTiming(0.84, {
+          withTiming(0.88, {
             duration: 5000,
           }),
         ),
@@ -174,7 +193,9 @@ export default function LoveNode({
 
   }, []);
 
-  // ✨ stable touch layer
+  //
+  // ✨ FIELD MOVEMENT
+  //
 
   const animatedStyle =
     useAnimatedStyle(() => {
@@ -205,7 +226,9 @@ export default function LoveNode({
       };
     });
 
-  // ✨ geometry expansion
+  //
+  // ✨ GEOMETRY EXPANSION
+  //
 
   const canvasStyle =
     useAnimatedStyle(() => {
@@ -223,18 +246,23 @@ export default function LoveNode({
     });
 
   return (
+
     <AnimatedPressable
 
       disabled={!interactive}
 
       onPress={() => {
 
-        // ✨ decorative mode
+        //
+        // ✨ DECORATIVE MODE
+        //
 
         if (!interactive)
           return;
 
-        // ✨ awaken node
+        //
+        // ✨ AWAKEN NODE
+        //
 
         pressScale.value =
           withTiming(1.18, {
@@ -261,7 +289,9 @@ export default function LoveNode({
             duration: 500,
           });
 
-        // ✨ enter resonance
+        //
+        // ✨ ENTER RESONANCE
+        //
 
         setTimeout(() => {
 
@@ -277,7 +307,9 @@ export default function LoveNode({
 
         }, 820);
 
-        // ✨ restore field
+        //
+        // ✨ RESTORE FIELD
+        //
 
         setTimeout(() => {
 
@@ -391,6 +423,16 @@ export default function LoveNode({
             strokeWidth={1.3}
 
             color="rgba(255,255,255,0.34)"
+          />
+
+          {/* ✨ INNER WARMTH */}
+
+          <Circle
+            cx={CENTER}
+            cy={CENTER}
+            r={10}
+
+            color="rgba(216,166,255,0.08)"
           />
 
           {/* ✨ INNER RING */}

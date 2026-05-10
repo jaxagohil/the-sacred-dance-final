@@ -17,10 +17,19 @@ import { processReflection } from "../../db/flow";
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 
+import {
+  Colors,
+} from "../../constants/theme";
+
 const guideColors = {
-  guide_heart: "#ff6b9a",
-  guide_structure: "#4da6ff",
-  guide_cosmic: "#ffffff",
+  guide_heart:
+    Colors.pink,
+
+  guide_structure:
+    Colors.blue,
+
+  guide_cosmic:
+    Colors.white,
 };
 
 const WORDS = [
@@ -713,22 +722,37 @@ if (
       null
     );
 
-    setOriginalProfile({
+setOriginalProfile({
+
+  //
+  // 👤
+  //
+
   name,
+
   location,
+
   language,
 
   avatar_url:
-    safeAvatar,
+    safeAvatar || null,
 
-  what_repeats:
-    repeats,
+  //
+  // ✨ GUIDES
+  //
 
-  line_that_feels_like_you:
-    line,
+  guide_1_name:
+    guideNames.guide_heart,
 
-  childhood_signals:
-    childhoodSignals,
+  guide_2_name:
+    guideNames.guide_structure,
+
+  guide_3_name:
+    guideNames.guide_cosmic,
+
+  //
+  // 🌊 SLIDERS
+  //
 
   givingreceiving:
     sliders.givingreceiving,
@@ -739,14 +763,24 @@ if (
   lackabundance:
     sliders.abundancelack,
 
-  guide_1_name:
-    guideNames.guide_heart,
+  //
+  // 🌿 CHILDHOOD
+  //
 
-  guide_2_name:
-    guideNames.guide_structure,
+  childhood_signals:
+    {
+      ...childhoodSignals,
+    },
 
-  guide_3_name:
-    guideNames.guide_cosmic,
+  //
+  // ✨ TEXT
+  //
+
+  what_repeats:
+    repeats,
+
+  line_that_feels_like_you:
+    line,
 });
 
   } catch (error) {
@@ -767,8 +801,8 @@ if (
     <View
       style={{
         flex: 1,
-        backgroundColor:
-          "black",
+backgroundColor:
+  Colors.background,
       }}
     >
 
@@ -788,8 +822,8 @@ if (
     style={{
 color:
   hasChanges
-    ? "white"
-    : "#444",
+    ? Colors.white
+    : Colors.subtleText,
       fontSize: 18,
     }}
   >
@@ -841,7 +875,7 @@ color:
                   height: 90,
                   borderRadius: 45,
                   backgroundColor:
-                    "#222",
+  "rgba(255,255,255,0.015)",
                 }}
               />
 
@@ -866,8 +900,8 @@ color:
 
                 <Text
                   style={{
-                    color:
-                      "#666",
+color:
+  Colors.subtleText,
                   }}
                 >
                   +
@@ -888,11 +922,13 @@ color:
 
             placeholder="your name"
 
-            placeholderTextColor="#555"
+placeholderTextColor={
+  Colors.mutedText
+}
 
             style={{
-              color:
-                "white",
+color:
+  Colors.white,
 
               fontSize: 16,
 
@@ -913,8 +949,8 @@ color:
 
             <Text
               style={{
-                color:
-                  "#555",
+color:
+  Colors.mutedText,
 
                 fontSize: 12,
 
@@ -934,7 +970,7 @@ color:
         <View
           style={{
             paddingHorizontal: 20,
-            marginBottom: 20,
+            marginBottom: 10,
           }}
         >
 
@@ -942,16 +978,27 @@ color:
             value={repeats}
             onChangeText={setRepeats}
             placeholder="what repeats"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+placeholderTextColor={
+  Colors.subtleText
+}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
             style={{
-              color: "white",
+color:
+  Colors.white,
               minHeight: 70,
               textAlign: "center",
               lineHeight: 22,
-              marginBottom: 10,
+              marginBottom: 5,
+              backgroundColor:
+  "rgba(255,255,255,0.008)",
+
+borderRadius: 16,
+
+paddingHorizontal: 12,
+
+paddingVertical: 10,
             }}
           />
 
@@ -959,14 +1006,25 @@ color:
             value={line}
             onChangeText={setLine}
             placeholder="a line that feels like you"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+placeholderTextColor={
+  Colors.subtleText
+}
             multiline
             numberOfLines={2}
             textAlignVertical="top"
             style={{
-              color: "white",
+color:
+  Colors.white,
               textAlign: "center",
               lineHeight: 22,
+              backgroundColor:
+  "rgba(255,255,255,0.008)",
+
+borderRadius: 16,
+
+paddingHorizontal: 12,
+
+paddingVertical: 10,
             }}
           />
 
@@ -979,7 +1037,7 @@ color:
             justifyContent: "center",
             gap: 20,
             marginTop: 15,
-            marginBottom: 30,
+            marginBottom: 20,
           }}
         >
           {(Object.keys(guideNames) as (keyof typeof guideNames)[]).map((key) => (
@@ -992,12 +1050,24 @@ color:
                   [key]: text,
                 }))
               }
-              style={{
-                color: guideColors[key],
-                fontSize: 14,
-                textAlign: "center",
-                minWidth: 70,
-              }}
+style={{
+  color:
+    guideColors[key],
+
+  fontSize: 14,
+
+  textAlign:
+    "center",
+
+  minWidth: 70,
+
+  paddingVertical: 6,
+
+  borderRadius: 12,
+
+  backgroundColor:
+    "rgba(255,255,255,0.008)",
+}}
             />
           ))}
         </View>
@@ -1006,13 +1076,14 @@ color:
         <View
           style={{
             paddingHorizontal: 20,
-            marginBottom: 20,
+            marginBottom: 10,
           }}
         >
 
           <Text
             style={{
-              color: "rgba(255,255,255,0.4)",
+color:
+  Colors.mutedText,
               fontSize: 11,
               textAlign: "center",
               marginBottom: 2,
@@ -1059,7 +1130,8 @@ color:
 
                   <Text
                     style={{
-                      color: "#666",
+color:
+  Colors.subtleText,
                       fontSize: 10,
                     }}
                   >
@@ -1088,9 +1160,9 @@ color:
                       minimumValue={-1}
                       maximumValue={1}
                       step={0.01}
-                      minimumTrackTintColor="#555"
-                      maximumTrackTintColor="#555"
-                      thumbTintColor="#fff"
+                      minimumTrackTintColor="rgba(255,255,255,0.25)"
+                      maximumTrackTintColor="rgba(255,255,255,0.12)"
+                      thumbTintColor="white"
                     />
 
                   </View>
@@ -1122,7 +1194,8 @@ color:
 
           <Text
             style={{
-              color: "rgba(255,255,255,0.4)",
+color:
+  Colors.mutedText,
               fontSize: 11,
               textAlign: "center",
               marginBottom: 2,
@@ -1156,14 +1229,20 @@ color:
                   onPress={() =>
                     toggleWord(word.key)
                   }
-                  style={{
-                    color:
-                      active
-                        ? "white"
-                        : "#555",
+style={{
+  color:
+    active
+      ? Colors.gold
+      : Colors.mutedText,
 
-                    margin: 6,
-                  }}
+  opacity:
+    active ? 1 : 0.55,
+
+  fontWeight:
+    active ? "500" : "300",
+
+  margin: 6,
+}}
                 >
                   {word.label}
                 </Text>
@@ -1174,6 +1253,157 @@ color:
           </View>
 
         </View>
+
+        {/* 🌍 LOCATION / LANGUAGE PICKER */}
+
+{showPicker && (
+
+  <View
+    style={{
+
+      position: "absolute",
+
+      left: 0,
+      right: 0,
+      bottom: 0,
+
+      paddingTop: 28,
+      paddingBottom: 42,
+
+      paddingHorizontal: 24,
+
+      backgroundColor:
+        "rgba(0,0,0,0.96)",
+
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+
+      borderTopWidth: 1,
+
+      borderColor:
+        "rgba(255,255,255,0.04)",
+
+      zIndex: 50,
+    }}
+  >
+
+    {/* ✨ TITLE */}
+
+    <Text
+      style={{
+        color:
+          Colors.softText,
+
+        textAlign:
+          "center",
+
+        marginBottom: 24,
+
+        fontSize: 13,
+
+        letterSpacing: 1,
+      }}
+    >
+      Location & Language
+    </Text>
+
+    {/* 🌍 LOCATION */}
+
+    <TextInput
+      value={location}
+
+      onChangeText={
+        setLocation
+      }
+
+      placeholder="location"
+
+      placeholderTextColor={
+        Colors.subtleText
+      }
+
+      style={{
+
+        color:
+          Colors.white,
+
+        backgroundColor:
+          "rgba(255,255,255,0.008)",
+
+        borderRadius: 16,
+
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+
+        marginBottom: 12,
+
+        textAlign: "center",
+      }}
+    />
+
+    {/* 🌐 LANGUAGE */}
+
+    <TextInput
+      value={language}
+
+      onChangeText={
+        setLanguage
+      }
+
+      placeholder="language"
+
+      placeholderTextColor={
+        Colors.subtleText
+      }
+
+      autoCapitalize="characters"
+
+      style={{
+
+        color:
+          Colors.white,
+
+        backgroundColor:
+          "rgba(255,255,255,0.008)",
+
+        borderRadius: 16,
+
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+
+        marginBottom: 20,
+
+        textAlign: "center",
+      }}
+    />
+
+    {/* ✨ CLOSE */}
+
+    <TouchableOpacity
+      onPress={() =>
+        setShowPicker(false)
+      }
+    >
+
+      <Text
+        style={{
+          color:
+            Colors.mutedText,
+
+          textAlign:
+            "center",
+
+          fontSize: 13,
+        }}
+      >
+        close
+      </Text>
+
+    </TouchableOpacity>
+
+  </View>
+
+)}
 
       </TouchableOpacity>
 

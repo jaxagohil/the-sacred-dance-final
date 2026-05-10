@@ -1,32 +1,30 @@
-// components/connections/UnityConsciousnessNode.tsx
-
 import React, {
-    useEffect,
+  useEffect,
 } from "react";
 
 import {
-    Pressable,
-    View,
+  Pressable,
+  View,
 } from "react-native";
 
 import {
-    Canvas,
-    Circle,
-    Group,
-    Path,
+  Canvas,
+  Circle,
+  Group,
+  Path,
 } from "@shopify/react-native-skia";
 
 import {
-    router,
+  router,
 } from "expo-router";
 
 import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 
 type Props = {
@@ -52,16 +50,30 @@ export default function UnityConsciousnessNode({
   y,
 }: Props) {
 
+  //
+  // 🌊 BREATHING
+  //
+
   const scale =
     useSharedValue(1);
+
+  //
+  // ✨ FIELD DRIFT
+  //
 
   const drift =
     useSharedValue(0);
 
+  //
+  // ✨ SACRED ROTATION
+  //
+
   const rotate =
     useSharedValue(0);
 
-  // ✨ activation
+  //
+  // ✨ ACTIVATION
+  //
 
   const pressScale =
     useSharedValue(1);
@@ -74,7 +86,9 @@ export default function UnityConsciousnessNode({
 
   useEffect(() => {
 
-    // 🌊 breathing
+    //
+    // 🌊 BREATHING
+    //
 
     scale.value =
       withRepeat(
@@ -103,7 +117,9 @@ export default function UnityConsciousnessNode({
         true
       );
 
-    // ✨ drift
+    //
+    // ✨ FIELD DRIFT
+    //
 
     drift.value =
       withRepeat(
@@ -122,7 +138,9 @@ export default function UnityConsciousnessNode({
         true
       );
 
-    // ✨ slow rotation
+    //
+    // ✨ SACRED ROTATION
+    //
 
     rotate.value =
       withRepeat(
@@ -136,18 +154,20 @@ export default function UnityConsciousnessNode({
         -1
       );
 
-    // ✨ pulse
+    //
+    // ✨ FIELD PULSE
+    //
 
     glowOpacity.value =
       withRepeat(
         withSequence(
 
           withTiming(1, {
-            duration: 5000,
+            duration: 6000,
           }),
 
-          withTiming(0.84, {
-            duration: 5000,
+          withTiming(0.88, {
+            duration: 6000,
           }),
         ),
 
@@ -157,7 +177,9 @@ export default function UnityConsciousnessNode({
 
   }, []);
 
-  // ✨ stable touch layer
+  //
+  // ✨ FIELD MOVEMENT
+  //
 
   const animatedStyle =
     useAnimatedStyle(() => {
@@ -183,7 +205,9 @@ export default function UnityConsciousnessNode({
       };
     });
 
-  // ✨ rotating geometry only
+  //
+  // ✨ ROTATING GEOMETRY
+  //
 
   const canvasStyle =
     useAnimatedStyle(() => {
@@ -206,11 +230,14 @@ export default function UnityConsciousnessNode({
     });
 
   return (
+
     <AnimatedPressable
 
       onPress={() => {
 
-        // ✨ awaken node
+        //
+        // ✨ AWAKEN NODE
+        //
 
         pressScale.value =
           withTiming(1.18, {
@@ -237,7 +264,9 @@ export default function UnityConsciousnessNode({
             duration: 500,
           });
 
-        // ✨ enter resonance
+        //
+        // ✨ ENTER RESONANCE
+        //
 
         setTimeout(() => {
 
@@ -253,8 +282,9 @@ export default function UnityConsciousnessNode({
 
         }, 820);
 
-        // ✨ restore field
-        // after navigation
+        //
+        // ✨ RESTORE FIELD
+        //
 
         setTimeout(() => {
 
@@ -330,7 +360,7 @@ export default function UnityConsciousnessNode({
             style="stroke"
             strokeWidth={1.2}
 
-            color="rgba(255,255,255,0.28)"
+            color="rgba(255,255,255,0.24)"
           />
 
           {/* ✨ INNER ORBIT */}
@@ -343,7 +373,7 @@ export default function UnityConsciousnessNode({
             style="stroke"
             strokeWidth={1}
 
-            color="rgba(255,255,255,0.20)"
+            color="rgba(255,255,255,0.18)"
           />
 
           {/* ✨ SACRED GEOMETRY */}
@@ -359,7 +389,7 @@ export default function UnityConsciousnessNode({
               style="stroke"
               strokeWidth={1}
 
-              color="rgba(255,255,255,0.24)"
+              color="rgba(255,255,255,0.22)"
             />
 
             <Path
@@ -371,7 +401,7 @@ export default function UnityConsciousnessNode({
               style="stroke"
               strokeWidth={1}
 
-              color="rgba(255,255,255,0.24)"
+              color="rgba(255,255,255,0.22)"
             />
 
             <Path
@@ -383,7 +413,7 @@ export default function UnityConsciousnessNode({
               style="stroke"
               strokeWidth={0.8}
 
-              color="rgba(255,255,255,0.18)"
+              color="rgba(255,255,255,0.16)"
             />
 
             <Path
@@ -395,7 +425,7 @@ export default function UnityConsciousnessNode({
               style="stroke"
               strokeWidth={0.8}
 
-              color="rgba(255,255,255,0.18)"
+              color="rgba(255,255,255,0.16)"
             />
 
             <Circle
@@ -404,9 +434,9 @@ export default function UnityConsciousnessNode({
               r={36}
 
               style="stroke"
-              strokeWidth={1.4}
+              strokeWidth={1.3}
 
-              color="rgba(255,255,255,0.34)"
+              color="rgba(255,255,255,0.30)"
             />
 
             <Circle
@@ -417,10 +447,20 @@ export default function UnityConsciousnessNode({
               style="stroke"
               strokeWidth={1}
 
-              color="rgba(255,255,255,0.24)"
+              color="rgba(255,255,255,0.22)"
             />
 
           </Group>
+
+          {/* ✨ INNER WARMTH */}
+
+          <Circle
+            cx={CENTER}
+            cy={CENTER}
+            r={10}
+
+            color="rgba(143,182,255,0.06)"
+          />
 
           {/* ✨ SATELLITE STARS */}
 
@@ -428,28 +468,32 @@ export default function UnityConsciousnessNode({
             cx={90}
             cy={18}
             r={1.6}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={162}
             cy={90}
             r={1.6}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={90}
             cy={162}
             r={1.6}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           <Circle
             cx={18}
             cy={90}
             r={1.6}
-            color="white"
+
+            color="rgba(255,255,255,0.82)"
           />
 
           {/* ✨ CORE */}
@@ -458,6 +502,7 @@ export default function UnityConsciousnessNode({
             cx={CENTER}
             cy={CENTER}
             r={5}
+
             color="white"
           />
 

@@ -30,6 +30,13 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
+import {
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  useFonts,
+} from "@expo-google-fonts/inter";
+
 export default function RootLayout() {
 
   const colorScheme =
@@ -42,6 +49,19 @@ export default function RootLayout() {
     loadValidSignals();
 
   }, []);
+
+  const [fontsLoaded] =
+  useFonts({
+
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+  });
+
+if (!fontsLoaded) {
+
+  return null;
+}
 
   return (
 

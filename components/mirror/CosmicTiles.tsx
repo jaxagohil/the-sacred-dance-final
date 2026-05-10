@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import {
   getCosmicData,
   getCosmicInterpretation,
 } from "../../lib/cosmic";
+
+import {
+  Colors,
+} from "../../constants/theme";
 
 function getPhaseIcon(type: string) {
   const map: Record<string, string> = {
@@ -105,60 +109,100 @@ export default function CosmicTiles({
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+paddingTop: 26,
+paddingBottom: 14,
   },
 
   container: {
+    alignItems: "center",
     paddingVertical: 6,
   },
 
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 10,
   },
 
-  tile: {
-    flex: 1,
-    borderRadius: 16,
-    paddingHorizontal: 6,
-    paddingVertical: 12,
-    minHeight: 85,
-    alignItems: "center",
-    marginHorizontal: 6,
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
+tile: {
+  width: 78,
+
+  borderRadius: 22,
+
+  paddingHorizontal: 8,
+  paddingVertical: 14,
+
+  minHeight: 92,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(255,255,255,0.015)",
+
+  borderWidth: 0.5,
+
+  borderColor:
+    "rgba(255,255,255,0.03)",
+},
 
   energyTile: {
     backgroundColor: "rgba(255,255,255,0.05)",
   },
 
   icon: {
-    fontSize: 14,
-    opacity: 0.5,
+fontSize: 12,
+
+opacity: 0.38,
     marginBottom: 6,
   },
 
-  value: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.85)",
-    textAlign: "center",
-  },
+value: {
+  fontSize: 11,
 
-  line: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.4)",
-    marginTop: 6,
-    textAlign: "center",
-    lineHeight: 14,
-  },
+  color:
+    Colors.white,
 
-  aiText: {
-    marginTop: 12,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
-    textAlign: "center",
-    lineHeight: 18,
-    paddingHorizontal: 10,
-  },
+  textAlign: "center",
+
+  marginTop: 2,
+
+  opacity: 0.82,
+
+  fontWeight: "300",
+},
+
+line: {
+  fontSize: 9,
+
+  color:
+    Colors.mutedText,
+
+  marginTop: 8,
+
+  textAlign: "center",
+
+  lineHeight: 13,
+
+  opacity: 0.72,
+},
+
+aiText: {
+  marginTop: 18,
+
+  fontSize: 11,
+
+  color:
+    Colors.softText,
+
+  textAlign: "center",
+
+  lineHeight: 21,
+
+  paddingHorizontal: 26,
+
+  opacity: 0.72,
+
+  fontStyle: "italic",
+},
 });

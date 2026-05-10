@@ -1,53 +1,169 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * 🌌 Sacred Dance Theme System
+ *
+ * Shared design language across the app.
  */
 
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+
+  //
+  // 🌑 BACKGROUNDS
+  //
+
+  background:
+    "#020304",
+
+  card:
+    "rgba(255,255,255,0.015)",
+
+  border:
+    "rgba(255,255,255,0.04)",
+
+  //
+  // ✨ TEXT
+  //
+
+  white:
+    "#FFFFFF",
+
+  softText:
+    "rgba(255,255,255,0.68)",
+
+  mutedText:
+    "rgba(255,255,255,0.38)",
+
+  subtleText:
+    "rgba(255,255,255,0.18)",  
+
+  pink:
+  "#D8A6FF",
+
+blue:
+  "#8FB6FF",
+
+gold:
+  "#FFD700",
+
+  //
+  // 🌿 ACCENTS
+  //
+
+  success:
+    "#7ED6A5",
+
+  warning:
+    "#F2C94C",
+
+  error:
+    "#EB5757",
+
+    /**
+ * 🌌 SACRED FIELD
+ */
+
+fieldRing:
+  "rgba(255,255,255,0.35)",
+
+fieldGlow:
+  "rgba(110,140,255,0.14)",
+
+fieldWarm:
+  "rgba(216,166,255,0.05)",
+
+fieldDeep:
+  "rgba(20,30,70,0.26)",
+
+cosmicDust:
+  "rgba(255,255,255,0.03)",
+
+/**
+ * ✦ SACRED ACTIONS
+ */
+
+diamond:
+  "rgba(255,255,255,0.82)",
+
+portal:
+  "rgba(255,255,255,0.18)",
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const Fonts = {
+
+  //
+  // ✨ INTER
+  //
+
+  light:
+    "Inter_300Light",
+
+  regular:
+    "Inter_400Regular",
+
+  medium:
+    "Inter_500Medium",
+};
+
+export const Spacing = {
+
+  //
+  // 📏 SPACING
+  //
+
+  xs: 4,
+
+  sm: 8,
+
+  md: 16,
+
+  lg: 24,
+
+  xl: 32,
+
+  xxl: 48,
+
+  xxxl: 64,
+};
+
+export const Radius = {
+
+  //
+  // 🌕
+
+  sm: 8,
+
+  md: 16,
+
+  lg: 24,
+
+  xl: 32,
+
+  pill: 999,
+};
+
+export const Opacity = {
+
+  //
+  // 🌫️
+  //
+
+  subtle: 0.18,
+
+  soft: 0.38,
+
+  medium: 0.68,
+
+  strong: 0.9,
+};
+
+export const Motion = {
+
+  //
+  // 🌊 ANIMATION
+  //
+
+  fast: 180,
+
+  normal: 320,
+
+  slow: 600,
+};

@@ -1,5 +1,3 @@
-// components/connections/HumanAvatar.tsx
-
 import React, {
   useEffect,
 } from "react";
@@ -10,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-
 
 import Animated, {
   Easing,
@@ -71,28 +68,53 @@ export default function HumanAvatar({
   const glowSize =
     size + 24;
 
-  // ✨ constellation opacity
-  const opacity =
-    useSharedValue(0.28);
+  //
+  // ✨ CONSTELLATION VISIBILITY
+  //
 
-  // 👤 avatar opacity
+  const opacity =
+    useSharedValue(0.24);
+
+  //
+  // 👤 AVATAR VISIBILITY
+  //
+
   const avatarOpacity =
     useSharedValue(0);
 
-  // 🌊 breathing
+  //
+  // 🌊 BREATHING
+  //
+
   const scale =
     useSharedValue(0.96);
 
-  // ✨ floating
+  //
+  // ✨ FLOATING
+  //
+
   const driftY =
     useSharedValue(0);
 
-  // 🌌 visibility transitions
+  const driftX =
+    useSharedValue(0);
+
+  //
+  // ✨ PARTICLE MOVEMENT
+  //
+
+  const particleFloat =
+    useSharedValue(0);
+
+  //
+  // 🌌 VISIBILITY TRANSITIONS
+  //
+
   useEffect(() => {
 
     opacity.value =
       withTiming(
-        visible ? 1 : 0.28,
+        visible ? 1 : 0.24,
         {
           duration: 3200,
 
@@ -131,7 +153,10 @@ export default function HumanAvatar({
 
   }, [visible]);
 
-  // 🌊 living movement
+  //
+  // 🌊 LIVING MOVEMENT
+  //
+
   useEffect(() => {
 
     driftY.value =
@@ -140,6 +165,44 @@ export default function HumanAvatar({
 
           withTiming(-2, {
             duration: 4200,
+          }),
+
+          withTiming(2, {
+            duration: 5100,
+          }),
+
+          withTiming(-1, {
+            duration: 3900,
+          }),
+        ),
+
+        -1,
+        true
+      );
+
+    driftX.value =
+      withRepeat(
+        withSequence(
+
+          withTiming(1.5, {
+            duration: 6200,
+          }),
+
+          withTiming(-1.5, {
+            duration: 5700,
+          }),
+        ),
+
+        -1,
+        true
+      );
+
+    particleFloat.value =
+      withRepeat(
+        withSequence(
+
+          withTiming(-2, {
+            duration: 3400,
           }),
 
           withTiming(2, {
@@ -153,6 +216,10 @@ export default function HumanAvatar({
 
   }, []);
 
+  //
+  // ✨ FIELD MOVEMENT
+  //
+
   const animatedStyle =
     useAnimatedStyle(() => {
 
@@ -162,6 +229,11 @@ export default function HumanAvatar({
           opacity.value,
 
         transform: [
+
+          {
+            translateX:
+              driftX.value,
+          },
 
           {
             translateY:
@@ -176,6 +248,10 @@ export default function HumanAvatar({
       };
     });
 
+  //
+  // 👤 AVATAR
+  //
+
   const avatarStyle =
     useAnimatedStyle(() => {
 
@@ -186,13 +262,33 @@ export default function HumanAvatar({
       };
     });
 
+  //
+  // ✨ PARTICLES
+  //
+
+  const particleStyle =
+    useAnimatedStyle(() => {
+
+      return {
+
+        transform: [
+
+          {
+            translateY:
+              particleFloat.value,
+          },
+        ],
+      };
+    });
+
   return (
+
     <AnimatedPressable
 
-onPress={() => {
+      onPress={() => {
 
-  onPress?.();
-}}
+        onPress?.();
+      }}
 
       style={[
         {
@@ -212,7 +308,7 @@ onPress={() => {
       ]}
     >
 
-      {/* ✨ CONSTELLATION PLACEHOLDER */}
+      {/* ✨ OUTER FIELD */}
 
       <View
         style={[
@@ -274,9 +370,11 @@ onPress={() => {
 
       {/* ✨ PARTICLES */}
 
-      <View
+      <Animated.View
         style={[
           styles.particle,
+
+          particleStyle,
 
           {
             left: -6,
@@ -285,9 +383,11 @@ onPress={() => {
         ]}
       />
 
-      <View
+      <Animated.View
         style={[
           styles.particle,
+
+          particleStyle,
 
           {
             right: -4,
@@ -301,9 +401,11 @@ onPress={() => {
         ]}
       />
 
-      <View
+      <Animated.View
         style={[
           styles.particle,
+
+          particleStyle,
 
           {
             bottom: -4,
@@ -326,14 +428,14 @@ const styles = StyleSheet.create({
   outerGlow: {
     position: "absolute",
 
-    opacity: 0.18,
+    opacity: 0.12,
   },
 
   innerGlow: {
     position: "absolute",
 
-    backgroundColor:
-      "black",
+backgroundColor:
+  "rgba(0,0,0,0.45)",
 
     opacity: 0.45,
   },

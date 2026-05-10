@@ -1,12 +1,16 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { getAffirmation } from "../../lib/energy";
+import ChakraSystem from "../mirror/ChakraSystem";
 import EnergyBallSkia from "./energyBallSkia";
 import EnergyBody from "./energyBody";
-import ChakraSystem from "../mirror/ChakraSystem";
-import { getAffirmation } from "../../lib/energy";
 
 import type { Chakra } from "../../lib/energy";
+
+import {
+  Colors,
+} from "../../constants/theme";
 
 export default function EnergyField({
   dominant,
@@ -24,13 +28,6 @@ export default function EnergyField({
   // 🧩 STATE (ONLY ONCE)
   // ---------------------------
   const [selectedChakra, setSelectedChakra] = React.useState<Chakra | null>(null);
-
-  // ---------------------------
-  // 🔍 DEBUG
-  // ---------------------------
-  console.log("🔥 EnergyField energy:", energy);
-  console.log("🧠 Chakra scores:", scores);
-  console.log("🎯 Awareness Chakra:", dominant);
 
   // ---------------------------
   // 🧠 TRUST MIRROR
@@ -104,8 +101,8 @@ const styles = StyleSheet.create({
   },
 
   fieldContainer: {
-    width: 200,
-    height: 400,
+width: 240,
+height: 430,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -115,13 +112,13 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -30, // 🔥 move up
+    marginTop: -12, // 🔥 move up
   },
 
   energyBall: {
     position: "absolute",
-    width: 420,
-    height: 420,
+width: 460,
+height: 460,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 30,
@@ -151,13 +148,22 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
 
-  affirmationText: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
-    fontStyle: "italic",
-    textAlign: "center",
-    lineHeight: 20,
-  },
+affirmationText: {
+  color:
+    Colors.softText,
+
+  fontSize: 13,
+
+  fontStyle: "italic",
+
+  textAlign: "center",
+
+  lineHeight: 24,
+
+  fontWeight: "300",
+
+  opacity: 0.82,
+},
 
   insightWrapper: {
     marginTop: 6,

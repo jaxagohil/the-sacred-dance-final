@@ -26,14 +26,14 @@ export const chakraOrder: Chakra[] = [
 // 🎯 Y positions
 export const chakraY: Record<Chakra, number> = {
   soul_star: 15,
-  crown: 45,
-  third_eye: 65,
-  throat: 100,
-  heart: 160,
-  solar_plexus: 210,
-  sacral: 230,
-  root: 255,
-  earth_star: 370,
+  crown: 65,
+  third_eye: 85,
+  throat: 120,
+  heart: 180,
+  solar_plexus: 230,
+  sacral: 250,
+  root: 275,
+  earth_star: 390,
 };
 
 // 🎨 Colors

@@ -1063,7 +1063,7 @@ export const ORACLE_CARDS: OracleCard[] = [
 },
 
 {
-  card: 68,
+  card: 69,
   title: "I AM MAGIC",
   affirmation: "I AM MAGIC",
   message: "Balance is not perfection — it is awareness. You are being invited to listen to your inner world more closely. Where something feels off, it is simply asking to be seen, not fixed. Let your emotional body guide you back to centre.",

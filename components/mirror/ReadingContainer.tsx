@@ -1,15 +1,36 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
-  View,
+  Animated,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Animated,
+  View,
 } from "react-native";
 
-import { generateAIResponse } from "../../lib/generateAIResponse";
-import { selectOracleCard } from "../../lib/selectOracleCard";
-import { selectTarotCard } from "../../lib/selectTarotCard";
+import {
+  Colors,
+} from "../../constants/theme";
+
+import {
+  generateAIResponse,
+} from "../../lib/generateAIResponse";
+
+import {
+  selectOracleCard,
+} from "../../lib/selectOracleCard";
+
+import {
+  selectTarotCard,
+} from "../../lib/selectTarotCard";
+
+import OracleCard from "./OracleCard";
+
+import TarotCard from "./TarotCard";
 
 type Props = {
   context?: {
@@ -17,6 +38,7 @@ type Props = {
     distortion?: string[];
     lens?: string;
     chakra?: string;
+
     cosmic?: {
       phase?: string;
       moon?: string;
@@ -26,263 +48,489 @@ type Props = {
   };
 };
 
+//
 // 🎨 COLOUR SYSTEM
-const COLOUR_CONFIG: Record<string, string> = {
-  silver: "rgba(192,192,192,0.6)",
-  copper: "rgba(184,115,51,0.6)",
-  gold: "rgba(212,175,55,0.6)",
-  pink: "rgba(236,72,153,0.6)",
-  royalblue: "rgba(65,105,225,0.6)",
-  navy: "rgba(11,31,58,0.6)",
-  black: "rgba(255,255,255,0.2)",
-  white: "rgba(255,255,255,0.3)",
-  silvergold: "rgba(214,194,122,0.6)",
-  greygold: "rgba(168,162,158,0.6)",
-  grey: "rgba(107,114,128,0.6)",
-  maroon: "rgba(127,29,29,0.6)",
-  orange: "rgba(249,115,22,0.6)",
-  yellow: "rgba(250,204,21,0.6)",
-  green: "rgba(34,197,94,0.6)",
-  blue: "rgba(59,130,246,0.6)",
-  purple: "rgba(139,92,246,0.6)",
+//
+
+const COLOUR_CONFIG:
+  Record<string, string> = {
+
+  silver:
+    "#C0C0C0",
+
+  copper:
+    "#B87333",
+
+  gold:
+    "#D4AF37",
+
+  pink:
+    "#EC4899",
+
+  royalblue:
+    "#4169E1",
+
+  navy:
+    "#0B1F3A",
+
+  black:
+    "#999999",
+
+  white:
+    "#FFFFFF",
+
+  silvergold:
+    "#D6C27A",
+
+  greygold:
+    "#A8A29E",
+
+  grey:
+    "#6B7280",
+
+  maroon:
+    "#7F1D1D",
+
+  orange:
+    "#F97316",
+
+  yellow:
+    "#FACC15",
+
+  green:
+    "#22C55E",
+
+  blue:
+    "#3B82F6",
+
+  purple:
+    "#8B5CF6",
 };
 
-export default function ReadingContainer({ context }: Props) {
-  const [show, setShow] = useState(false);
-  const [showTarot, setShowTarot] = useState(false);
+export default function ReadingContainer({
+  context,
+}: Props) {
 
-  const [oracle, setOracle] = useState<any>(null);
-  const [tarot, setTarot] = useState<any>(null);
-  const [typed, setTyped] = useState("");
+  const [show, setShow] =
+    useState(false);
 
-  const tarotAnim = useRef(new Animated.Value(0)).current;
+  const [showTarot, setShowTarot] =
+    useState(false);
 
-  const handleOpen = async () => {
-    const ctx = context || {};
+  const [oracle, setOracle] =
+    useState<any>(null);
 
-    // 🧠 Select cards
-    const selectedOracle = selectOracleCard(ctx);
-    const selectedTarot = selectTarotCard(ctx);
+  const [tarot, setTarot] =
+    useState<any>(null);
+
+  const [typed, setTyped] =
+    useState("");
+
+  const tarotAnim =
+    useRef(
+      new Animated.Value(0)
+    ).current;
+
+  //
+  // ✨ OPEN READING
+  //
+
+  const handleOpen =
+    async () => {
+
+    const ctx =
+      context || {};
+
+    //
+    // 🧠 SELECT CARDS
+    //
+
+    const selectedOracle =
+      selectOracleCard(ctx);
+
+    const selectedTarot =
+      selectTarotCard(ctx);
 
     setOracle(selectedOracle);
+
     setTarot(selectedTarot);
 
     setTyped("");
+
     setShowTarot(false);
+
+    tarotAnim.setValue(0);
+
     setShow(true);
 
-    // 🤖 AI CALL (FIXED + FULL CONTEXT)
+    //
+    // 🤖 AI READING
+    //
+
     try {
-      const aiText = await generateAIResponse({
+
+      const aiText =
+        await generateAIResponse({
+
         type: "cards",
+
         data: {
+
           oracle: {
-            title: selectedOracle.title,
-            affirmation: selectedOracle.affirmation,
+
+            number:
+              selectedOracle.card,
+
+            title:
+              selectedOracle.title,
+
+            affirmation:
+              selectedOracle.affirmation,
           },
+
           tarot: {
-            name: selectedTarot.name,
-            message: selectedTarot.message,
+
+            name:
+              selectedTarot.name,
+
+            archetype:
+              selectedTarot.archetype,
+
+            message:
+              selectedTarot.message,
           },
 
-          // 🔥 core signals
-          patterns: ctx.patterns,
-          distortion: ctx.distortion,
-          lens: ctx.lens,
-          chakra: ctx.chakra,
+          patterns:
+            ctx.patterns,
 
-          // 🌌 cosmic flattened
-          phase: ctx.cosmic?.phase,
-          moon: ctx.cosmic?.moon,
-          energy: ctx.cosmic?.energy,
+          distortion:
+            ctx.distortion,
+
+          lens:
+            ctx.lens,
+
+          chakra:
+            ctx.chakra,
+
+          phase:
+            ctx.cosmic?.phase,
+
+          moon:
+            ctx.cosmic?.moon,
+
+          energy:
+            ctx.cosmic?.energy,
         },
       });
 
       setTyped(aiText);
-    } catch (err) {
-      console.log("AI fallback");
 
-      // ✅ FIXED fallback
-      setTyped(selectedOracle.affirmation || "");
+    } catch (err) {
+
+      console.log(
+        "AI fallback"
+      );
+
+      setTyped(
+        selectedOracle
+          .affirmation || ""
+      );
     }
   };
 
-  // 🔮 tarot reveal
-  useEffect(() => {
-    if (!show || !oracle) return;
+  //
+  // 🔮 TAROT REVEAL
+  //
 
-    const t = setTimeout(() => {
+  useEffect(() => {
+
+    if (!show || !oracle)
+      return;
+
+    const t =
+      setTimeout(() => {
+
       setShowTarot(true);
 
-      Animated.timing(tarotAnim, {
-        toValue: 1,
-        duration: 700,
-        useNativeDriver: true,
-      }).start();
+      Animated.timing(
+        tarotAnim,
+
+        {
+          toValue: 1,
+
+          duration: 700,
+
+          useNativeDriver: true,
+        }
+
+      ).start();
+
     }, 1200);
 
-    return () => clearTimeout(t);
+    return () =>
+      clearTimeout(t);
+
   }, [show, oracle]);
 
+  //
+  // ✨ TAROT ANIMATION
+  //
+
   const tarotStyle = {
-    opacity: tarotAnim,
+
+    opacity:
+      tarotAnim,
+
     transform: [
+
       {
-        translateY: tarotAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [30, -10],
-        }),
+        translateY:
+          tarotAnim.interpolate({
+            inputRange: [0, 1],
+
+            outputRange:
+              [30, -10],
+          }),
       },
-      { rotate: "5deg" },
+
+      {
+        rotate: "5deg",
+      },
     ],
   };
 
+  //
+  // ✨ INITIAL STATE
+  //
+
   if (!oracle) {
+
     return (
+
       <View style={styles.container}>
-        <TouchableOpacity onPress={handleOpen}>
+
+        <TouchableOpacity
+          onPress={handleOpen}
+        >
+
           <Text style={styles.trigger}>
-            Energy Read
+            pull a reading
           </Text>
+
         </TouchableOpacity>
+
       </View>
     );
   }
 
+  //
+  // 🎨 ORACLE COLOUR
+  //
+
   const borderColor =
-    COLOUR_CONFIG[oracle.colour] ||
-    "rgba(255,255,255,0.2)";
+    COLOUR_CONFIG[
+      oracle.colour
+    ] ||
+
+    "#D4AF37";
 
   return (
+
     <View style={styles.container}>
+
       {show && (
+
         <View style={styles.canvas}>
 
-          {/* 🃏 ORACLE (AFFIRMATION ONLY) */}
-          <View style={styles.oracleWrap}>
-            <View style={[styles.oracleCard, { borderColor }]}>
-              <Text style={styles.oracleTitle}>
-                {oracle.title}
-              </Text>
+          {/* 🃏 ORACLE */}
 
-              <Text style={styles.oracleMessage}>
-                {oracle.affirmation}
-              </Text>
-            </View>
+          <View style={styles.oracleWrap}>
+
+            <OracleCard
+              number={oracle.card}
+              title={oracle.title}
+              message={
+                oracle.affirmation
+              }
+              colour={borderColor}
+            />
+
           </View>
 
           {/* 🔮 TAROT */}
+
           {showTarot && tarot && (
-            <Animated.View style={[styles.tarot, tarotStyle]}>
-              <View style={styles.tarotCard}>
-                <Text style={styles.tarotTitle}>
-                  {tarot.name}
-                </Text>
-                <Text style={styles.tarotMessage}>
-                  {tarot.message}
-                </Text>
-              </View>
+
+            <Animated.View
+              style={[
+                styles.tarot,
+                tarotStyle,
+              ]}
+            >
+
+              <TarotCard
+                number={tarot.number}
+                title={tarot.name}
+                archetype={tarot.archetype}
+                message={tarot.message}
+              />
+
             </Animated.View>
           )}
 
-          {/* 🧠 AI READING */}
+          {/* 🧠 READING */}
+
           {showTarot && (
-            <Text style={styles.reading}>
-              {typed}
-            </Text>
+
+            <>
+
+              {/* 🌙 READING LINE */}
+
+              <View
+                style={
+                  styles.readingLine
+                }
+              />
+
+              <Text style={styles.reading}>
+                {typed}
+              </Text>
+
+            </>
           )}
 
         </View>
       )}
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
+
+  //
+  // 🌌 CONTAINER
+  //
+
   container: {
     alignItems: "center",
+
     marginTop: 40,
   },
 
+  //
+  // ✨ TRIGGER
+  //
+
   trigger: {
-    color: "rgba(255,255,255,0.6)",
+    color:
+      Colors.softText,
+
     fontSize: 14,
+
+    letterSpacing: 1,
+
     marginTop: 20,
   },
+
+  //
+  // 🌌 CANVAS
+  //
 
   canvas: {
     width: "100%",
+
     alignItems: "center",
+
     paddingTop: 40,
   },
 
+  //
+  // 🃏 ORACLE
+  //
+
   oracleWrap: {
     alignItems: "center",
+
     marginTop: 20,
+
+    zIndex: 1,
   },
 
-  oracleCard: {
-    width: 260,
-    minHeight: 340,
-    paddingVertical: 28,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    backgroundColor: "#000",
-    borderWidth: 3,
-    alignItems: "center",
-  },
-
-  oracleTitle: {
-    fontSize: 17,
-    color: "white",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-
-  oracleMessage: {
-    color: "rgba(255,255,255,0.7)",
-    textAlign: "center",
-    lineHeight: 22,
-  },
+  //
+  // 🔮 TAROT
+  //
 
   tarot: {
-    marginTop: -160,
+
+    marginTop: -120,
+
     alignSelf: "flex-end",
-    marginRight: 30,
-    width: 190,
+
+    marginRight: 22,
+
+    width: 180,
+
     zIndex: 2,
   },
 
-  tarotCard: {
-    minHeight: 260,
-    paddingVertical: 28,
-    paddingHorizontal: 16,
-    borderRadius: 26,
-    backgroundColor: "#000",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    justifyContent: "center",
+  //
+  // 🌙 READING LINE
+  //
+
+  readingLine: {
+
+    width: 42,
+    height: 1,
+
+    borderRadius: 999,
+
+    backgroundColor:
+      "rgba(255,255,255,0.12)",
+
+    marginTop: 44,
+    marginBottom: -16,
   },
 
-  tarotTitle: {
-    color: "rgba(255,255,255,0.9)",
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  tarotMessage: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 18,
-  },
+  //
+  // 🧠 READING
+  //
 
   reading: {
-    marginTop: 28,
-    paddingHorizontal: 30,
+
+    marginTop: 42,
+
+    paddingHorizontal: 14,
+
+    paddingVertical: 5,
+
+    maxWidth: 340,
+
     textAlign: "center",
-    color: "rgba(255,255,255,0.85)",
-    lineHeight: 22,
+
+    color:
+      "rgba(255,255,255,0.84)",
+
+    lineHeight: 30,
+
+    fontSize: 15,
+
+    fontWeight: "300",
+
+    letterSpacing: 0.1,
+
+    backgroundColor:
+      "rgba(255,255,255,0.02)",
+
+    borderRadius: 28,
+
+    borderWidth: 1,
+
+    borderColor:
+      "rgba(255,255,255,0.04)",
+
+    overflow: "hidden",
+
   },
 });

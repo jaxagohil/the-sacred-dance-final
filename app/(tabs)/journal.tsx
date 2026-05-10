@@ -1,24 +1,33 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  TouchableOpacity,
+  Dimensions,
   Keyboard,
   KeyboardAvoidingView,
-  Dimensions,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 
-import { supabase } from "../../services/supabase";
 import { processReflection } from "../../db/flow";
+
 import { getUserId } from "../../lib/user";
+
+import { supabase } from "../../services/supabase";
+
+import {
+  Colors,
+  Fonts,
+  Opacity,
+  Spacing,
+} from "../../constants/theme";
 
 import EmotionCloudSkia from "../../components/signals/EmotionCloudSkia";
 
-const { height } = Dimensions.get("window");
-
-type Mode = "idle" | "writing";
+const { height } =
+  Dimensions.get("window");
 
 type Emotion = {
   id: number;
@@ -26,218 +35,426 @@ type Emotion = {
 };
 
 export default function Journal() {
-  const [mode, setMode] = useState<Mode>("idle");
 
-  const [text, setText] = useState("");
-  const [selected, setSelected] = useState<number[]>([]);
-  
+  //
+  // 🌊 STATE
+  //
 
-  const [ack, setAck] = useState(false);
-  const [emotions, setEmotions] = useState<Emotion[]>([]);
+  const [text, setText] =
+    useState("");
 
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [selected, setSelected] =
+    useState<number[]>([]);
 
- const hasContent =
-  text.length > 0 ||
-  selected.length > 0;
+  const [ack, setAck] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [emotions, setEmotions] =
+    useState<Emotion[]>([]);
+
+  //
+  // ✨ DERIVED
+  //
+
+  const hasContent =
+
+    text.trim().length > 0 ||
+
+    selected.length > 0;
+
+  //
+  // 🌿 LOAD EMOTIONS
+  //
 
   useEffect(() => {
-    const loadEmotions = async () => {
-      const { data } = await supabase
-        .from("emotions")
-        .select("id, word");
+
+    async function loadEmotions() {
+
+      const { data } =
+        await supabase
+
+          .from("emotions")
+
+          .select("id, word");
 
       setEmotions(data || []);
-    };
+    }
 
     loadEmotions();
+
   }, []);
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardVisible(true);
-    });
+  //
+  // 🌊 TOGGLE EMOTION
+  //
 
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardVisible(false);
-    });
+  const toggleEmotion = (
+    id: number
+  ) => {
 
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
-  const toggleEmotion = (id: number) => {
     setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((e) => e !== id);
-      if (prev.length >= 3) return prev;
+
+      if (
+        prev.includes(id)
+      ) {
+
+        return prev.filter(
+          (e) => e !== id
+        );
+      }
+
+      if (
+        prev.length >= 3
+      ) {
+
+        return prev;
+      }
+
       return [...prev, id];
     });
   };
 
-  const handleTyping = (t: string) => {
+  //
+  // ✍️ TYPING
+  //
+
+  const handleTyping = (
+    t: string
+  ) => {
+
     setText(t);
   };
 
-  const handleRelease = async () => {
-    if (!text.trim() && selected.length === 0) return;
+  //
+  // ✨ RELEASE
+  //
 
-    const userId = await getUserId();
-    if (!userId) return;
+  const handleRelease =
+    async () => {
 
-    await processReflection({
-      userId,
-      text,
-      emotions: selected,
-      source: "journal",
-    });
+      if (!hasContent)
+        return;
 
-    Keyboard.dismiss();
+      const userId =
+        await getUserId();
 
-    setText("");
-    setSelected([]);
-    setMode("idle");
+      if (!userId)
+        return;
 
-    setAck(true);
-    setTimeout(() => setAck(false), 1200);
-  };
+      try {
+
+        setSaving(true);
+
+        await processReflection({
+
+          userId,
+
+          text,
+
+          emotions:
+            selected,
+
+          source:
+            "journal",
+        });
+
+        Keyboard.dismiss();
+
+        setText("");
+
+        setSelected([]);
+
+        setAck(true);
+
+        setTimeout(() => {
+
+          setAck(false);
+
+        }, 1200);
+
+      } catch (error) {
+
+        console.log(
+          "❌ JOURNAL ERROR",
+          error
+        );
+
+      } finally {
+
+        setSaving(false);
+      }
+    };
+
+  //
+  // 🌌 UI
+  //
 
   return (
+
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "black" }}
+
+      style={{
+        flex: 1,
+
+        backgroundColor:
+          Colors.background,
+      }}
+
       behavior={undefined}
     >
-      {/* ✦ DIAMOND (TOP LAYER - ALWAYS VISIBLE) */}
- <TouchableOpacity
-  onPress={handleRelease}
-  style={{
-    position: "absolute",
-    top: 60,
-    right: 24,
-    zIndex: 10,
-  }}
->
-  <Text
-    style={{
-      color: hasContent ? "white" : "#555",
-      fontSize: 18,
-    }}
-  >
-    ✦
-  </Text>
-</TouchableOpacity>
 
-      {/* MAIN CONTENT */}
-      <Pressable
-        style={{ flex: 1 }}
-        onPress={() => {
-          Keyboard.dismiss();
-          setMode("writing");
+      {/* ✦ SAVE */}
+
+      <TouchableOpacity
+
+        onPress={handleRelease}
+
+        disabled={!hasContent}
+
+        style={{
+          position: "absolute",
+
+          top: 60,
+
+          right: 24,
+
+          zIndex: 10,
         }}
       >
 
-        {/* 📷 🎤 MEDIA */}
-        {mode === "writing" && (
-          <View
-            style={{
-              position: "absolute",
-              top: 80,
-              left: 30,
-              flexDirection: "row",
-              gap: 18,
-              opacity: 0.6,
-            }}
-          >
-            <TouchableOpacity>
-              <Text style={{ color: "#666", fontSize: 18 }}>📷</Text>
-            </TouchableOpacity>
+        <Text
+          style={{
 
-            <TouchableOpacity>
-              <Text style={{ color: "#666", fontSize: 18 }}>🎤</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+            color:
+
+              saving
+
+                ? Colors.mutedText
+
+                : hasContent
+
+                  ? Colors.white
+
+                  : Colors.subtleText,
+
+            fontFamily:
+              Fonts.light,
+
+            fontSize: 24,
+
+            opacity:
+
+              hasContent
+
+                ? 0.92
+
+                : 0.28,
+          }}
+        >
+          ✦
+        </Text>
+
+      </TouchableOpacity>
+
+      {/* 🌊 MAIN */}
+
+      <Pressable
+
+        style={{
+          flex: 1,
+        }}
+
+        onPress={() => {
+
+          Keyboard.dismiss();
+        }}
+      >
+
+        {/* 📷 🎤 */}
+
+        <View
+          style={{
+            position: "absolute",
+
+            top: 80,
+
+            left: 30,
+
+            flexDirection:
+              "row",
+
+            gap: 18,
+
+            opacity:
+              Opacity.medium,
+          }}
+        >
+
+          <TouchableOpacity>
+
+            <Text
+              style={{
+                color:
+                  Colors.mutedText,
+
+                fontSize: 18,
+              }}
+            >
+              📷
+            </Text>
+
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+
+            <Text
+              style={{
+                color:
+                  Colors.mutedText,
+
+                fontSize: 18,
+              }}
+            >
+              🎤
+            </Text>
+
+          </TouchableOpacity>
+
+        </View>
 
         {/* ✍️ WRITING */}
-        {mode === "writing" && (
-          <View
-            style={{
-              position: "absolute",
-              top: 120,
-              left: 30,
-              right: 30,
-            }}
-          >
-            <TextInput
-              value={text}
-              onChangeText={handleTyping}
-              placeholder="..."
-              placeholderTextColor="#444"
-              multiline
-              autoFocus
-              returnKeyType="done"
-              onSubmitEditing={() => Keyboard.dismiss()}
-              style={{
-                color: "white",
-                fontSize: 18,
-                lineHeight: 26,
-              }}
-            />
-          </View>
-        )}
+
+<View
+  style={{
+    position: "absolute",
+
+    top: 120,
+
+    left: 30,
+
+    right: 30,
+
+    maxHeight:
+      height * 0.35,
+  }}
+>
+
+          <TextInput
+
+            value={text}
+
+            onChangeText={
+              handleTyping
+            }
+
+            placeholder="What would you like to write ..."
+
+            placeholderTextColor={
+              Colors.subtleText
+            }
+
+            multiline
+
+            autoFocus={false}
+
+            returnKeyType="done"
+
+            onSubmitEditing={() =>
+              Keyboard.dismiss()
+            }
+
+style={{
+
+  color:
+    Colors.softText,
+
+  fontFamily:
+    Fonts.light,
+
+  fontSize: 16,
+
+  lineHeight: 20,
+
+  paddingHorizontal:
+    Spacing.sm,
+
+  textAlignVertical:
+    "top",
+}}
+          />
+
+        </View>
 
         {/* 🌿 EMOTION CLOUD */}
-        {!keyboardVisible && (
-          <View
-            style={{
-              position: "absolute",
-              bottom: height * 0.08,
-              left: 0,
-              right: 0,
-              alignItems: "center",
-            }}
-          >
-            <EmotionCloudSkia
-              emotions={emotions}
-              selected={selected}
-              onPress={toggleEmotion}
-            />
-          </View>
-        )}
 
-        {/* ✨ PROMPT */}
-        {mode === "idle" && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: height * 0.45,
-              alignSelf: "center",
-            }}
-          >
-            <Text style={{ color: "#666", fontSize: 14 }}>
-              ,,,
-            </Text>
-          </View>
-        )}
+        <View
+          style={{
+            position: "absolute",
+
+            bottom:
+              height * 0.04,
+
+            left: 0,
+            right: 0,
+
+            alignItems:
+              "center",
+
+            opacity:
+              Opacity.medium,
+          }}
+        >
+
+          <EmotionCloudSkia
+
+            emotions={
+              emotions
+            }
+
+            selected={
+              selected
+            }
+
+            onPress={
+              toggleEmotion
+            }
+          />
+
+        </View>
+
 
         {/* 💫 ACK */}
+
         {ack && (
+
           <Text
             style={{
               position: "absolute",
+
               bottom: 40,
-              alignSelf: "center",
-              color: "#888",
+
+              alignSelf:
+                "center",
+
+              color:
+                Colors.mutedText,
+
+              fontFamily:
+                Fonts.light,
+
               fontSize: 12,
             }}
           >
             held
           </Text>
+
         )}
 
       </Pressable>
+
     </KeyboardAvoidingView>
   );
 }

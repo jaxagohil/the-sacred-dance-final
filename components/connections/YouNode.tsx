@@ -1,5 +1,3 @@
-// components/connections/YouNode.tsx
-
 import React, {
   useEffect,
 } from "react";
@@ -56,27 +54,37 @@ export default function YouNode({
     avatar
   );
 
-  // ✨ field opacity
+  //
+  // ✨ FIELD VISIBILITY
+  //
 
   const opacity =
     useSharedValue(0);
 
-  // 👤 avatar opacity
+  //
+  // 👤 AVATAR VISIBILITY
+  //
 
   const avatarOpacity =
     useSharedValue(0);
 
-  // 🌊 breathing
+  //
+  // 🌊 BREATHING
+  //
 
   const scale =
     useSharedValue(0.96);
 
-  // ✨ soft floating
+  //
+  // ✨ SOFT FLOATING
+  //
 
   const driftY =
     useSharedValue(0);
 
-  // ✨ activation
+  //
+  // ✨ ACTIVATION
+  //
 
   const pressScale =
     useSharedValue(1);
@@ -84,7 +92,9 @@ export default function YouNode({
   const glowOpacity =
     useSharedValue(0.92);
 
-  // 🌌 appear / disappear
+  //
+  // 🌌 APPEAR / DISAPPEAR
+  //
 
   useEffect(() => {
 
@@ -129,18 +139,22 @@ export default function YouNode({
 
   }, [visible]);
 
-  // 🌊 living movement
+  //
+  // 🌊 LIVING MOVEMENT
+  //
 
   useEffect(() => {
 
-    // breathing
+    //
+    // 🌊 REGULATED BREATHING
+    //
 
     scale.value =
       withRepeat(
         withSequence(
 
-          withTiming(1.02, {
-            duration: 4000,
+          withTiming(1.012, {
+            duration: 5200,
 
             easing:
               Easing.inOut(
@@ -149,7 +163,7 @@ export default function YouNode({
           }),
 
           withTiming(1, {
-            duration: 4000,
+            duration: 5200,
 
             easing:
               Easing.inOut(
@@ -162,7 +176,9 @@ export default function YouNode({
         true
       );
 
-    // imperfect drift
+    //
+    // ✨ IMPERFECT DRIFT
+    //
 
     driftY.value =
       withRepeat(
@@ -185,18 +201,20 @@ export default function YouNode({
         true
       );
 
-    // ✨ subtle pulse
+    //
+    // ✨ FIELD PULSE
+    //
 
     glowOpacity.value =
       withRepeat(
         withSequence(
 
           withTiming(1, {
-            duration: 5000,
+            duration: 6000,
           }),
 
-          withTiming(0.84, {
-            duration: 5000,
+          withTiming(0.88, {
+            duration: 6000,
           }),
         ),
 
@@ -206,7 +224,9 @@ export default function YouNode({
 
   }, []);
 
-  // ✨ stable field
+  //
+  // ✨ STABLE FIELD
+  //
 
   const animatedStyle =
     useAnimatedStyle(() => {
@@ -233,6 +253,10 @@ export default function YouNode({
       };
     });
 
+  //
+  // 👤 AVATAR STYLE
+  //
+
   const avatarStyle =
     useAnimatedStyle(() => {
 
@@ -244,11 +268,14 @@ export default function YouNode({
     });
 
   return (
+
     <AnimatedPressable
 
       onPress={() => {
 
-        // ✨ awaken node
+        //
+        // ✨ AWAKEN NODE
+        //
 
         pressScale.value =
           withTiming(1.16, {
@@ -265,7 +292,9 @@ export default function YouNode({
             duration: 500,
           });
 
-        // ✨ enter resonance
+        //
+        // ✨ ENTER RESONANCE
+        //
 
         setTimeout(() => {
 
@@ -275,7 +304,9 @@ export default function YouNode({
 
         }, 820);
 
-        // ✨ restore field
+        //
+        // ✨ RESTORE FIELD
+        //
 
         setTimeout(() => {
 
@@ -316,9 +347,9 @@ export default function YouNode({
 
           shadowColor: "#fff",
 
-          shadowOpacity: 0.18,
+          shadowOpacity: 0.12,
 
-          shadowRadius: 16,
+          shadowRadius: 10,
 
           shadowOffset: {
             width: 0,
@@ -342,7 +373,7 @@ export default function YouNode({
           borderRadius: 999,
 
           backgroundColor:
-            "rgba(255,255,255,0.035)",
+            "rgba(216,166,255,0.04)",
         }}
       />
 
