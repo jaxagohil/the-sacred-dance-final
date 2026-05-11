@@ -25,8 +25,8 @@ import {
 } from "../../lib/user";
 
 import {
-  generateSacredResponse,
-} from "../../lib/sacredDance/generateSacredResponse";
+  runSacredReflection,
+} from "../../lib/sacredDance/core/runSacredReflection";
 
 import {
   buildUserContext,
@@ -384,129 +384,56 @@ export default function Guidance() {
 // 🌌 GUIDE RESPONSE
 //
 
+//
+// 🌸 SACRED REFLECTION
+//
+
 const sacred =
-  await generateSacredResponse({
+  await runSacredReflection({
 
-    //
-    // 👤 USER
-    //
+    rawInput: text,
 
-    user:
-      updatedContext?.profile,
+    entryType: "guide",
 
-    //
-    // 🧿 GUIDE
-    //
+    guideType:
+      activeGuide ===
+      "guide_heart"
 
-    guide:
+        ? "heart"
+
+        : activeGuide ===
+          "guide_structure"
+
+        ? "structure"
+
+        : "cosmic",
+
+    guideName:
       guideNames[
         activeGuide
       ],
 
-    //
-    // 🌙 THEME
-    //
+    /*
+     * ---------------------------------------------------
+     * 🌊 USER CONTEXT
+     * ---------------------------------------------------
+     */
 
-    theme:
-      updatedContext
-        ?.story
-        ?.emotionalTheme,
-
-    //
-    // 👁 LENS
-    //
-
-    lens:
-      "general",
-
-    //
-    // 🌍 LANGUAGE
-    //
-
-    language:
-      "en",
-
-    //
-    // ⚡ ENERGY
-    //
-
-    energy:
-      updatedContext?.energy,
-
-    //
-    // 🪞 MIRROR
-    //
-
-    mirror:
-      updatedContext?.mirror,
-
-    //
-    // 🌌 SIGNALS
-    //
-
-    signals:
-      updatedContext?.signals,
-
-    //
-    // 🌊 LIVING FIELD
-    //
-
-    livingField: {
-
-      emotional:
-        updatedContext
-          ?.story
-          ?.emotionalTheme,
-
-      relational:
-        updatedContext
-          ?.story
-          ?.relationalTheme,
-
-      spiritual:
-        updatedContext
-          ?.story
-          ?.energeticMovement,
-
-      intensity:
-        updatedContext
-          ?.consciousness
-          ?.integration,
-    },
-
-    //
-    // 🌙 CONTEXT
-    //
-
-    context: {
-
-      patterns:
-        updatedContext
-          ?.current
-          ?.patterns,
-
-      distortions:
-        updatedContext
-          ?.energy
-          ?.distortions,
-
-      chakra:
-        updatedContext
-          ?.energy
-          ?.dominantChakra,
-
-      cosmic:
-        updatedContext
-          ?.cosmic,
-    },
+    mirrorContext:
+      updatedContext,
   });
 
 //
-// ✨ TRANSMISSION
+// ✨ RESPONSE
+//
+
+//
+// 🌊 FINAL MESSAGE
 //
 
 const res =
-  sacred.transmission;
+  sacred?.response ||
+  "Something important is moving here.";
 
 //
 // 🌊 GUIDE MESSAGE

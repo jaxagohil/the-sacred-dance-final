@@ -18,7 +18,7 @@ import {
 
 import {
   generateAIResponse,
-} from "../../lib/generateAIResponse";
+} from "../../lib/ai/generateAIResponse";
 
 import {
   selectOracleCard,
@@ -33,19 +33,7 @@ import OracleCard from "./OracleCard";
 import TarotCard from "./TarotCard";
 
 type Props = {
-  context?: {
-    patterns?: string[];
-    distortion?: string[];
-    lens?: string;
-    chakra?: string;
-
-    cosmic?: {
-      phase?: string;
-      moon?: string;
-      energy?: string;
-      sign?: string;
-    };
-  };
+  context?: any;
 };
 
 //
@@ -155,13 +143,15 @@ export default function ReadingContainer({
 
     setTarot(selectedTarot);
 
-    setTyped("");
-
     setShowTarot(false);
 
     tarotAnim.setValue(0);
 
     setShow(true);
+
+    setTyped(
+  "Beloved..."
+);
 
     //
     // 🤖 AI READING
@@ -169,59 +159,55 @@ export default function ReadingContainer({
 
     try {
 
-      const aiText =
-        await generateAIResponse({
+ const aiText =
+  await generateAIResponse({
 
-        type: "cards",
+    type: "divine",
 
-        data: {
+    context: {
 
-          oracle: {
+      user: ctx,
+    },
 
-            number:
-              selectedOracle.card,
+    data: {
 
-            title:
-              selectedOracle.title,
+      message:
+        "Offer Divine Guidance for this soul in the present moment.",
 
-            affirmation:
-              selectedOracle.affirmation,
-          },
+      oracleCard: {
 
-          tarot: {
+        number:
+          selectedOracle.card,
 
-            name:
-              selectedTarot.name,
+        title:
+          selectedOracle.title,
 
-            archetype:
-              selectedTarot.archetype,
+        affirmation:
+          selectedOracle.affirmation,
 
-            message:
-              selectedTarot.message,
-          },
+        message:
+          selectedOracle.message,
 
-          patterns:
-            ctx.patterns,
+        symbolism:
+          selectedOracle.symbolism,
+      },
 
-          distortion:
-            ctx.distortion,
+      tarotCard: {
 
-          lens:
-            ctx.lens,
+        name:
+          selectedTarot.name,
 
-          chakra:
-            ctx.chakra,
+        archetype:
+          selectedTarot.archetype,
 
-          phase:
-            ctx.cosmic?.phase,
+        meaning:
+          selectedTarot.message,
+      },
 
-          moon:
-            ctx.cosmic?.moon,
-
-          energy:
-            ctx.cosmic?.energy,
-        },
-      });
+      base:
+        "Beloved... breathe.",
+    },
+  });
 
       setTyped(aiText);
 
@@ -314,7 +300,7 @@ export default function ReadingContainer({
         >
 
           <Text style={styles.trigger}>
-            pull a reading
+            Divine Guidance
           </Text>
 
         </TouchableOpacity>
@@ -490,7 +476,7 @@ const styles =
       "rgba(255,255,255,0.12)",
 
     marginTop: 44,
-    marginBottom: -16,
+    marginBottom: 2,
   },
 
   //
@@ -501,18 +487,19 @@ const styles =
 
     marginTop: 42,
 
-    paddingHorizontal: 14,
+    paddingHorizontal: 20,
 
-    paddingVertical: 5,
+    paddingVertical: 10,
+    paddingBottom: 80,
 
-    maxWidth: 340,
+    maxWidth: 300,
 
     textAlign: "center",
 
     color:
       "rgba(255,255,255,0.84)",
 
-    lineHeight: 30,
+    lineHeight: 20,
 
     fontSize: 15,
 
