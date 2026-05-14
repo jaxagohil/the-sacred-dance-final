@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "ingest:be-you": "tsx scripts/ingestBeYou.ts",
-    "ingest:radha-ayyub": "tsx scripts/ingestRadhaAyyub.ts"
+    "ingest:radha-ayyub": "tsx scripts/ingestRadhaAyyub.ts",
+    "seed:cards": "tsx scripts/seedSacredDanceCards.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

@@ -25,12 +25,13 @@ import {
 } from "../../constants/theme";
 
 import EmotionCloudSkia from "../../components/signals/EmotionCloudSkia";
+import { getLanguage, t } from "../../lib/i18n/t";
 
 const { height } =
   Dimensions.get("window");
 
 type Emotion = {
-  id: number;
+  id: string;
   word: string;
 };
 
@@ -43,8 +44,8 @@ export default function Journal() {
   const [text, setText] =
     useState("");
 
-  const [selected, setSelected] =
-    useState<number[]>([]);
+const [selected, setSelected] =
+  useState<string[]>([]);
 
   const [ack, setAck] =
     useState(false);
@@ -73,12 +74,26 @@ export default function Journal() {
 
     async function loadEmotions() {
 
-      const { data } =
-        await supabase
+const language =
+  getLanguage();
 
-          .from("emotions")
+  console.log(
+  "🌍 JOURNAL LANGUAGE:",
+  language
+);
 
-          .select("id, word");
+const { data } =
+
+  await supabase
+
+    .from("emotions")
+
+    .select("id, word")
+
+    .eq(
+      "language",
+      language
+    );
 
       setEmotions(data || []);
     }
@@ -92,7 +107,7 @@ export default function Journal() {
   //
 
   const toggleEmotion = (
-    id: number
+    id: string
   ) => {
 
     setSelected((prev) => {
@@ -350,7 +365,7 @@ export default function Journal() {
               handleTyping
             }
 
-            placeholder="What would you like to write ..."
+            placeholder={t("journal.placeholder")}
 
             placeholderTextColor={
               Colors.subtleText

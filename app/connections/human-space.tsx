@@ -1,4 +1,4 @@
-// app/connections/human-space.tsx
+// /app/connections/human-space.tsx
 
 import React, {
   useEffect,
@@ -44,12 +44,10 @@ import {
 } from "../../services/connections/messages";
 
 import {
-  buildConnectionsContext,
-} from "../../lib/context/buildConnectionsContext";
-
-import {
   generateTransmission,
 } from "../../lib/connections/generateTransmission";
+
+import { t } from "../../lib/i18n/t";
 
 export default function HumanSpace() {
 
@@ -66,6 +64,28 @@ export default function HumanSpace() {
     )
       ? params.otherUserId[0]
       : params.otherUserId;
+
+//
+// ✨ TRANSMISSION
+//
+
+const [
+
+  transmission,
+
+  setTransmission,
+
+] = useState(
+  "..."
+);
+
+const [
+
+  visibleTransmission,
+
+  setVisibleTransmission,
+
+] = useState("");
 
   //
   // 🌊 STATE
@@ -89,14 +109,11 @@ export default function HumanSpace() {
     useState("");
 
   //
-  // ✨ TRANSMISSIONS
+  // ✨ UI
   //
 
-  const [transmission, setTransmission] =
-    useState("");
-
-  const [whisperMessage, setWhisperMessage] =
-    useState("");
+  const [loading, setLoading] =
+    useState(true);
 
   const inputRef =
     useRef<TextInput>(null);
@@ -191,6 +208,26 @@ export default function HumanSpace() {
           pairId
         );
 
+        const generatedTransmission =
+  await generateTransmission({
+
+    spaceType:
+      "human",
+
+    dailyField:
+      null,
+  });
+
+if (mounted) {
+
+  setTransmission(
+
+    generatedTransmission
+      ?.transmission ||
+
+    "Connection feels softer today."
+  );
+}
         //
         // 🌊 LOAD MESSAGES
         //
@@ -218,39 +255,19 @@ export default function HumanSpace() {
             : []
         );
 
-        //
-        // ✨ CONTEXT
-        //
-
-        const context =
-          await buildConnectionsContext({
-
-            spaceType:
-              "human",
-
-            connectionId:
-              pairId,
-          });
-
-        const transmissionData =
-          generateTransmission({
-            context,
-          });
-
-        setTransmission(
-          transmissionData.transmission
-        );
-
-        setWhisperMessage(
-          transmissionData.whisper
-        );
-
       } catch (error) {
 
         console.log(
           "❌ HUMAN SPACE ERROR",
           error
         );
+
+      } finally {
+
+        if (mounted) {
+
+          setLoading(false);
+        }
       }
     }
 
@@ -262,6 +279,53 @@ export default function HumanSpace() {
     };
 
   }, [otherUserId]);
+
+  //
+// ✨ REVEAL TRANSMISSION
+//
+
+useEffect(() => {
+
+  if (!transmission) {
+
+    return;
+  }
+
+  let index = 0;
+
+  setVisibleTransmission("");
+
+  const interval =
+    setInterval(() => {
+
+      index++;
+
+      setVisibleTransmission(
+
+        transmission.slice(
+          0,
+          index
+        )
+      );
+
+      if (
+        index >=
+        transmission.length
+      ) {
+
+        clearInterval(
+          interval
+        );
+      }
+
+    }, 55);
+
+  return () =>
+    clearInterval(
+      interval
+    );
+
+}, [transmission]);
 
   //
   // ✨ SEND
@@ -337,32 +401,6 @@ export default function HumanSpace() {
             ? refreshed
             : []
         );
-
-        //
-        // ✨ REFRESH CONTEXT
-        //
-
-        const context =
-          await buildConnectionsContext({
-
-            spaceType:
-              "human",
-
-            connectionId,
-          });
-
-        const transmissionData =
-          generateTransmission({
-            context,
-          });
-
-        setTransmission(
-          transmissionData.transmission
-        );
-
-        setWhisperMessage(
-          transmissionData.whisper
-        );
       }
 
     } catch (error) {
@@ -384,9 +422,10 @@ export default function HumanSpace() {
       style={styles.container}
     >
 
-      {/* 🌌 LIVING FIELD */}
+      {/* 🌌 FIELD */}
 
-      <LivingField />
+      <LivingField
+      />
 
       {/* 👤 ↔️ 🌍 */}
 
@@ -456,24 +495,14 @@ export default function HumanSpace() {
 
       </View>
 
-      {/* 🌊 TRANSMISSION */}
+      {/* ✨ TRANSMISSION */}
 
       <Text
         style={
           styles.fieldMessage
         }
       >
-        {transmission}
-      </Text>
-
-      {/* ✨ WHISPER */}
-
-      <Text
-        style={
-          styles.whisper
-        }
-      >
-        {whisperMessage}
+        {visibleTransmission}
       </Text>
 
       {/* ✨ INPUT */}
@@ -492,7 +521,7 @@ export default function HumanSpace() {
 
           multiline
 
-          placeholder="Share into the space..."
+          placeholder={t("connections.humanspace_placeholder")}
 
           placeholderTextColor={
             Colors.subtleText
@@ -671,32 +700,17 @@ const styles =
       textAlign: "center",
 
       color:
-        Colors.softText,
+        Colors.gold,
 
       fontSize: 14,
 
-      lineHeight: 24,
+      lineHeight: 19,
 
       fontWeight: "300",
 
-      paddingHorizontal: 42,
-    },
+      paddingHorizontal: 58,
 
-    whisper: {
-      marginTop: 10,
-
-      textAlign: "center",
-
-      color:
-        Colors.mutedText,
-
-      fontSize: 11,
-
-      lineHeight: 22,
-
-      fontWeight: "300",
-
-      paddingHorizontal: 52,
+      opacity: 0.88,
     },
 
     reflectionContainer: {
@@ -757,6 +771,8 @@ const styles =
 
       borderColor:
         "rgba(255,255,255,0.03)",
+
+      opacity: 0.72,
     },
 
     messageText: {

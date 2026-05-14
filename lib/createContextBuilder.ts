@@ -1,6 +1,8 @@
 // lib/context/buildMirrorContext.ts
 
 import { getTodaysTransit } from "../lib/getTodaysTransit";
+import { buildLensContext } from "../lib/sacredDance/core/buildLensContext";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // 🧠 CONTEXT
@@ -76,6 +78,8 @@ export type MirrorContext = {
       themes: string[];
     };
   };
+
+
 
   // ⚡ ENERGY
   energy: {
@@ -380,12 +384,26 @@ const cosmicTransit =
       )
     );
 
-  const currentBehaviours =
-    unique(
-      extractBehaviours(
-        currentSignals
-      )
-    );
+const currentBehaviours =
+
+  unique(
+    currentSignals.flatMap(
+
+      (s) => s?.ai_behaviours || []
+    )
+  ).map((b: any) => ({
+
+    id:
+      b?.id || b?.name,
+
+    weight:
+      b?.weight || 1,
+  }));
+
+  console.log(
+  "🪞 CURRENT BEHAVIOURS:",
+  currentBehaviours
+);
 
   const currentEmotions =
     unique(
@@ -514,17 +532,128 @@ const cosmicTransit =
   // 🗣 REFLECTION ECHOES
   // --------------------------------------------------
 
-  const reflectionEchoes =
-    currentSignals
+const reflectionIds = unique(
 
-      .map(
-        (s) =>
-          s?.reflection_summary
-      )
+  currentSignals
+
+    .map(
+      (s) => s?.reflection_id
+    )
+
+    .filter(Boolean)
+);
+
+console.log(
+  "🪞 REFLECTION IDS:",
+  reflectionIds
+);
+
+let reflectionEchoes: string[] = [];
+
+if (reflectionIds.length > 0) {
+
+  const { data: reflectionsData } =
+    await supabase
+
+      .from("reflections")
+
+      .select("content")
+
+      .in("id", reflectionIds)
+
+      .limit(20);
+
+  reflectionEchoes =
+
+    (reflectionsData || [])
+
+      .map((r) => r?.content)
 
       .filter(Boolean)
 
-      .slice(0, 5);
+      .slice(0, 10);
+
+      console.log(
+  "🪞 REFLECTIONS DATA:",
+  reflectionsData
+);
+}
+      // --------------------------------------------------
+// 🌍 LEVELS
+// --------------------------------------------------
+
+const levels = {
+
+  physical: {
+
+    behaviours:
+      currentBehaviours,
+
+    actions: [],
+
+    bodyThemes: [],
+  },
+
+  emotional: {
+
+    emotions:
+      currentEmotions,
+
+    needs: [],
+
+    themes:
+      currentPatterns,
+  },
+
+  energetic: {
+
+    chakra:
+      energy?.dominant_chakra,
+
+    contraction:
+      energy?.contraction,
+
+    expansion:
+      energy?.expansion,
+
+    distortions:
+      energy?.distortions ||
+      [],
+  },
+};
+
+      const peopleLensContext =
+  await buildLensContext({
+    lens: "people",
+    reflections: reflectionEchoes,
+    behaviours: currentBehaviours,
+    patterns: currentPatterns,
+    levels,
+    mirror,
+    energy,
+  });
+
+const placesLensContext =
+  await buildLensContext({
+    lens: "places",
+    reflections: reflectionEchoes,
+    behaviours: currentBehaviours,
+    patterns: currentPatterns,
+    levels,
+    mirror,
+    energy,
+  });
+
+const thingsLensContext =
+  await buildLensContext({
+    lens: "things",
+    reflections: reflectionEchoes,
+    behaviours: currentBehaviours,
+    patterns: currentPatterns,
+    levels,
+    mirror,
+    energy,
+  });
 
   // --------------------------------------------------
   // 🌌 COSMIC
@@ -718,6 +847,19 @@ const cosmicData = {
       },
     },
 
+      // 🪞 LENS CONTEXTS
+lensContexts: {
+
+  people:
+    peopleLensContext,
+
+  places:
+    placesLensContext,
+
+  things:
+    thingsLensContext,
+},
+
     // ⚡ ENERGY
     energy: {
 
@@ -745,46 +887,8 @@ const cosmicData = {
         {},
     },
 
-    // 🌍 LEVELS
-    levels: {
-
-      physical: {
-
-        behaviours:
-          currentBehaviours,
-
-        actions: [],
-
-        bodyThemes: [],
-      },
-
-      emotional: {
-
-        emotions:
-          currentEmotions,
-
-        needs: [],
-
-        themes:
-          currentPatterns,
-      },
-
-      energetic: {
-
-        chakra:
-          energy?.dominant_chakra,
-
-        contraction:
-          energy?.contraction,
-
-        expansion:
-          energy?.expansion,
-
-        distortions:
-          energy?.distortions ||
-          [],
-      },
-    },
+// 🌍 LEVELS
+levels,
 
     // ✨ CONSCIOUSNESS
     consciousness: {

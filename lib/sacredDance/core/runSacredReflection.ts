@@ -16,6 +16,7 @@ import {
   GuideType,
   LensType,
   MirrorEntryType,
+  RealityLayer,
 } from "./types";
 
 interface RunSacredReflectionParams {
@@ -78,7 +79,44 @@ export async function runSacredReflection({
 
     /*
      * ---------------------------------------------------------
-     * 1. BUILD CONTEXT
+     * 1. INTERPRET INPUT
+     * ---------------------------------------------------------
+     */
+
+    const interpreted =
+      await interpretInput({
+
+        text:
+          rawInput,
+      });
+
+    console.log(
+      "✨ INTERPRETED:",
+      interpreted
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * REALITY LAYER
+     * ---------------------------------------------------------
+     */
+
+    const realityLayer: RealityLayer =
+
+      interpreted?.realityLayer ||
+
+      mirrorContext?.realityLayer ||
+
+      "mixed";
+
+    console.log(
+      "🪞 REALITY LAYER:",
+      realityLayer
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * 2. BUILD CONTEXT
      * ---------------------------------------------------------
      */
 
@@ -91,6 +129,8 @@ export async function runSacredReflection({
 
         lens,
 
+        realityLayer,
+
         guideType,
 
         guideName,
@@ -101,24 +141,6 @@ export async function runSacredReflection({
     console.log(
       "🧠 CONTEXT:",
       context
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * 2. INTERPRET INPUT
-     * ---------------------------------------------------------
-     */
-
-    const interpreted =
-      await interpretInput({
-
-        text:
-          context.rawInput,
-      });
-
-    console.log(
-      "✨ INTERPRETED:",
-      interpreted
     );
 
     /*
@@ -135,6 +157,8 @@ export async function runSacredReflection({
 
         behaviours:
           interpreted.behaviours || [],
+
+        realityLayer,
 
         lens:
           interpreted.lens,
@@ -194,6 +218,8 @@ export async function runSacredReflection({
         entryType,
 
         lens,
+
+        realityLayer,
 
         guideType,
 
@@ -305,6 +331,14 @@ export async function runSacredReflection({
 
           /*
            * -------------------------------------------------
+           * REALITY LAYER
+           * -------------------------------------------------
+           */
+
+          realityLayer,
+
+          /*
+           * -------------------------------------------------
            * CARDS
            * -------------------------------------------------
            */
@@ -341,6 +375,8 @@ export async function runSacredReflection({
       context,
 
       interpreted,
+
+      realityLayer,
 
       sacredContext,
 

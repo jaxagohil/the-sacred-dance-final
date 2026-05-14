@@ -1,6 +1,6 @@
 // scripts/seedOracleCards.ts
 
-import { ORACLE_CARDS } from "../lib/oracleCards";
+import { ORACLE_CARDS } from "../lib/xxoracleCards";
 import { supabase } from "../services/supabase";
 
 async function seed() {

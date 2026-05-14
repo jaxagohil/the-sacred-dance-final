@@ -3,6 +3,7 @@ import "react-native-get-random-values";
 
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -17,7 +18,6 @@ import {
 import { processReflection } from "../db/flow";
 import { getOrCreateProfile } from "../db/getProfile";
 import { getDailyPrompt } from "../db/prompts";
-import { setLanguage } from "../lib/i18n/i18n";
 import { getUserId, initUser } from "../lib/user";
 
 import * as ImagePicker from "expo-image-picker";
@@ -27,6 +27,8 @@ import {
   Fonts,
   Spacing
 } from "../constants/theme";
+
+import { setLanguage, t } from "../lib/i18n/t";
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -53,7 +55,11 @@ export default function LandingScreen() {
       const userId = await getUserId();
       const p = await getOrCreateProfile(userId);
 
-      if (p?.language) setLanguage(p.language);
+      await setLanguage(
+        p?.language || "en"
+      );
+
+      console.log("LANGUAGE:", p?.language);
 
 const pr =
   await getDailyPrompt(
@@ -146,7 +152,10 @@ setPrompt(pr);
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.background, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "white" }}>Loading...</Text>
+<ActivityIndicator
+  size="small"
+  color="white"
+/>
       </View>
     );
   }
@@ -359,9 +368,7 @@ setPrompt(pr);
     handleTyping
   }
 
-  placeholder="
-write freely...
-"
+placeholder={t("landing.write_freely")}
 
   placeholderTextColor={
     Colors.subtleText

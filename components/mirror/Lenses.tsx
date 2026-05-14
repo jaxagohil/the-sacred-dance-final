@@ -1,135 +1,410 @@
-import React, { useState } from "react";
+import React, {
+  useState,
+} from "react";
+
 import {
   StyleSheet,
+
   Text,
+
   TouchableOpacity,
-  View
+
+  View,
 } from "react-native";
 
-import { generateAIResponse } from "../../lib/generateAIResponse";
+import {
+  generateAIResponse,
+} from "../../lib/ai/generateAIResponse";
 
 import {
   Colors,
 } from "../../constants/theme";
 
+import { t } from "../../lib/i18n/t";
+
 type Props = {
+
   mirror: any;
+
   energy: any;
+
   signals: any[];
+
+  context: any;
 };
 
 export default function Lenses({
+
   mirror,
+
   energy,
+
   signals,
+
+  context,
+
 }: Props) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [responses, setResponses] = useState<{
-    people?: string;
-    places?: string;
-    things?: string;
-  }>({});
-  const [loading, setLoading] = useState(false);
 
-  // 🔥 REAL LENS DATA
-const latestSignal = signals?.[0];
+  const [selected,
+    setSelected] =
+      useState<
+        string | null
+      >(null);
 
-const lensData = latestSignal?.ai_lens || {
-  people: [],
-  places: [],
-  things: [],
-};
+  const [responses,
+    setResponses] =
+      useState<{
 
-  const handlePress = async (lens: "people" | "places" | "things") => {
-    if (!mirror?.primary) return;
+        people?: string;
 
-    // ❌ if no data → do nothing
-    if (!lensData[lens] || lensData[lens].length === 0) return;
+        places?: string;
+
+        things?: string;
+
+      }>({});
+
+  const [loading,
+    setLoading] =
+      useState(false);
+
+  /*
+   * ---------------------------------------------------------
+   * 🌌 DAILY FIELD
+   * ---------------------------------------------------------
+   */
+
+  const dailyField =
+    context?.dailyField || {};
+
+  /*
+   * ---------------------------------------------------------
+   * REAL LENS DATA
+   * ---------------------------------------------------------
+   */
+
+  const latestSignal =
+
+    [...(signals || [])]
+
+      .reverse()
+
+      .find(
+
+        (signal) => {
+
+          const lens =
+            signal?.ai_lens;
+
+          return (
+
+            lens && (
+
+              lens.people?.length ||
+
+              lens.places?.length ||
+
+              lens.things?.length
+            )
+          );
+        }
+
+      ) || null;
+
+  console.log(
+    "✨ LATEST SIGNAL:",
+    latestSignal
+  );
+
+  console.log(
+    "👁 AI LENS:",
+    latestSignal?.ai_lens
+  );
+
+  console.log(
+    "🌌 DAILY FIELD:",
+    dailyField
+  );
+
+  const lensData =
+    latestSignal?.ai_lens || {
+
+      people: [],
+
+      places: [],
+
+      things: [],
+    };
+
+  /*
+   * ---------------------------------------------------------
+   * HANDLE PRESS
+   * ---------------------------------------------------------
+   */
+
+  const handlePress = async (
+
+    lens:
+
+      | "people"
+
+      | "places"
+
+      | "things"
+
+  ) => {
+
+    if (!mirror?.primary) {
+      return;
+    }
+
+    /*
+     * -------------------------------------------------------
+     * NO DATA
+     * -------------------------------------------------------
+     */
+
+    if (
+
+      !lensData[lens] ||
+
+      lensData[lens].length === 0
+
+    ) {
+
+      return;
+    }
 
     setSelected(lens);
 
-    // ✅ already generated → don't regenerate
-    if (responses[lens]) return;
+    /*
+     * -------------------------------------------------------
+     * ALREADY GENERATED
+     * -------------------------------------------------------
+     */
+
+    if (responses[lens]) {
+      return;
+    }
 
     setLoading(true);
 
     try {
-const behaviours = lensData[lens];
 
-const res = await generateAIResponse({
-  type: "lens",
-  data: {
-    lens,
-    chakra: energy?.dominant_chakra,
-    pattern: mirror?.primary?.name || "unknown",
-    patternState: mirror?.primary?.state || "unknown",
-    patternTrend: mirror?.primary?.trend || "stable",
-    behaviours, // ✅ already string[]
-  },
-});
+      const lensSignals =
+        lensData[lens];
+
+      /*
+       * -----------------------------------------------------
+       * AI RESPONSE
+       * -----------------------------------------------------
+       */
+
+      const res =
+        await generateAIResponse({
+
+          type: "lens",
+
+          /*
+           * -------------------------------------------------
+           * CONTEXT
+           * -------------------------------------------------
+           */
+
+          context,
+
+          /*
+           * -------------------------------------------------
+           * DATA
+           * -------------------------------------------------
+           */
+
+          data: {
+
+            lens,
+
+            mirror,
+
+            energy,
+
+            lensSignals,
+
+            /*
+             * -----------------------------------------------
+             * DAILY FIELD
+             * -----------------------------------------------
+             */
+
+            dailyField,
+
+            /*
+             * -----------------------------------------------
+             * LENS CONTEXT
+             * -----------------------------------------------
+             */
+
+            lensContext:
+
+              context
+                ?.lensContexts?.[
+                  lens
+                ],
+          },
+        });
 
       setResponses((prev) => ({
+
         ...prev,
+
         [lens]: res,
       }));
+
     } catch (e) {
-      console.error("Lens AI error:", e);
+
+      console.error(
+        "Lens AI error:",
+        e
+      );
+
       setResponses((prev) => ({
+
         ...prev,
-        [lens]: "...",
+
+        [lens]:
+          "...",
       }));
+
     } finally {
+
       setLoading(false);
     }
   };
 
-  const renderButton = (lens: "people" | "places" | "things") => {
-    const hasData = lensData[lens]?.length > 0;
+  /*
+   * ---------------------------------------------------------
+   * BUTTON
+   * ---------------------------------------------------------
+   */
+
+  const renderButton = (
+
+    lens:
+
+      | "people"
+
+      | "places"
+
+      | "things"
+
+  ) => {
+
+    const hasData =
+
+      lensData[lens]
+        ?.length > 0;
 
     return (
+
       <TouchableOpacity
+
         style={[
+
           styles.button,
-          selected === lens && styles.active,
-          !hasData && styles.disabled,
+
+          selected === lens &&
+            styles.active,
+
+          !hasData &&
+            styles.disabled,
         ]}
-        onPress={() => handlePress(lens)}
+
+        onPress={() =>
+          handlePress(lens)
+        }
+
         disabled={!hasData}
       >
-        <Text style={[styles.text, !hasData && styles.disabledText]}>
-          {lens}
+
+        <Text
+
+          style={[
+
+            styles.text,
+
+            !hasData &&
+              styles.disabledText,
+          ]}
+        >
+
+          {t(`mirror.${lens}`)}
+
         </Text>
+
       </TouchableOpacity>
     );
   };
 
+  /*
+   * ---------------------------------------------------------
+   * RENDER
+   * ---------------------------------------------------------
+   */
+
   return (
+
     <View style={styles.container}>
 
       {/* 🔘 LENSES */}
+
       <View style={styles.row}>
+
         {renderButton("people")}
+
         {renderButton("places")}
+
         {renderButton("things")}
+
       </View>
 
       {/* ✨ LABEL */}
+
       <Text style={styles.label}>
-        what are your mirrors showing you?
+
+        {t("mirror.header")}
+
       </Text>
 
       {/* 🧠 RESPONSE */}
+
       {selected && (
+
         <View style={styles.responseBox}>
-          {loading && !responses[selected] ? (
-            <Text style={styles.loadingText}>
-  listening...
-</Text>
+
+          {loading &&
+          !responses[selected] ? (
+
+            <Text
+              style={
+                styles.loadingText
+              }
+            >
+
+              listening...
+
+            </Text>
+
           ) : (
-            <Text style={styles.responseText}>
+
+            <Text
+              style={
+                styles.responseText
+              }
+            >
+
               {responses[selected]}
+
             </Text>
           )}
+
         </View>
       )}
 
@@ -137,110 +412,130 @@ const res = await generateAIResponse({
   );
 }
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
+
   container: {
+
     width: "100%",
+
     alignItems: "center",
+
     marginTop: -10,
+
     paddingBottom: 24,
   },
 
   row: {
+
     flexDirection: "row",
+
     justifyContent: "center",
+
     gap: 12,
+
     marginBottom: 14,
   },
 
- button: {
-  paddingVertical: 12,
-  paddingHorizontal: 18,
+  button: {
 
-  borderRadius: 999,
+    paddingVertical: 12,
 
-  backgroundColor:
-    "rgba(255,255,255,0.015)",
+    paddingHorizontal: 18,
 
-  borderWidth: 0.5,
+    borderRadius: 999,
 
-  borderColor:
-    "rgba(255,255,255,0.03)",
-},
+    backgroundColor:
+      "rgba(255,255,255,0.015)",
+
+    borderWidth: 0.5,
+
+    borderColor:
+      "rgba(255,255,255,0.03)",
+  },
 
   active: {
-backgroundColor:
-  "rgba(255,255,255,0.045)",
 
-borderColor:
-  "rgba(255,255,255,0.08)",
+    backgroundColor:
+      "rgba(255,255,255,0.045)",
+
+    borderColor:
+      "rgba(255,255,255,0.08)",
   },
 
   disabled: {
+
     opacity: 0.3,
   },
 
   text: {
-   color:
-  Colors.softText,
 
-fontSize: 13,
+    color:
+      Colors.softText,
 
-fontWeight: "300",
+    fontSize: 13,
 
-letterSpacing: 0.3,
+    fontWeight: "300",
+
+    letterSpacing: 0.3,
   },
 
   disabledText: {
-color:
-  Colors.subtleText,
+
+    color:
+      Colors.subtleText,
   },
 
-label: {
-  color:
-    Colors.mutedText,
+  label: {
 
-  fontSize: 10,
+    color:
+      Colors.mutedText,
 
-  textAlign: "center",
+    fontSize: 10,
 
-  marginTop: 6,
+    textAlign: "center",
 
-  opacity: 0.72,
+    marginTop: 6,
 
-  letterSpacing: 0.4,
-},
+    opacity: 0.72,
+
+    letterSpacing: 0.4,
+  },
 
   responseBox: {
-marginTop: 24,
 
-paddingHorizontal: 32,
+    marginTop: 24,
 
-maxWidth: "92%",
+    paddingHorizontal: 32,
+
+    maxWidth: "92%",
   },
 
-responseText: {
-  color:
-    Colors.softText,
+  responseText: {
 
-  fontSize: 14,
+    color:
+      Colors.softText,
 
-  lineHeight: 28,
+    fontSize: 14,
 
-  textAlign: "center",
+    lineHeight: 28,
 
-  fontWeight: "300",
+    textAlign: "center",
 
-  opacity: 0.9,
-},
+    fontWeight: "300",
+
+    opacity: 0.9,
+  },
 
   loadingText: {
-  color:
-    Colors.mutedText,
 
-  fontSize: 11,
+    color:
+      Colors.mutedText,
 
-  fontStyle: "italic",
+    fontSize: 11,
 
-  opacity: 0.72,
-},
+    fontStyle: "italic",
+
+    opacity: 0.72,
+  },
 });

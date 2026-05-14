@@ -1,94 +1,571 @@
-import { TAROT_CARDS } from "./tarotCards";
+// /lib/tarot/selectTarotCard.ts
 
-type SelectionContext = {
-  patterns?: string[];
-  distortion?: string[];
+import {
+  supabase,
+} from "../services/supabase";
+
+//
+// 🌌 TYPES
+//
+
+type TarotCard = {
+
+  id: string;
+
+  name: string;
+
+  arcana?: string;
+
+  suit?: string;
+
+  archetypal_energy?: string;
+
+  symbolic_atmosphere?: string[];
+
+  imagery_keywords?: string[];
+
+  movement_keywords?: string[];
+
+  environment_keywords?: string[];
+
+  question_style?: string;
+
+  inquiry_examples?: string[];
+
+  behavioural_themes?: string[];
+
+  tension_patterns?: string[];
+
+  symbolic_temperature?: string;
+
+  pacing_style?: string;
+
+  archetype_family?: string;
+
+  is_active?: boolean;
+
+  weight?: number;
 };
 
-function mapToSuit(context: SelectionContext) {
-  const combined = [
-    ...(context.patterns || []),
-    ...(context.distortion || []),
-  ].join(" ").toLowerCase();
+type SelectionContext = {
 
-  if (combined.includes("emotion") || combined.includes("intuition")) return "cups";
-  if (combined.includes("overthinking") || combined.includes("fear") || combined.includes("anxiety")) return "swords";
-  if (combined.includes("action") || combined.includes("drive") || combined.includes("purpose")) return "wands";
-  if (combined.includes("ground") || combined.includes("money") || combined.includes("stability")) return "pentacles";
+  patterns?: string[];
 
-  return "major";
+  distortion?: string[];
+
+  oracleCard?: any;
+
+  cosmic?: {
+
+    phase?: string;
+
+    moon?: string;
+
+    sun?: string;
+
+    dominantEnergy?: string;
+  };
+
+  recentCards?: string[];
+};
+
+//
+// 🧠 HELPERS
+//
+
+function normalizeArray(
+  value: any
+): string[] {
+
+  if (
+    Array.isArray(value)
+  ) {
+
+    return value
+      .filter(Boolean)
+      .map((v) =>
+        String(v)
+          .toLowerCase()
+      );
+  }
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+
+    return value
+
+      .split(",")
+
+      .map((v) =>
+        v.trim()
+          .toLowerCase()
+      )
+
+      .filter(Boolean);
+  }
+
+  return [];
 }
 
-// 🧠 weighted pick
-function weightedPick(cards: any[]) {
-  const total = cards.reduce((sum, c) => sum + c.weight, 0);
-  let rand = Math.random() * total;
+//
+// 🧠 WEIGHTED RANDOM
+//
 
-  for (let c of cards) {
-    rand -= c.weight;
-    if (rand <= 0) return c;
+function weightedPick(
+  cards: TarotCard[]
+): TarotCard {
+
+  const total =
+    cards.reduce(
+
+      (sum, c) =>
+
+        sum + (c.weight || 0),
+
+      0
+    );
+
+  let rand =
+    Math.random() * total;
+
+  for (const card of cards) {
+
+    rand -=
+      card.weight || 0;
+
+    if (rand <= 0) {
+
+      return card;
+    }
   }
 
   return cards[0];
 }
 
-export function selectTarotCard(context: SelectionContext) {
-  const suit = mapToSuit(context);
+//
+// 🌌 SELECT TAROT CARD
+//
 
-  const patterns = (context.patterns || []).join(" ").toLowerCase();
-  const distortion = (context.distortion || []).join(" ").toLowerCase();
+export async function
+selectTarotCard({
 
-  // 🎯 base pool
-  const basePool =
-    suit === "major"
-      ? TAROT_CARDS.filter((c) => c.arcana === "major")
-      : TAROT_CARDS.filter((c) => c.suit === suit);
+  patterns = [],
 
-  const weighted = basePool.map((card) => {
-    let weight = 1;
+  distortion = [],
 
-    // 🔥 suit match boost
-    if (card.suit === suit) weight += 3;
+  oracleCard,
 
-    // 🧠 emotional patterns → cups
-    if (
-      (patterns.includes("emotion") || patterns.includes("intuition")) &&
-      card.suit === "cups"
-    ) {
-      weight += 2;
-    }
+  cosmic,
 
-    // ⚠️ overthinking → swords
-    if (
-      (distortion.includes("overthinking") || distortion.includes("anxiety")) &&
-      card.suit === "swords"
-    ) {
-      weight += 3;
-    }
+  recentCards = [],
 
-    // ⚡ action / purpose → wands
-    if (
-      (patterns.includes("purpose") || patterns.includes("drive")) &&
-      card.suit === "wands"
-    ) {
-      weight += 2;
-    }
+}: SelectionContext): Promise<TarotCard> {
 
-    // 🌱 grounding → pentacles
-    if (
-      (patterns.includes("stability") || patterns.includes("money")) &&
-      card.suit === "pentacles"
-    ) {
-      weight += 2;
-    }
+  //
+  // 🃏 LOAD CARDS
+  //
 
-    // 🔮 major arcana = deeper moments
-    if (card.arcana === "major") {
-      weight += 1; // subtle bias
-    }
+  const {
 
-    return { ...card, weight };
-  });
+    data,
 
-  return weightedPick(weighted);
+    error,
+
+  } = await supabase
+
+    .from(
+      "tarot_cards"
+    )
+
+    .select("*")
+
+    .eq(
+      "is_active",
+      true
+    );
+
+  //
+  // ❌ ERROR
+  //
+
+  if (
+    error ||
+    !data ||
+    data.length === 0
+  ) {
+
+    console.log(
+      "❌ TAROT LOAD ERROR:",
+      error
+    );
+
+    throw new Error(
+      "Unable to load tarot cards."
+    );
+  }
+
+  //
+  // ✨ NORMALIZE USER FIELD
+  //
+
+  const normalizedPatterns =
+
+    patterns.map(
+      (p) =>
+        p.toLowerCase()
+    );
+
+  const normalizedDistortions =
+
+    distortion.map(
+      (d) =>
+        d.toLowerCase()
+    );
+
+  //
+  // 🌌 ORACLE FIELD
+  //
+
+  const oracleThemes =
+    normalizeArray(
+
+      oracleCard
+        ?.behavioural_themes
+    );
+
+  const oracleImagery =
+    normalizeArray(
+
+      oracleCard
+        ?.imagery_keywords
+    );
+
+  const oracleTone =
+    normalizeArray(
+
+      oracleCard
+        ?.symbolic_tone
+    );
+
+  //
+  // ✨ BUILD WEIGHTS
+  //
+
+  const weighted =
+    data.map(
+      (card: TarotCard) => {
+
+        let weight = 1;
+
+        //
+        // ✨ NORMALIZE CARD
+        //
+
+        const behaviours =
+          normalizeArray(
+            card
+              .behavioural_themes
+          );
+
+        const tension =
+          normalizeArray(
+            card
+              .tension_patterns
+          );
+
+        const imagery =
+          normalizeArray(
+            card
+              .imagery_keywords
+          );
+
+        const movement =
+          normalizeArray(
+            card
+              .movement_keywords
+          );
+
+        const atmosphere =
+          normalizeArray(
+            card
+              .symbolic_atmosphere
+          );
+
+        //
+        // 🪞 USER PATTERN RESONANCE
+        //
+
+        normalizedPatterns.forEach(
+          (pattern) => {
+
+            if (
+
+              behaviours.includes(
+                pattern
+              )
+
+            ) {
+
+              weight += 3;
+            }
+
+            if (
+
+              imagery.includes(
+                pattern
+              )
+
+            ) {
+
+              weight += 1.5;
+            }
+          }
+        );
+
+        //
+        // ⚠️ DISTORTION RESONANCE
+        //
+
+        normalizedDistortions.forEach(
+          (distortion) => {
+
+            if (
+
+              tension.includes(
+                distortion
+              )
+
+            ) {
+
+              weight += 3;
+            }
+
+            if (
+
+              behaviours.includes(
+                distortion
+              )
+
+            ) {
+
+              weight += 2;
+            }
+          }
+        );
+
+        //
+        // 🌌 ORACLE RESONANCE
+        //
+
+        oracleThemes.forEach(
+          (theme) => {
+
+            if (
+
+              behaviours.includes(
+                theme
+              )
+
+            ) {
+
+              weight += 2;
+            }
+          }
+        );
+
+        oracleImagery.forEach(
+          (image) => {
+
+            if (
+
+              imagery.includes(
+                image
+              )
+
+            ) {
+
+              weight += 1.5;
+            }
+          }
+        );
+
+        oracleTone.forEach(
+          (tone) => {
+
+            if (
+
+              atmosphere.includes(
+                tone
+              )
+
+            ) {
+
+              weight += 1.5;
+            }
+          }
+        );
+
+        //
+        // 🌕 MOON PHASE
+        //
+
+        if (
+
+          cosmic?.phase ===
+          "Full"
+
+        ) {
+
+          if (
+
+            card.arcana ===
+            "major"
+
+          ) {
+
+            weight += 2;
+          }
+
+          if (
+
+            atmosphere.includes(
+              "intense"
+            )
+
+          ) {
+
+            weight += 1.5;
+          }
+        }
+
+        if (
+
+          cosmic?.phase ===
+          "Waning"
+
+        ) {
+
+          if (
+
+            movement.includes(
+              "release"
+            ) ||
+
+            movement.includes(
+              "slowing"
+            )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        if (
+
+          cosmic?.phase ===
+          "New"
+
+        ) {
+
+          if (
+
+            movement.includes(
+              "beginning"
+            ) ||
+
+            movement.includes(
+              "emerging"
+            )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        //
+        // 🌌 COLLECTIVE ENERGY
+        //
+
+        if (
+
+          cosmic?.dominantEnergy
+
+        ) {
+
+          if (
+
+            card
+              ?.archetypal_energy
+              ?.toLowerCase?.()
+
+              .includes(
+
+                cosmic
+                  .dominantEnergy
+                  .toLowerCase()
+
+              )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        //
+        // 🔮 MAJOR ARCANA
+        //
+
+        if (
+
+          card.arcana ===
+          "major"
+
+        ) {
+
+          weight += 1;
+        }
+
+        //
+        // 🔁 REDUCE RECENT REPEATS
+        //
+
+        if (
+
+          recentCards.includes(
+            card.id
+          )
+
+        ) {
+
+          weight *= 0.08;
+        }
+
+        //
+        // ✨ RANDOM MAGIC
+        //
+
+        weight +=
+          Math.random() * 1.4;
+
+        return {
+
+          ...card,
+
+          weight,
+        };
+      }
+    );
+
+  //
+  // 🌌 FINAL CARD
+  //
+
+  return weightedPick(
+    weighted
+  );
 }

@@ -1,213 +1,138 @@
 // /lib/connections/generateTransmission.ts
 
+import {
+  generateAIResponse,
+} from "../ai/generateAIResponse";
+
 type Params = {
-  context: any;
+
+  spaceType:
+    | "love"
+    | "compassion"
+    | "unity"
+    | "human"
+    | "self";
+
+  dailyField?: any;
 };
 
-export function
+export async function
 generateTransmission({
-  context,
+  spaceType,
+  dailyField,
 }: Params) {
 
-  const {
-    spaceType,
-
-    emotionalTone,
-
-    stillness,
-
-    fieldState,
-
-    resonanceLevel,
-
-    activeHumans,
-
-    dominantEmotion,
-
-    recentConnectionEnergy,
-
-  } = context || {};
-
   //
-  // 🌙 STILLNESS
+  // 🌕 DAILY FIELD
   //
 
-  if (stillness) {
+  const cosmic =
+    dailyField?.cosmic;
+
+  const symbolicThemes =
+    dailyField?.symbolicThemes || [];
+
+  const oracleCard =
+    dailyField?.oracleCard;
+
+  //
+  // ✨ AI
+  //
+
+  const transmission =
+    await generateAIResponse({
+
+      type:
+        "transmission",
+
+      data: {
+
+        //
+        // 🌌 SPACE
+        //
+
+        spaceType,
+
+        //
+        // 🌕 DAILY ENERGY
+        //
+
+        phase:
+          cosmic?.phase,
+
+        moon:
+          cosmic?.moon,
+
+        sun:
+          cosmic?.sun,
+
+        oracleCard,
+
+        symbolicThemes,
+
+        //
+        // ✨ FALLBACK
+        //
+
+        base:
+          "Something softer is moving today.",
+      },
+    });
+
+  //
+  // 🪵 DEBUG
+  //
+
+  console.log(
+    "✨ TRANSMISSION:",
+    transmission
+  );
+
+  //
+  // ✨ NORMALIZE
+  //
+
+  const finalText =
+
+    typeof transmission ===
+    "string"
+
+      ? transmission
+
+      : transmission?.text ||
+
+        transmission?.response ||
+
+        transmission?.message ||
+
+        "";
+
+  //
+  // ✨ FALLBACK
+  //
+
+  if (!finalText) {
 
     return {
 
       transmission:
-        "Quietness is moving gently through your field today.",
-
-      whisper:
-        "Stillness is also a form of presence.",
+        "Something softer is moving today.",
     };
   }
 
   //
-  // 🌌 SELF SPACE
-  //
-
-  if (
-    spaceType === "self"
-  ) {
-
-    if (
-      emotionalTone === "tender"
-    ) {
-
-      return {
-
-        transmission:
-          "Your nervous system seems to be asking for gentleness.",
-
-        whisper:
-          "Healing often begins softly.",
-      };
-    }
-
-    if (
-      emotionalTone === "warm"
-    ) {
-
-      return {
-
-        transmission:
-          "Your field feels more open to connection today.",
-
-        whisper:
-          "Love changes the atmosphere around us.",
-      };
-    }
-
-    return {
-
-      transmission:
-        "You are softly available to resonance today.",
-
-      whisper:
-        "Presence reshapes the field quietly.",
-    };
-  }
-
-  //
-  // 🌍 HUMAN SPACE
-  //
-
-  if (
-    spaceType === "human"
-  ) {
-
-    if (
-      recentConnectionEnergy ===
-      "resonant"
-    ) {
-
-      return {
-
-        transmission:
-          "This connection carries emotional movement.",
-
-        whisper:
-          "Some people arrive to help us remember ourselves.",
-      };
-    }
-
-    if (
-      emotionalTone === "quiet"
-    ) {
-
-      return {
-
-        transmission:
-          "Not all connection needs words to deepen.",
-
-        whisper:
-          "Silence can also be relational.",
-      };
-    }
-
-    return {
-
-      transmission:
-        "The field is holding this connection softly.",
-
-      whisper:
-        "Resonance forms slowly between human hearts.",
-    };
-  }
-
-  //
-  // 🌌 CIRCLE SPACE
-  //
-
-  if (
-    spaceType === "circle"
-  ) {
-
-    if (
-      fieldState === "alive"
-    ) {
-
-      return {
-
-        transmission:
-          "Many emotional currents are moving through this field today.",
-
-        whisper:
-          `${activeHumans} souls are presently resonating here.`,
-      };
-    }
-
-    if (
-      dominantEmotion ===
-      "hopeful"
-    ) {
-
-      return {
-
-        transmission:
-          "Hope is quietly circulating through this space.",
-
-        whisper:
-          "Humanity heals in small moments too.",
-      };
-    }
-
-    if (
-      fieldState === "still"
-    ) {
-
-      return {
-
-        transmission:
-          "This field is resting in quiet spaciousness today.",
-
-        whisper:
-          "Not all sacred spaces need activity.",
-      };
-    }
-
-    return {
-
-      transmission:
-        "Resonance is gently moving through this collective field.",
-
-      whisper:
-        "Every reflection subtly changes the atmosphere.",
-    };
-  }
-
-  //
-  // ✨ DEFAULT
+  // ✨ RETURN
   //
 
   return {
 
     transmission:
-      "The field is listening softly.",
+      finalText
 
-    whisper:
-      "Presence is already enough.",
+        .replace(/\n/g, " ")
+
+        .replace(/"/g, "")
+
+        .trim(),
   };
 }

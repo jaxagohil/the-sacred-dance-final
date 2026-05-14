@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
 
 import { useFocusEffect } from "@react-navigation/native";
@@ -17,13 +17,13 @@ import CosmicTiles from "../../components/mirror/CosmicTiles";
 import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
 
+import { getCosmicMessage } from "../../lib/cosmic/getCosmicMessage";
 import { getEnergyFromSignals } from "../../lib/energy/getEnergyFromSignals";
-import { getCosmicMessage } from "../../lib/getCosmicMessage";
 import { interpretMirror } from "../../lib/interpretMirror";
 
 import {
-  buildFullChakraScores,
-  getAwarenessChakra,
+    buildFullChakraScores,
+    getAwarenessChakra,
 } from "../../lib/energy";
 
 // ✅ NEW
@@ -233,10 +233,12 @@ const builtContext =
 
 {context && (
 
-  <Lenses
-    energy={energy}
-    context={context}
-  />
+<Lenses
+  mirror={mirror}
+  energy={energy}
+  signals={signals}
+  context={context}
+/>
 )}
 
         {/* 🔥 UPDATED */}

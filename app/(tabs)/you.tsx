@@ -21,6 +21,8 @@ import {
   Colors,
 } from "../../constants/theme";
 
+import { t } from "../../lib/i18n/t";
+
 const guideColors = {
   guide_heart:
     Colors.pink,
@@ -35,55 +37,55 @@ const guideColors = {
 const WORDS = [
   {
     key: "felt_seen",
-    label: "I felt seen",
+    labelKey: "felt_seen",
   },
 
   {
     key: "felt_safe",
-    label: "I felt safe",
+    labelKey: "felt_safe",
   },
 
   {
     key: "felt_alone",
-    label: "I felt alone",
+    labelKey: "felt_alone",
   },
 
   {
     key: "father_emotionally_present",
-    label:
-      "My father was emotionally present",
+    labelKey:
+      "father_emotionally_present",
   },
 
   {
     key: "felt_insecure",
-    label: "I felt insecure",
+    labelKey: "felt_insecure",
   },
 
   {
     key: "felt_loved",
-    label: "I felt loved",
+    labelKey: "felt_loved",
   },
 
   {
     key: "mother_emotionally_present",
-    label:
-      "My mother was emotionally present",
+    labelKey:
+      "mother_emotionally_present",
   },
 
   {
     key: "felt_judged",
-    label: "I felt judged",
+    labelKey: "felt_judged",
   },
 
   {
     key: "dreams_were_heard",
-    label: "My dreams were heard",
+    labelKey: "dreams_were_heard",
   },
 
   {
     key: "boundaries_respected",
-    label:
-      "My boundaries were respected",
+    labelKey:
+      "boundaries_respected",
   },
 ];
 
@@ -977,7 +979,7 @@ color:
           <TextInput
             value={repeats}
             onChangeText={setRepeats}
-            placeholder="what repeats"
+            placeholder={t("you.whats_repeats_placeholder")}
 placeholderTextColor={
   Colors.subtleText
 }
@@ -1005,7 +1007,7 @@ paddingVertical: 10,
           <TextInput
             value={line}
             onChangeText={setLine}
-            placeholder="a line that feels like you"
+            placeholder={t("you.line_that_feels_like_you_placeholder")}
 placeholderTextColor={
   Colors.subtleText
 }
@@ -1090,27 +1092,27 @@ color:
               letterSpacing: 0.5,
             }}
           >
-            Where are you today?
+            {t("you.today_header")}
           </Text>
 
           {(Object.keys(sliders) as (keyof typeof sliders)[]).map((key) => {
 
-            const config = {
-              givingreceiving: {
-                left: "receiving",
-                right: "giving",
-              },
+const config = {
+  givingreceiving: {
+    left: t("you.receiving"),
+    right: t("you.giving"),
+  },
 
-              flowstructure: {
-                left: "flow",
-                right: "structure",
-              },
+  flowstructure: {
+    left: t("you.flow"),
+    right: t("you.structure"),
+  },
 
-              abundancelack: {
-                left: "abundance",
-                right: "lack",
-              },
-            }[key];
+  abundancelack: {
+    left: t("you.abundance"),
+    right: t("you.lack"),
+  },
+}[key];
 
             return (
 
@@ -1202,7 +1204,7 @@ color:
               letterSpacing: 0.5,
             }}
           >
-            Childhood Memories
+            {t("you.childhood_header")}
           </Text>
 
           <View
@@ -1244,7 +1246,7 @@ style={{
   margin: 6,
 }}
                 >
-                  {word.label}
+                  {t(`you.${word.labelKey}`)}
                 </Text>
 
               );

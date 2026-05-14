@@ -1,12 +1,16 @@
 // /lib/context/buildConnectionsContext.ts
 
 import {
-    getUserId,
+  getUserId,
 } from "../user";
 
 import {
-    supabase,
+  supabase,
 } from "../../services/supabase";
+
+import {
+  buildUserContext,
+} from "./buildUserContext";
 
 type SpaceType =
   | "self"
@@ -14,6 +18,7 @@ type SpaceType =
   | "circle";
 
 type Params = {
+
   spaceType: SpaceType;
 
   connectionId?: string;
@@ -40,6 +45,22 @@ buildConnectionsContext({
 
     const userId =
       await getUserId();
+
+    //
+    // 🌌 USER CONTEXT
+    //
+
+    const userContext =
+      await buildUserContext({
+
+        userId,
+
+        source:
+          "connections",
+
+        activeLens:
+          "people",
+      });
 
     //
     // 👤 PROFILE
@@ -125,8 +146,12 @@ buildConnectionsContext({
       any[] = [];
 
     if (
-      spaceType === "circle" &&
+
+      spaceType ===
+      "circle" &&
+
       fieldSlug
+
     ) {
 
       const {
@@ -175,13 +200,17 @@ buildConnectionsContext({
       .select("*")
 
       .gte(
+
         "last_seen_at",
 
         new Date(
+
           Date.now() -
+
           1000 *
           60 *
           8
+
         ).toISOString()
       );
 
@@ -213,6 +242,7 @@ buildConnectionsContext({
 
     const fieldState =
       deriveFieldState({
+
         activeHumans:
           activeHumans?.length || 0,
 
@@ -254,6 +284,24 @@ buildConnectionsContext({
         humanMessages || []
       );
 
+    //
+    // 🌌 DAILY FIELD
+    //
+
+    const dailyField =
+      userContext?.dailyField || null;
+
+    //
+    // 🌌 COSMIC
+    //
+
+    const cosmic =
+      userContext?.cosmic || null;
+
+    //
+    // ✨ RETURN
+    //
+
     return {
 
       spaceType,
@@ -278,6 +326,27 @@ buildConnectionsContext({
       connectionId,
 
       fieldSlug,
+
+      //
+      // 🌌 COSMIC FIELD
+      //
+
+      dailyField,
+
+      cosmic,
+
+      //
+      // 🪞 USER CONTEXT
+      //
+
+      mirror:
+        userContext?.mirror || null,
+
+      energy:
+        userContext?.energy || null,
+
+      distortions:
+        userContext?.distortions || null,
     };
 
   } catch (error) {
@@ -309,6 +378,16 @@ buildConnectionsContext({
 
       dominantEmotion:
         "reflective",
+
+      dailyField: null,
+
+      cosmic: null,
+
+      mirror: null,
+
+      energy: null,
+
+      distortions: null,
     };
   }
 }
@@ -334,35 +413,50 @@ function deriveEmotionalTone(
       .toLowerCase();
 
   if (
+
     text.includes("love") ||
+
     text.includes("heart") ||
+
     text.includes("care")
+
   ) {
 
     return "warm";
   }
 
   if (
+
     text.includes("grief") ||
+
     text.includes("sad") ||
+
     text.includes("miss")
+
   ) {
 
     return "tender";
   }
 
   if (
+
     text.includes("fear") ||
+
     text.includes("anxious") ||
+
     text.includes("lost")
+
   ) {
 
     return "fragile";
   }
 
   if (
+
     text.includes("peace") ||
+
     text.includes("still")
+
   ) {
 
     return "quiet";
@@ -376,16 +470,24 @@ function deriveEmotionalTone(
 //
 
 function deriveFieldState({
+
   activeHumans,
+
   messageCount,
+
 }: {
+
   activeHumans: number;
+
   messageCount: number;
 }) {
 
   if (
+
     activeHumans === 0 &&
+
     messageCount < 2
+
   ) {
 
     return "still";

@@ -1,3 +1,5 @@
+// app/connections/field.tsx
+
 import React, {
   useEffect,
   useState,
@@ -24,14 +26,23 @@ import {
 } from "../../lib/user";
 
 import {
+  buildDailyField,
+} from "../../lib/cosmic/buildDailyField";
+
+import {
   Colors,
 } from "../../constants/theme";
 
 import CompassionNode from "../../components/connections/CompassionNode";
+
 import HumanAvatar from "../../components/connections/HumanAvatar";
+
 import LivingField from "../../components/connections/LivingField";
+
 import LoveNode from "../../components/connections/LoveNode";
+
 import UnityConsciousnessNode from "../../components/connections/UnityConsciousnessNode";
+
 import YouNode from "../../components/connections/YouNode";
 
 const { width, height } =
@@ -41,7 +52,7 @@ const centerX = width / 2;
 const centerY = height / 2;
 
 //
-// 🌌 FIXED HUMAN CONSTELLATION POSITIONS
+// 🌌 POSITIONS
 //
 
 const positions = [
@@ -85,101 +96,80 @@ const positions = [
     x: centerX + 135,
     y: centerY - 150,
   },
-
-  {
-    x: centerX - 100,
-    y: centerY + 280,
-  },
-
-  {
-    x: centerX + 40,
-    y: centerY + 310,
-  },
-
-  {
-    x: centerX - 135,
-    y: centerY - 40,
-  },
-
-  {
-    x: centerX + 130,
-    y: centerY + 270,
-  },
-
-  {
-    x: centerX - 150,
-    y: centerY + 110,
-  },
-
-  {
-    x: centerX + 130,
-    y: centerY + 110,
-  },
-
-  {
-    x: centerX - 100,
-    y: centerY - 330,
-  },
 ];
 
 export default function Field() {
 
   //
-  // 👤 CURRENT USER
+  // 👤 USER
   //
 
   const [currentUser, setCurrentUser] =
     useState<any>(null);
 
   //
-  // 🌍 REAL HUMANS
+  // 🌕 DAILY FIELD
+  //
+
+  const [
+
+    dailyField,
+
+    setDailyField,
+
+  ] = useState<any>(null);
+
+  //
+  // 🌍 HUMANS
   //
 
   const [humans, setHumans] =
     useState<any[]>([]);
 
   //
-  // 👤 DELAYED SELF ARRIVAL
+  // 👤 SELF
   //
 
   const [showYou, setShowYou] =
     useState(false);
 
   //
-  // 🌍 ACTIVE HUMANS
+  // 🌍 ACTIVE
   //
 
   const [visibleHumans, setVisibleHumans] =
     useState<string[]>([]);
 
   //
-  // 👤 LOAD REAL PROFILES
+  // 🌌 LOAD
   //
 
   useEffect(() => {
 
-    async function loadProfiles() {
+    async function load() {
 
       try {
 
-        console.log(
-          "🌍 LOAD PROFILES"
-        );
-
         //
-        // 👤 CURRENT USER ID
+        // 👤 USER
         //
 
         const userId =
           await getUserId();
 
-        console.log(
-          "👤 CURRENT USER:",
-          userId
+        //
+        // 🌕 DAILY FIELD
+        //
+
+        const field =
+          await buildDailyField();
+
+        setDailyField(
+          field
         );
 
         //
-        // 🌍 LOAD PROFILES
+        // 🌍 LOAD HUMANS
         //
 
         const {
@@ -194,7 +184,7 @@ export default function Field() {
         if (error) {
 
           console.log(
-            "❌ PROFILES ERROR",
+            "❌ PROFILE ERROR",
             error
           );
 
@@ -202,7 +192,7 @@ export default function Field() {
         }
 
         //
-        // 👤 FIND ME
+        // 👤 ME
         //
 
         const me =
@@ -222,7 +212,7 @@ export default function Field() {
           ) || [];
 
         //
-        // ✨ POSITION HUMANS
+        // ✨ POSITION
         //
 
         const positioned =
@@ -252,24 +242,24 @@ export default function Field() {
       } catch (error) {
 
         console.log(
-          "❌ LOAD PROFILES ERROR",
+          "❌ FIELD ERROR",
           error
         );
       }
     }
 
-    loadProfiles();
+    load();
 
   }, []);
 
   //
-  // ✨ YOU ENTERS FIRST
+  // 👤 YOU
   //
 
   useEffect(() => {
 
     const delay =
-      2000 + Math.random() * 2000;
+      300 + Math.random() * 300;
 
     const timer =
       setTimeout(() => {
@@ -284,7 +274,7 @@ export default function Field() {
   }, []);
 
   //
-  // 🌌 HUMANS EMERGE AFTER YOU
+  // 🌍 HUMAN ROTATION
   //
 
   useEffect(() => {
@@ -297,95 +287,102 @@ export default function Field() {
       return;
     }
 
-    //
-    // 🌊 SPACIOUS EMERGENCE
-    //
-
-    const humanDelay =
-      5000 + Math.random() * 3000;
-
-    let interval:
-      ReturnType<typeof setInterval>;
-
     const timer =
       setTimeout(() => {
 
         const initial =
           [...humans]
-            .sort(() =>
-              Math.random() - 0.5
+
+            .sort(
+              () =>
+                Math.random() - 0.5
             )
+
             .slice(0, 2)
-            .map((h) => h.user_id);
 
-        setVisibleHumans(initial);
+            .map(
+              (h) => h.user_id
+            );
 
-        //
-        // 🌌 LIVING FIELD ROTATION
-        //
+        setVisibleHumans(
+          initial
+        );
 
-        interval =
-          setInterval(() => {
+      }, 2500);
 
-            const shuffled =
-              [...humans]
-                .sort(() =>
-                  Math.random() - 0.5
-                );
-
-            const selected =
-              shuffled
-                .slice(0, 2)
-                .map((h) => h.user_id);
-
-            setVisibleHumans(selected);
-
-          }, 12000);
-
-      }, humanDelay);
-
-    return () => {
-
+    return () =>
       clearTimeout(timer);
-
-      if (interval) {
-
-        clearInterval(interval);
-      }
-    };
 
   }, [
     showYou,
     humans,
   ]);
 
+  //
+  // 🌌 UI
+  //
+
   return (
 
     <View style={styles.container}>
 
-      {/* 🌌 ATMOSPHERIC FIELD */}
+      {/* 🌌 FIELD */}
 
-      <LivingField />
-
-      {/* 🔵 COMPASSION */}
-
-      <CompassionNode
-        x={centerX + 80}
-        y={centerY - 210}
+      <LivingField
+        dailyField={
+          dailyField
+        }
       />
 
       {/* 💗 LOVE */}
 
       <LoveNode
+
         x={centerX - 90}
         y={centerY - 110}
+
+        opacity={1}
+
+        onPress={() => {
+
+          router.push(
+            "/connections/circle-space?type=love"
+          );
+        }}
+      />
+
+      {/* 🔵 COMPASSION */}
+
+      <CompassionNode
+
+        x={centerX + 80}
+        y={centerY - 210}
+
+        opacity={1}
+
+        onPress={() => {
+
+          router.push(
+            "/connections/circle-space?type=compassion"
+          );
+        }}
       />
 
       {/* ✨ UNITY */}
 
       <UnityConsciousnessNode
+
         x={centerX}
         y={centerY + 180}
+
+        opacity={1}
+
+        onPress={() => {
+
+          router.push(
+            "/connections/circle-space?type=unity"
+          );
+        }}
       />
 
       {/* 👤 YOU */}
@@ -397,12 +394,21 @@ export default function Field() {
 
         visible={showYou}
 
+        opacity={1}
+
         avatar={
           currentUser?.avatar_url
         }
+
+        onPress={() => {
+
+          router.push(
+            "/connections/you-space"
+          );
+        }}
       />
 
-      {/* 🌍 REAL HUMANS */}
+      {/* 🌍 HUMANS */}
 
       {humans.map((human) => (
 
@@ -423,25 +429,21 @@ export default function Field() {
           x={human.x}
           y={human.y}
 
+          opacity={1}
+
           onPress={() => {
 
-            router.push({
+            router.push(
 
-              pathname:
-                "/connections/human-space",
+              `/connections/human-space?otherUserId=${human.user_id}`
 
-              params: {
-
-                otherUserId:
-                  human.user_id,
-              },
-            });
+            );
           }}
         />
 
       ))}
 
-      {/* ◌ RETURN */}
+      {/* ◌ */}
 
       <Pressable
 
@@ -462,45 +464,41 @@ export default function Field() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles =
+  StyleSheet.create({
 
-  container: {
-    flex: 1,
+    container: {
+      flex: 1,
 
-    backgroundColor:
-      Colors.background,
-  },
+      backgroundColor:
+        Colors.background,
 
-  //
-  // ◌ PORTAL
-  //
+      overflow: "hidden",
+    },
 
-  portal: {
-    position: "absolute",
+    portal: {
+      position: "absolute",
 
-    bottom: 0,
+      bottom: 0,
 
-    width: "100%",
+      width: "100%",
 
-    alignItems:
-      "center",
+      alignItems:
+        "center",
 
-    justifyContent:
-      "center",
+      justifyContent:
+        "center",
 
-    paddingTop: 20,
-    paddingBottom: 8,
+      zIndex: 10,
+    },
 
-    zIndex: 999,
-  },
+    portalText: {
+      color:
+        Colors.portal,
 
-  portalText: {
-    color:
-      Colors.portal,
+      fontSize: 28,
 
-    fontSize: 28,
+      fontWeight: "200",
+    },
 
-    fontWeight: "200",
-  },
-
-});
+  });

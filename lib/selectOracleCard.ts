@@ -1,90 +1,563 @@
-import { ORACLE_CARDS } from "./oracleCards";
+// /lib/oracle/selectOracleCard.ts
 
-// ✅ infer type from array
-type OracleCard = (typeof ORACLE_CARDS)[number];
+import {
+  supabase,
+} from "../services/supabase";
 
-type SelectionContext = {
-  patterns?: string[];
-  distortion?: string[];
-  lens?: string;
+//
+// 🌌 TYPES
+//
+
+type OracleCard = {
+
+  id: string;
+
+  title: string;
+
+  card_number?: number;
+
+  theme?: string;
+
   chakra?: string;
-  cosmic?: {
-    moon?: string;
-    sign?: string;
-    energy?: string;
-  };
+
+  energy_category?: string;
+
+  emotional_frequency?: string;
+
+  symbolic_tone?: string[];
+
+  relational_energy?: string;
+
+  cadence_style?: string;
+
+  imagery_keywords?: string[];
+
+  inquiry_energy?: string;
+
+  inquiry_examples?: string[];
+
+  behavioural_themes?: string[];
+
+  movement_keywords?: string[];
+
+  symbolic_environment?: string[];
+
+  archetypal_temperature?: string;
+
+  is_active?: boolean;
+
+  weight?: number;
 };
 
-// ✅ FIXED TYPE
-function mapPatternToTheme(patterns: string[] = []): OracleCard["theme"] {
-  const p = patterns.join(" ").toLowerCase();
+type SelectionContext = {
 
-  if (p.includes("abandon") || p.includes("inner child")) return "healing";
-  if (p.includes("control") || p.includes("fear")) return "masculine";
-  if (p.includes("intuition") || p.includes("soft")) return "feminine";
-  if (p.includes("purpose") || p.includes("destiny")) return "soul";
-  if (p.includes("synchronicity") || p.includes("timing")) return "cosmic";
-  if (p.includes("relationship") || p.includes("mirror")) return "ascension";
-  if (p.includes("boundary") || p.includes("energy")) return "energy";
-  if (p.includes("trust") || p.includes("divine")) return "divine";
+  cosmic?: {
 
-  return "soul";
-}
+    sun?: string;
 
-// 🧠 weighted random helper
-function weightedPick(cards: (OracleCard & { weight: number })[]): OracleCard {
-  const total = cards.reduce((sum, c) => sum + c.weight, 0);
-  let rand = Math.random() * total;
+    moon?: string;
 
-  for (let c of cards) {
-    rand -= c.weight;
-    if (rand <= 0) return c;
+    phase?: string;
+
+    dominantEnergy?: string;
+
+    collectiveTheme?: string;
+
+    archetypes?: any[];
+  };
+
+  recentCards?: string[];
+};
+
+//
+// 🧠 WEIGHTED RANDOM
+//
+
+function weightedPick(
+
+  cards: (
+    OracleCard & {
+      weight: number;
+    }
+  )[]
+
+): OracleCard {
+
+  const total =
+    cards.reduce(
+
+      (sum, c) =>
+
+        sum + (c.weight || 0),
+
+      0
+    );
+
+  let rand =
+    Math.random() * total;
+
+  for (const card of cards) {
+
+    rand -=
+      card.weight || 0;
+
+    if (rand <= 0) {
+
+      return card;
+    }
   }
 
   return cards[0];
 }
 
-export function selectOracleCard(context: SelectionContext): OracleCard {
-  const theme = mapPatternToTheme(context.patterns);
+//
+// 🌌 HELPERS
+//
 
-  const basePool =
-    ORACLE_CARDS.filter((c) => c.theme === theme) || ORACLE_CARDS;
+function normalizeArray(
+  value: any
+): string[] {
 
-  const patterns = (context.patterns || []).join(" ").toLowerCase();
-  const distortion = (context.distortion || []).join(" ").toLowerCase();
-  const chakra = context.chakra;
+  if (
+    Array.isArray(value)
+  ) {
 
-  const weighted = basePool.map((card) => {
-    let weight = 1;
+    return value
+      .filter(Boolean)
+      .map((v) =>
+        String(v)
+          .toLowerCase()
+      );
+  }
 
-    // 🔥 theme match
-    if (card.theme === theme) weight += 3;
+  if (
+    typeof value ===
+    "string"
+  ) {
 
-    // 🧠 pattern
-    if (patterns.includes("abandon") && card.theme === "healing") weight += 3;
-    if (patterns.includes("control") && card.theme === "masculine") weight += 2;
-    if (patterns.includes("intuition") && card.theme === "feminine") weight += 2;
+    return value
 
-    // ⚠️ distortion
-    if (distortion.includes("overthinking") && card.theme === "masculine") weight += 2;
-    if (distortion.includes("seeking") && card.theme === "feminine") weight += 1;
+      .split(",")
 
-    // 🌈 chakra (if exists)
-    if ((card as any).chakra && chakra && (card as any).chakra === chakra) {
-      weight += 2;
-    }
+      .map((v) =>
+        v.trim()
+          .toLowerCase()
+      )
 
-    // 🌌 cosmic (light)
-    if (context.cosmic?.energy === "grounding" && card.theme === "energy") {
-      weight += 1;
-    }
+      .filter(Boolean);
+  }
 
-    if (context.cosmic?.energy === "expansion" && card.theme === "soul") {
-      weight += 1;
-    }
+  return [];
+}
 
-    return { ...card, weight };
-  });
+//
+// 🌌 SELECT ORACLE CARD
+//
 
-  return weightedPick(weighted);
+export async function
+selectOracleCard({
+
+  cosmic,
+
+  recentCards = [],
+
+}: SelectionContext): Promise<OracleCard> {
+
+  //
+  // 🃏 LOAD CARDS
+  //
+
+  const {
+
+    data,
+
+    error,
+
+  } = await supabase
+
+    .from(
+      "oracle_cards"
+    )
+
+    .select("*")
+
+    .eq(
+      "is_active",
+      true
+    );
+
+  //
+  // ❌ ERROR
+  //
+
+  if (
+    error ||
+    !data ||
+    data.length === 0
+  ) {
+
+    console.log(
+      "❌ ORACLE LOAD ERROR:",
+      error
+    );
+
+    throw new Error(
+      "Unable to load oracle cards."
+    );
+  }
+
+  //
+  // 🌌 ARCHETYPES
+  //
+
+  const archetypes =
+    cosmic?.archetypes || [];
+
+  //
+  // ✨ BUILD WEIGHTS
+  //
+
+  const weighted =
+    data.map(
+      (card: OracleCard) => {
+
+        let weight = 1;
+
+        //
+        // ✨ NORMALIZE CARD DATA
+        //
+
+        const imagery =
+          normalizeArray(
+            card.imagery_keywords
+          );
+
+        const behaviours =
+          normalizeArray(
+            card.behavioural_themes
+          );
+
+        const movement =
+          normalizeArray(
+            card.movement_keywords
+          );
+
+        const environments =
+          normalizeArray(
+            card.symbolic_environment
+          );
+
+        const tone =
+          normalizeArray(
+            card.symbolic_tone
+          );
+
+        //
+        // 🌌 ARCHETYPE RESONANCE
+        //
+
+        archetypes.forEach(
+          (archetype: any) => {
+
+            const themes =
+              normalizeArray(
+                archetype
+                  ?.themes
+              );
+
+            const oracleBias =
+              normalizeArray(
+                archetype
+                  ?.oracle_bias
+              );
+
+            const emotionalTone =
+
+              String(
+
+                archetype
+                  ?.emotional_tone ||
+
+                ""
+
+              )
+
+              .toLowerCase();
+
+            const movementStyle =
+
+              String(
+
+                archetype
+                  ?.movement_style ||
+
+                ""
+
+              )
+
+              .toLowerCase();
+
+            //
+            // 🌌 SYMBOLIC RESONANCE
+            //
+
+            themes.forEach(
+              (theme) => {
+
+                if (
+
+                  imagery.includes(
+                    theme
+                  )
+
+                ) {
+
+                  weight += 2;
+                }
+
+                if (
+
+                  behaviours.includes(
+                    theme
+                  )
+
+                ) {
+
+                  weight += 2;
+                }
+
+                if (
+
+                  environments.includes(
+                    theme
+                  )
+
+                ) {
+
+                  weight += 1.5;
+                }
+              }
+            );
+
+            //
+            // ✨ ORACLE BIAS
+            //
+
+            oracleBias.forEach(
+              (bias) => {
+
+                if (
+
+                  behaviours.includes(
+                    bias
+                  )
+
+                ) {
+
+                  weight += 2.5;
+                }
+
+                if (
+
+                  tone.includes(
+                    bias
+                  )
+
+                ) {
+
+                  weight += 1.5;
+                }
+              }
+            );
+
+            //
+            // 🌊 EMOTIONAL TONE
+            //
+
+            if (
+
+              card
+                ?.emotional_frequency
+                ?.toLowerCase?.()
+
+                .includes(
+                  emotionalTone
+                )
+
+            ) {
+
+              weight += 2;
+            }
+
+            //
+            // 🌬 MOVEMENT STYLE
+            //
+
+            if (
+
+              movement.includes(
+                movementStyle
+              )
+
+            ) {
+
+              weight += 2;
+            }
+
+            //
+            // ⚡ ACTIVATION WEIGHT
+            //
+
+            weight +=
+
+              (
+                archetype
+                  ?.activation_weight ||
+
+                1
+              ) * 0.6;
+          }
+        );
+
+        //
+        // 🌕 MOON PHASE
+        //
+
+        if (
+
+          cosmic?.phase ===
+          "Full"
+
+        ) {
+
+          if (
+
+            tone.includes(
+              "intense"
+            ) ||
+
+            tone.includes(
+              "revealing"
+            )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        if (
+
+          cosmic?.phase ===
+          "New"
+
+        ) {
+
+          if (
+
+            movement.includes(
+              "emerging"
+            ) ||
+
+            movement.includes(
+              "beginning"
+            )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        if (
+
+          cosmic?.phase ===
+          "Waning"
+
+        ) {
+
+          if (
+
+            movement.includes(
+              "release"
+            ) ||
+
+            tone.includes(
+              "reflective"
+            )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        //
+        // ⚡ COLLECTIVE ENERGY
+        //
+
+        if (
+
+          cosmic?.dominantEnergy
+
+        ) {
+
+          if (
+
+            card
+              ?.energy_category
+              ?.toLowerCase?.()
+
+              .includes(
+
+                cosmic
+                  .dominantEnergy
+                  .toLowerCase()
+
+              )
+
+          ) {
+
+            weight += 2;
+          }
+        }
+
+        //
+        // 🔁 REDUCE RECENT REPEATS
+        //
+
+        if (
+
+          recentCards.includes(
+            card.id
+          )
+
+        ) {
+
+          weight *= 0.08;
+        }
+
+        //
+        // ✨ RANDOM MAGIC
+        //
+
+        weight +=
+          Math.random() * 1.2;
+
+        return {
+
+          ...card,
+
+          weight,
+        };
+      }
+    );
+
+  //
+  // 🌌 FINAL CARD
+  //
+
+  return weightedPick(
+    weighted
+  );
 }

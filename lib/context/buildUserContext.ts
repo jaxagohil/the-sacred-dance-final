@@ -2,20 +2,30 @@
 
 import { supabase } from "../../services/supabase";
 
-import { getEnergyFromSignals } from "../energy/getEnergyFromSignals";
-
-import { interpretMirror } from "../interpretMirror";
-
-import { getCosmicMessage } from "../getCosmicMessage";
+import {
+  getEnergyFromSignals,
+} from "../energy/getEnergyFromSignals";
 
 import {
-    buildFullChakraScores,
-    getAwarenessChakra,
+  interpretMirror,
+} from "../interpretMirror";
+
+import {
+  getCosmicMessage,
+} from "../cosmic/getCosmicMessage";
+
+import {
+  buildFullChakraScores,
+
+  getAwarenessChakra,
 } from "../energy";
 
-import { buildMirrorContext } from "../createContextBuilder";
+import {
+  buildMirrorContext,
+} from "../createContextBuilder";
 
 type BuildUserContextParams = {
+
   userId: string;
 
   source?: string;
@@ -24,40 +34,66 @@ type BuildUserContextParams = {
 };
 
 export async function buildUserContext({
+
   userId,
+
   source = "system",
+
   activeLens = "general",
+
 }: BuildUserContextParams) {
+
   //
   // 👤 PROFILE
   //
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const { data: profile } =
+    await supabase
+
+      .from("profiles")
+
+      .select("*")
+
+      .eq("user_id", userId)
+
+      .maybeSingle();
 
   //
   // 🌊 SIGNALS
   //
 
-  const { data: signals, error } = await supabase
+  const {
+    data: signals,
+    error,
+  } = await supabase
+
     .from("signals")
+
     .select("*")
+
     .eq("user_id", userId)
+
     .order("created_at", {
+
       ascending: false,
     })
+
     .limit(20);
 
-  if (error || !signals || signals.length === 0) {
+  if (
+    error ||
+    !signals ||
+    signals.length === 0
+  ) {
+
     return {
+
       ready: false,
 
       source,
 
-      profile: profile || null,
+      profile:
+        profile || null,
 
       signals: [],
 
@@ -67,12 +103,16 @@ export async function buildUserContext({
 
       cosmic: null,
 
+      dailyField: null,
+
       context: null,
 
       chakraPatterns: {},
 
       distortions: {
+
         masculine: [],
+
         feminine: [],
       },
 
@@ -85,18 +125,26 @@ export async function buildUserContext({
   //
 
   const energyResult =
-    await getEnergyFromSignals(signals);
+    await getEnergyFromSignals(
+      signals
+    );
 
   if (
+
     !energyResult ||
+
     !energyResult.patterns
+
   ) {
+
     return {
+
       ready: false,
 
       source,
 
-      profile: profile || null,
+      profile:
+        profile || null,
 
       signals,
 
@@ -106,12 +154,16 @@ export async function buildUserContext({
 
       cosmic: null,
 
+      dailyField: null,
+
       context: null,
 
       chakraPatterns: {},
 
       distortions: {
+
         masculine: [],
+
         feminine: [],
       },
 
@@ -127,14 +179,17 @@ export async function buildUserContext({
     energyResult.patterns;
 
   const chakraPatterns =
-    energyResult.chakraPatterns || {};
+    energyResult
+      .chakraPatterns || {};
 
   //
   // 🪞 MIRROR
   //
 
   const mirror =
-    interpretMirror(patterns);
+    interpretMirror(
+      patterns
+    );
 
   //
   // 🌌 COSMIC
@@ -142,7 +197,10 @@ export async function buildUserContext({
 
   const cosmicResult =
     await getCosmicMessage({
-      energy: energyResult.energy,
+
+      energy:
+        energyResult.energy,
+
       patterns,
     });
 
@@ -150,48 +208,74 @@ export async function buildUserContext({
   // 🧿 DISTORTIONS
   //
 
-  const masculine: any[] = [];
+  const masculine:
+    any[] = [];
 
-  const feminine: any[] = [];
+  const feminine:
+    any[] = [];
 
   signals.forEach((s) => {
+
     const behaviours =
       s.ai_behaviours || [];
 
-    behaviours.forEach((b: any) => {
-      if (!b?.statement) return;
+    behaviours.forEach(
+      (b: any) => {
 
-      if (b.side === "masculine") {
+      if (!b?.statement)
+        return;
+
+      if (
+        b.side ===
+        "masculine"
+      ) {
+
         masculine.push(b);
       }
 
-      if (b.side === "feminine") {
+      if (
+        b.side ===
+        "feminine"
+      ) {
+
         feminine.push(b);
       }
     });
   });
 
   const distortions = {
-    masculine: masculine.slice(0, 3),
 
-    feminine: feminine.slice(0, 3),
+    masculine:
+      masculine.slice(0, 3),
+
+    feminine:
+      feminine.slice(0, 3),
   };
 
   //
   // 🧠 CHAKRAS
   //
 
-  let chakraScores: any = {};
+  let chakraScores:
+    any = {};
 
-  let awarenessChakra: any = null;
+  let awarenessChakra:
+    any = null;
 
   if (
+
     energyResult.energy &&
+
     energyResult.energy.chakras
+
   ) {
+
     chakraScores =
       buildFullChakraScores(
-        energyResult.energy.chakras
+
+        energyResult
+          .energy
+          .chakras
       );
 
     awarenessChakra =
@@ -206,6 +290,7 @@ export async function buildUserContext({
 
   const context =
     await buildMirrorContext({
+
       mirror,
 
       energy:
@@ -213,6 +298,9 @@ export async function buildUserContext({
 
       cosmic:
         cosmicResult.cosmic,
+
+      dailyField:
+        cosmicResult.dailyField,
 
       signals,
 
@@ -224,6 +312,7 @@ export async function buildUserContext({
   //
 
   return {
+
     ready: true,
 
     source,
@@ -234,7 +323,8 @@ export async function buildUserContext({
     // 👤 USER
     //
 
-    profile: profile || null,
+    profile:
+      profile || null,
 
     //
     // 🌊 SIGNALS
@@ -272,6 +362,9 @@ export async function buildUserContext({
 
     cosmicMessage:
       cosmicResult.aiMessage,
+
+    dailyField:
+      cosmicResult.dailyField,
 
     //
     // 🧠 CONTEXT

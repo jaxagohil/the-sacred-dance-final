@@ -2,11 +2,10 @@
 
 import { API_URL } from "../config";
 
-
 import { buildPrompt } from "./buildPrompt";
 
 import {
-    AIInput,
+  AIInput,
 } from "./types/aiTypes";
 
 /*
@@ -32,6 +31,7 @@ export async function generateAIResponse({
    */
 
   const prompt =
+
     buildPrompt({
 
       type,
@@ -125,7 +125,9 @@ export async function generateAIResponse({
       );
 
       return (
+
         data?.base ||
+
         "..."
       );
     }
@@ -162,11 +164,26 @@ export async function generateAIResponse({
      * -----------------------------------------------------
      */
 
+    const finalText =
+
+      result?.text ||
+
+      result?.response ||
+
+      result?.message ||
+
+      "";
+
     return (
 
-      result?.text || ""
+      typeof finalText ===
+      "string"
 
-    ).trim() ||
+        ? finalText.trim()
+
+        : ""
+
+    ) ||
 
       data?.base ||
 
@@ -202,7 +219,9 @@ export async function generateAIResponse({
      */
 
     return (
+
       data?.base ||
+
       "..."
     );
   }

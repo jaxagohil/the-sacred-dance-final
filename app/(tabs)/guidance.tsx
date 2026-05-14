@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import {
+  ActivityIndicator,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -48,6 +49,8 @@ import {
   Colors,
   Fonts,
 } from "../../constants/theme";
+
+import { t } from "../../lib/i18n/t";
 
 type GuideKey =
   | "guide_heart"
@@ -542,7 +545,10 @@ const guideSegment = {
             fontSize: 14,
           }}
         >
-          attuning...
+<ActivityIndicator
+  size="small"
+  color="white"
+/>
         </Text>
 
       </SafeAreaView>
@@ -655,7 +661,7 @@ const guideSegment = {
                 setInput
               }
 
-              placeholder="..."
+              placeholder={t("guidance.placeholder")}
 
               placeholderTextColor={
                 Colors.subtleText

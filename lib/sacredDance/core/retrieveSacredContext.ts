@@ -3,6 +3,7 @@
 import { supabase } from "../../../services/supabase";
 
 import {
+  RealityLayer,
   RetrievedFragment,
 } from "./types";
 
@@ -11,6 +12,14 @@ interface RetrieveSacredContextParams {
   emotions?: string[];
 
   behaviours?: string[];
+
+  /*
+   * ---------------------------------------------------------
+   * REALITY LAYER
+   * ---------------------------------------------------------
+   */
+
+  realityLayer?: RealityLayer;
 
   lens?: {
     people?: string[];
@@ -87,6 +96,8 @@ export async function retrieveSacredContext({
 
   behaviours = [],
 
+  realityLayer,
+
   lens,
 
   limit = 5,
@@ -118,6 +129,10 @@ export async function retrieveSacredContext({
       ...behaviours,
 
       ...lensSignals,
+
+      ...(realityLayer
+        ? [realityLayer]
+        : []),
     ]
       .filter(Boolean)
       .map(
@@ -261,10 +276,7 @@ export async function retrieveSacredContext({
      * ---------------------------------------------------------
      */
 
-    const {
-      data: oracleCardsData,
-      error: oracleCardsError,
-    } = await supabase
+    let oracleCardsQuery = supabase
 
       .from(
         "oracle_cards"
@@ -276,21 +288,30 @@ export async function retrieveSacredContext({
         title,
         affirmation,
         message
-      `)
+      `);
 
-      .or(
+    if (themes.length > 0) {
 
-        themes
-          .map(
-            (
-              theme
-            ) =>
+      oracleCardsQuery =
+        oracleCardsQuery.or(
 
-              `title.ilike.%${theme}%`
-          )
-          .join(",")
+          themes
+            .map(
+              (
+                theme
+              ) =>
 
-      )
+                `title.ilike.%${theme}%`
+            )
+            .join(",")
+
+        );
+    }
+
+    const {
+      data: oracleCardsData,
+      error: oracleCardsError,
+    } = await oracleCardsQuery
 
       .limit(limit);
 
@@ -308,10 +329,7 @@ export async function retrieveSacredContext({
      * ---------------------------------------------------------
      */
 
-    const {
-      data: oraclePromptsData,
-      error: oraclePromptsError,
-    } = await supabase
+    let oraclePromptsQuery = supabase
 
       .from(
         "oracle_prompts"
@@ -322,21 +340,30 @@ export async function retrieveSacredContext({
         card_number,
         prompt,
         weight
-      `)
+      `);
 
-      .or(
+    if (themes.length > 0) {
 
-        themes
-          .map(
-            (
-              theme
-            ) =>
+      oraclePromptsQuery =
+        oraclePromptsQuery.or(
 
-              `prompt.ilike.%${theme}%`
-          )
-          .join(",")
+          themes
+            .map(
+              (
+                theme
+              ) =>
 
-      )
+                `prompt.ilike.%${theme}%`
+            )
+            .join(",")
+
+        );
+    }
+
+    const {
+      data: oraclePromptsData,
+      error: oraclePromptsError,
+    } = await oraclePromptsQuery
 
       .order(
         "weight",

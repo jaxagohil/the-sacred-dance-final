@@ -2,12 +2,12 @@
 
 import React, {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
 import {
   Dimensions,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -57,12 +57,10 @@ import {
 } from "../../services/connections/fieldEnergy";
 
 import {
-  buildConnectionsContext,
-} from "../../lib/context/buildConnectionsContext";
-
-import {
   generateTransmission,
 } from "../../lib/connections/generateTransmission";
+
+import { t } from "../../lib/i18n/t";
 
 const { width } =
   Dimensions.get("window");
@@ -93,6 +91,34 @@ export default function CircleSpace() {
       : "unity";
 
   //
+  // ✨ DAILY FIELD
+  //
+
+const dailyField = null;
+
+//
+// ✨ TRANSMISSION
+//
+
+const [
+
+  transmission,
+
+  setTransmission,
+
+] = useState(
+  "..."
+);
+
+const [
+
+  visibleTransmission,
+
+  setVisibleTransmission,
+
+] = useState("");
+
+  //
   // 🌍 FIELD
   //
 
@@ -120,23 +146,20 @@ export default function CircleSpace() {
     useState(false);
 
   //
-  // ✨ TRANSMISSIONS
-  //
-
-  const [transmission, setTransmission] =
-    useState("");
-
-  const [whisperMessage, setWhisperMessage] =
-    useState("");
-
-  //
   // 🌊 FIELD ENERGY
   //
 
   const fieldEnergy =
-    deriveFieldEnergy(
-      messages,
-      humans
+    useMemo(
+      () =>
+        deriveFieldEnergy(
+          messages,
+          humans
+        ),
+      [
+        messages,
+        humans,
+      ]
     );
 
   const fieldColor =
@@ -150,21 +173,11 @@ export default function CircleSpace() {
     safeType === "love"
       ? "L O V E"
 
-      : safeType === "compassion"
+      : safeType ===
+        "compassion"
       ? "C O M P A S S I O N"
 
       : "U N I T Y\nC O N S C I O U S N E S S";
-
-  const prompt =
-    safeType === "love"
-
-      ? "Where are you being invited to soften?"
-
-      : safeType === "compassion"
-
-      ? "What tenderness is asking to be seen?"
-
-      : "What separation are you ready to release?";
 
   //
   // 🌌 REFRESH FIELD
@@ -206,33 +219,6 @@ export default function CircleSpace() {
         fieldMessages || []
       );
 
-      //
-      // ✨ CONTEXT
-      //
-
-      const context =
-        await buildConnectionsContext({
-
-          spaceType:
-            "circle",
-
-          fieldSlug:
-            safeType,
-        });
-
-      const transmissionData =
-        generateTransmission({
-          context,
-        });
-
-      setTransmission(
-        transmissionData.transmission
-      );
-
-      setWhisperMessage(
-        transmissionData.whisper
-      );
-
     } catch (error) {
 
       console.log(
@@ -254,10 +240,6 @@ export default function CircleSpace() {
 
       try {
 
-        //
-        // 🌌 ENTER FIELD
-        //
-
         await enterField({
 
           presenceType:
@@ -267,9 +249,26 @@ export default function CircleSpace() {
             safeType,
         });
 
-        //
-        // 🌊 LOAD
-        //
+        const generatedTransmission =
+  await generateTransmission({
+
+    spaceType:
+      safeType,
+
+    dailyField:
+      null,
+  });
+
+if (mounted) {
+
+  setTransmission(
+
+    generatedTransmission
+      ?.transmission ||
+
+    "The field feels softer today."
+  );
+}
 
         const [
           presence,
@@ -304,33 +303,6 @@ export default function CircleSpace() {
 
         setMessages(
           fieldMessages || []
-        );
-
-        //
-        // ✨ CONTEXT
-        //
-
-        const context =
-          await buildConnectionsContext({
-
-            spaceType:
-              "circle",
-
-            fieldSlug:
-              safeType,
-          });
-
-        const transmissionData =
-          generateTransmission({
-            context,
-          });
-
-        setTransmission(
-          transmissionData.transmission
-        );
-
-        setWhisperMessage(
-          transmissionData.whisper
         );
 
       } catch (error) {
@@ -385,10 +357,6 @@ export default function CircleSpace() {
         `field-${safeType}`
       );
 
-    //
-    // ✨ MESSAGES
-    //
-
     channel.on(
 
       "postgres_changes",
@@ -407,10 +375,6 @@ export default function CircleSpace() {
         await refreshField();
       }
     );
-
-    //
-    // 👥 PRESENCE
-    //
 
     channel.on(
 
@@ -441,6 +405,53 @@ export default function CircleSpace() {
     };
 
   }, [safeType]);
+
+  //
+// ✨ REVEAL TRANSMISSION
+//
+
+useEffect(() => {
+
+  if (!transmission) {
+
+    return;
+  }
+
+  let index = 0;
+
+  setVisibleTransmission("");
+
+  const interval =
+    setInterval(() => {
+
+      index++;
+
+      setVisibleTransmission(
+
+        transmission.slice(
+          0,
+          index
+        )
+      );
+
+      if (
+        index >=
+        transmission.length
+      ) {
+
+        clearInterval(
+          interval
+        );
+      }
+
+    }, 55);
+
+  return () =>
+    clearInterval(
+      interval
+    );
+
+}, [transmission]);
 
   //
   // ✨ SEND
@@ -515,9 +526,13 @@ export default function CircleSpace() {
 
         <View style={styles.container}>
 
-          {/* 🌌 LIVING FIELD */}
+          {/* 🌌 FIELD */}
 
-          <LivingField />
+          <LivingField
+            dailyField={
+              dailyField
+            }
+          />
 
           {/* 🌌 NODE */}
 
@@ -574,13 +589,13 @@ export default function CircleSpace() {
               {title}
             </Text>
 
-            <Text style={styles.prompt}>
-              {prompt}
-            </Text>
-
-            <Text style={styles.transmission}>
-              {transmission}
-            </Text>
+<Text
+  style={
+    styles.transmission
+  }
+>
+  {visibleTransmission}
+</Text>
 
             {/* ✍️ INPUT */}
 
@@ -598,7 +613,7 @@ export default function CircleSpace() {
 
                 maxLength={220}
 
-                placeholder="Share into the field..."
+                placeholder={t("connections.circlespace_placeholder")}
 
                 placeholderTextColor={
                   Colors.subtleText
@@ -617,7 +632,7 @@ export default function CircleSpace() {
 
           </View>
 
-          {/* ✨ REFLECTIONS */}
+          {/* 🌊 REFLECTIONS */}
 
           <View style={styles.reflectionsWindow}>
 
@@ -700,85 +715,6 @@ export default function CircleSpace() {
 
           </View>
 
-          {/* 🌍 HUMANS */}
-
-          <View style={styles.bottom}>
-
-            {loading ? (
-
-              <>
-                <View style={styles.avatar} />
-                <View style={styles.avatar} />
-                <View style={styles.avatar} />
-              </>
-
-            ) : (
-
-              humans
-
-                .filter(
-                  (human) =>
-                    !!human?.avatar_url
-                )
-
-                .map(
-                  (human, index) => (
-
-                    <View
-                      key={
-                        human.id ||
-                        index
-                      }
-
-                      style={[
-                        styles.avatar,
-                        {
-                          borderColor:
-                            `${fieldColor}66`,
-                        },
-                      ]}
-                    >
-
-                      <Image
-
-                        source={{
-                          uri:
-                            human.avatar_url,
-                        }}
-
-                        style={{
-                          width: "100%",
-                          height: "100%",
-
-                          borderRadius: 999,
-                        }}
-                      />
-
-                    </View>
-                  )
-                )
-            )}
-
-          </View>
-
-          {/* ✨ WHISPER */}
-
-          <View style={styles.whisperContainer}>
-
-            <Text
-              style={[
-                styles.whisper,
-                {
-                  color:
-                    fieldColor,
-                },
-              ]}
-            >
-              {whisperMessage}
-            </Text>
-
-          </View>
-
           {/* ◌ RETURN */}
 
           <Pressable
@@ -852,40 +788,23 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
 
-  prompt: {
-    marginTop: 3,
-
-    color:
-      Colors.mutedText,
-
-    fontSize: 13,
-
-    lineHeight: 22,
-
-    textAlign: "center",
-
-    fontWeight: "300",
-
-    paddingHorizontal: 54,
-  },
-
   transmission: {
-    marginTop: 12,
+    marginTop: 10,
 
     color:
-      Colors.softText,
+      Colors.gold,
 
-    fontSize: 12,
+    fontSize: 14,
 
-    lineHeight: 22,
+    lineHeight: 19,
 
     textAlign: "center",
 
     fontWeight: "300",
 
-    paddingHorizontal: 48,
+    paddingHorizontal: 30,
 
-    opacity: 0.82,
+    opacity: 0.88,
   },
 
   inputContainer: {
@@ -952,7 +871,7 @@ const styles = StyleSheet.create({
 
     borderWidth: 0.6,
 
-    opacity: 0.5,
+    opacity: 0.72,
   },
 
   reflectionText: {
@@ -962,62 +881,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
 
     lineHeight: 21,
-
-    fontWeight: "300",
-  },
-
-  bottom: {
-    position: "absolute",
-
-    bottom: 75,
-
-    width: "100%",
-
-    flexDirection: "row",
-
-    justifyContent:
-      "center",
-
-    alignItems:
-      "center",
-
-    gap: 18,
-
-    zIndex: 5,
-  },
-
-  avatar: {
-    width: 40,
-    height: 40,
-
-    borderRadius: 999,
-
-    overflow: "hidden",
-
-    borderWidth: 1,
-
-    backgroundColor:
-      "rgba(255,255,255,0.015)",
-  },
-
-  whisperContainer: {
-    position: "absolute",
-
-    bottom: 25,
-
-    width: "100%",
-
-    paddingHorizontal: 54,
-
-    zIndex: 3,
-  },
-
-  whisper: {
-    fontSize: 11,
-
-    lineHeight: 24,
-
-    textAlign: "center",
 
     fontWeight: "300",
   },

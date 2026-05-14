@@ -1,58 +1,74 @@
-// app/connections/you-space.tsx
+// /app/connections/you-space.tsx
 
 import React, {
-    useEffect,
-    useState,
+  useEffect,
+  useState,
 } from "react";
 
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import {
-    Image,
+  Image,
 } from "expo-image";
 
 import {
-    router,
+  router,
 } from "expo-router";
 
 import {
-    supabase,
+  supabase,
 } from "../../services/supabase";
 
 import {
-    Colors,
+  Colors,
 } from "../../constants/theme";
 
 import LivingField from "../../components/connections/LivingField";
 
 import {
-    getUserId,
+  getUserId,
 } from "../../lib/user";
 
 import {
-    createFieldMessage,
-    getFieldMessages,
+  createFieldMessage,
+  getFieldMessages,
 } from "../../services/connections/messages";
 
 import {
-    buildConnectionsContext,
-} from "../../lib/context/buildConnectionsContext";
-
-import {
-    generateTransmission,
+  generateTransmission,
 } from "../../lib/connections/generateTransmission";
 
+import { t } from "../../lib/i18n/t";
+
 export default function YouSpace() {
+
+const [
+
+  transmission,
+
+  setTransmission,
+
+] = useState(
+  "..."
+);
+
+const [
+
+  visibleTransmission,
+
+  setVisibleTransmission,
+
+] = useState("");
 
   //
   // 🌊 STATE
@@ -75,16 +91,6 @@ export default function YouSpace() {
 
   const [recentHumans, setRecentHumans] =
     useState<any[]>([]);
-
-  //
-  // ✨ TRANSMISSIONS
-  //
-
-  const [transmission, setTransmission] =
-    useState("");
-
-  const [whisperMessage, setWhisperMessage] =
-    useState("");
 
   //
   // ⌨️ KEYBOARD
@@ -159,6 +165,23 @@ export default function YouSpace() {
           data?.is_quiet || false
         );
 
+        const generatedTransmission =
+  await generateTransmission({
+
+    spaceType:
+      "self",
+
+    dailyField:
+      null,
+  });
+
+setTransmission(
+
+  generatedTransmission
+    ?.transmission ||
+
+  "Your field feels more open today."
+);
         //
         // 🌊 SELF REFLECTIONS
         //
@@ -179,30 +202,6 @@ export default function YouSpace() {
           )
             ? loaded
             : []
-        );
-
-        //
-        // ✨ CONTEXT
-        //
-
-        const context =
-          await buildConnectionsContext({
-
-            spaceType:
-              "self",
-          });
-
-        const transmissionData =
-          generateTransmission({
-            context,
-          });
-
-        setTransmission(
-          transmissionData.transmission
-        );
-
-        setWhisperMessage(
-          transmissionData.whisper
         );
 
         //
@@ -300,6 +299,53 @@ export default function YouSpace() {
   }, []);
 
   //
+// ✨ REVEAL TRANSMISSION
+//
+
+useEffect(() => {
+
+  if (!transmission) {
+
+    return;
+  }
+
+  let index = 0;
+
+  setVisibleTransmission("");
+
+  const interval =
+    setInterval(() => {
+
+      index++;
+
+      setVisibleTransmission(
+
+        transmission.slice(
+          0,
+          index
+        )
+      );
+
+      if (
+        index >=
+        transmission.length
+      ) {
+
+        clearInterval(
+          interval
+        );
+      }
+
+    }, 55);
+
+  return () =>
+    clearInterval(
+      interval
+    );
+
+}, [transmission]);
+
+  //
   // 🌙 STILLNESS
   //
 
@@ -331,30 +377,6 @@ export default function YouSpace() {
           "user_id",
           profile.user_id
         );
-
-      //
-      // ✨ REFRESH CONTEXT
-      //
-
-      const context =
-        await buildConnectionsContext({
-
-          spaceType:
-            "self",
-        });
-
-      const transmissionData =
-        generateTransmission({
-          context,
-        });
-
-      setTransmission(
-        transmissionData.transmission
-      );
-
-      setWhisperMessage(
-        transmissionData.whisper
-      );
 
     } catch (error) {
 
@@ -441,30 +463,6 @@ export default function YouSpace() {
             ? refreshed
             : []
         );
-
-        //
-        // ✨ REFRESH CONTEXT
-        //
-
-        const context =
-          await buildConnectionsContext({
-
-            spaceType:
-              "self",
-          });
-
-        const transmissionData =
-          generateTransmission({
-            context,
-          });
-
-        setTransmission(
-          transmissionData.transmission
-        );
-
-        setWhisperMessage(
-          transmissionData.whisper
-        );
       }
 
     } catch (error) {
@@ -504,7 +502,8 @@ export default function YouSpace() {
 
         {/* 🌌 LIVING FIELD */}
 
-        <LivingField />
+        <LivingField
+        />
 
         {/* 🧿 YOU */}
 
@@ -568,15 +567,7 @@ export default function YouSpace() {
               styles.transmission
             }
           >
-            {transmission}
-          </Text>
-
-          <Text
-            style={
-              styles.whisper
-            }
-          >
-            {whisperMessage}
+            {visibleTransmission}
           </Text>
 
         </View>
@@ -597,9 +588,8 @@ export default function YouSpace() {
 
             value={message}
 
-            placeholder="
-Breathe. Write softly...
-"
+
+            placeholder={t("connections.yourspace_placeholder")}
 
             placeholderTextColor={
               Colors.subtleText
@@ -737,20 +727,11 @@ Breathe. Write softly...
 
                     onPress={() => {
 
-                      router.push({
+router.push(
 
-                        pathname:
-                          "/connections/human-space",
+  `/connections/human-space?otherUserId=${human.user_id}`
 
-                        params: {
-
-                          otherUserId:
-                            human.user_id,
-
-                          source:
-                            "you-space",
-                        },
-                      });
+);
                     }}
 
                     style={[
@@ -761,7 +742,7 @@ Breathe. Write softly...
                         opacity:
                           0.55 +
                           Math.random() *
-                            0.45,
+                            0.25,
                       },
                     ]}
                   >
@@ -866,37 +847,22 @@ const styles =
     transmissionContainer: {
       marginTop: 30,
 
-      paddingHorizontal: 34,
+      paddingHorizontal: 58,
     },
 
     transmission: {
       color:
-        Colors.softText,
+        Colors.gold,
 
-      fontSize: 16,
+      fontSize: 14,
 
-      lineHeight: 30,
-
-      textAlign: "center",
-
-      fontWeight: "300",
-    },
-
-    whisper: {
-      marginTop: 10,
-
-      color:
-        Colors.mutedText,
-
-      fontSize: 11,
-
-      lineHeight: 22,
+      lineHeight: 20,
 
       textAlign: "center",
 
       fontWeight: "300",
 
-      opacity: 0.8,
+      opacity: 0.84,
     },
 
     /* ✍️ REFLECTION */
@@ -960,6 +926,8 @@ const styles =
 
       borderColor:
         "rgba(255,255,255,0.03)",
+
+      opacity: 0.72,
     },
 
     reflectionText: {

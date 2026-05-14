@@ -1,5 +1,20 @@
-import { buildDivinePrompt } from "./prompts/buildDivinePrompt";
-import { buildGuidePrompt } from "./prompts/guides/buildGuidePrompt";
+// /lib/ai/buildPrompt.ts
+
+import {
+  buildDivinePrompt,
+} from "./prompts/buildDivinePrompt";
+
+import {
+  buildGuidePrompt,
+} from "./prompts/guides/buildGuidePrompt";
+
+import {
+  buildLensPrompt,
+} from "./prompts/lenses/buildLensPrompt";
+
+import {
+  buildConnectionsPrompt,
+} from "./prompts/buildConnectionsPrompts";
 
 export function buildPrompt({
 
@@ -13,14 +28,20 @@ export function buildPrompt({
 
   switch (type) {
 
-  case "divine":
+    /*
+     * -------------------------------------------------------
+     * DIVINE
+     * -------------------------------------------------------
+     */
 
-  return buildDivinePrompt({
+    case "divine":
 
-    context,
+      return buildDivinePrompt({
 
-    data,
-  });
+        context,
+
+        data,
+      });
 
     /*
      * -------------------------------------------------------
@@ -45,7 +66,7 @@ export function buildPrompt({
 
     case "lens":
 
-      return buildGuidePrompt({
+      return buildLensPrompt({
 
         context,
 
@@ -61,6 +82,21 @@ export function buildPrompt({
     case "cards":
 
       return buildGuidePrompt({
+
+        context,
+
+        data,
+      });
+
+    /*
+     * -------------------------------------------------------
+     * CONNECTIONS
+     * -------------------------------------------------------
+     */
+
+    case "transmission":
+
+      return buildConnectionsPrompt({
 
         context,
 

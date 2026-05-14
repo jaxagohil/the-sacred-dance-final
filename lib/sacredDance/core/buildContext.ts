@@ -5,14 +5,24 @@ import {
   GuideType,
   LensType,
   MirrorEntryType,
+  RealityLayer,
 } from "./types";
 
 interface BuildContextParams {
+
   rawInput: string;
 
   entryType: MirrorEntryType;
 
   lens?: LensType;
+
+  /*
+   * ---------------------------------------------------------
+   * REALITY LAYER
+   * ---------------------------------------------------------
+   */
+
+  realityLayer?: RealityLayer;
 
   /*
    * ---------------------------------------------------------
@@ -37,8 +47,9 @@ export function buildContext({
   rawInput,
   entryType,
   lens,
+  realityLayer,
   guideType,
-  guideName,
+ guideName,
   cardType,
 }: BuildContextParams): EmotionalContext {
 
@@ -62,6 +73,14 @@ export function buildContext({
      */
 
     lens,
+
+    /*
+     * ---------------------------------------------------------
+     * REALITY LAYER
+     * ---------------------------------------------------------
+     */
+
+    realityLayer,
 
     /*
      * ---------------------------------------------------------

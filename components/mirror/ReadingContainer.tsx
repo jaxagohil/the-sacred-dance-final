@@ -6,11 +6,20 @@ import React, {
 
 import {
   Animated,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+import {
+  buildDivineContext,
+} from "../../lib/context/buildDivineContext";
+
+import {
+  buildDailyField,
+} from "../../lib/cosmic/buildDailyField";
 
 import {
   Colors,
@@ -21,16 +30,14 @@ import {
 } from "../../lib/ai/generateAIResponse";
 
 import {
-  selectOracleCard,
-} from "../../lib/selectOracleCard";
-
-import {
   selectTarotCard,
 } from "../../lib/selectTarotCard";
 
 import OracleCard from "./OracleCard";
 
 import TarotCard from "./TarotCard";
+
+import { t } from "../../lib/i18n/t";
 
 type Props = {
   context?: any;
@@ -130,14 +137,51 @@ export default function ReadingContainer({
       context || {};
 
     //
-    // 🧠 SELECT CARDS
+    // 🌌 DAILY FIELD
+    //
+
+    const dailyField =
+      await buildDailyField();
+
+    //
+    // 🃏 DAILY ORACLE
     //
 
     const selectedOracle =
-      selectOracleCard(ctx);
+      dailyField.oracleCard;
 
-    const selectedTarot =
-      selectTarotCard(ctx);
+      if (!selectedOracle) {
+
+  console.log(
+    "❌ No oracle card selected"
+  );
+
+  return;
+}
+
+    //
+    // 🔮 TAROT ACTIVATION
+    //
+
+const selectedTarot =
+  await selectTarotCard({
+
+    patterns:
+      ctx?.patterns || [],
+
+    distortion:
+      ctx?.distortion || [],
+
+    oracleCard:
+      selectedOracle,
+
+    cosmic:
+      dailyField?.cosmic,
+
+  });
+    //
+    // ✨ DISPLAY
+    //
 
     setOracle(selectedOracle);
 
@@ -150,8 +194,8 @@ export default function ReadingContainer({
     setShow(true);
 
     setTyped(
-  "Beloved..."
-);
+      "Beloved..."
+    );
 
     //
     // 🤖 AI READING
@@ -159,55 +203,220 @@ export default function ReadingContainer({
 
     try {
 
- const aiText =
-  await generateAIResponse({
+      //
+      // ✨ DIVINE CONTEXT
+      //
 
-    type: "divine",
+      const divineContext =
+        await buildDivineContext({
 
-    context: {
+          userContext: ctx,
 
-      user: ctx,
+          oracleCard:
+            selectedOracle,
+
+          tarotCard:
+            selectedTarot,
+
+          dailyField,
+        });
+
+      //
+      // 🤖 GENERATE
+      //
+
+
+      console.log(
+  "🌌 DIVINE PAYLOAD:",
+  {
+
+    oracle: {
+
+      title:
+        selectedOracle?.title,
+
+      tone:
+        selectedOracle?.symbolic_tone,
+
+      energy:
+        selectedOracle?.energy_category,
+
+      themes:
+        selectedOracle?.behavioural_themes,
     },
 
-    data: {
+    tarot: {
 
-      message:
-        "Offer Divine Guidance for this soul in the present moment.",
+      name:
+        selectedTarot?.name,
 
-      oracleCard: {
+      atmosphere:
+        selectedTarot?.symbolic_atmosphere,
 
-        number:
-          selectedOracle.card,
+      tension:
+        selectedTarot?.tension_patterns,
 
-        title:
-          selectedOracle.title,
-
-        affirmation:
-          selectedOracle.affirmation,
-
-        message:
-          selectedOracle.message,
-
-        symbolism:
-          selectedOracle.symbolism,
-      },
-
-      tarotCard: {
-
-        name:
-          selectedTarot.name,
-
-        archetype:
-          selectedTarot.archetype,
-
-        meaning:
-          selectedTarot.message,
-      },
-
-      base:
-        "Beloved... breathe.",
+      pacing:
+        selectedTarot?.pacing_style,
     },
-  });
+  }
+);
+
+      const aiText =
+        await generateAIResponse({
+
+          type: "divine",
+
+          context: {
+
+            user: ctx,
+          },
+
+ data: {
+
+  divineContext,
+
+  message:
+    "Divine Guidance for this soul in the present moment.",
+
+  oracleCard: {
+
+    //
+    // 🃏 CORE
+    //
+
+    number:
+      selectedOracle?.card_number,
+
+    title:
+      selectedOracle?.title,
+
+    affirmation:
+      selectedOracle?.affirmation,
+
+    message:
+      selectedOracle?.message,
+
+    theme:
+      selectedOracle?.theme,
+
+    chakra:
+      selectedOracle?.chakra,
+
+    colour:
+      selectedOracle?.colour,
+
+    //
+    // 🌌 SYMBOLIC FIELD
+    //
+
+    energyCategory:
+      selectedOracle?.energy_category,
+
+    emotionalFrequency:
+      selectedOracle?.emotional_frequency,
+
+    symbolicTone:
+      selectedOracle?.symbolic_tone,
+
+    relationalEnergy:
+      selectedOracle?.relational_energy,
+
+    cadenceStyle:
+      selectedOracle?.cadence_style,
+
+    inquiryEnergy:
+      selectedOracle?.inquiry_energy,
+
+    symbolicEnvironment:
+      selectedOracle?.symbolic_environment,
+
+    archetypalTemperature:
+      selectedOracle?.archetypal_temperature,
+
+    //
+    // 🧠 ARRAYS
+    //
+
+    imageryKeywords:
+      selectedOracle?.imagery_keywords || [],
+
+    inquiryExamples:
+      selectedOracle?.inquiry_examples || [],
+
+    behaviouralThemes:
+      selectedOracle?.behavioural_themes || [],
+
+    movementKeywords:
+      selectedOracle?.movement_keywords || [],
+  },
+
+  tarotCard: {
+
+    //
+    // 🔮 CORE
+    //
+
+    name:
+      selectedTarot?.name,
+
+    arcana:
+      selectedTarot?.arcana,
+
+    suit:
+      selectedTarot?.suit,
+
+    archetype:
+      selectedTarot?.archetype_family,
+
+    //
+    // 🌌 SYMBOLIC FIELD
+    //
+
+    questionStyle:
+      selectedTarot?.question_style,
+
+    symbolicTemperature:
+      selectedTarot?.symbolic_temperature,
+
+    pacingStyle:
+      selectedTarot?.pacing_style,
+
+    //
+    // 🧠 ARRAYS
+    //
+
+    symbolicAtmosphere:
+      selectedTarot?.symbolic_atmosphere || [],
+
+    imageryKeywords:
+      selectedTarot?.imagery_keywords || [],
+
+    movementKeywords:
+      selectedTarot?.movement_keywords || [],
+
+    environmentKeywords:
+      selectedTarot?.environment_keywords || [],
+
+    inquiryExamples:
+      selectedTarot?.inquiry_examples || [],
+
+    behaviouralThemes:
+      selectedTarot?.behavioural_themes || [],
+
+    archetypalEnergy:
+      selectedTarot?.archetypal_energy || [],
+
+    tensionPatterns:
+      selectedTarot?.tension_patterns || [],
+  },
+
+  dailyField,
+
+  base:
+    "Beloved... breathe.",
+},
+        });
 
       setTyped(aiText);
 
@@ -218,8 +427,11 @@ export default function ReadingContainer({
       );
 
       setTyped(
+
         selectedOracle
-          .affirmation || ""
+          ?.affirmation ||
+
+        "Beloved..."
       );
     }
   };
@@ -300,7 +512,7 @@ export default function ReadingContainer({
         >
 
           <Text style={styles.trigger}>
-            Divine Guidance
+            {t("mirror.divine_guidance")}
           </Text>
 
         </TouchableOpacity>
@@ -333,7 +545,7 @@ export default function ReadingContainer({
           <View style={styles.oracleWrap}>
 
             <OracleCard
-              number={oracle.card}
+              number={oracle.card_number}
               title={oracle.title}
               message={
                 oracle.affirmation
@@ -358,7 +570,7 @@ export default function ReadingContainer({
                 number={tarot.number}
                 title={tarot.name}
                 archetype={tarot.archetype}
-                message={tarot.message}
+                message={tarot.symbolic_temperature}
               />
 
             </Animated.View>
@@ -368,7 +580,16 @@ export default function ReadingContainer({
 
           {showTarot && (
 
-            <>
+            <ScrollView
+              style={styles.readingScroll}
+
+              contentContainerStyle={{
+                alignItems: "center",
+                paddingBottom: 140,
+              }}
+
+              showsVerticalScrollIndicator={false}
+            >
 
               {/* 🌙 READING LINE */}
 
@@ -382,7 +603,7 @@ export default function ReadingContainer({
                 {typed}
               </Text>
 
-            </>
+            </ScrollView>
           )}
 
         </View>
@@ -400,6 +621,7 @@ const styles =
   //
 
   container: {
+
     alignItems: "center",
 
     marginTop: 40,
@@ -410,6 +632,7 @@ const styles =
   //
 
   trigger: {
+
     color:
       Colors.softText,
 
@@ -425,6 +648,7 @@ const styles =
   //
 
   canvas: {
+
     width: "100%",
 
     alignItems: "center",
@@ -432,11 +656,19 @@ const styles =
     paddingTop: 40,
   },
 
+  readingScroll: {
+
+    width: "100%",
+
+    marginTop: 20,
+  },
+
   //
   // 🃏 ORACLE
   //
 
   oracleWrap: {
+
     alignItems: "center",
 
     marginTop: 20,
@@ -468,6 +700,7 @@ const styles =
   readingLine: {
 
     width: 42,
+
     height: 1,
 
     borderRadius: 999,
@@ -475,7 +708,8 @@ const styles =
     backgroundColor:
       "rgba(255,255,255,0.12)",
 
-    marginTop: 44,
+    marginTop: 10,
+
     marginBottom: 2,
   },
 
@@ -485,14 +719,15 @@ const styles =
 
   reading: {
 
-    marginTop: 42,
+    marginTop: 20,
 
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
 
     paddingVertical: 10,
-    paddingBottom: 80,
 
-    maxWidth: 300,
+    paddingBottom: 20,
+
+    maxWidth: 280,
 
     textAlign: "center",
 
@@ -516,8 +751,5 @@ const styles =
 
     borderColor:
       "rgba(255,255,255,0.04)",
-
-    overflow: "hidden",
-
   },
 });

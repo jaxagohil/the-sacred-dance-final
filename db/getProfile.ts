@@ -34,6 +34,7 @@ export const getOrCreateProfile = async (userId: string) => {
       .from("profiles")
       .insert({
         user_id: userId,
+        language: "en",
         guide_1_name: "nani",
         guide_2_name: "lala",
         guide_3_name: "ammaarah",

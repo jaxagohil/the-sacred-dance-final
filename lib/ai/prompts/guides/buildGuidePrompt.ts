@@ -32,6 +32,12 @@ export function buildGuidePrompt({
   const sacredContext =
     context?.sacred || {};
 
+  const dailyField =
+  context?.dailyField || {};  
+
+  const oracleContext =
+    context?.oracle || {};
+
   /*
    * ---------------------------------------------------------
    * FORMAT CONTEXT
@@ -50,7 +56,7 @@ export function buildGuidePrompt({
 
   const formattedOracleContext =
     formatOracleContext(
-      sacredContext
+      oracleContext
     );
 
   /*
@@ -136,6 +142,28 @@ ORACLE CONTEXT
 ${formattedOracleContext}
 
 --------------------------------------------------
+COLLECTIVE FIELD
+--------------------------------------------------
+
+Atmosphere:
+${dailyField?.fieldEssence?.atmosphere || ""}
+
+Pacing:
+${dailyField?.fieldEssence?.pacing || ""}
+
+Relational Field:
+${dailyField?.fieldEssence?.relationalField || ""}
+
+Nervous System:
+${dailyField?.fieldEssence?.nervousSystem || ""}
+
+Movement:
+${dailyField?.fieldEssence?.movement || ""}
+
+Symbolic Texture:
+${dailyField?.fieldEssence?.symbolicTexture || ""}
+
+--------------------------------------------------
 USER MESSAGE
 --------------------------------------------------
 
@@ -144,6 +172,31 @@ ${data?.message || ""}
 --------------------------------------------------
 RESPONSE STYLE
 --------------------------------------------------
+
+The guide should respond according to
+the user's current layer of reality.
+
+Ground physically when needed.
+
+Reflect emotionally when needed.
+
+Expand symbolically only when the user
+is energetically open to it.
+
+Attunement matters more than insight.
+
+The guide should subtly absorb
+the collective energetic atmosphere.
+
+The response pacing,
+symbolism,
+relational distance,
+and nervous system tone
+should naturally shift with the field.
+
+Do not explain the field.
+
+Embody it quietly.
 
 Respond:
 - naturally
@@ -164,11 +217,14 @@ Do not:
 - give surface-level validation
 
 The response should feel:
-alive,
-aware,
-specific,
-human,
-and deeply observant.
+- alive
+- aware
+- specific
+- human
+- deeply observant
+- emotionally attuned
+- nervous-system aware
+- naturally flowing
 
 `;
 }
