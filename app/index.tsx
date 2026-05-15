@@ -35,12 +35,13 @@ export default function LandingScreen() {
 
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [showInput, setShowInput] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
 
   const [prompt, setPrompt] = useState("...");
   const [loading, setLoading] = useState(true);
+
+  const [language, setAppLanguage] = useState("en");
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [audioBase64, setAudioBase64] = useState<string | null>(null);
@@ -59,6 +60,9 @@ export default function LandingScreen() {
         p?.language || "en"
       );
 
+      setAppLanguage(
+  p?.language || "en"
+);
       console.log("LANGUAGE:", p?.language);
 
 const pr =
@@ -138,6 +142,7 @@ setPrompt(pr);
     ) {
       await processReflection({
         userId,
+        language,
         text,
         emotions: selected,
         imageBase64: imageBase64 || undefined,

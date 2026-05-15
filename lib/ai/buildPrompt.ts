@@ -16,6 +16,14 @@ import {
   buildConnectionsPrompt,
 } from "./prompts/buildConnectionsPrompts";
 
+import {
+  buildCosmicPrompt,
+} from "./prompts/buildCosmicPrompt";
+
+import {
+  buildTarotPrompt,
+} from "./prompts/buildTarotPrompt";
+
 export function buildPrompt({
 
   type,
@@ -73,20 +81,20 @@ export function buildPrompt({
         data,
       });
 
-    /*
-     * -------------------------------------------------------
-     * CARDS
-     * -------------------------------------------------------
-     */
+      /*
+ * -------------------------------------------------------
+ * TAROT
+ * -------------------------------------------------------
+ */
 
-    case "cards":
+case "tarot":
 
-      return buildGuidePrompt({
+  return buildTarotPrompt({
 
-        context,
+    context,
 
-        data,
-      });
+    data,
+  });
 
     /*
      * -------------------------------------------------------
@@ -97,6 +105,21 @@ export function buildPrompt({
     case "transmission":
 
       return buildConnectionsPrompt({
+
+        context,
+
+        data,
+      });
+
+    /*
+     * -------------------------------------------------------
+     * COSMIC
+     * -------------------------------------------------------
+     */
+
+    case "cosmic":
+
+      return buildCosmicPrompt({
 
         context,
 

@@ -50,6 +50,10 @@ import {
 
 import { t } from "../../lib/i18n/t";
 
+import {
+  loadUserLanguage,
+} from "../../lib/i18n/loadUserLanguage";
+
 export default function YouSpace() {
 
 const [
@@ -61,6 +65,22 @@ const [
 ] = useState(
   "..."
 );
+
+const [
+
+  language,
+
+  setLanguage,
+
+] = useState("en");
+
+const [
+
+  languageContext,
+
+  setLanguageContext,
+
+] = useState<any>({});
 
 const [
 
@@ -130,6 +150,22 @@ const [
 
     async function load() {
 
+      const {
+
+  language,
+
+  languageContext,
+
+} = await loadUserLanguage();
+
+setLanguage(
+  language
+);
+
+setLanguageContext(
+  languageContext
+);
+
       try {
 
         const userId =
@@ -165,11 +201,15 @@ const [
           data?.is_quiet || false
         );
 
-        const generatedTransmission =
+const generatedTransmission =
   await generateTransmission({
 
     spaceType:
       "self",
+
+    language,
+
+    languageContext,
 
     dailyField:
       null,
@@ -425,18 +465,20 @@ useEffect(() => {
       // 🌊 SAVE
       //
 
-      const result =
-        await createFieldMessage({
+const result =
+  await createFieldMessage({
 
-          sourceType:
-            "self",
+    sourceType:
+      "self",
 
-          connectionId:
-            profile.user_id,
+    connectionId:
+      profile.user_id,
 
-          content:
-            clean,
-        });
+    content:
+      clean,
+
+    language,
+  });
 
       //
       // ✨ REFRESH

@@ -23,6 +23,8 @@ type CreateMessageInput = {
 
   content: string;
 
+  language?: string;
+
   fieldSlug?:
     FieldSlug;
 
@@ -51,6 +53,7 @@ export async function createFieldMessage({
   fieldSlug,
   connectionId,
   content,
+  language = "en",
 }: CreateMessageInput) {
 
   try {
@@ -223,6 +226,8 @@ export async function createFieldMessage({
         content:
           content.trim(),
 
+        language,
+
         //
         // ⏰ TIMING
         //
@@ -335,6 +340,7 @@ export async function getFieldMessages({
         .select(`
           id,
           content,
+          language,
           created_at,
           expires_at,
           source_type,

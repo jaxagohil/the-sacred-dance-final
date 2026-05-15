@@ -1,100 +1,213 @@
 import { supabase } from "../services/supabase";
 
 export async function getDailyPrompt(userId: string) {
-  const today = new Date().toISOString().split("T")[0];
 
-//
-// 🌸 1. onboarding
-//
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
 
-const {
-  data: profile,
-} = await supabase
+  //
+  // 🌸 PROFILE
+  //
 
-  .from("profiles")
+  const {
+    data: profile,
+  } = await supabase
 
-  .select("created_at")
+    .from("profiles")
 
-  .eq(
-    "user_id",
-    userId
-  )
+    .select(
+      "created_at, language"
+    )
 
-  .maybeSingle();
+    .eq(
+      "user_id",
+      userId
+    )
 
-if (
-  profile?.created_at
-) {
+    .maybeSingle();
 
-  const start =
-    new Date(
-      profile.created_at
-    );
+  const language =
+    profile?.language || "en";
 
-  const diffDays =
-    Math.floor(
+  //
+  // 🌿 HELPER
+  //
 
-      (
-        Date.now() -
-        start.getTime()
-      ) /
+  const fetchPrompt =
+    async (
+      query: any
+    ) => {
 
-      (1000 * 60 * 60 * 24)
+      // 🌍 USER LANGUAGE
 
-    ) + 1;
+      let { data } =
+        await query
+          .eq(
+            "language",
+            language
+          )
+          .maybeSingle();
+
+      // 🌸 FALLBACK ENGLISH
+
+      if (!data && language !== "en") {
+
+        const fallback =
+          await query
+            .eq(
+              "language",
+              "en"
+            )
+            .maybeSingle();
+
+        data =
+          fallback.data;
+      }
+
+      return data;
+    };
+
+  //
+  // 🌸 1. ONBOARDING
+  //
 
   if (
-    diffDays <= 30
+    profile?.created_at
   ) {
 
-    const {
-      data: onboarding,
-    } = await supabase
+    const start =
+      new Date(
+        profile.created_at
+      );
 
-      .from("daily_prompts")
+    const diffDays =
+      Math.floor(
 
-      .select("*")
+        (
+          Date.now() -
+          start.getTime()
+        ) /
 
-      .eq(
-        "type",
-        "onboarding"
-      )
+        (
+          1000 *
+          60 *
+          60 *
+          24
+        )
 
-      .eq(
-        "day_number",
-        diffDays
-      )
+      ) + 1;
 
-      .maybeSingle();
+    if (
+      diffDays <= 30
+    ) {
 
-    if (onboarding) {
+      const onboarding =
+        await fetchPrompt(
 
-      return onboarding.prompt;
+          supabase
+
+            .from(
+              "daily_prompts"
+            )
+
+            .select("*")
+
+            .eq(
+              "type",
+              "onboarding"
+            )
+
+            .eq(
+              "day_number",
+              diffDays
+            )
+        );
+
+      if (onboarding) {
+
+        return onboarding.prompt;
+      }
     }
   }
-}
 
-    // 🌕 2. seasonal
-  const { data: seasonal } = await supabase
-    .from("daily_prompts")
-    .select("*")
-    .eq("type", "seasonal")
-    .eq("active", true)
-    .lte("start_date", today)
-    .gte("end_date", today)
-    .order("priority", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  //
+  // 🌕 2. SEASONAL
+  //
 
-  if (seasonal) return seasonal.prompt;
+  const seasonal =
+    await fetchPrompt(
 
-  // 🌿 3. default
-  const { data: fallback } = await supabase
-    .from("daily_prompts")
-    .select("*")
-    .eq("type", "default")
-    .limit(1)
-    .maybeSingle();
+      supabase
 
-  return fallback?.prompt || "Love .. Remembering itself";
+        .from(
+          "daily_prompts"
+        )
+
+        .select("*")
+
+        .eq(
+          "type",
+          "seasonal"
+        )
+
+        .eq(
+          "active",
+          true
+        )
+
+        .lte(
+          "start_date",
+          today
+        )
+
+        .gte(
+          "end_date",
+          today
+        )
+
+        .order(
+          "priority",
+          {
+            ascending: false,
+          }
+        )
+
+        .limit(1)
+    );
+
+  if (seasonal) {
+
+    return seasonal.prompt;
+  }
+
+  //
+  // 🌿 3. DEFAULT
+  //
+
+  const fallback =
+    await fetchPrompt(
+
+      supabase
+
+        .from(
+          "daily_prompts"
+        )
+
+        .select("*")
+
+        .eq(
+          "type",
+          "default"
+        )
+
+        .limit(1)
+    );
+
+  return (
+    fallback?.prompt ||
+
+    "Love remembering itself 🩷"
+  );
 }

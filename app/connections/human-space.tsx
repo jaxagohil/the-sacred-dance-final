@@ -47,7 +47,14 @@ import {
   generateTransmission,
 } from "../../lib/connections/generateTransmission";
 
+import {
+  localizeConnectionContent,
+} from "../../lib/connections/localizeConnectionContent";
 import { t } from "../../lib/i18n/t";
+
+import {
+  loadUserLanguage,
+} from "../../lib/i18n/loadUserLanguage";
 
 export default function HumanSpace() {
 
@@ -78,6 +85,26 @@ const [
 ] = useState(
   "..."
 );
+
+//
+// 🌍 LANGUAGE
+//
+
+const [
+
+  language,
+
+  setLanguage,
+
+] = useState("en");
+
+const [
+
+  languageContext,
+
+  setLanguageContext,
+
+] = useState<any>({});
 
 const [
 
@@ -112,8 +139,13 @@ const [
   // ✨ UI
   //
 
-  const [loading, setLoading] =
-    useState(true);
+const [
+
+  loading,
+
+  setLoading,
+
+] = useState(true);
 
   const inputRef =
     useRef<TextInput>(null);
@@ -140,6 +172,22 @@ const [
 
           return;
         }
+
+        const {
+
+  language,
+
+  languageContext,
+
+} = await loadUserLanguage();
+
+setLanguage(
+  language
+);
+
+setLanguageContext(
+  languageContext
+);
 
         //
         // 👤 LOAD BOTH
@@ -208,11 +256,15 @@ const [
           pairId
         );
 
-        const generatedTransmission =
+const generatedTransmission =
   await generateTransmission({
 
     spaceType:
       "human",
+
+    language,
+
+    languageContext,
 
     dailyField:
       null,
@@ -247,13 +299,26 @@ if (mounted) {
           return;
         }
 
-        setMessages(
-          Array.isArray(
-            loaded
-          )
-            ? loaded
-            : []
-        );
+const localized =
+  await localizeConnectionContent({
+
+    items:
+
+      Array.isArray(
+        loaded
+      )
+
+        ? loaded
+
+        : [],
+
+    viewerLanguage:
+      language,
+  });
+
+setMessages(
+  localized
+);
 
       } catch (error) {
 
@@ -373,8 +438,10 @@ useEffect(() => {
 
           connectionId,
 
-          content:
-            cleanMessage,
+content:
+  cleanMessage,
+
+language,
         });
 
       //
@@ -394,13 +461,26 @@ useEffect(() => {
             connectionId,
           });
 
-        setMessages(
-          Array.isArray(
-            refreshed
-          )
-            ? refreshed
-            : []
-        );
+const localized =
+  await localizeConnectionContent({
+
+    items:
+
+      Array.isArray(
+        refreshed
+      )
+
+        ? refreshed
+
+        : [],
+
+    viewerLanguage:
+      language,
+  });
+
+setMessages(
+  localized
+);
       }
 
     } catch (error) {
@@ -601,7 +681,9 @@ useEffect(() => {
               >
 
                 {
-                  item?.content
+item?.translatedContent ||
+
+item?.content
                 }
 
               </Text>

@@ -1,5 +1,26 @@
 // /lib/sacredDance/core/buildContext.ts
 
+// --------------------------------------------------
+// 🧠 SACRED DANCE INTERACTION CONTEXT
+// --------------------------------------------------
+//
+// RESPONSIBLE FOR:
+//
+// ✅ normalizing UI/session input
+// ✅ defining interaction type
+// ✅ defining active lens
+// ✅ defining active guide
+// ✅ defining active reality layer
+// ✅ defining card/oracle context
+//
+// ❌ NOT responsible for emotional intelligence
+// ❌ NOT responsible for patterns
+// ❌ NOT responsible for distortions
+// ❌ NOT responsible for mirror logic
+// ❌ NOT responsible for prose generation
+//
+// --------------------------------------------------
+
 import {
   EmotionalContext,
   GuideType,
@@ -8,11 +29,33 @@ import {
   RealityLayer,
 } from "./types";
 
+// --------------------------------------------------
+// 🧠 INPUT
+// --------------------------------------------------
+
 interface BuildContextParams {
+
+  /*
+   * ---------------------------------------------------------
+   * USER INPUT
+   * ---------------------------------------------------------
+   */
 
   rawInput: string;
 
+  /*
+   * ---------------------------------------------------------
+   * ENTRY TYPE
+   * ---------------------------------------------------------
+   */
+
   entryType: MirrorEntryType;
+
+  /*
+   * ---------------------------------------------------------
+   * LENS
+   * ---------------------------------------------------------
+   */
 
   lens?: LensType;
 
@@ -43,14 +86,26 @@ interface BuildContextParams {
   cardType?: string;
 }
 
+// --------------------------------------------------
+// 🚀 BUILD CONTEXT
+// --------------------------------------------------
+
 export function buildContext({
+
   rawInput,
+
   entryType,
+
   lens,
+
   realityLayer,
+
   guideType,
- guideName,
+
+  guideName,
+
   cardType,
+
 }: BuildContextParams): EmotionalContext {
 
   return {
@@ -62,17 +117,24 @@ export function buildContext({
      */
 
     rawInput:
-      rawInput.trim(),
+      rawInput?.trim() || "",
+
+    /*
+     * ---------------------------------------------------------
+     * INTERACTION TYPE
+     * ---------------------------------------------------------
+     */
 
     entryType,
 
     /*
      * ---------------------------------------------------------
-     * EXPERIENCE TYPE
+     * LENS
      * ---------------------------------------------------------
      */
 
-    lens,
+    lens:
+      lens || "general",
 
     /*
      * ---------------------------------------------------------
@@ -80,7 +142,8 @@ export function buildContext({
      * ---------------------------------------------------------
      */
 
-    realityLayer,
+    realityLayer:
+      realityLayer || "emotional",
 
     /*
      * ---------------------------------------------------------
@@ -88,9 +151,11 @@ export function buildContext({
      * ---------------------------------------------------------
      */
 
-    guideType,
+    guideType:
+      guideType || null,
 
-    guideName,
+    guideName:
+      guideName || null,
 
     /*
      * ---------------------------------------------------------
@@ -98,6 +163,7 @@ export function buildContext({
      * ---------------------------------------------------------
      */
 
-    cardType,
+    cardType:
+      cardType || null,
   };
 }

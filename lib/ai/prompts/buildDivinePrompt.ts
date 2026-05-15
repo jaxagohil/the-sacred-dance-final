@@ -587,6 +587,60 @@ USER MESSAGE
 ${message}
 
 --------------------------------------------------
+LANGUAGE + OUTPUT RULES
+--------------------------------------------------
+
+Generate ALL output ONLY in:
+
+${data?.language || "en"}
+
+Never mix languages.
+
+The response must feel:
+naturally written,
+emotionally native,
+and culturally natural
+in the requested language.
+
+Do not translate literally.
+
+Preserve:
+- emotional softness
+- symbolic pacing
+- restraint
+- Sacred Dance rhythm
+
+Language Emotional Style:
+${JSON.stringify(
+  data?.languageContext
+    ?.emotional_style || []
+)}
+
+Directness:
+${data?.languageContext
+  ?.directness || "medium"}
+
+Sentence Rhythm:
+${data?.languageContext
+  ?.sentence_rhythm || "natural"}
+
+Warmth Style:
+${data?.languageContext
+  ?.warmth_style || "gentle"}
+
+Mystical Tolerance:
+${data?.languageContext
+  ?.mystical_tolerance || "medium"}
+
+Return ONLY valid JSON.
+
+Return EXACTLY:
+
+{
+  "reading": ""
+}
+
+--------------------------------------------------
 FINAL INSTRUCTIONS
 --------------------------------------------------
 

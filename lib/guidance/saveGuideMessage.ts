@@ -1,8 +1,8 @@
 import { supabase } from "../../services/supabase";
 
 import {
-    buildContextSnapshot,
-} from "./buildContextSnapshot";
+  buildFieldSnapshot,
+} from "./buildFieldSnapshot";
 
 type Params = {
 
@@ -18,7 +18,9 @@ type Params = {
 
   source?: string;
 
-  contextState?: any;
+  language?: string;
+
+  userField?: any;
 };
 
 export async function saveGuideMessage({
@@ -33,36 +35,44 @@ export async function saveGuideMessage({
 
   source = "guidance",
 
-  contextState,
+  userField,
 
 }: Params) {
 
-  //
-  // ⏳ 36 HOURS
-  //
+  /*
+   * ---------------------------------------------------------
+   * ⏳ 36 HOURS
+   * ---------------------------------------------------------
+   */
 
   const expiresAt =
     new Date(
+
       Date.now() +
 
       36 *
         60 *
         60 *
         1000
+
     ).toISOString();
 
-  //
-  // 🧠 SNAPSHOT
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 FIELD SNAPSHOT
+   * ---------------------------------------------------------
+   */
 
-  const contextSnapshot =
-    buildContextSnapshot(
-      contextState
+  const fieldSnapshot =
+    buildFieldSnapshot(
+      userField
     );
 
-  //
-  // 🌊 SAVE
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌊 SAVE MESSAGE
+   * ---------------------------------------------------------
+   */
 
   const { error } =
     await supabase
@@ -88,13 +98,21 @@ export async function saveGuideMessage({
           expiresAt,
 
         context_snapshot:
-          contextSnapshot,
+          fieldSnapshot,
       });
+
+  /*
+   * ---------------------------------------------------------
+   * ❌ ERROR
+   * ---------------------------------------------------------
+   */
 
   if (error) {
 
     console.log(
+
       "❌ SAVE GUIDE MESSAGE ERROR",
+
       error
     );
   }

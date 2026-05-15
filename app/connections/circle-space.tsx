@@ -2,8 +2,7 @@
 
 import React, {
   useEffect,
-  useMemo,
-  useState,
+  useState
 } from "react";
 
 import {
@@ -52,15 +51,21 @@ import {
   getFieldMessages,
 } from "../../services/connections/messages";
 
-import {
-  deriveFieldEnergy,
-} from "../../services/connections/fieldEnergy";
 
 import {
   generateTransmission,
 } from "../../lib/connections/generateTransmission";
 
+import {
+  localizeConnectionContent,
+} from "../../lib/connections/localizeConnectionContent";
+
 import { t } from "../../lib/i18n/t";
+
+import {
+  loadUserLanguage,
+} from "../../lib/i18n/loadUserLanguage";
+
 
 const { width } =
   Dimensions.get("window");
@@ -95,6 +100,26 @@ export default function CircleSpace() {
   //
 
 const dailyField = null;
+
+//
+// 🌍 LANGUAGE
+//
+
+const [
+
+  language,
+
+  setLanguage,
+
+] = useState("en");
+
+const [
+
+  languageContext,
+
+  setLanguageContext,
+
+] = useState<any>({});
 
 //
 // ✨ TRANSMISSION
@@ -146,26 +171,6 @@ const [
     useState(false);
 
   //
-  // 🌊 FIELD ENERGY
-  //
-
-  const fieldEnergy =
-    useMemo(
-      () =>
-        deriveFieldEnergy(
-          messages,
-          humans
-        ),
-      [
-        messages,
-        humans,
-      ]
-    );
-
-  const fieldColor =
-    fieldEnergy.color;
-
-  //
   // ✨ TITLES
   //
 
@@ -184,6 +189,13 @@ const [
   //
 
   async function refreshField() {
+
+    const {
+
+  language:
+    currentLanguage,
+
+} = await loadUserLanguage();
 
     try {
 
@@ -215,9 +227,19 @@ const [
         presence || []
       );
 
-      setMessages(
-        fieldMessages || []
-      );
+const localized =
+  await localizeConnectionContent({
+
+    items:
+      fieldMessages || [],
+
+viewerLanguage:
+  currentLanguage,
+  });
+
+setMessages(
+  localized
+);
 
     } catch (error) {
 
@@ -238,6 +260,22 @@ const [
 
     async function loadField() {
 
+      const {
+
+  language,
+
+  languageContext,
+
+} = await loadUserLanguage();
+
+setLanguage(
+  language
+);
+
+setLanguageContext(
+  languageContext
+);
+
       try {
 
         await enterField({
@@ -249,11 +287,15 @@ const [
             safeType,
         });
 
-        const generatedTransmission =
+const generatedTransmission =
   await generateTransmission({
 
     spaceType:
       safeType,
+
+    language,
+
+    languageContext,
 
     dailyField:
       null,
@@ -301,9 +343,19 @@ if (mounted) {
           presence || []
         );
 
-        setMessages(
-          fieldMessages || []
-        );
+const localized =
+  await localizeConnectionContent({
+
+    items:
+      fieldMessages || [],
+
+    viewerLanguage:
+      language,
+  });
+
+setMessages(
+  localized
+);
 
       } catch (error) {
 
@@ -471,18 +523,20 @@ useEffect(() => {
 
       setSending(true);
 
-      const result =
-        await createFieldMessage({
+const result =
+  await createFieldMessage({
 
-          sourceType:
-            "circle",
+    sourceType:
+      "circle",
 
-          fieldSlug:
-            safeType,
+    fieldSlug:
+      safeType,
 
-          content:
-            message,
-        });
+    content:
+      message,
+
+    language,
+  });
 
       if (
         result.success
@@ -622,8 +676,8 @@ useEffect(() => {
                 style={[
                   styles.input,
                   {
-                    borderColor:
-                      fieldColor,
+borderColor:
+  Colors.fieldRing,
                   },
                 ]}
               />
@@ -658,21 +712,6 @@ useEffect(() => {
                   }}
                 >
 
-                  <Text
-                    style={{
-                      color:
-                        Colors.mutedText,
-
-                      fontSize: 12,
-
-                      fontWeight: "300",
-                    }}
-                  >
-
-                    The field is quiet today.
-
-                  </Text>
-
                 </View>
 
               ) : (
@@ -686,8 +725,8 @@ useEffect(() => {
                       style={[
                         styles.reflectionCard,
                         {
-                          borderColor:
-                            `${fieldColor}22`,
+borderColor:
+  "rgba(255,255,255,0.05)",
                         },
                       ]}
                     >
@@ -697,7 +736,11 @@ useEffect(() => {
                           styles.reflectionText
                         }
                       >
-                        “{item.content}”
+“{
+  item.translatedContent ||
+
+  item.content
+}”
                       </Text>
 
                     </View>

@@ -1,3 +1,5 @@
+// app/(tabs)/guidance.tsx
+
 import React, {
   useEffect,
   useRef,
@@ -26,8 +28,8 @@ import {
 } from "../../lib/user";
 
 import {
-  runSacredReflection,
-} from "../../lib/sacredDance/core/runSacredReflection";
+  orchestrateGuideResponse,
+} from "../../lib/guidance/orchestrateGuideResponse";
 
 import {
   buildUserContext,
@@ -50,7 +52,10 @@ import {
   Fonts,
 } from "../../constants/theme";
 
-import { t } from "../../lib/i18n/t";
+import {
+  getLanguage,
+  t,
+} from "../../lib/i18n/t";
 
 type GuideKey =
   | "guide_heart"
@@ -58,9 +63,10 @@ type GuideKey =
   | "guide_cosmic";
 
 type Segment = {
+
   id: string;
 
-  guide?: GuideKey;
+  guide: GuideKey;
 
   role:
     | "user"
@@ -71,7 +77,11 @@ type Segment = {
   createdAt: number;
 };
 
-const guideConfig = {
+const guideConfig:
+  Record<
+    GuideKey,
+    { color: string }
+  > = {
 
   guide_heart: {
     color: Colors.pink,
@@ -88,9 +98,11 @@ const guideConfig = {
 
 export default function Guidance() {
 
-  //
-  // 🌊 STATE
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌊 STATE
+   * ---------------------------------------------------------
+   */
 
   const [input, setInput] =
     useState("");
@@ -106,14 +118,31 @@ export default function Guidance() {
   const [loading, setLoading] =
     useState(false);
 
-  const [contextState, setContextState] =
+  const [language, setLanguage] =
+    useState("en");
+
+  /*
+   * ---------------------------------------------------------
+   * 🌌 FIELD
+   * ---------------------------------------------------------
+   */
+
+  const [fieldContext, setFieldContext] =
     useState<any>(null);
 
   const [contextReady, setContextReady] =
     useState(false);
 
+  /*
+   * ---------------------------------------------------------
+   * 👤 GUIDE NAMES
+   * ---------------------------------------------------------
+   */
+
   const [guideNames, setGuideNames] =
-    useState({
+    useState<
+      Record<GuideKey, string>
+    >({
 
       guide_heart:
         "nani",
@@ -125,9 +154,11 @@ export default function Guidance() {
         "ammaarah",
     });
 
-  //
-  // 🌌 REFS
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 REFS
+   * ---------------------------------------------------------
+   */
 
   const inputRef =
     useRef<TextInput>(null);
@@ -135,16 +166,20 @@ export default function Guidance() {
   const flatListRef =
     useRef<FlatList>(null);
 
-  //
-  // ✨ DERIVED
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ DERIVED
+   * ---------------------------------------------------------
+   */
 
   const hasContent =
     Boolean(input.trim());
 
-  //
-  // 🌊 AUTO SCROLL
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌊 AUTO SCROLL
+   * ---------------------------------------------------------
+   */
 
   const scrollToBottom = () => {
 
@@ -159,9 +194,11 @@ export default function Guidance() {
     });
   };
 
-  //
-  // 🧠 LOAD CONTEXT
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🧠 LOAD CONTEXT
+   * ---------------------------------------------------------
+   */
 
   useEffect(() => {
 
@@ -172,15 +209,26 @@ export default function Guidance() {
         const userId =
           await getUserId();
 
-        //
-        // 🧹 CLEANUP
-        //
+        const currentLanguage =
+          getLanguage();
+
+        setLanguage(
+          currentLanguage
+        );
+
+        /*
+         * ---------------------------------------------------
+         * 🧹 CLEANUP
+         * ---------------------------------------------------
+         */
 
         await cleanupGuideMessages();
 
-        //
-        // 🧠 CONTEXT
-        //
+        /*
+         * ---------------------------------------------------
+         * 🌌 BUILD FIELD
+         * ---------------------------------------------------
+         */
 
         const built =
           await buildUserContext({
@@ -194,13 +242,15 @@ export default function Guidance() {
               "general",
           });
 
-        setContextState(
+        setFieldContext(
           built
         );
 
-        //
-        // 👤 GUIDE NAMES
-        //
+        /*
+         * ---------------------------------------------------
+         * 👤 GUIDE NAMES
+         * ---------------------------------------------------
+         */
 
         if (built?.profile) {
 
@@ -229,9 +279,11 @@ export default function Guidance() {
           });
         }
 
-        //
-        // 🌊 LOAD MESSAGES
-        //
+        /*
+         * ---------------------------------------------------
+         * 🌊 LOAD MESSAGES
+         * ---------------------------------------------------
+         */
 
         const messages =
           await loadGuideMessages(
@@ -259,9 +311,11 @@ export default function Guidance() {
 
   }, []);
 
-  //
-  // ✨ SEND
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ SEND MESSAGE
+   * ---------------------------------------------------------
+   */
 
   const sendMessage =
     async () => {
@@ -276,21 +330,26 @@ export default function Guidance() {
 
       Keyboard.dismiss();
 
-      //
-      // 🌌 USER
-      //
+      /*
+       * ---------------------------------------------------
+       * 👤 USER
+       * ---------------------------------------------------
+       */
 
       const userId =
         await getUserId();
 
-      //
-      // 👤 USER MESSAGE
-      //
+      /*
+       * ---------------------------------------------------
+       * 🌊 USER SEGMENT
+       * ---------------------------------------------------
+       */
 
       const userSegment = {
 
         id:
-          Date.now().toString(),
+          Date.now()
+            .toString(),
 
         role:
           "user" as const,
@@ -304,9 +363,11 @@ export default function Guidance() {
           Date.now(),
       };
 
-      //
-      // 🌊 APPEND
-      //
+      /*
+       * ---------------------------------------------------
+       * 🌊 APPEND
+       * ---------------------------------------------------
+       */
 
       setSegments((prev) => [
 
@@ -315,9 +376,11 @@ export default function Guidance() {
         userSegment,
       ]);
 
-      //
-      // 🌊 SAVE MESSAGE
-      //
+      /*
+       * ---------------------------------------------------
+       * 💾 SAVE USER
+       * ---------------------------------------------------
+       */
 
       await saveGuideMessage({
 
@@ -335,16 +398,21 @@ export default function Guidance() {
         source:
           "guidance",
 
-        contextState,
+        contextState:
+          fieldContext,
       });
 
-      //
-      // 🌊 SAVE REFLECTION
-      //
+      /*
+       * ---------------------------------------------------
+       * 🌌 PROCESS REFLECTION
+       * ---------------------------------------------------
+       */
 
       await processReflection({
 
         userId,
+
+        language,
 
         text,
 
@@ -355,116 +423,80 @@ export default function Guidance() {
           activeGuide,
       });
 
-      //
-      // 🧠 REBUILD CONTEXT
-      //
-
-      const updatedContext =
-        await buildUserContext({
-
-          userId,
-
-          source:
-            "guidance",
-
-          activeLens:
-            "general",
-        });
-
-      setContextState(
-        updatedContext
-      );
-
-      //
-      // ✨ LOADING
-      //
+      /*
+       * ---------------------------------------------------
+       * ✨ LOADING
+       * ---------------------------------------------------
+       */
 
       setLoading(true);
 
       try {
 
- //
-// 🌌 GUIDE RESPONSE
-//
+        /*
+         * ---------------------------------------------------
+         * 🌊 ORCHESTRATE GUIDE
+         * ---------------------------------------------------
+         */
 
-//
-// 🌸 SACRED REFLECTION
-//
+        const guideResponse =
+          await orchestrateGuideResponse({
 
-const sacred =
-  await runSacredReflection({
+            userId,
 
-    rawInput: text,
+            message:
+              text,
 
-    entryType: "guide",
+            language,
 
-    guideType:
-      activeGuide ===
-      "guide_heart"
+            guide:
+              activeGuide,
+          });
 
-        ? "heart"
+        /*
+         * ---------------------------------------------------
+         * 🌸 FINAL RESPONSE
+         * ---------------------------------------------------
+         */
 
-        : activeGuide ===
-          "guide_structure"
+        const res =
 
-        ? "structure"
+          guideResponse
+            ?.response ||
 
-        : "cosmic",
+          "Something important is moving here.";
 
-    guideName:
-      guideNames[
-        activeGuide
-      ],
+        /*
+         * ---------------------------------------------------
+         * 🌌 GUIDE SEGMENT
+         * ---------------------------------------------------
+         */
 
-    /*
-     * ---------------------------------------------------
-     * 🌊 USER CONTEXT
-     * ---------------------------------------------------
-     */
+        const guideSegment = {
 
-    mirrorContext:
-      updatedContext,
-  });
+          id:
 
-//
-// ✨ RESPONSE
-//
+            Date.now()
+              .toString() + "-g",
 
-//
-// 🌊 FINAL MESSAGE
-//
+          guide:
+            activeGuide,
 
-const res =
-  sacred?.response ||
-  "Something important is moving here.";
+          role:
+            "guide" as const,
 
-//
-// 🌊 GUIDE MESSAGE
-//
+          text:
+            res,
 
-const guideSegment = {
+          createdAt:
+            Date.now(),
+        };
 
-  id:
-
-    Date.now()
-      .toString() + "-g",
-
-  guide:
-    activeGuide,
-
-  role:
-    "guide" as const,
-
-  text:
-    res,
-
-  createdAt:
-    Date.now(),
-};
-
-        //
-        // 🌊 APPEND
-        //
+        /*
+         * ---------------------------------------------------
+         * 🌊 APPEND
+         * ---------------------------------------------------
+         */
 
         setSegments((prev) => [
 
@@ -473,9 +505,11 @@ const guideSegment = {
           guideSegment,
         ]);
 
-        //
-        // 🌊 SAVE GUIDE
-        //
+        /*
+         * ---------------------------------------------------
+         * 💾 SAVE GUIDE
+         * ---------------------------------------------------
+         */
 
         await saveGuideMessage({
 
@@ -494,8 +528,45 @@ const guideSegment = {
             "guidance",
 
           contextState:
-            updatedContext,
+            guideResponse
+              ?.userField,
         });
+
+        /*
+         * ---------------------------------------------------
+         * 🌌 REFRESH FIELD
+         * ---------------------------------------------------
+         */
+
+        setTimeout(async () => {
+
+          try {
+
+            const refreshed =
+              await buildUserContext({
+
+                userId,
+
+                source:
+                  "guidance",
+
+                activeLens:
+                  "general",
+              });
+
+            setFieldContext(
+              refreshed
+            );
+
+          } catch (e) {
+
+            console.log(
+              "❌ FIELD REFRESH ERROR",
+              e
+            );
+          }
+
+        }, 1200);
 
       } catch (e) {
 
@@ -510,9 +581,11 @@ const guideSegment = {
       }
     };
 
-  //
-  // ⏳ LOADING
-  //
+  /*
+   * ---------------------------------------------------------
+   * ⏳ LOADING
+   * ---------------------------------------------------------
+   */
 
   if (!contextReady) {
 
@@ -533,31 +606,20 @@ const guideSegment = {
         }}
       >
 
-        <Text
-          style={{
-
-            color:
-              Colors.softText,
-
-            fontFamily:
-              Fonts.light,
-
-            fontSize: 14,
-          }}
-        >
-<ActivityIndicator
-  size="small"
-  color="white"
-/>
-        </Text>
+        <ActivityIndicator
+          size="small"
+          color="white"
+        />
 
       </SafeAreaView>
     );
   }
 
-  //
-  // 🌌 UI
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 UI
+   * ---------------------------------------------------------
+   */
 
   return (
 
@@ -835,7 +897,7 @@ const guideSegment = {
                           color:
 
                             guideConfig[
-                              item.guide!
+                              item.guide
                             ].color,
 
                           fontSize: 11,
@@ -851,7 +913,7 @@ const guideSegment = {
                         {
 
                           guideNames[
-                            item.guide!
+                            item.guide
                           ]
 
                         }

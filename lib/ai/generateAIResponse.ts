@@ -61,7 +61,7 @@ export async function generateAIResponse({
       setTimeout(
         () =>
           controller.abort(),
-        12000
+        25000
       );
 
     /*
@@ -89,6 +89,9 @@ export async function generateAIResponse({
             JSON.stringify({
 
               prompt,
+
+              language:
+                data?.language || "en",
             }),
 
           signal:
@@ -164,7 +167,7 @@ export async function generateAIResponse({
      * -----------------------------------------------------
      */
 
-    const finalText =
+    const finalResult =
 
       result?.text ||
 
@@ -172,22 +175,88 @@ export async function generateAIResponse({
 
       result?.message ||
 
-      "";
+      result;
+
+    /*
+     * -----------------------------------------------------
+     * 📝 STRING
+     * -----------------------------------------------------
+     */
+
+/*
+ * -----------------------------------------------------
+ * 📝 STRING
+ * -----------------------------------------------------
+ */
+
+if (
+  typeof finalResult ===
+  "string"
+) {
+
+  const cleaned =
+    finalResult.trim();
+
+  /*
+   * ---------------------------------------------------
+   * 🌌 TRY JSON PARSE
+   * ---------------------------------------------------
+   */
+
+  if (
+    cleaned.startsWith("{")
+  ) {
+
+    try {
+
+      return JSON.parse(
+        cleaned
+      );
+
+    } catch (e) {
+
+      console.error(
+        "❌ INNER JSON PARSE ERROR:",
+        cleaned
+      );
+    }
+  }
+
+  /*
+   * ---------------------------------------------------
+   * 📝 NORMAL STRING
+   * ---------------------------------------------------
+   */
+
+  return cleaned;
+}
+
+    /*
+     * -----------------------------------------------------
+     * 🌌 OBJECT
+     * -----------------------------------------------------
+     */
+
+    if (
+      typeof finalResult ===
+      "object"
+    ) {
+
+      return finalResult;
+    }
+
+    /*
+     * -----------------------------------------------------
+     * ❌ FALLBACK
+     * -----------------------------------------------------
+     */
 
     return (
 
-      typeof finalText ===
-      "string"
-
-        ? finalText.trim()
-
-        : ""
-
-    ) ||
-
       data?.base ||
 
-      "...";
+      "..."
+    );
 
   } catch (err: any) {
 

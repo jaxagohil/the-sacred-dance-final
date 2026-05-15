@@ -118,8 +118,8 @@ export default function You() {
   const [location, setLocation] =
     useState("India");
 
-  const [language, setLanguage] =
-    useState("EN");
+const [language, setLanguage] =
+  useState("en");
 
   const [repeats, setRepeats] =
     useState("");
@@ -129,6 +129,12 @@ export default function You() {
 
   const [showPicker, setShowPicker] =
     useState(false);
+
+    const [languages, setLanguages] =
+  useState<any[]>([]);
+
+const [earthRegions, setEarthRegions] =
+  useState<any[]>([]);
 
   const [
   originalProfile,
@@ -210,7 +216,7 @@ export default function You() {
 
       setLanguage(
         data.language ||
-        "EN"
+        "en"
       );
 
       setRepeats(
@@ -257,6 +263,40 @@ export default function You() {
           data.guide_3_name ||
           "ammaarah",
       });
+
+      setOriginalProfile(data);
+
+      const {
+  data: languageData,
+} = await supabase
+
+  .from("languages")
+
+  .select("*")
+
+  .eq("active", true)
+
+  .order("name");
+
+setLanguages(
+  languageData || []
+);
+
+const {
+  data: earthData,
+} = await supabase
+
+  .from("earth_regions")
+
+  .select("*")
+
+  .eq("active", true)
+
+  .order("name");
+
+setEarthRegions(
+  earthData || []
+);
     }
 
     loadProfile();
@@ -340,7 +380,7 @@ export default function You() {
 
   location !== (originalProfile?.location || "India") ||
 
-  language !== (originalProfile?.language || "EN") ||
+  language !== (originalProfile?.language || "en") ||
 
   repeats !==
     (originalProfile?.what_repeats || "") ||
@@ -571,6 +611,8 @@ const handleSave = async () => {
   await processReflection({
     userId,
 
+    language,
+
     source: "baseline",
 
     signalDepth: 3,
@@ -593,6 +635,8 @@ if (
 
   await processReflection({
     userId,
+
+    language,
 
     source: "baseline",
 
@@ -631,6 +675,8 @@ if (
 
   await processReflection({
     userId,
+
+    language,
 
     source: "baseline",
 
@@ -689,14 +735,17 @@ if (
           ] === 1
       )
 
-      .map(
-        (w) => w.label
-      )
+.map(
+  (w) =>
+    t(`you.${w.labelKey}`)
+)
 
       .join(", ");
 
   await processReflection({
     userId,
+
+    language,
 
     source: "baseline",
 
@@ -1309,75 +1358,128 @@ style={{
       Location & Language
     </Text>
 
-    {/* 🌍 LOCATION */}
+    {/* 🌍 LOCATION/LANGAUGE */}
 
-    <TextInput
-      value={location}
+ <Text
+  style={{
+    color:
+      Colors.subtleText,
 
-      onChangeText={
-        setLocation
-      }
+    textAlign:
+      "center",
 
-      placeholder="location"
+    marginBottom: 10,
+  }}
+>
+  Earth Region
+</Text>
 
-      placeholderTextColor={
-        Colors.subtleText
-      }
+<View
+  style={{
+    marginBottom: 22,
+  }}
+>
 
-      style={{
+  {earthRegions.map((r) => {
 
-        color:
-          Colors.white,
+    const active =
+      location === r.name;
 
-        backgroundColor:
-          "rgba(255,255,255,0.008)",
+    return (
 
-        borderRadius: 16,
+      <Text
+        key={r.code}
 
-        paddingHorizontal: 16,
-        paddingVertical: 14,
+        onPress={() =>
+          setLocation(
+            r.name
+          )
+        }
 
-        marginBottom: 12,
+        style={{
 
-        textAlign: "center",
-      }}
-    />
+          color:
+            active
+              ? Colors.white
+              : Colors.mutedText,
 
-    {/* 🌐 LANGUAGE */}
+          opacity:
+            active ? 1 : 0.6,
 
-    <TextInput
-      value={language}
+          textAlign:
+            "center",
 
-      onChangeText={
-        setLanguage
-      }
+          fontSize: 15,
 
-      placeholder="language"
+          marginBottom: 10,
+        }}
+      >
+        {r.emoji} {r.name}
+      </Text>
+    );
+  })}
+</View>
 
-      placeholderTextColor={
-        Colors.subtleText
-      }
 
-      autoCapitalize="characters"
+<Text
+  style={{
+    color:
+      Colors.subtleText,
 
-      style={{
+    textAlign:
+      "center",
 
-        color:
-          Colors.white,
+    marginBottom: 10,
+  }}
+>
+  Language
+</Text>
 
-        backgroundColor:
-          "rgba(255,255,255,0.008)",
+<View
+  style={{
+    marginBottom: 20,
+  }}
+>
 
-        borderRadius: 16,
+  {languages.map((l) => {
 
-        paddingHorizontal: 16,
-        paddingVertical: 14,
+    const active =
+      language === l.code;
 
-        marginBottom: 20,
+    return (
 
-        textAlign: "center",
-      }}
-    />
+      <Text
+        key={l.code}
+
+        onPress={() =>
+          setLanguage(
+            l.code
+          )
+        }
+
+        style={{
+
+          color:
+            active
+              ? Colors.white
+              : Colors.mutedText,
+
+          opacity:
+            active ? 1 : 0.6,
+
+          textAlign:
+            "center",
+
+          fontSize: 15,
+
+          marginBottom: 10,
+        }}
+      >
+        {l.native_name}
+      </Text>
+    );
+  })}
+</View>
 
     {/* ✨ CLOSE */}
 

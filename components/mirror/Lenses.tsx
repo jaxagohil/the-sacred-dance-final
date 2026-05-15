@@ -1,14 +1,13 @@
+// /components/mirror/Lenses.tsx
+
 import React, {
   useState,
 } from "react";
 
 import {
   StyleSheet,
-
   Text,
-
   TouchableOpacity,
-
   View,
 } from "react-native";
 
@@ -20,169 +19,197 @@ import {
   Colors,
 } from "../../constants/theme";
 
-import { t } from "../../lib/i18n/t";
+import {
+  t,
+} from "../../lib/i18n/t";
+
+// --------------------------------------------------
+// 🧠 TYPES
+// --------------------------------------------------
 
 type Props = {
 
-  mirror: any;
-
-  energy: any;
-
-  signals: any[];
+  userContext: any;
 
   context: any;
+
+  language: any;
+
+  languageContext: any;
 };
+
+// --------------------------------------------------
+// 👁 LENSES
+// --------------------------------------------------
 
 export default function Lenses({
 
-  mirror,
-
-  energy,
-
-  signals,
+  userContext,
 
   context,
 
+  language,
+
+  languageContext,
+
 }: Props) {
 
-  const [selected,
-    setSelected] =
-      useState<
-        string | null
-      >(null);
+  // --------------------------------------------------
+  // 🧩 STATE
+  // --------------------------------------------------
 
-  const [responses,
-    setResponses] =
-      useState<{
+  const [
+    selected,
+    setSelected,
+  ] = useState<
+    string | null
+  >(null);
 
-        people?: string;
+  const [
+    responses,
+    setResponses,
+  ] = useState<{
 
-        places?: string;
+    people?: string;
 
-        things?: string;
+    places?: string;
 
-      }>({});
+    things?: string;
 
-  const [loading,
-    setLoading] =
-      useState(false);
+  }>({});
 
-  /*
-   * ---------------------------------------------------------
-   * 🌌 DAILY FIELD
-   * ---------------------------------------------------------
-   */
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
+
+  // --------------------------------------------------
+  // 🌌 DAILY FIELD
+  // --------------------------------------------------
 
   const dailyField =
-    context?.dailyField || {};
 
-  /*
-   * ---------------------------------------------------------
-   * REAL LENS DATA
-   * ---------------------------------------------------------
-   */
+    userContext
+      ?.dailyField || {};
 
-  const latestSignal =
+  // --------------------------------------------------
+  // 🪞 LENS CONTEXTS
+  // --------------------------------------------------
 
-    [...(signals || [])]
+  const lensContexts =
 
-      .reverse()
+    context
+      ?.lensContexts || {};
 
-      .find(
+  // --------------------------------------------------
+  // 👁 LENS DATA
+  // --------------------------------------------------
 
-        (signal) => {
+  const peopleContext =
+    lensContexts.people;
 
-          const lens =
-            signal?.ai_lens;
+  const placesContext =
+    lensContexts.places;
 
-          return (
+  const thingsContext =
+    lensContexts.things;
 
-            lens && (
+  // --------------------------------------------------
+  // 👁 HAS DATA
+  // --------------------------------------------------
 
-              lens.people?.length ||
+const hasPeople =
 
-              lens.places?.length ||
+  !!(
+    peopleContext
+      ?.observableScenes
+      ?.length ||
 
-              lens.things?.length
-            )
-          );
-        }
-
-      ) || null;
-
-  console.log(
-    "✨ LATEST SIGNAL:",
-    latestSignal
+    peopleContext
+      ?.manifestations
+      ?.length
   );
 
-  console.log(
-    "👁 AI LENS:",
-    latestSignal?.ai_lens
+  const hasPlaces =
+
+
+    !!(
+    placesContext
+      ?.observableScenes
+      ?.length ||
+
+    placesContext
+      ?.manifestations
+      ?.length
   );
 
-  console.log(
-    "🌌 DAILY FIELD:",
-    dailyField
+  const hasThings =
+
+  !!(
+    thingsContext
+      ?.observableScenes
+      ?.length ||
+
+    thingsContext
+      ?.manifestations
+      ?.length
   );
 
-  const lensData =
-    latestSignal?.ai_lens || {
+  // --------------------------------------------------
+  // 🧠 GET CONTEXT
+  // --------------------------------------------------
 
-      people: [],
+  const getLensContext = (
+    lens:
+      | "people"
+      | "places"
+      | "things"
+  ) => {
 
-      places: [],
+    return (
+      lensContexts?.[lens]
+    );
+  };
 
-      things: [],
-    };
-
-  /*
-   * ---------------------------------------------------------
-   * HANDLE PRESS
-   * ---------------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🚀 HANDLE PRESS
+  // --------------------------------------------------
 
   const handlePress = async (
 
     lens:
-
       | "people"
-
       | "places"
-
       | "things"
 
   ) => {
 
-    if (!mirror?.primary) {
-      return;
-    }
-
-    /*
-     * -------------------------------------------------------
-     * NO DATA
-     * -------------------------------------------------------
-     */
-
-    if (
-
-      !lensData[lens] ||
-
-      lensData[lens].length === 0
-
-    ) {
-
-      return;
-    }
-
     setSelected(lens);
 
-    /*
-     * -------------------------------------------------------
-     * ALREADY GENERATED
-     * -------------------------------------------------------
-     */
+    // --------------------------------------------------
+    // 🧠 EXISTING
+    // --------------------------------------------------
 
     if (responses[lens]) {
+      return;
+    }
+
+    const lensContext =
+      getLensContext(
+        lens
+      );
+
+ if (
+
+  !lensContext
+    ?.manifestations
+    ?.length &&
+
+  !lensContext
+    ?.observableScenes
+    ?.length
+) {
+
       return;
     }
 
@@ -190,88 +217,144 @@ export default function Lenses({
 
     try {
 
-      const lensSignals =
-        lensData[lens];
-
-      /*
-       * -----------------------------------------------------
-       * AI RESPONSE
-       * -----------------------------------------------------
-       */
+      // --------------------------------------------------
+      // ✨ AI RESPONSE
+      // --------------------------------------------------
 
       const res =
         await generateAIResponse({
 
           type: "lens",
 
-          /*
-           * -------------------------------------------------
-           * CONTEXT
-           * -------------------------------------------------
-           */
+          // --------------------------------------------------
+          // 🧠 CONTEXT
+          // --------------------------------------------------
 
           context,
 
-          /*
-           * -------------------------------------------------
-           * DATA
-           * -------------------------------------------------
-           */
+          // --------------------------------------------------
+          // 🌊 DATA
+          // --------------------------------------------------
 
           data: {
 
+            language,
+
+            languageContext,
+
             lens,
 
-            mirror,
+            userContext,
 
-            energy,
+            mirrorContext:
+              context,
 
-            lensSignals,
-
-            /*
-             * -----------------------------------------------
-             * DAILY FIELD
-             * -----------------------------------------------
-             */
+            lensContext,
 
             dailyField,
 
-            /*
-             * -----------------------------------------------
-             * LENS CONTEXT
-             * -----------------------------------------------
-             */
+            // --------------------------------------------------
+            // 🪞 OBSERVABLE REALITY
+            // --------------------------------------------------
 
-            lensContext:
+            observableScenes:
 
-              context
-                ?.lensContexts?.[
-                  lens
-                ],
+              lensContext
+                ?.observableScenes || [],
+
+            nervousSystemState:
+
+              lensContext
+                ?.nervousSystemState || null,
+
+
+// --------------------------------------------------
+// 🪞 MANIFESTATION FIELD
+// --------------------------------------------------
+
+manifestations:
+
+  lensContext
+    ?.manifestations || [],
+
+copingStrategies:
+
+  lensContext
+    ?.copingStrategies || [],
+
+bodyResponses:
+
+  lensContext
+    ?.bodyResponses || [],
+
+mirrorPrompts:
+
+  lensContext
+    ?.mirrorPrompts || [],
+
+integratedExpressions:
+
+  lensContext
+    ?.integratedExpressions || [],
+
+
+
+            // --------------------------------------------------
+            // 🌊 PATTERNS
+            // --------------------------------------------------
+
+            dominantPattern:
+
+              userContext
+                ?.dominantPattern,
+
+            recurringPatterns:
+
+              userContext
+                ?.recurringPatterns || [],
+
+            distortions:
+
+              userContext
+                ?.distortions || {},
+
+            awarenessChakra:
+
+              userContext
+                ?.awarenessChakra,
+
+            dominantChakra:
+
+              userContext
+                ?.dominantChakra,
           },
         });
 
-      setResponses((prev) => ({
+      setResponses(
+        (prev) => ({
 
-        ...prev,
+          ...prev,
 
-        [lens]: res,
-      }));
+          [lens]: res,
+        })
+      );
 
     } catch (e) {
 
       console.error(
-        "Lens AI error:",
+        "❌ LENS AI ERROR:",
         e
       );
 
-      setResponses((prev) => ({
+      setResponses(
+        (prev) => ({
 
-        ...prev,
+          ...prev,
 
-        [lens]:
-          "...",
-      }));
+          [lens]:
+            "...",
+        })
+      );
 
     } finally {
 
@@ -279,28 +362,30 @@ export default function Lenses({
     }
   };
 
-  /*
-   * ---------------------------------------------------------
-   * BUTTON
-   * ---------------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🔘 BUTTON
+  // --------------------------------------------------
 
   const renderButton = (
 
     lens:
-
       | "people"
-
       | "places"
-
       | "things"
 
   ) => {
 
     const hasData =
 
-      lensData[lens]
-        ?.length > 0;
+      lens === "people"
+
+        ? hasPeople
+
+        : lens === "places"
+
+        ? hasPlaces
+
+        : hasThings;
 
     return (
 
@@ -343,11 +428,9 @@ export default function Lenses({
     );
   };
 
-  /*
-   * ---------------------------------------------------------
-   * RENDER
-   * ---------------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🌌 RENDER
+  // --------------------------------------------------
 
   return (
 
@@ -357,11 +440,17 @@ export default function Lenses({
 
       <View style={styles.row}>
 
-        {renderButton("people")}
+        {renderButton(
+          "people"
+        )}
 
-        {renderButton("places")}
+        {renderButton(
+          "places"
+        )}
 
-        {renderButton("things")}
+        {renderButton(
+          "things"
+        )}
 
       </View>
 
@@ -373,14 +462,20 @@ export default function Lenses({
 
       </Text>
 
-      {/* 🧠 RESPONSE */}
+      {/* 🪞 RESPONSE */}
 
       {selected && (
 
-        <View style={styles.responseBox}>
+        <View
+          style={
+            styles.responseBox
+          }
+        >
 
           {loading &&
-          !responses[selected] ? (
+          !responses[
+            selected
+          ] ? (
 
             <Text
               style={
@@ -388,7 +483,7 @@ export default function Lenses({
               }
             >
 
-              listening...
+              ...
 
             </Text>
 
@@ -400,7 +495,11 @@ export default function Lenses({
               }
             >
 
-              {responses[selected]}
+              {
+                responses[
+                  selected
+                ]
+              }
 
             </Text>
           )}
@@ -412,130 +511,142 @@ export default function Lenses({
   );
 }
 
+// --------------------------------------------------
+// 🎨 STYLES
+// --------------------------------------------------
+
 const styles =
   StyleSheet.create({
 
-  container: {
+    container: {
 
-    width: "100%",
+      width: "100%",
 
-    alignItems: "center",
+      alignItems:
+        "center",
 
-    marginTop: -10,
+      marginTop: -10,
 
-    paddingBottom: 24,
-  },
+      paddingBottom: 24,
+    },
 
-  row: {
+    row: {
 
-    flexDirection: "row",
+      flexDirection:
+        "row",
 
-    justifyContent: "center",
+      justifyContent:
+        "center",
 
-    gap: 12,
+      gap: 12,
 
-    marginBottom: 14,
-  },
+      marginBottom: 14,
+    },
 
-  button: {
+    button: {
 
-    paddingVertical: 12,
+      paddingVertical: 12,
 
-    paddingHorizontal: 18,
+      paddingHorizontal: 18,
 
-    borderRadius: 999,
+      borderRadius: 999,
 
-    backgroundColor:
-      "rgba(255,255,255,0.015)",
+      backgroundColor:
+        "rgba(255,255,255,0.015)",
 
-    borderWidth: 0.5,
+      borderWidth: 0.5,
 
-    borderColor:
-      "rgba(255,255,255,0.03)",
-  },
+      borderColor:
+        "rgba(255,255,255,0.03)",
+    },
 
-  active: {
+    active: {
 
-    backgroundColor:
-      "rgba(255,255,255,0.045)",
+      backgroundColor:
+        "rgba(255,255,255,0.045)",
 
-    borderColor:
-      "rgba(255,255,255,0.08)",
-  },
+      borderColor:
+        "rgba(255,255,255,0.08)",
+    },
 
-  disabled: {
+    disabled: {
 
-    opacity: 0.3,
-  },
+      opacity: 0.3,
+    },
 
-  text: {
+    text: {
 
-    color:
-      Colors.softText,
+      color:
+        Colors.softText,
 
-    fontSize: 13,
+      fontSize: 13,
 
-    fontWeight: "300",
+      fontWeight:
+        "300",
 
-    letterSpacing: 0.3,
-  },
+      letterSpacing: 0.3,
+    },
 
-  disabledText: {
+    disabledText: {
 
-    color:
-      Colors.subtleText,
-  },
+      color:
+        Colors.subtleText,
+    },
 
-  label: {
+    label: {
 
-    color:
-      Colors.mutedText,
+      color:
+        Colors.mutedText,
 
-    fontSize: 10,
+      fontSize: 10,
 
-    textAlign: "center",
+      textAlign:
+        "center",
 
-    marginTop: 6,
+      marginTop: 6,
 
-    opacity: 0.72,
+      opacity: 0.72,
 
-    letterSpacing: 0.4,
-  },
+      letterSpacing: 0.4,
+    },
 
-  responseBox: {
+    responseBox: {
 
-    marginTop: 24,
+      marginTop: 24,
 
-    paddingHorizontal: 32,
+      paddingHorizontal: 32,
 
-    maxWidth: "92%",
-  },
+      maxWidth: "92%",
+    },
 
-  responseText: {
+    responseText: {
 
-    color:
-      Colors.softText,
+      color:
+        Colors.softText,
 
-    fontSize: 14,
+      fontSize: 14,
 
-    lineHeight: 28,
+      lineHeight: 28,
 
-    textAlign: "center",
+      textAlign:
+        "center",
 
-    fontWeight: "300",
+      fontWeight:
+        "300",
 
-    opacity: 0.9,
-  },
+      opacity: 0.9,
+    },
 
-  loadingText: {
+    loadingText: {
 
-    color:
-      Colors.mutedText,
+      color:
+        Colors.mutedText,
 
-    fontSize: 11,
+      fontSize: 11,
 
-    fontStyle: "italic",
+      fontStyle:
+        "italic",
 
-    opacity: 0.72,
-  },
-});
+      opacity: 0.72,
+    },
+  });

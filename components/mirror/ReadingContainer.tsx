@@ -1,3 +1,5 @@
+// /components/mirror/ReadingContainer.tsx
+
 import React, {
   useEffect,
   useRef,
@@ -14,12 +16,12 @@ import {
 } from "react-native";
 
 import {
-  buildDivineContext,
-} from "../../lib/context/buildDivineContext";
+  supabase,
+} from "../../services/supabase";
 
 import {
-  buildDailyField,
-} from "../../lib/cosmic/buildDailyField";
+  buildDivineContext,
+} from "../../lib/context/buildDivineContext";
 
 import {
   Colors,
@@ -37,15 +39,30 @@ import OracleCard from "./OracleCard";
 
 import TarotCard from "./TarotCard";
 
-import { t } from "../../lib/i18n/t";
+import {
+  t,
+} from "../../lib/i18n/t";
+
+// --------------------------------------------------
+// 🧠 TYPES
+// --------------------------------------------------
 
 type Props = {
+
+  userContext?: any;
+
   context?: any;
+
+  language?: string;
+
+  languageContext?: any;
+
+  cosmic?: any;
 };
 
-//
+// --------------------------------------------------
 // 🎨 COLOUR SYSTEM
-//
+// --------------------------------------------------
 
 const COLOUR_CONFIG:
   Record<string, string> = {
@@ -102,90 +119,196 @@ const COLOUR_CONFIG:
     "#8B5CF6",
 };
 
+// --------------------------------------------------
+// 📖 READING CONTAINER
+// --------------------------------------------------
+
 export default function ReadingContainer({
+
+  userContext,
+
   context,
+
+  language = "en",
+
+  languageContext,
+
+  cosmic,
+
 }: Props) {
 
-  const [show, setShow] =
-    useState(false);
+  // --------------------------------------------------
+  // 🧩 STATE
+  // --------------------------------------------------
 
-  const [showTarot, setShowTarot] =
-    useState(false);
+  const [
+    show,
+    setShow,
+  ] = useState(false);
 
-  const [oracle, setOracle] =
-    useState<any>(null);
+  const [
+    showTarot,
+    setShowTarot,
+  ] = useState(false);
 
-  const [tarot, setTarot] =
-    useState<any>(null);
+  const [
+    oracle,
+    setOracle,
+  ] = useState<any>(null);
 
-  const [typed, setTyped] =
-    useState("");
+  const [
+    displayOracle,
+    setDisplayOracle,
+  ] = useState<any>(null);
+
+  const [
+    tarot,
+    setTarot,
+  ] = useState<any>(null);
+
+  const [
+    typed,
+    setTyped,
+  ] = useState("");
+
+  const [
+    loadingReading,
+    setLoadingReading,
+  ] = useState(false);
+
+  const [
+    tarotWhisper,
+    setTarotWhisper,
+  ] = useState("");
 
   const tarotAnim =
     useRef(
       new Animated.Value(0)
     ).current;
 
-  //
+  // --------------------------------------------------
+  // 🧠 CONTEXT
+  // --------------------------------------------------
+
+  const mirrorContext =
+    context || {};
+
+  const ctx =
+    userContext || {};
+
+  // --------------------------------------------------
   // ✨ OPEN READING
-  //
+  // --------------------------------------------------
 
   const handleOpen =
     async () => {
-
-    const ctx =
-      context || {};
 
     //
     // 🌌 DAILY FIELD
     //
 
     const dailyField =
-      await buildDailyField();
+      cosmic?.dailyField || {};
 
     //
     // 🃏 DAILY ORACLE
     //
 
     const selectedOracle =
-      dailyField.oracleCard;
+      dailyField?.oracleCard;
 
-      if (!selectedOracle) {
+    if (!selectedOracle) {
 
-  console.log(
-    "❌ No oracle card selected"
-  );
+      console.log(
+        "❌ No oracle card selected"
+      );
 
-  return;
-}
+      return;
+    }
 
     //
-    // 🔮 TAROT ACTIVATION
+    // 🌍 LOCALIZATION
     //
 
-const selectedTarot =
-  await selectTarotCard({
+    let localizedOracle =
+      selectedOracle;
 
-    patterns:
-      ctx?.patterns || [],
+    if (
+      language !== "en"
+    ) {
 
-    distortion:
-      ctx?.distortion || [],
+      const {
+        data: translation,
+      } = await supabase
 
-    oracleCard:
-      selectedOracle,
+        .from(
+          "oracle_card_translations"
+        )
 
-    cosmic:
-      dailyField?.cosmic,
+        .select("*")
 
-  });
+        .eq(
+          "card_number",
+          selectedOracle.card_number
+        )
+
+        .eq(
+          "language",
+          language
+        )
+
+        .maybeSingle();
+
+      if (translation) {
+
+        localizedOracle = {
+
+          ...selectedOracle,
+
+          title:
+            translation.title,
+
+          affirmation:
+            translation.affirmation,
+        };
+      }
+    }
+
+    setOracle(
+      selectedOracle
+    );
+
+    setDisplayOracle(
+      localizedOracle
+    );
+
+    //
+    // 🔮 TAROT
+    //
+
+    const selectedTarot =
+      await selectTarotCard({
+
+        patterns:
+          ctx?.activePatterns || [],
+
+        distortions:
+          ctx?.distortions || {},
+
+        oracleCard:
+          selectedOracle,
+
+        cosmic:
+          cosmic?.cosmic,
+      });
+
     //
     // ✨ DISPLAY
     //
 
-    setOracle(selectedOracle);
-
-    setTarot(selectedTarot);
+    setTarot(
+      selectedTarot
+    );
 
     setShowTarot(false);
 
@@ -193,13 +316,13 @@ const selectedTarot =
 
     setShow(true);
 
-    setTyped(
-      "Beloved..."
-    );
+    setTarotWhisper("");
 
     //
     // 🤖 AI READING
     //
+
+    setLoadingReading(true);
 
     try {
 
@@ -212,6 +335,8 @@ const selectedTarot =
 
           userContext: ctx,
 
+          mirrorContext,
+
           oracleCard:
             selectedOracle,
 
@@ -222,45 +347,121 @@ const selectedTarot =
         });
 
       //
-      // 🤖 GENERATE
+      // 🃏 TAROT WHISPER
       //
 
+      const tarotResult =
+        await generateAIResponse({
 
-      console.log(
-  "🌌 DIVINE PAYLOAD:",
-  {
+          type: "tarot",
 
-    oracle: {
+          context: {
 
-      title:
-        selectedOracle?.title,
+            user: ctx,
+          },
 
-      tone:
-        selectedOracle?.symbolic_tone,
+          data: {
 
-      energy:
-        selectedOracle?.energy_category,
+            language,
 
-      themes:
-        selectedOracle?.behavioural_themes,
-    },
+            languageContext,
 
-    tarot: {
+            //
+            // 🃏 ORACLE
+            //
 
-      name:
-        selectedTarot?.name,
+            oracle:
+              selectedOracle?.title,
 
-      atmosphere:
-        selectedTarot?.symbolic_atmosphere,
+            oracleMeaning:
+              selectedOracle?.message,
 
-      tension:
-        selectedTarot?.tension_patterns,
+            oracleSubheader:
+              selectedOracle?.theme,
 
-      pacing:
-        selectedTarot?.pacing_style,
-    },
-  }
-);
+            //
+            // 🔮 TAROT
+            //
+
+            symbolicTemperature:
+
+              selectedTarot
+                ?.symbolic_temperature,
+
+            //
+            // 🌌 COSMIC
+            //
+
+            moon:
+              cosmic?.cosmic
+                ?.moon_sign,
+
+            phase:
+              cosmic?.cosmic
+                ?.moon_phase,
+
+            sun:
+              cosmic?.cosmic
+                ?.sun_sign,
+
+            cosmicMessage:
+
+              cosmic?.moonLine +
+
+              " " +
+
+              cosmic?.phaseLine +
+
+              " " +
+
+              cosmic?.sunLine,
+
+            //
+            // 🌊 USER CONTEXT
+            //
+
+            dominantPattern:
+
+              ctx?.dominantPattern,
+
+            recurringPatterns:
+
+              ctx?.recurringPatterns || [],
+
+            observableScenes:
+
+              ctx?.observableScenes || [],
+
+            distortions:
+
+              ctx?.distortions || {},
+
+            awarenessChakra:
+
+              ctx?.awarenessChakra,
+
+            dominantChakra:
+
+              ctx?.dominantChakra,
+
+            cycles:
+              ctx?.cycles || [],
+
+            childhoodSignals:
+
+              ctx?.childhoodSignals || {},
+
+            patterns:
+              ctx?.activePatterns || [],
+
+            energy:
+              ctx?.energy || {},
+          },
+        });
+
+      //
+      // 🌌 DIVINE READING
+      //
 
       const aiText =
         await generateAIResponse({
@@ -272,153 +473,266 @@ const selectedTarot =
             user: ctx,
           },
 
- data: {
+          data: {
 
-  divineContext,
+            language,
 
-  message:
-    "Divine Guidance for this soul in the present moment.",
+            languageContext,
 
-  oracleCard: {
+            divineContext,
 
-    //
-    // 🃏 CORE
-    //
+            //
+            // 🌊 USER CONTEXT
+            //
 
-    number:
-      selectedOracle?.card_number,
+            dominantPattern:
 
-    title:
-      selectedOracle?.title,
+              ctx?.dominantPattern,
 
-    affirmation:
-      selectedOracle?.affirmation,
+            recurringPatterns:
 
-    message:
-      selectedOracle?.message,
+              ctx?.recurringPatterns || [],
 
-    theme:
-      selectedOracle?.theme,
+            observableScenes:
 
-    chakra:
-      selectedOracle?.chakra,
+              ctx?.observableScenes || [],
 
-    colour:
-      selectedOracle?.colour,
+            distortions:
 
-    //
-    // 🌌 SYMBOLIC FIELD
-    //
+              ctx?.distortions || {},
 
-    energyCategory:
-      selectedOracle?.energy_category,
+            awarenessChakra:
 
-    emotionalFrequency:
-      selectedOracle?.emotional_frequency,
+              ctx?.awarenessChakra,
 
-    symbolicTone:
-      selectedOracle?.symbolic_tone,
+            dominantChakra:
 
-    relationalEnergy:
-      selectedOracle?.relational_energy,
+              ctx?.dominantChakra,
 
-    cadenceStyle:
-      selectedOracle?.cadence_style,
+            childhoodSignals:
 
-    inquiryEnergy:
-      selectedOracle?.inquiry_energy,
+              ctx?.childhoodSignals || {},
 
-    symbolicEnvironment:
-      selectedOracle?.symbolic_environment,
+            cycles:
+              ctx?.cycles || [],
 
-    archetypalTemperature:
-      selectedOracle?.archetypal_temperature,
+            //
+            // 🪞 MIRROR
+            //
 
-    //
-    // 🧠 ARRAYS
-    //
+            mirrorContext,
 
-    imageryKeywords:
-      selectedOracle?.imagery_keywords || [],
+            //
+            // 🃏 ORACLE
+            //
 
-    inquiryExamples:
-      selectedOracle?.inquiry_examples || [],
+            oracleCard: {
 
-    behaviouralThemes:
-      selectedOracle?.behavioural_themes || [],
+              number:
+                selectedOracle?.card_number,
 
-    movementKeywords:
-      selectedOracle?.movement_keywords || [],
-  },
+              title:
+                selectedOracle?.title,
 
-  tarotCard: {
+              affirmation:
+                selectedOracle?.affirmation,
 
-    //
-    // 🔮 CORE
-    //
+              message:
+                selectedOracle?.message,
 
-    name:
-      selectedTarot?.name,
+              theme:
+                selectedOracle?.theme,
 
-    arcana:
-      selectedTarot?.arcana,
+              chakra:
+                selectedOracle?.chakra,
 
-    suit:
-      selectedTarot?.suit,
+              colour:
+                selectedOracle?.colour,
 
-    archetype:
-      selectedTarot?.archetype_family,
+              energyCategory:
 
-    //
-    // 🌌 SYMBOLIC FIELD
-    //
+                selectedOracle
+                  ?.energy_category,
 
-    questionStyle:
-      selectedTarot?.question_style,
+              emotionalFrequency:
 
-    symbolicTemperature:
-      selectedTarot?.symbolic_temperature,
+                selectedOracle
+                  ?.emotional_frequency,
 
-    pacingStyle:
-      selectedTarot?.pacing_style,
+              symbolicTone:
 
-    //
-    // 🧠 ARRAYS
-    //
+                selectedOracle
+                  ?.symbolic_tone,
 
-    symbolicAtmosphere:
-      selectedTarot?.symbolic_atmosphere || [],
+              relationalEnergy:
 
-    imageryKeywords:
-      selectedTarot?.imagery_keywords || [],
+                selectedOracle
+                  ?.relational_energy,
 
-    movementKeywords:
-      selectedTarot?.movement_keywords || [],
+              cadenceStyle:
 
-    environmentKeywords:
-      selectedTarot?.environment_keywords || [],
+                selectedOracle
+                  ?.cadence_style,
 
-    inquiryExamples:
-      selectedTarot?.inquiry_examples || [],
+              inquiryEnergy:
 
-    behaviouralThemes:
-      selectedTarot?.behavioural_themes || [],
+                selectedOracle
+                  ?.inquiry_energy,
 
-    archetypalEnergy:
-      selectedTarot?.archetypal_energy || [],
+              symbolicEnvironment:
 
-    tensionPatterns:
-      selectedTarot?.tension_patterns || [],
-  },
+                selectedOracle
+                  ?.symbolic_environment,
 
-  dailyField,
+              archetypalTemperature:
 
-  base:
-    "Beloved... breathe.",
-},
+                selectedOracle
+                  ?.archetypal_temperature,
+
+              imageryKeywords:
+
+                selectedOracle
+                  ?.imagery_keywords || [],
+
+              inquiryExamples:
+
+                selectedOracle
+                  ?.inquiry_examples || [],
+
+              behaviouralThemes:
+
+                selectedOracle
+                  ?.behavioural_themes || [],
+
+              movementKeywords:
+
+                selectedOracle
+                  ?.movement_keywords || [],
+            },
+
+            //
+            // 🔮 TAROT
+            //
+
+            tarotCard: {
+
+              name:
+                selectedTarot?.name,
+
+              arcana:
+                selectedTarot?.arcana,
+
+              suit:
+                selectedTarot?.suit,
+
+              archetype:
+
+                selectedTarot
+                  ?.archetype_family,
+
+              questionStyle:
+
+                selectedTarot
+                  ?.question_style,
+
+              symbolicTemperature:
+
+                selectedTarot
+                  ?.symbolic_temperature,
+
+              pacingStyle:
+
+                selectedTarot
+                  ?.pacing_style,
+
+              symbolicAtmosphere:
+
+                selectedTarot
+                  ?.symbolic_atmosphere || [],
+
+              imageryKeywords:
+
+                selectedTarot
+                  ?.imagery_keywords || [],
+
+              movementKeywords:
+
+                selectedTarot
+                  ?.movement_keywords || [],
+
+              environmentKeywords:
+
+                selectedTarot
+                  ?.environment_keywords || [],
+
+              inquiryExamples:
+
+                selectedTarot
+                  ?.inquiry_examples || [],
+
+              behaviouralThemes:
+
+                selectedTarot
+                  ?.behavioural_themes || [],
+
+              archetypalEnergy:
+
+                selectedTarot
+                  ?.archetypal_energy || [],
+
+              tensionPatterns:
+
+                selectedTarot
+                  ?.tension_patterns || [],
+            },
+
+            //
+            // 🌌 FIELD
+            //
+
+            dailyField,
+
+            //
+            // ✨ BASE
+            //
+
+            base:
+              "Beloved... breathe.",
+          },
         });
 
-      setTyped(aiText);
+      //
+      // ✨ RESPONSE
+      //
+
+      setTyped(
+
+        typeof aiText ===
+        "string"
+
+          ? aiText
+
+          : aiText?.reading ||
+
+            ""
+      );
+
+      setTarotWhisper(
+
+        typeof tarotResult ===
+        "object"
+
+          ? tarotResult
+              ?.tarotWhisper ||
+
+            ""
+
+          : tarotResult || ""
+      );
+
+      setLoadingReading(
+        false
+      );
 
     } catch (err) {
 
@@ -431,19 +745,33 @@ const selectedTarot =
         selectedOracle
           ?.affirmation ||
 
-        "Beloved..."
+        "..."
+      );
+
+      setTarotWhisper(
+
+        selectedTarot
+          ?.symbolic_temperature ||
+
+        ""
+      );
+
+      setLoadingReading(
+        false
       );
     }
   };
 
-  //
+  // --------------------------------------------------
   // 🔮 TAROT REVEAL
-  //
+  // --------------------------------------------------
 
   useEffect(() => {
 
-    if (!show || !oracle)
-      return;
+    if (
+      !show ||
+      !oracle
+    ) return;
 
     const t =
       setTimeout(() => {
@@ -451,9 +779,11 @@ const selectedTarot =
       setShowTarot(true);
 
       Animated.timing(
+
         tarotAnim,
 
         {
+
           toValue: 1,
 
           duration: 700,
@@ -470,9 +800,9 @@ const selectedTarot =
 
   }, [show, oracle]);
 
-  //
-  // ✨ TAROT ANIMATION
-  //
+  // --------------------------------------------------
+  // ✨ TAROT STYLE
+  // --------------------------------------------------
 
   const tarotStyle = {
 
@@ -482,9 +812,13 @@ const selectedTarot =
     transform: [
 
       {
+
         translateY:
+
           tarotAnim.interpolate({
-            inputRange: [0, 1],
+
+            inputRange:
+              [0, 1],
 
             outputRange:
               [30, -10],
@@ -497,9 +831,9 @@ const selectedTarot =
     ],
   };
 
-  //
-  // ✨ INITIAL STATE
-  //
+  // --------------------------------------------------
+  // ✨ INITIAL
+  // --------------------------------------------------
 
   if (!oracle) {
 
@@ -512,7 +846,11 @@ const selectedTarot =
         >
 
           <Text style={styles.trigger}>
-            {t("mirror.divine_guidance")}
+
+            {t(
+              "mirror.divine_guidance"
+            )}
+
           </Text>
 
         </TouchableOpacity>
@@ -521,16 +859,21 @@ const selectedTarot =
     );
   }
 
-  //
-  // 🎨 ORACLE COLOUR
-  //
+  // --------------------------------------------------
+  // 🎨 ORACLE COLOR
+  // --------------------------------------------------
 
   const borderColor =
+
     COLOUR_CONFIG[
       oracle.colour
     ] ||
 
     "#D4AF37";
+
+  // --------------------------------------------------
+  // 🌌 RENDER
+  // --------------------------------------------------
 
   return (
 
@@ -542,35 +885,80 @@ const selectedTarot =
 
           {/* 🃏 ORACLE */}
 
-          <View style={styles.oracleWrap}>
+          <View
+            style={
+              styles.oracleWrap
+            }
+          >
 
             <OracleCard
-              number={oracle.card_number}
-              title={oracle.title}
+
+              number={
+                oracle.card_number
+              }
+
+              title={
+
+                displayOracle
+                  ?.title ||
+
+                oracle.title
+              }
+
               message={
+
+                displayOracle
+                  ?.affirmation ||
+
                 oracle.affirmation
               }
-              colour={borderColor}
+
+              colour={
+                borderColor
+              }
             />
 
           </View>
 
           {/* 🔮 TAROT */}
 
-          {showTarot && tarot && (
+          {showTarot &&
+            tarot && (
 
             <Animated.View
+
               style={[
+
                 styles.tarot,
+
                 tarotStyle,
               ]}
             >
 
               <TarotCard
-                number={tarot.number}
-                title={tarot.name}
-                archetype={tarot.archetype}
-                message={tarot.symbolic_temperature}
+
+                number={
+                  tarot.number
+                }
+
+                title={
+                  tarot.name
+                }
+
+                archetype={
+                  tarot.archetype
+                }
+
+                message={
+
+                  loadingReading
+
+                    ? ""
+
+                    : tarotWhisper ||
+
+                      tarot.symbolic_temperature
+                }
               />
 
             </Animated.View>
@@ -581,17 +969,26 @@ const selectedTarot =
           {showTarot && (
 
             <ScrollView
-              style={styles.readingScroll}
+
+              style={
+                styles.readingScroll
+              }
 
               contentContainerStyle={{
-                alignItems: "center",
-                paddingBottom: 140,
+
+                alignItems:
+                  "center",
+
+                paddingBottom:
+                  140,
               }}
 
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={
+                false
+              }
             >
 
-              {/* 🌙 READING LINE */}
+              {/* 🌙 LINE */}
 
               <View
                 style={
@@ -599,8 +996,23 @@ const selectedTarot =
                 }
               />
 
-              <Text style={styles.reading}>
-                {typed}
+              {/* ✨ TEXT */}
+
+              <Text
+                style={
+                  styles.reading
+                }
+              >
+
+                {
+
+                  loadingReading
+
+                    ? ""
+
+                    : typed
+                }
+
               </Text>
 
             </ScrollView>
@@ -613,143 +1025,124 @@ const selectedTarot =
   );
 }
 
+// --------------------------------------------------
+// 🎨 STYLES
+// --------------------------------------------------
+
 const styles =
   StyleSheet.create({
 
-  //
-  // 🌌 CONTAINER
-  //
+    container: {
 
-  container: {
+      alignItems:
+        "center",
 
-    alignItems: "center",
+      marginTop: 40,
+    },
 
-    marginTop: 40,
-  },
+    trigger: {
 
-  //
-  // ✨ TRIGGER
-  //
+      color:
+        Colors.softText,
 
-  trigger: {
+      fontSize: 14,
 
-    color:
-      Colors.softText,
+      letterSpacing: 1,
 
-    fontSize: 14,
+      marginTop: 20,
+    },
 
-    letterSpacing: 1,
+    canvas: {
 
-    marginTop: 20,
-  },
+      width: "100%",
 
-  //
-  // 🌌 CANVAS
-  //
+      alignItems:
+        "center",
 
-  canvas: {
+      paddingTop: 40,
+    },
 
-    width: "100%",
+    readingScroll: {
 
-    alignItems: "center",
+      width: "100%",
 
-    paddingTop: 40,
-  },
+      marginTop: 20,
+    },
 
-  readingScroll: {
+    oracleWrap: {
 
-    width: "100%",
+      alignItems:
+        "center",
 
-    marginTop: 20,
-  },
+      marginTop: 20,
 
-  //
-  // 🃏 ORACLE
-  //
+      zIndex: 1,
+    },
 
-  oracleWrap: {
+    tarot: {
 
-    alignItems: "center",
+      marginTop: -120,
 
-    marginTop: 20,
+      alignSelf:
+        "flex-end",
 
-    zIndex: 1,
-  },
+      marginRight: 22,
 
-  //
-  // 🔮 TAROT
-  //
+      width: 180,
 
-  tarot: {
+      zIndex: 2,
+    },
 
-    marginTop: -120,
+    readingLine: {
 
-    alignSelf: "flex-end",
+      width: 42,
 
-    marginRight: 22,
+      height: 1,
 
-    width: 180,
+      borderRadius: 999,
 
-    zIndex: 2,
-  },
+      backgroundColor:
+        "rgba(255,255,255,0.12)",
 
-  //
-  // 🌙 READING LINE
-  //
+      marginTop: 10,
 
-  readingLine: {
+      marginBottom: 2,
+    },
 
-    width: 42,
+    reading: {
 
-    height: 1,
+      marginTop: 20,
 
-    borderRadius: 999,
+      paddingHorizontal: 40,
 
-    backgroundColor:
-      "rgba(255,255,255,0.12)",
+      paddingVertical: 10,
 
-    marginTop: 10,
+      paddingBottom: 20,
 
-    marginBottom: 2,
-  },
+      maxWidth: 280,
 
-  //
-  // 🧠 READING
-  //
+      textAlign:
+        "center",
 
-  reading: {
+      color:
+        "rgba(255,255,255,0.84)",
 
-    marginTop: 20,
+      lineHeight: 20,
 
-    paddingHorizontal: 40,
+      fontSize: 15,
 
-    paddingVertical: 10,
+      fontWeight: "300",
 
-    paddingBottom: 20,
+      letterSpacing: 0.1,
 
-    maxWidth: 280,
+      backgroundColor:
+        "rgba(255,255,255,0.02)",
 
-    textAlign: "center",
+      borderRadius: 28,
 
-    color:
-      "rgba(255,255,255,0.84)",
+      borderWidth: 1,
 
-    lineHeight: 20,
-
-    fontSize: 15,
-
-    fontWeight: "300",
-
-    letterSpacing: 0.1,
-
-    backgroundColor:
-      "rgba(255,255,255,0.02)",
-
-    borderRadius: 28,
-
-    borderWidth: 1,
-
-    borderColor:
-      "rgba(255,255,255,0.04)",
-  },
-});
+      borderColor:
+        "rgba(255,255,255,0.04)",
+    },
+  });

@@ -83,14 +83,7 @@ export default function TarotCard({
             {title}
           </Text>
 
-          {/* 🌙 ARCHETYPE */}
 
-          {archetype && (
-
-            <Text style={styles.archetype}>
-              {archetype}
-            </Text>
-          )}
 
           {/* 🌌 MESSAGE */}
 

@@ -18,6 +18,37 @@ buildConnectionsPrompt({
   // ✨ SPACE ATMOSPHERE
   //
 
+
+//
+// 🌍 LANGUAGE
+//
+
+const language =
+  data?.language || "en";
+
+const languageContext =
+  data?.languageContext || {};
+
+const emotionalStyle =
+
+  Array.isArray(
+    languageContext?.emotional_style
+  )
+
+    ? languageContext
+        .emotional_style
+        .join(", ")
+
+    : "";
+
+const symbolicTolerance =
+  languageContext
+    ?.symbolic_tolerance || "medium";
+
+const directness =
+  languageContext
+    ?.directness || "medium";
+
   const spaceContext =
 
     //
@@ -203,6 +234,34 @@ ${oracleCard}
 
 THEMES:
 ${symbolicThemes}
+
+LANGUAGE:
+${language}
+
+LANGUAGE EMOTIONAL STYLE:
+${emotionalStyle}
+
+SYMBOLIC TOLERANCE:
+${symbolicTolerance}
+
+DIRECTNESS:
+${directness}
+
+The transmission must feel
+emotionally native
+to ${language}.
+
+Do not translate English poetic structure directly.
+
+Shorter and simpler is better.
+
+The emotional cadence,
+spacing,
+softness,
+and symbolic restraint
+should feel natural
+for someone emotionally fluent
+in the ${language}.
 
 RULES:
 

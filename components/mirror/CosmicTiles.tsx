@@ -1,21 +1,14 @@
 import React, {
   useEffect,
-  useState,
+  useRef,
 } from "react";
 
 import {
+  Animated,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-
-import {
-  buildDailyField,
-} from "../../lib/cosmic/buildDailyField";
-
-import {
-  getCosmicInterpretation
-} from "../../lib/cosmic/cosmicInterpretation";
 
 import {
   Colors,
@@ -42,69 +35,110 @@ function getPhaseIcon(
 
 export default function CosmicTiles({
 
-  energy,
+  cosmic,
 
-  patterns,
+  language,
 
-  aiMessage,
+  languageContext,
 
 }: {
 
-  energy?: any;
+  cosmic: any;
 
-  patterns?: any[];
+  language?: string;
 
-  aiMessage?: string;
+  languageContext?: any;
 
 }) {
 
-  const [cosmic,
-    setCosmic] =
-      useState<any>(null);
+  //
+  // ✨ SHIMMER
+  //
+
+  const shimmerAnim =
+    useRef(
+      new Animated.Value(0.18)
+    ).current;
+
+  //
+  // 🌫 BREATHING EFFECT
+  //
 
   useEffect(() => {
 
-    async function load() {
+    Animated.loop(
 
-      //
-      // 🌌 DAILY FIELD
-      //
+      Animated.sequence([
 
-      const dailyField =
-        await buildDailyField();
+        Animated.timing(
+          shimmerAnim,
 
-      //
-      // 🧠 INTERPRETATION
-      //
+          {
+            toValue: 0.06,
 
-      const interpretation =
-        getCosmicInterpretation({
+            duration: 1600,
 
-          dailyField,
+            useNativeDriver: true,
+          }
+        ),
 
-          energy,
+        Animated.timing(
+          shimmerAnim,
 
-          patterns,
-        });
+          {
+            toValue: 0.18,
 
-      //
-      // ✨ MERGED FIELD
-      //
+            duration: 1600,
 
-      setCosmic({
+            useNativeDriver: true,
+          }
+        ),
+      ])
 
-        ...dailyField,
+    ).start();
 
-        ...interpretation,
-      });
-    }
+  }, []);
 
-    load();
-
-  }, [energy, patterns]);
+  //
+  // 🌫 LOADING STATE
+  //
 
   if (!cosmic) {
-    return null;
+
+    return (
+
+      <View style={styles.wrapper}>
+
+        <View style={styles.container}>
+
+          <View style={styles.row}>
+
+            {[1,2,3,4].map((i) => (
+
+              <Animated.View
+                key={i}
+
+                style={[
+
+                  styles.tile,
+
+                  styles.loadingTile,
+
+                  {
+                    opacity:
+                      shimmerAnim,
+                  },
+                ]}
+              />
+
+            ))}
+
+          </View>
+
+        </View>
+
+      </View>
+    );
   }
 
   //
@@ -124,7 +158,7 @@ export default function CosmicTiles({
       key: "moon",
 
       value:
-        cosmicData.moon,
+        cosmicData.moon_sign,
 
       line:
         cosmic.moonLine,
@@ -136,7 +170,7 @@ export default function CosmicTiles({
       key: "phase",
 
       value:
-        cosmicData.phase,
+        cosmicData.moon_phase,
 
       line:
         cosmic.phaseLine,
@@ -147,11 +181,39 @@ export default function CosmicTiles({
         ),
     },
 
-    {
-      key: "energy",
+{
+  key: "energy",
 
-      value:
-        cosmicData.sunEnergy,
+value:
+  (
+    (
+      cosmic?.dailyField
+        ?.dominantEnergy ||
+
+      "Energy"
+    )
+
+    .split(" ")[0]
+  )
+
+    .charAt(0)
+
+    .toUpperCase()
+
+  +
+
+  (
+    (
+      cosmic?.dailyField
+        ?.dominantEnergy ||
+
+      "Energy"
+    )
+
+    .split(" ")[0]
+  )
+
+    .slice(1),
 
       line:
         cosmic.energyLine,
@@ -163,7 +225,7 @@ export default function CosmicTiles({
       key: "sun",
 
       value:
-        cosmicData.sun,
+        cosmicData.sun_sign,
 
       line:
         cosmic.sunLine,
@@ -196,9 +258,13 @@ export default function CosmicTiles({
                   {t.icon}
                 </Text>
 
-                <Text style={styles.value}>
-                  {t.value}
-                </Text>
+<View style={styles.valueWrapper}>
+
+  <Text style={styles.value}>
+    {t.value}
+  </Text>
+
+</View>
 
                 <Text style={styles.line}>
                   {t.line}
@@ -209,17 +275,6 @@ export default function CosmicTiles({
           })}
         </View>
 
-        {/* 🌌 DAILY FIELD MESSAGE */}
-
-        {aiMessage && (
-
-          <Text style={styles.aiText}>
-
-            {aiMessage}
-
-          </Text>
-        )}
-
       </View>
 
     </View>
@@ -228,6 +283,15 @@ export default function CosmicTiles({
 
 const styles =
   StyleSheet.create({
+
+ valueWrapper: {
+
+  height: 20,
+
+  justifyContent: "center",
+
+  alignItems: "center",
+},   
 
   wrapper: {
 
@@ -243,6 +307,8 @@ const styles =
     alignItems: "center",
 
     paddingVertical: 6,
+
+    minHeight: 110,
   },
 
   row: {
@@ -279,9 +345,15 @@ const styles =
       "rgba(255,255,255,0.03)",
   },
 
+  loadingTile: {
+
+    backgroundColor:
+      "rgba(255,255,255,0.04)",
+  },
+
   icon: {
 
-    fontSize: 12,
+    fontSize: 14,
 
     opacity: 0.38,
 
@@ -290,53 +362,35 @@ const styles =
 
   value: {
 
-    fontSize: 11,
+    fontSize: 10,
 
     color:
       Colors.white,
 
     textAlign: "center",
 
-    marginTop: 2,
+    marginTop: 1,
 
-    opacity: 0.82,
+    opacity: 0.9,
 
     fontWeight: "300",
   },
 
   line: {
 
-    fontSize: 9,
+      minHeight: 52,
+
+    fontSize: 10,
 
     color:
       Colors.mutedText,
 
-    marginTop: 8,
+    marginTop: 10,
 
     textAlign: "center",
 
-    lineHeight: 13,
+    lineHeight: 14,
 
     opacity: 0.72,
-  },
-
-  aiText: {
-
-    marginTop: 18,
-
-    fontSize: 11,
-
-    color:
-      Colors.softText,
-
-    textAlign: "center",
-
-    lineHeight: 21,
-
-    paddingHorizontal: 26,
-
-    opacity: 0.72,
-
-    fontStyle: "italic",
   },
 });

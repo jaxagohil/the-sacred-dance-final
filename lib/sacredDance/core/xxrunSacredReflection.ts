@@ -10,7 +10,9 @@ import {
   generateAIResponse,
 } from "../../ai/generateAIResponse";
 
-import { interpretInput } from "../../ai/interpretInput";
+import {
+  interpretInput,
+} from "../../ai/interpretInput";
 
 import {
   GuideType,
@@ -20,6 +22,8 @@ import {
 } from "./types";
 
 interface RunSacredReflectionParams {
+
+  language?: string;
 
   rawInput: string;
 
@@ -33,7 +37,13 @@ interface RunSacredReflectionParams {
 
   cardType?: string;
 
-  mirrorContext?: any;
+  /*
+   * ---------------------------------------------------------
+   * 🌌 FIELD CONTEXT
+   * ---------------------------------------------------------
+   */
+
+  context?: any;
 }
 
 function mapGuideType(
@@ -59,6 +69,8 @@ function mapGuideType(
 
 export async function runSacredReflection({
 
+  language,
+
   rawInput,
 
   entryType,
@@ -71,7 +83,7 @@ export async function runSacredReflection({
 
   cardType,
 
-  mirrorContext,
+  context,
 
 }: RunSacredReflectionParams) {
 
@@ -85,6 +97,8 @@ export async function runSacredReflection({
 
     const interpreted =
       await interpretInput({
+
+        language,
 
         text:
           rawInput,
@@ -105,7 +119,7 @@ export async function runSacredReflection({
 
       interpreted?.realityLayer ||
 
-      mirrorContext?.realityLayer ||
+      context?.realityLayer ||
 
       "mixed";
 
@@ -120,7 +134,7 @@ export async function runSacredReflection({
      * ---------------------------------------------------------
      */
 
-    const context =
+    const requestContext =
       buildContext({
 
         rawInput,
@@ -139,8 +153,8 @@ export async function runSacredReflection({
       });
 
     console.log(
-      "🧠 CONTEXT:",
-      context
+      "🧠 REQUEST CONTEXT:",
+      requestContext
     );
 
     /*
@@ -181,12 +195,12 @@ export async function runSacredReflection({
 
       /*
        * -------------------------------------------------------
-       * 👤 USER CONTEXT
+       * 👤 USER FIELD
        * -------------------------------------------------------
        */
 
       user:
-        mirrorContext || null,
+        context || null,
 
       /*
        * -------------------------------------------------------
@@ -211,22 +225,8 @@ export async function runSacredReflection({
        * -------------------------------------------------------
        */
 
-      request: {
-
-        rawInput,
-
-        entryType,
-
-        lens,
-
-        realityLayer,
-
-        guideType,
-
-        guideName,
-
-        cardType,
-      },
+      request:
+        requestContext,
     };
 
     console.log(
@@ -268,6 +268,8 @@ export async function runSacredReflection({
           completeGuideContext,
 
         data: {
+
+          language,
 
           /*
            * -------------------------------------------------
@@ -314,12 +316,12 @@ export async function runSacredReflection({
 
           /*
            * -------------------------------------------------
-           * USER CONTEXT
+           * USER FIELD
            * -------------------------------------------------
            */
 
           userContext:
-            mirrorContext,
+            context,
 
           /*
            * -------------------------------------------------
@@ -372,7 +374,7 @@ export async function runSacredReflection({
 
     return {
 
-      context,
+      requestContext,
 
       interpreted,
 

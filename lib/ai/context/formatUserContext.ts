@@ -24,6 +24,12 @@ export function formatUserContext(
   const healingEdge =
     user?.story?.healingEdge;
 
+  const emotionalTension =
+    user?.story?.emotionalTension;
+
+  const nervousSystemState =
+    user?.story?.nervousSystemState;
+
   /*
    * ---------------------------------------------------------
    * ENERGY
@@ -60,6 +66,27 @@ export function formatUserContext(
 
   /*
    * ---------------------------------------------------------
+   * MANIFESTATIONS
+   * ---------------------------------------------------------
+   */
+
+  const manifestations =
+
+    distortions
+      ?.map(
+        (d: any) =>
+
+          d?.manifestation ||
+
+          d?.observable_scene ||
+
+          d?.mirror_prompt
+      )
+      .filter(Boolean)
+      .slice(0, 6);
+
+  /*
+   * ---------------------------------------------------------
    * VOICE
    * ---------------------------------------------------------
    */
@@ -84,29 +111,77 @@ export function formatUserContext(
 
   /*
    * ---------------------------------------------------------
+   * ATMOSPHERIC STATE
+   * ---------------------------------------------------------
+   */
+
+  const contraction =
+    energetic?.contraction || 0;
+
+  const expansion =
+    energetic?.expansion || 0;
+
+  let energeticAtmosphere =
+    "balanced";
+
+  if (contraction > 0.7) {
+
+    energeticAtmosphere =
+      "emotionally contracted and protective";
+  }
+
+  if (expansion > 0.7) {
+
+    energeticAtmosphere =
+      "open, expressive, and emotionally expansive";
+  }
+
+  if (
+    contraction > 0.5 &&
+    expansion > 0.5
+  ) {
+
+    energeticAtmosphere =
+      "moving between openness and emotional protection";
+  }
+
+  /*
+   * ---------------------------------------------------------
    * FORMAT
    * ---------------------------------------------------------
    */
 
   return `
 
-USER CONTEXT
+USER FIELD
 
 --------------------------------------------------
-STORY
+EMOTIONAL ATMOSPHERE
 --------------------------------------------------
 
-Emotional Theme:
+The user currently appears to be moving through:
+
+- Emotional Theme:
 ${emotionalTheme || "Unknown"}
 
-Relational Theme:
+- Relational Theme:
 ${relationalTheme || "Unknown"}
 
-Energetic Movement:
+- Energetic Movement:
 ${energeticMovement || "Unknown"}
 
-Healing Edge:
+- Healing Edge:
 ${healingEdge || "Unknown"}
+
+- Emotional Tension:
+${emotionalTension || "Unknown"}
+
+- Nervous System State:
+${nervousSystemState || "Unknown"}
+
+The overall energetic atmosphere feels:
+
+${energeticAtmosphere}
 
 --------------------------------------------------
 LEVELS OF REALITY
@@ -114,82 +189,88 @@ LEVELS OF REALITY
 
 Physical Layer
 
-Behaviours:
+- Behaviours:
 ${physical?.behaviours?.join(", ") || "none"}
 
-Actions:
+- Actions:
 ${physical?.actions?.join(", ") || "none"}
 
-Body Themes:
+- Body Themes:
 ${physical?.bodyThemes?.join(", ") || "none"}
 
 Emotional Layer
 
-Emotions:
+- Emotions:
 ${emotional?.emotions?.join(", ") || "none"}
 
-Needs:
+- Needs:
 ${emotional?.needs?.join(", ") || "none"}
 
-Themes:
+- Themes:
 ${emotional?.themes?.join(", ") || "none"}
 
 Energetic Layer
 
-Dominant Chakra:
+- Dominant Chakra:
 ${energetic?.chakra || "unknown"}
 
-Contraction:
-${energetic?.contraction || 0}
+- Contraction:
+${contraction}
 
-Expansion:
-${energetic?.expansion || 0}
+- Expansion:
+${expansion}
 
 --------------------------------------------------
-ENERGY
+ENERGETIC FIELD
 --------------------------------------------------
 
-Dominant Chakra:
+- Dominant Chakra:
 ${dominantChakra || "Unknown"}
 
-Awareness Chakra:
+- Awareness Chakra:
 ${awarenessChakra || "Unknown"}
 
 --------------------------------------------------
-PATTERNS
+ACTIVE MANIFESTATIONS
 --------------------------------------------------
 
-${patterns.length
+${manifestations.length
 
-  ? patterns
-      .map((p: any) => `- ${p}`)
-      .join("\n")
-
-  : "none"}
-
---------------------------------------------------
-DISTORTIONS
---------------------------------------------------
-
-${distortions.length
-
-  ? distortions
+  ? manifestations
       .map(
-        (d: any) =>
-          `- ${d.statement || d}`
+        (m: any) =>
+          `- ${m}`
       )
       .join("\n")
 
   : "none"}
 
 --------------------------------------------------
-REFLECTION ECHOES
+RECURRING PATTERNS
+--------------------------------------------------
+
+${patterns.length
+
+  ? patterns
+      .map(
+        (p: any) =>
+          `- ${p}`
+      )
+      .join("\n")
+
+  : "none"}
+
+--------------------------------------------------
+VOICE ECHOES
 --------------------------------------------------
 
 ${reflectionEchoes.length
 
   ? reflectionEchoes
-      .map((r: any) => `- ${r}`)
+      .map(
+        (r: any) =>
+          `- ${r}`
+      )
       .join("\n")
 
   : "none"}

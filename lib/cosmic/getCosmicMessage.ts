@@ -3,109 +3,217 @@ import {
 } from "../ai/generateAIResponse";
 
 import {
-  buildDailyField,
-} from "./buildDailyField";
-
-import {
   getCosmicInterpretation,
 } from "./cosmicInterpretation";
 
 export async function getCosmicMessage({
 
-  energy,
+  dailyField,
 
-  patterns,
+  language,
+
+  languageContext,
 
 }: {
 
-  energy?: any;
+  dailyField: any;
 
-  patterns?: any[];
+  language?: string;
+
+  languageContext?: any;
 
 }) {
 
-  //
-  // 🌌 DAILY FIELD
-  //
-
-  const dailyField =
-    await buildDailyField();
-
-  //
-  // 🧠 INTERPRETATION
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🧠 INTERPRETATION
+   * ---------------------------------------------------------
+   */
 
   const interpretation =
     getCosmicInterpretation({
 
       dailyField,
 
-      energy,
-
-      patterns,
     });
 
-  //
-  // 🌙 COSMIC DATA
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌙 COSMIC DATA
+   * ---------------------------------------------------------
+   */
 
   const cosmic =
-    dailyField.cosmic;
+    dailyField?.cosmic || {};
 
-  //
-  // 🤖 AI REFINEMENT
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 ACTIVE FIELDS
+   * ---------------------------------------------------------
+   */
 
-  const aiText =
+  const activeFields =
+
+    dailyField?.fields?.map(
+      (f: any) => f.title
+    ) || [];
+
+  const collectiveThemes =
+
+    dailyField?.fields?.map(
+      (f: any) =>
+        f.collective_theme
+    ) || [];
+
+  const energeticThemes =
+
+    dailyField?.fields?.map(
+      (f: any) =>
+        f.energetic_theme
+    ) || [];
+
+  /*
+   * ---------------------------------------------------------
+   * 🤖 AI REFINEMENT
+   * ---------------------------------------------------------
+   */
+
+  const aiPayload =
     await generateAIResponse({
 
       type: "cosmic",
 
       data: {
 
+        /*
+         * ---------------------------------------------------
+         * 🌍 LANGUAGE
+         * ---------------------------------------------------
+         */
+
+        language,
+
+        languageContext,
+
+        /*
+         * ---------------------------------------------------
+         * 🌌 BASE ATMOSPHERE
+         * ---------------------------------------------------
+         */
+
         base:
           interpretation.cosmicMessage,
 
-        phase:
-          cosmic.phase,
-
-        sunEnergy:
-          cosmic.sunEnergy,
-
-        sun:
-          cosmic.sun,
+        /*
+         * ---------------------------------------------------
+         * 🌙 SKY SNAPSHOT
+         * ---------------------------------------------------
+         */
 
         moon:
-          cosmic.moon,
+          cosmic?.moon_sign,
 
-        pattern:
-          patterns?.[0]?.id,
+        phase:
+          cosmic?.moon_phase,
+
+        sun:
+          cosmic?.sun_sign,
+
+        /*
+         * ---------------------------------------------------
+         * 🌌 COLLECTIVE FIELDS
+         * ---------------------------------------------------
+         */
+
+        activeFields,
+
+        collectiveThemes,
+
+        energeticThemes,
+
+        /*
+         * ---------------------------------------------------
+         * ⚡ DAILY FIELD
+         * ---------------------------------------------------
+         */
+
+        dominantEnergy:
+          dailyField?.dominantEnergy,
 
         symbolicThemes:
-          dailyField.symbolicThemes,
+          dailyField?.symbolicThemes,
 
-        imagery:
-          dailyField.imagery,
+        /*
+         * ---------------------------------------------------
+         * 🃏 ORACLE
+         * ---------------------------------------------------
+         */
 
-        guideTone:
-          dailyField.guideTone,
+        oracle:
+          dailyField
+            ?.oracleCard
+            ?.title,
 
-        oracleBias:
-          dailyField.oracleBias,
+        oracleEnergy:
+          dailyField
+            ?.oracleCard
+            ?.energy_category,
+
+        oracleChakra:
+          dailyField
+            ?.oracleCard
+            ?.chakra,
       },
     });
 
-  //
-  // 🌌 RETURN
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 RETURN
+   * ---------------------------------------------------------
+   */
 
   return {
 
     ...interpretation,
 
+    /*
+     * -------------------------------------------------------
+     * 🤖 AI WHISPERS
+     * -------------------------------------------------------
+     */
+
+    moonLine:
+
+      aiPayload?.moonLine ||
+
+      interpretation.moonLine,
+
+    phaseLine:
+
+      aiPayload?.phaseLine ||
+
+      interpretation.phaseLine,
+
+    sunLine:
+
+      aiPayload?.sunLine ||
+
+      interpretation.sunLine,
+
+    energyLine:
+
+      aiPayload?.energyLine ||
+
+      interpretation.energyLine,
+
+    /*
+     * -------------------------------------------------------
+     * 🌌 RAW AI
+     * -------------------------------------------------------
+     */
+
     aiMessage:
-      aiText ||
-      interpretation.cosmicMessage,
+      aiPayload,
 
     cosmic,
 

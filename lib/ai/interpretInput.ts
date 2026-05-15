@@ -14,6 +14,9 @@ import { loadEmotionSynonyms } from "../loadEmotionSynonyms";
 // ----------------------------------
 
 type InterpretInputArgs = {
+
+  language?: string;
+
   text?: string;
 
   emotions?: string[];
@@ -39,10 +42,17 @@ type InterpretInputArgs = {
 // ----------------------------------
 
 const normalize = (arr?: string[]) =>
+
   (arr || [])
+
     .map((v) =>
-      v?.toLowerCase().trim()
+
+      v
+        ?.toString()
+        .toLowerCase()
+        .trim()
     )
+
     .filter(Boolean);
 
 // ----------------------------------

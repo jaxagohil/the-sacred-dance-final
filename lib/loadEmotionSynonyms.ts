@@ -1,18 +1,44 @@
 import { supabase } from "../services/supabase";
 
-let EMOTION_MAP: Record<string, string> = {};
+let EMOTION_MAP:
+  Record<string, string> = {};
 
 let isLoaded = false;
+
+//
+// 🌍 NORMALIZE
+//
+
+function normalize(
+  value: string
+) {
+
+  return value
+    ?.toLowerCase()
+    .trim();
+}
+
+//
+// 🧠 LOAD EMOTION SYNONYMS
+//
 
 export async function loadEmotionSynonyms() {
 
   if (isLoaded) {
+
     return EMOTION_MAP;
   }
 
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
+
     .from("emotion_synonyms")
-    .select("synonym, emotion_id");
+
+    .select(
+      "synonym, emotion_id"
+    );
 
   if (error) {
 
@@ -28,16 +54,26 @@ export async function loadEmotionSynonyms() {
 
   (data || []).forEach((row) => {
 
-    EMOTION_MAP[
-      row.synonym.toLowerCase()
-    ] = row.emotion_id;
+    const key =
+      normalize(
+        row.synonym
+      );
+
+    if (!key) {
+      return;
+    }
+
+    EMOTION_MAP[key] =
+      row.emotion_id;
   });
 
   isLoaded = true;
 
   console.log(
     "✅ Emotion synonyms loaded:",
-    Object.keys(EMOTION_MAP).length
+    Object.keys(
+      EMOTION_MAP
+    ).length
   );
 
   return EMOTION_MAP;

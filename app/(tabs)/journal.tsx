@@ -56,6 +56,9 @@ const [selected, setSelected] =
   const [emotions, setEmotions] =
     useState<Emotion[]>([]);
 
+  const [language, setLanguageState] =
+  useState("en");  
+
   //
   // ✨ DERIVED
   //
@@ -76,6 +79,10 @@ const [selected, setSelected] =
 
 const language =
   getLanguage();
+
+  setLanguageState(
+  language
+);
 
   console.log(
   "🌍 JOURNAL LANGUAGE:",
@@ -166,6 +173,8 @@ const { data } =
         await processReflection({
 
           userId,
+
+          language,
 
           text,
 

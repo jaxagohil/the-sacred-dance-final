@@ -4,8 +4,6 @@ import { supabase } from "../services/supabase";
 
 import { interpretInput } from "../lib/ai/interpretInput";
 
-import { deriveLensFromBehaviours } from "../lib/deriveLensFromBehaviours";
-
 import { derivePatternsFromBehaviours } from "../lib/derivePatternsFromBehaviours";
 
 import { buildEnergyFromBehaviours } from "../lib/energy/buildEnergyFromBehaviours";
@@ -98,6 +96,7 @@ export async function processReflection(
     source,
     metadata,
     signalDepth,
+    language,
   } = input;
 
   // --------------------------------------------------
@@ -106,6 +105,7 @@ export async function processReflection(
 
   const interpretation =
     await interpretInput({
+      language,
       text,
       emotions,
       childhoodSignals,
@@ -288,6 +288,44 @@ export async function processReflection(
     behaviours
   );
 
+// --------------------------------------------------
+// 🪞 LENS MANIFESTATIONS
+// --------------------------------------------------
+
+const behaviourIds =
+  behaviours.map(
+    (b) => b.id
+  );
+
+const {
+  data: lensMappings,
+  error: lensError,
+} = await supabase
+
+  .from(
+    "behaviour_lens_weights"
+  )
+
+  .select("*")
+
+  .in(
+    "behaviour_id",
+    behaviourIds
+  );
+
+if (lensError) {
+
+  console.error(
+    "❌ Lens mapping error:",
+    lensError
+  );
+}
+
+console.log(
+  "🪞 LENS MAPPINGS:",
+  lensMappings
+);
+
   // --------------------------------------------------
   // 🪞 DERIVE PATTERNS
   // --------------------------------------------------
@@ -346,37 +384,72 @@ export async function processReflection(
     energy
   );
 
-  // --------------------------------------------------
-  // 🧠 LENS
-  // --------------------------------------------------
+// --------------------------------------------------
+// 🪞 SHAPE LENS MEMORY
+// --------------------------------------------------
 
-  const lensRaw =
-    await deriveLensFromBehaviours(
-      behaviours
-    );
+const shapeLensEntries = (
+  lens: string
+) =>
 
-  const aiLens = {
+  lensMappings
 
-    people:
-      lensRaw.people.map(
-        (b) => b.id
-      ),
+    ?.filter(
+      (m: any) =>
+        m.lens === lens
+    )
 
-    places:
-      lensRaw.places.map(
-        (b) => b.id
-      ),
+    ?.map((m: any) => ({
 
-    things:
-      lensRaw.things.map(
-        (b) => b.id
-      ),
-  };
+      behaviour_id:
+        m.behaviour_id,
 
-  console.log(
-    "🧠 LENS:",
-    aiLens
-  );
+      weight:
+        m.weight,
+
+      manifestation:
+        m.manifestation,
+
+      observable_scene:
+        m.observable_scene,
+
+      body_response:
+        m.body_response,
+
+      coping_strategy:
+        m.coping_strategy,
+
+      relational_effect:
+        m.relational_effect,
+
+      mirror_prompt:
+        m.mirror_prompt,
+
+      integrated_expression:
+        m.integrated_expression,
+    })) || [];
+
+// --------------------------------------------------
+// 🧠 EMBODIED LENS
+// --------------------------------------------------
+
+const aiLens = {
+
+  people:
+    shapeLensEntries(
+      "people"
+    ),
+
+  places:
+    shapeLensEntries(
+      "places"
+    ),
+
+  things:
+    shapeLensEntries(
+      "things"
+    ),
+};
 
   // --------------------------------------------------
 // 🌍 LEVELS
@@ -574,6 +647,9 @@ const content_type =
       source,
 
 metadata: {
+
+language:
+  language || "en",
 
   emotions:
     emotions || [],

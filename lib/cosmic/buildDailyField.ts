@@ -5,10 +5,6 @@ import {
 } from "../../services/supabase";
 
 import {
-  getCosmicData,
-} from "./getCosmicData";
-
-import {
   selectOracleCard,
 } from "../selectOracleCard";
 
@@ -86,80 +82,60 @@ buildDailyField() {
         existingField.field_message,
 
       fieldEssence:
-  existingField.field_essence || {},  
+        existingField.field_essence || {},
 
-      fields: [],
+      fields:
+        existingField.fields || [],
     };
   }
 
-  //
-  // 🌌 COSMIC CALCULATIONS
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 SKY SNAPSHOT
+   * ---------------------------------------------------------
+   */
 
-  const cosmic =
-    getCosmicData();
+  const {
+    data: cosmic,
+  } = await supabase
 
-  //
-  // 🌙 DETERMINE FIELD KEYS
-  //
+    .from("cosmic_sky")
 
-  const keys: string[] = [];
+    .select("*")
 
-  //
-  // 🌕 MOON PHASES
-  //
+    .eq(
+      "date",
+      today
+    )
 
-  if (
-    cosmic.phase ===
-    "Full"
-  ) {
+    .maybeSingle();
 
-    keys.push(
-      "full_moon"
-    );
-  }
-
-  if (
-    cosmic.phase ===
-    "New"
-  ) {
-
-    keys.push(
-      "new_moon"
-    );
-  }
-
-  if (
-    cosmic.phase ===
-    "Waning"
-  ) {
-
-    keys.push(
-      "last_quarter_moon"
-    );
-  }
-
-  //
-  // 🌌 FIELD DEFINITIONS
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 ACTIVE COSMIC FIELDS
+   * ---------------------------------------------------------
+   */
 
   const {
 
-    data,
+    data: activeFields,
 
     error,
 
   } = await supabase
 
-    .from(
-      "cosmic_field_definitions"
-    )
+    .from("cosmic_fields")
 
     .select("*")
 
-    .in(
-      "key",
-      keys
+    .lte(
+      "starts_at",
+      new Date().toISOString()
+    )
+
+    .gte(
+      "ends_at",
+      new Date().toISOString()
     )
 
     .eq(
@@ -167,9 +143,11 @@ buildDailyField() {
       true
     );
 
-  //
-  // ❌ ERROR
-  //
+  /*
+   * ---------------------------------------------------------
+   * ❌ ERROR
+   * ---------------------------------------------------------
+   */
 
   if (error) {
 
@@ -186,34 +164,33 @@ buildDailyField() {
     };
   }
 
-  //
-  // 🌙 SAFE FIELDS
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 SAFE FIELDS
+   * ---------------------------------------------------------
+   */
 
   const fields =
-    data || [];
+    activeFields || [];
 
-  //
-  // 🧠 BUILD FIELD
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🧠 BUILD FIELD
+   * ---------------------------------------------------------
+   */
 
   const symbolicThemes =
     fields.flatMap(
       (f: any) =>
 
-        f.symbolic_themes || []
+        f.keywords || []
     );
 
-  const guideTone =
-    fields.flatMap(
-      (f: any) =>
-
-        f.guide_tone || []
-    );
-
-  //
-  // 🌌 LOAD ARCHETYPES
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 LOAD ARCHETYPES
+   * ---------------------------------------------------------
+   */
 
   const {
 
@@ -232,9 +209,11 @@ buildDailyField() {
       true
     );
 
-  //
-  // 🃏 SELECT ORACLE
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🃏 SELECT ORACLE
+   * ---------------------------------------------------------
+   */
 
   const oracleCard =
     await selectOracleCard({
@@ -243,104 +222,127 @@ buildDailyField() {
 
         ...cosmic,
 
+        fields,
+
         archetypes:
           archetypes || [],
       },
 
     });
 
-  //
-  // 🌌 DOMINANT ENERGY
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 DOMINANT ENERGY
+   * ---------------------------------------------------------
+   */
 
   const dominantEnergy =
 
     oracleCard
       ?.energy_category ||
 
-    cosmic?.sunEnergy ||
+    fields?.[0]
+      ?.dominant_energy ||
 
     "flow";
 
-  //
-  // 🌈 DOMINANT CHAKRA
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌈 DOMINANT CHAKRA
+   * ---------------------------------------------------------
+   */
 
   const dominantChakra =
 
     oracleCard
       ?.chakra ||
 
+    fields?.[0]
+      ?.chakra_focus ||
+
     null;
 
-  //
-  // ✨ FIELD MESSAGE
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ FIELD MESSAGE
+   * ---------------------------------------------------------
+   */
 
-  const fieldMessage =
+const fieldMessage =
 
-    oracleCard
-      ?.affirmation ||
+  fields?.[0]
+    ?.guidance ||
 
-    "Something sacred is moving today.";
+  "The atmosphere is quietly shifting.";
 
- /*
- * ---------------------------------------------------------
- * 🌌 FIELD ESSENCE
- * ---------------------------------------------------------
- */
+  /*
+   * ---------------------------------------------------------
+   * 🌌 FIELD ESSENCE
+   * ---------------------------------------------------------
+   */
 
-const fieldEssence = {
+  const fieldEssence = {
 
-  atmosphere:
+    atmosphere:
 
-    oracleCard
-      ?.symbolic_tone ||
-
-    "reflective",
-
-  pacing:
-
-    oracleCard
-      ?.cadence_style ||
-
-    "steady",
-
-  relationalField:
-
-    oracleCard
-      ?.relational_energy ||
-
-    "introspective",
-
-  nervousSystem:
-
-    oracleCard
-      ?.emotional_frequency ||
-
-    "sensitive",
-
-  movement:
-
-    (
       oracleCard
-        ?.movement_keywords || []
+        ?.symbolic_tone ||
 
-    )[0] ||
+      fields?.[0]
+        ?.collective_theme ||
 
-    "observe",
+      "reflective",
 
-  symbolicTexture:
+    pacing:
 
-    oracleCard
-      ?.symbolic_environment ||
+      oracleCard
+        ?.cadence_style ||
 
-    "quiet space",
-};   
+      "steady",
 
-  //
-  // 💾 STORE FIELD
-  //
+    relationalField:
+
+      oracleCard
+        ?.relational_energy ||
+
+      fields?.[0]
+        ?.energetic_theme ||
+
+      "introspective",
+
+    nervousSystem:
+
+      oracleCard
+        ?.emotional_frequency ||
+
+      "sensitive",
+
+    movement:
+
+      (
+        oracleCard
+          ?.movement_keywords || []
+
+      )[0] ||
+
+      "observe",
+
+    symbolicTexture:
+
+      oracleCard
+        ?.symbolic_environment ||
+
+      fields?.[0]
+        ?.dominant_energy ||
+
+      "quiet space",
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * 💾 STORE FIELD
+   * ---------------------------------------------------------
+   */
 
   await supabase
 
@@ -358,11 +360,13 @@ const fieldEssence = {
 
       cosmic,
 
+      fields,
+
       field_message:
         fieldMessage,
 
       field_essence:
-        fieldEssence,  
+        fieldEssence,
 
       dominant_chakra:
         dominantChakra,
@@ -377,9 +381,11 @@ const fieldEssence = {
         archetypes || [],
     });
 
-  //
-  // 🪵 DEBUG
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🪵 DEBUG
+   * ---------------------------------------------------------
+   */
 
   console.log(
     "🌌 NEW DAILY FIELD CREATED:",
@@ -396,12 +402,29 @@ const fieldEssence = {
 
       chakra:
         dominantChakra,
+
+      moon:
+        cosmic?.moon_sign,
+
+      phase:
+        cosmic?.moon_phase,
+
+      sun:
+        cosmic?.sun_sign,
+
+      activeFields:
+        fields.map(
+          (f: any) =>
+            f.title
+        ),
     }
   );
 
-  //
-  // 🌌 RETURN
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌌 RETURN
+   * ---------------------------------------------------------
+   */
 
   return {
 
@@ -413,8 +436,6 @@ const fieldEssence = {
 
     symbolicThemes,
 
-    guideTone,
-
     archetypes:
       archetypes || [],
 
@@ -425,84 +446,5 @@ const fieldEssence = {
     fieldMessage,
 
     fieldEssence,
-
-    emotionalBias:
-      average(
-
-        fields.map(
-          (f: any) =>
-
-            f.emotional_bias || 0
-        )
-      ),
-
-    reflectionBias:
-      average(
-
-        fields.map(
-          (f: any) =>
-
-            f.reflection_bias || 0
-        )
-      ),
-
-    movementBias:
-      average(
-
-        fields.map(
-          (f: any) =>
-
-            f.movement_bias || 0
-        )
-      ),
-
-    relationalBias:
-      average(
-
-        fields.map(
-          (f: any) =>
-
-            f.relational_bias || 0
-        )
-      ),
-
-    nervousSystemBias:
-      average(
-
-        fields.map(
-          (f: any) =>
-
-            f.nervous_system_bias || 0
-        )
-      ),
   };
-}
-
-//
-// 🧠 HELPERS
-//
-
-function average(
-  numbers: number[]
-) {
-
-  if (
-    !numbers ||
-    numbers.length === 0
-  ) {
-
-    return 0;
-  }
-
-  return (
-
-    numbers.reduce(
-
-      (a, b) => a + b,
-
-      0
-    ) /
-
-    numbers.length
-  );
 }

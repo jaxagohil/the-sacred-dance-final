@@ -13,18 +13,31 @@ type Params = {
     | "human"
     | "self";
 
+  language?: string;
+
+  languageContext?: any;
+
   dailyField?: any;
 };
 
 export async function
 generateTransmission({
+
   spaceType,
+
+  language = "en",
+
+  languageContext = {},
+
   dailyField,
+
 }: Params) {
 
-  //
-  // 🌕 DAILY FIELD
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🌕 DAILY FIELD
+   * ---------------------------------------------------------
+   */
 
   const cosmic =
     dailyField?.cosmic;
@@ -35,9 +48,11 @@ generateTransmission({
   const oracleCard =
     dailyField?.oracleCard;
 
-  //
-  // ✨ AI
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ AI
+   * ---------------------------------------------------------
+   */
 
   const transmission =
     await generateAIResponse({
@@ -47,15 +62,29 @@ generateTransmission({
 
       data: {
 
-        //
-        // 🌌 SPACE
-        //
+        /*
+         * ---------------------------------------------------
+         * 🌍 LANGUAGE
+         * ---------------------------------------------------
+         */
+
+        language,
+
+        languageContext,
+
+        /*
+         * ---------------------------------------------------
+         * 🌌 SPACE
+         * ---------------------------------------------------
+         */
 
         spaceType,
 
-        //
-        // 🌕 DAILY ENERGY
-        //
+        /*
+         * ---------------------------------------------------
+         * 🌕 DAILY ENERGY
+         * ---------------------------------------------------
+         */
 
         phase:
           cosmic?.phase,
@@ -70,27 +99,33 @@ generateTransmission({
 
         symbolicThemes,
 
-        //
-        // ✨ FALLBACK
-        //
+        /*
+         * ---------------------------------------------------
+         * ✨ FALLBACK
+         * ---------------------------------------------------
+         */
 
         base:
           "Something softer is moving today.",
       },
     });
 
-  //
-  // 🪵 DEBUG
-  //
+  /*
+   * ---------------------------------------------------------
+   * 🪵 DEBUG
+   * ---------------------------------------------------------
+   */
 
   console.log(
     "✨ TRANSMISSION:",
     transmission
   );
 
-  //
-  // ✨ NORMALIZE
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ NORMALIZE
+   * ---------------------------------------------------------
+   */
 
   const finalText =
 
@@ -107,9 +142,11 @@ generateTransmission({
 
         "";
 
-  //
-  // ✨ FALLBACK
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ FALLBACK
+   * ---------------------------------------------------------
+   */
 
   if (!finalText) {
 
@@ -120,9 +157,11 @@ generateTransmission({
     };
   }
 
-  //
-  // ✨ RETURN
-  //
+  /*
+   * ---------------------------------------------------------
+   * ✨ RETURN
+   * ---------------------------------------------------------
+   */
 
   return {
 
