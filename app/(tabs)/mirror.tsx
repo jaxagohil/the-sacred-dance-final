@@ -1,6 +1,7 @@
 // /screens/mirror/Mirror.tsx
 
 import React, {
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -8,17 +9,12 @@ import React, {
 import {
   ScrollView,
   StyleSheet,
-  Text,
-  View,
+  View
 } from "react-native";
 
 import {
   useFocusEffect,
 } from "@react-navigation/native";
-
-import {
-  useCallback,
-} from "react";
 
 import CosmicLoadingField from "../../components/mirror/cosmicLoadingField";
 
@@ -47,16 +43,16 @@ import {
 } from "../../lib/cosmic/getDailyCosmicMessage";
 
 import {
-  loadUserLanguage,
-} from "../../lib/i18n/loadUserLanguage";
-
-import {
   buildUserContext,
 } from "../../lib/context/buildUserContext";
 
 import {
   buildMirrorContext,
 } from "../../lib/context/buildMirrorContext";
+
+import {
+  getLanguage,
+} from "../../lib/i18n/t";
 
 // --------------------------------------------------
 // 🪞 MIRROR
@@ -79,15 +75,6 @@ export default function Mirror() {
   ] = useState<any>(null);
 
   const [
-    energyState,
-    setEnergyState,
-  ] = useState<
-    "loading" |
-    "empty" |
-    "ready"
-  >("loading");
-
-  const [
     dailyField,
     setDailyField,
   ] = useState<any>(null);
@@ -97,12 +84,12 @@ export default function Mirror() {
     setCosmic,
   ] = useState<any>(null);
 
-const [
-  language,
-  setLanguage,
-] = useState<string | null>(
-  null
-);
+  const [
+    language,
+    setLanguage,
+  ] = useState<string | null>(
+    null
+  );
 
   const [
     languageContext,
@@ -115,36 +102,51 @@ const [
   ] = useState<any>({});
 
   // --------------------------------------------------
-// 🌍 LANGUAGE
-// --------------------------------------------------
+  // 🌍 LANGUAGE
+  // --------------------------------------------------
 
-useFocusEffect(
+  useFocusEffect(
 
-  useCallback(() => {
+    useCallback(() => {
 
-    async function loadLanguage() {
+      async function loadLanguage() {
 
-      const {
+        const currentLanguage =
+          getLanguage();
 
-        language,
+        console.log(
+          "🌍 MIRROR LANGUAGE:",
+          currentLanguage
+        );
 
-        languageContext,
+        setLanguage(
+          currentLanguage
+        );
 
-      } = await loadUserLanguage();
+        const {
+          data,
+        } = await supabase
 
-      setLanguage(
-        language
-      );
+          .from("languages")
 
-      setLanguageContext(
-        languageContext
-      );
-    }
+          .select("*")
 
-    loadLanguage();
+          .eq(
+            "code",
+            currentLanguage
+          )
 
-  }, [])
-);
+          .maybeSingle();
+
+        setLanguageContext(
+          data || {}
+        );
+      }
+
+      loadLanguage();
+
+    }, [])
+  );
 
   // --------------------------------------------------
   // 🧘 CHAKRA CONTENT
@@ -214,17 +216,12 @@ useFocusEffect(
   }, []);
 
   // --------------------------------------------------
-  // 🌌 DAILY COSMIC
+  // 🌌 COSMIC FIELD
   // --------------------------------------------------
 
   useEffect(() => {
 
     async function loadCosmic() {
-
-      console.log(
-  "🌍 COSMIC LANGUAGE:",
-  language
-);
 
       if (!dailyField)
         return;
@@ -234,6 +231,11 @@ useFocusEffect(
 
       if (!languageContext)
         return;
+
+      console.log(
+        "🌍 VERIFIED LANGUAGE:",
+        language
+      );
 
       const cosmicMessage =
 
@@ -272,18 +274,23 @@ useFocusEffect(
   // 🧠 USER CONTEXT
   // --------------------------------------------------
 
-  useEffect(() => {
+useFocusEffect(
 
-    async function loadUserContext() {
+  useCallback(() => {
+
+    async function
+    loadUserContext() {
 
       try {
 
-        setEnergyState(
-          "loading"
-        );
-
         const userId =
           await getUserId();
+
+        // 🛡 SAFETY
+        if (!userId) {
+
+          return;
+        }
 
         const context =
 
@@ -307,16 +314,8 @@ useFocusEffect(
           !context.ready
         ) {
 
-          setEnergyState(
-            "empty"
-          );
-
           return;
         }
-
-        setEnergyState(
-          "ready"
-        );
 
       } catch (err) {
 
@@ -324,16 +323,13 @@ useFocusEffect(
           "❌ USER CONTEXT ERROR:",
           err
         );
-
-        setEnergyState(
-          "empty"
-        );
       }
     }
 
     loadUserContext();
 
-  }, []);
+  }, [])
+);
 
   // --------------------------------------------------
   // 🪞 MIRROR CONTEXT
@@ -349,18 +345,61 @@ useFocusEffect(
       if (!cosmic)
         return;
 
+      if (!languageContext)
+        return;
+
       const context =
 
         await buildMirrorContext({
 
-          userContext,
+          // ⚡ ENERGY
+          energy:
+            userContext?.energy,
 
+          // 🌌 COSMIC
           cosmic,
 
+          // 🌍 LANGUAGE
           languageContext,
 
+          // 🌊 SIGNALS
+          signals:
+            userContext?.signals || [],
+
+          // 🪞 ACTIVE LENS
           activeLens:
             "general",
+
+          // 🌍 REALITY LAYERS
+          realityLayers:
+            userContext
+              ?.realityLayers || {},
+
+          // 🧠 BEHAVIOURS
+          enrichedBehaviours:
+            userContext
+              ?.enrichedBehaviours || [],
+
+          // 🌊 PATTERNS
+          enrichedPatterns:
+            userContext
+              ?.enrichedPatterns || [],
+
+          // 🌈 DISTORTIONS
+distortions:
+
+  userContext
+    ?.distortions || {
+
+      distorted: [],
+
+      integrated: [],
+    },
+
+          // 👁 LENS MEMORY
+          lensEntries:
+            userContext
+              ?.lensEntries || [],
         });
 
       setMirrorContext(
@@ -389,49 +428,14 @@ if (
 
   !languageContext ||
 
-  !cosmic ||
-
-  energyState ===
-    "loading"
+  !cosmic
 
 ) {
 
-    return (
-      <CosmicLoadingField />
-    );
-  }
-
-  // --------------------------------------------------
-  // 🌑 EMPTY
-  // --------------------------------------------------
-
-  if (
-    energyState ===
-    "empty"
-  ) {
-
-    return (
-
-      <View
-        style={
-          styles.container
-        }
-      >
-
-        <Text
-          style={
-            styles.loadingText
-          }
-        >
-
-          No signals yet.
-          Start reflecting ✨
-
-        </Text>
-
-      </View>
-    );
-  }
+  return (
+    <CosmicLoadingField />
+  );
+}
 
   // --------------------------------------------------
   // 🪞 RENDER
@@ -441,7 +445,7 @@ if (
 
     <View style={styles.container}>
 
-      {/* 🌌 TOP */}
+      {/* 🌌 COSMIC */}
 
       <View style={styles.top}>
 
@@ -460,7 +464,7 @@ if (
 
       </View>
 
-      {/* 🪞 CONTENT */}
+      {/* 🌍 FIELD */}
 
       <ScrollView
 

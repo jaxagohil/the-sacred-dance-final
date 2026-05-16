@@ -14,7 +14,7 @@ export async function buildDivineContext({
 
   /*
    * ---------------------------------------------------------
-   * ENERGY
+   * ⚡ ENERGY
    * ---------------------------------------------------------
    */
 
@@ -23,7 +23,7 @@ export async function buildDivineContext({
 
   /*
    * ---------------------------------------------------------
-   * MIRROR
+   * 🪞 MIRROR
    * ---------------------------------------------------------
    */
 
@@ -32,57 +32,114 @@ export async function buildDivineContext({
 
   /*
    * ---------------------------------------------------------
-   * STORY
+   * 🌍 REALITY
+   * ---------------------------------------------------------
+   */
+
+  const realityLayers =
+    userContext?.realityLayers || {};
+
+  /*
+   * ---------------------------------------------------------
+   * 🌊 STORY
    * ---------------------------------------------------------
    */
 
   const story =
-    userContext?.story || {};
+    mirror?.story || {};
 
   /*
    * ---------------------------------------------------------
-   * DOMINANT PATTERN
+   * 🧬 PATTERNS
+   * ---------------------------------------------------------
+   */
+
+  const enrichedPatterns =
+
+    userContext
+      ?.enrichedPatterns || [];
+
+  /*
+   * ---------------------------------------------------------
+   * 🧠 BEHAVIOURS
+   * ---------------------------------------------------------
+   */
+
+  const enrichedBehaviours =
+
+    userContext
+      ?.enrichedBehaviours || [];
+
+  /*
+   * ---------------------------------------------------------
+   * 🌈 DISTORTIONS
+   * ---------------------------------------------------------
+   */
+
+  const distortions =
+
+    userContext
+      ?.distortions
+      ?.distorted || [];
+
+  const integratedField =
+
+    userContext
+      ?.distortions
+      ?.integrated || [];
+
+  /*
+   * ---------------------------------------------------------
+   * 🌈 CHAKRAS
+   * ---------------------------------------------------------
+   */
+
+  const chakraManifestations =
+
+    userContext
+      ?.chakraManifestations || {};
+
+  /*
+   * ---------------------------------------------------------
+   * 🧠 DOMINANT PATTERN
    * ---------------------------------------------------------
    */
 
   const dominantPattern =
-    mirror?.dominantPattern ||
-    mirror?.primaryPattern ||
-    "emotional hesitation";
+
+    story?.dominantPattern ||
+
+    enrichedPatterns?.[0]
+      ?.id ||
+
+    enrichedPatterns?.[0]
+      ?.name ||
+
+    "processing";
 
   /*
    * ---------------------------------------------------------
-   * CONTRACTION
+   * ⚡ ENERGY STATE
    * ---------------------------------------------------------
    */
 
   const contraction =
     energy?.contraction || 0;
 
-  /*
-   * ---------------------------------------------------------
-   * EXPANSION
-   * ---------------------------------------------------------
-   */
-
   const expansion =
     energy?.expansion || 0;
 
-  /*
-   * ---------------------------------------------------------
-   * CHAKRA
-   * ---------------------------------------------------------
-   */
-
   const dominantChakra =
+
     energy?.dominant_chakra ||
+
     "heart";
 
-  /*
-   * ---------------------------------------------------------
-   * POLARITY
-   * ---------------------------------------------------------
-   */
+    const awarenessChakra =
+
+    energy?.awareness_chakra ||
+
+    "heart";
 
   const masculineEnergy =
     energy?.masculine || 0;
@@ -92,257 +149,323 @@ export async function buildDivineContext({
 
   /*
    * ---------------------------------------------------------
-   * EMOTIONAL FIELD
+   * 🌊 EMOTIONAL FIELD
    * ---------------------------------------------------------
    */
 
-  const emotionalField: string[] = [];
+  const emotionalField = [
 
-  if (contraction > expansion) {
+    ...(realityLayers
+      ?.emotional
+      ?.recurringManifestations || []),
 
-    emotionalField.push(
-      "hesitation",
-      "guarded openness",
-      "withdrawal"
-    );
-  }
+    ...(realityLayers
+      ?.emotional
+      ?.recurringCopingStrategies || []),
 
-  if (expansion > contraction) {
-
-    emotionalField.push(
-      "soft opening",
-      "movement",
-      "possibility"
-    );
-  }
+  ].slice(0, 10);
 
   /*
    * ---------------------------------------------------------
-   * RESPONSE ENERGY
+   * 🌱 RESPONSE ENERGY
    * ---------------------------------------------------------
    */
 
-  let responseEnergy =
-    "quiet";
+  const responseEnergy =
 
-  if (
-    dominantChakra ===
-    "throat"
-  ) {
+    story?.emotionalTension ||
 
-    responseEnergy =
-      "truth";
-  }
+    realityLayers
+      ?.physical
+      ?.nervousSystemState ||
 
-  if (
-    dominantChakra ===
-    "heart"
-  ) {
-
-    responseEnergy =
-      "tender";
-  }
-
-  if (
-    dominantChakra ===
-    "solar_plexus"
-  ) {
-
-    responseEnergy =
-      "movement";
-  }
+    "present";
 
   /*
    * ---------------------------------------------------------
-   * SYMBOLIC ATMOSPHERE
+   * 🌌 SYMBOLIC ATMOSPHERE
    * ---------------------------------------------------------
    */
 
-const symbolicAtmosphere = [
+  const symbolicAtmosphere = [
 
-  ...(Array.isArray(
-    oracleCard?.symbolic_tone
-  )
+    ...(Array.isArray(
+      oracleCard?.symbolic_tone
+    )
 
-    ? oracleCard
-        ?.symbolic_tone
+      ? oracleCard
+          ?.symbolic_tone
 
-    : oracleCard?.symbolic_tone
+      : oracleCard?.symbolic_tone
 
-      ? [
-          oracleCard
-            ?.symbolic_tone,
-        ]
+        ? [
+            oracleCard
+              ?.symbolic_tone,
+          ]
 
-      : []),
+        : []),
 
-  ...(tarotCard?.symbolic_atmosphere || []),
+    ...(tarotCard
+      ?.symbolic_atmosphere || []),
 
-  ...(dailyField?.symbolicThemes || []),
-];
+    ...(dailyField
+      ?.symbolicThemes || []),
+
+    ...(realityLayers
+      ?.consciousness
+      ?.soulLessons || []),
+
+  ];
 
   /*
    * ---------------------------------------------------------
-   * IMAGERY
+   * 🖼 IMAGERY
    * ---------------------------------------------------------
    */
 
   const imagerySuggestions = [
 
-    ...(oracleCard?.imagery_keywords || []),
+    ...(oracleCard
+      ?.imagery_keywords || []),
 
-    ...(tarotCard?.imagery_keywords || []),
+    ...(tarotCard
+      ?.imagery_keywords || []),
 
-    ...(dailyField?.imagery || []),
+    ...(dailyField
+      ?.imagery || []),
+
+    ...(realityLayers
+      ?.physical
+      ?.observableScenes || []),
   ];
 
   /*
    * ---------------------------------------------------------
-   * MOVEMENT
+   * 🌊 MOVEMENT
    * ---------------------------------------------------------
    */
 
   const movementField = [
 
-    ...(oracleCard?.movement_keywords || []),
+    ...(oracleCard
+      ?.movement_keywords || []),
 
-    ...(tarotCard?.movement_keywords || []),
+    ...(tarotCard
+      ?.movement_keywords || []),
+
+    ...(realityLayers
+      ?.emotional
+      ?.recurringManifestations || []),
   ];
 
   /*
    * ---------------------------------------------------------
-   * BEHAVIOURAL THEMES
+   * 🧠 BEHAVIOURAL THEMES
    * ---------------------------------------------------------
    */
 
   const behaviouralThemes = [
 
-    ...(oracleCard?.behavioural_themes || []),
+    ...(oracleCard
+      ?.behavioural_themes || []),
 
-    ...(tarotCard?.behavioural_themes || []),
-  ];
+    ...(tarotCard
+      ?.behavioural_themes || []),
 
-  /*
- * ---------------------------------------------------------
- * RELATIONAL FIELD
- * ---------------------------------------------------------
- */
+    ...enrichedBehaviours.map(
+      (b: any) =>
 
-const relationalField = [
+        b?.id
+    ),
 
-  oracleCard
-    ?.relational_energy,
-
-].filter(Boolean);
+  ].filter(Boolean);
 
   /*
    * ---------------------------------------------------------
-   * ENVIRONMENT
+   * 💞 RELATIONAL FIELD
+   * ---------------------------------------------------------
+   */
+
+  const relationalField = [
+
+    oracleCard
+      ?.relational_energy,
+
+    ...(realityLayers
+      ?.emotional
+      ?.recurringMirrorPrompts || []),
+
+  ].filter(Boolean);
+
+  /*
+   * ---------------------------------------------------------
+   * 🌍 ENVIRONMENT
    * ---------------------------------------------------------
    */
 
   const symbolicEnvironment = [
 
-  ...(Array.isArray(
-    oracleCard?.symbolic_environment
-  )
-
-    ? oracleCard
+    ...(Array.isArray(
+      oracleCard
         ?.symbolic_environment
+    )
 
-    : oracleCard?.symbolic_environment
+      ? oracleCard
+          ?.symbolic_environment
 
-      ? [
-          oracleCard
-            ?.symbolic_environment,
-        ]
+      : oracleCard
+          ?.symbolic_environment
 
-      : []),
+        ? [
+            oracleCard
+              ?.symbolic_environment,
+          ]
 
-  ...(tarotCard?.environment_keywords || []),
-];
+        : []),
+
+    ...(tarotCard
+      ?.environment_keywords || []),
+
+    ...(realityLayers
+      ?.physical
+      ?.observableScenes || []),
+  ];
 
   /*
    * ---------------------------------------------------------
-   * QUESTION STYLE
+   * ❓ QUESTION STYLE
    * ---------------------------------------------------------
    */
 
   const questionStyle =
 
-    tarotCard?.question_style ||
+    tarotCard
+      ?.question_style ||
 
-    oracleCard?.inquiry_energy ||
+    oracleCard
+      ?.inquiry_energy ||
 
     "reflective";
 
   /*
    * ---------------------------------------------------------
-   * QUESTION EXAMPLES
+   * 🪞 INQUIRY
    * ---------------------------------------------------------
    */
 
   const inquiryExamples = [
 
-    ...(oracleCard?.inquiry_examples || []),
+    ...(oracleCard
+      ?.inquiry_examples || []),
 
-    ...(tarotCard?.inquiry_examples || []),
+    ...(tarotCard
+      ?.inquiry_examples || []),
+
+    ...(realityLayers
+      ?.emotional
+      ?.recurringMirrorPrompts || []),
+
   ];
 
   /*
    * ---------------------------------------------------------
-   * ARCHETYPAL ENERGY
+   * 🧬 ARCHETYPAL ENERGY
    * ---------------------------------------------------------
    */
 
   const archetypalEnergy = [
 
-    ...(tarotCard?.archetypal_energy || []),
+    ...(tarotCard
+      ?.archetypal_energy || []),
 
-    ...(dailyField?.guideTone || []),
+    ...(dailyField
+      ?.guideTone || []),
+
+    ...(realityLayers
+      ?.consciousness
+      ?.gifts || []),
   ];
 
   /*
    * ---------------------------------------------------------
-   * TENSION PATTERNS
+   * ⚡ TENSION PATTERNS
    * ---------------------------------------------------------
    */
 
   const tensionPatterns = [
 
-    ...(tarotCard?.tension_patterns || []),
-  ];
+    ...(tarotCard
+      ?.tension_patterns || []),
+
+    ...distortions.map(
+      (d: any) =>
+
+        d?.shadow_meaning
+    ),
+
+  ].filter(Boolean);
 
   /*
    * ---------------------------------------------------------
-   * CADENCE
+   * 🌱 INTEGRATED THEMES
+   * ---------------------------------------------------------
+   */
+
+  const integratedThemes =
+
+    integratedField.map(
+      (b: any) =>
+
+        b?.integrated_meaning
+    ).filter(Boolean);
+
+  /*
+   * ---------------------------------------------------------
+   * 🌊 CADENCE
    * ---------------------------------------------------------
    */
 
   const cadenceStyle =
 
-    oracleCard?.cadence_style ||
+    oracleCard
+      ?.cadence_style ||
 
-    tarotCard?.pacing_style ||
+    tarotCard
+      ?.pacing_style ||
 
     "gentle";
 
   /*
    * ---------------------------------------------------------
-   * TEMPERATURE
+   * 🌡 TEMPERATURE
    * ---------------------------------------------------------
    */
 
   const symbolicTemperature = [
 
-    oracleCard?.archetypal_temperature,
+    oracleCard
+      ?.archetypal_temperature,
 
-    tarotCard?.symbolic_temperature,
+    tarotCard
+      ?.symbolic_temperature,
+
   ].filter(Boolean);
 
   /*
    * ---------------------------------------------------------
-   * RETURN
+   * 🌈 CHAKRA FIELD
+   * ---------------------------------------------------------
+   */
+
+  const activeChakraField =
+
+    chakraManifestations[
+      awarenessChakra
+    ] || [];
+
+  /*
+   * ---------------------------------------------------------
+   * ✨ RETURN
    * ---------------------------------------------------------
    */
 
@@ -350,19 +473,21 @@ const relationalField = [
 
     dominantPattern,
 
-    emotionalField,
-
     contraction,
 
     expansion,
 
     dominantChakra,
 
+    awarenessChakra,
+
     masculineEnergy,
 
     feminineEnergy,
 
     responseEnergy,
+
+    emotionalField,
 
     symbolicAtmosphere,
 
@@ -371,6 +496,7 @@ const relationalField = [
     movementField,
 
     behaviouralThemes,
+
     relationalField,
 
     symbolicEnvironment,
@@ -383,9 +509,25 @@ const relationalField = [
 
     tensionPatterns,
 
+    integratedThemes,
+
     cadenceStyle,
 
     symbolicTemperature,
+
+    activeChakraField,
+
+    soulLessons:
+
+      realityLayers
+        ?.consciousness
+        ?.soulLessons || [],
+
+    gifts:
+
+      realityLayers
+        ?.consciousness
+        ?.gifts || [],
 
     storyTheme:
       story?.emotionalTheme || null,
@@ -393,16 +535,20 @@ const relationalField = [
     dailyField: {
 
       oracleBias:
-        dailyField?.oracleBias || [],
+        dailyField
+          ?.oracleBias || [],
 
       tarotBias:
-        dailyField?.tarotBias || [],
+        dailyField
+          ?.tarotBias || [],
 
       symbolicThemes:
-        dailyField?.symbolicThemes || [],
+        dailyField
+          ?.symbolicThemes || [],
 
       guideTone:
-        dailyField?.guideTone || [],
+        dailyField
+          ?.guideTone || [],
     },
   };
 }

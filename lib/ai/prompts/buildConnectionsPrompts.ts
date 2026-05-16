@@ -24,7 +24,7 @@ buildConnectionsPrompt({
 //
 
 const language =
-  data?.language || "en";
+  data?.languageName || "English";
 
 const languageContext =
   data?.languageContext || {};
@@ -238,6 +238,18 @@ ${symbolicThemes}
 LANGUAGE:
 ${language}
 
+Generate ALL output ONLY in ${language}.
+
+Never use English unless the requested language is English.
+
+If the requested language is Hindi,
+ALL output must be written in Hindi script.
+
+Do NOT use English words.
+
+The transmission must feel emotionally native,
+not translated.
+
 LANGUAGE EMOTIONAL STYLE:
 ${emotionalStyle}
 
@@ -249,7 +261,7 @@ ${directness}
 
 The transmission must feel
 emotionally native
-to ${language}.
+to ${data?.languageName}.
 
 Do not translate English poetic structure directly.
 
@@ -261,7 +273,7 @@ softness,
 and symbolic restraint
 should feel natural
 for someone emotionally fluent
-in the ${language}.
+in the ${data?.languageName}.
 
 RULES:
 

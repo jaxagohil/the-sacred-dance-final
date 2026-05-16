@@ -30,16 +30,15 @@ export async function generateAIResponse({
    * -------------------------------------------------------
    */
 
-  const prompt =
+const prompt =
+  await buildPrompt({
 
-    buildPrompt({
+    type,
 
-      type,
+    context,
 
-      context,
-
-      data,
-    });
+    data,
+  });
 
   console.log(
     "🧠 FINAL PROMPT:",

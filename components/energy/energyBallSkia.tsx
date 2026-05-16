@@ -32,12 +32,17 @@ import {
 const { width } =
   Dimensions.get("window");
 
-const SIZE = width * 0.9;
+const SIZE = width * 0.84;
 
-const CENTER = SIZE / 2;
+const CANVAS_SIZE =
+  SIZE + 80;  
+
+const CENTER =
+  CANVAS_SIZE / 2;  
 
 const RADIUS =
-  CENTER * 0.95;
+  CENTER * 0.8;
+
 
 // --------------------------------------------------
 // 🧠 TYPES
@@ -47,12 +52,20 @@ type Props = {
 
   energy: any;
 
-  distortions?: {
+distortions?: {
 
-    masculine: any[];
+  distorted?: any[];
 
-    feminine: any[];
-  };
+  integrated?: any[];
+
+  contractionLevel?: number;
+
+  expansionLevel?: number;
+
+  dominantPolarity?:
+    | "feminine"
+    | "masculine";
+};
 
   observableScenes?:
     string[];
@@ -220,14 +233,11 @@ const coherence =
   // 🧿 DISTORTIONS
   // --------------------------------------------------
 
-  const distortionList = [
+const distortionList = [
 
-    ...(distortions
-      ?.masculine || []),
-
-    ...(distortions
-      ?.feminine || []),
-  ];
+  ...(distortions
+    ?.distorted || []),
+];
 
   // --------------------------------------------------
   // 🌑 DOT POSITIONS
@@ -249,14 +259,21 @@ const coherence =
             primaryChakra as keyof typeof chakraY
           ] || CENTER;
 
-        const side =
+const side =
 
-          d?.feminine >
-          d?.masculine
+  (
+    Number(
+      d?.masculine || 0
+    ) >
 
-            ? "left"
+    Number(
+      d?.feminine || 0
+    )
+  )
 
-            : "right";
+    ? "right"
+
+    : "left";
 
         const x =
 
@@ -266,17 +283,32 @@ const coherence =
 
             : CENTER + 55;
 
-        const intensity =
+const intensity =
 
-          d?.intensity ??
+  Number(
 
-          d?.contraction ??
+    distortions
+      ?.contractionLevel || 0.5
 
-          0.3;
+  ) *
 
-        const r =
-          6 +
-          intensity * 8;
+  (
+
+    d?.quality ===
+    "distorted"
+
+      ? 1.2
+
+      : 0.7
+  );
+
+const r =
+
+  6 +
+
+  Number(
+    intensity || 0
+  ) * 8;
 
         return {
 
@@ -347,19 +379,21 @@ const coherence =
 
   return (
 
-    <View
-      style={{
-        width: SIZE,
-        height: SIZE,
-      }}
-    >
-
+<View
+  style={{
+    width: CANVAS_SIZE,
+    height: CANVAS_SIZE,
+    overflow: "visible",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
       {/* 🎨 CANVAS */}
 
       <Canvas
         style={{
-          width: SIZE,
-          height: SIZE,
+          width: CANVAS_SIZE,
+          height: CANVAS_SIZE,
         }}
       >
 
@@ -379,7 +413,7 @@ const coherence =
             start={vec(0, 0)}
 
             end={vec(
-              SIZE,
+              CANVAS_SIZE,
               0
             )}
 
@@ -402,16 +436,15 @@ const coherence =
 
               Math.max(
                 0,
-                (splitX - 80) /
-                  SIZE
+                (splitX - 80) / CANVAS_SIZE
               ),
 
-              splitX / SIZE,
+              splitX / CANVAS_SIZE,
 
               Math.min(
                 1,
                 (splitX + 80) /
-                  SIZE
+                  CANVAS_SIZE
               ),
 
               1,

@@ -15,6 +15,10 @@ import {
   View,
 } from "react-native";
 
+import {
+  addLanguage,
+} from "../lib/i18n/addLanguage";
+
 import { processReflection } from "../db/flow";
 import { getOrCreateProfile } from "../db/getProfile";
 import { getDailyPrompt } from "../db/prompts";
@@ -409,8 +413,51 @@ placeholder={t("landing.write_freely")}
 
   </View>
 
+  
+
+)}
+
+{__DEV__ && (
+
+  <TouchableOpacity
+
+    style={{
+
+      marginTop: 40,
+
+      padding: 12,
+
+      alignSelf: "center",
+    }}
+
+    onPress={async () => {
+
+      await addLanguage({
+
+        language: "es",
+      });
+
+      console.log(
+        "✅ Spanish generated"
+      );
+    }}
+  >
+
+    <Text style={{
+
+      color: "white",
+
+      opacity: 0.6,
+    }}>
+
+      🌍 Generate Spanish
+
+    </Text>
+
+  </TouchableOpacity>
 )}
       </Pressable>
     </KeyboardAvoidingView>
   );
+
 }

@@ -158,7 +158,7 @@ export default function CosmicTiles({
       key: "moon",
 
       value:
-        cosmicData.moon_sign,
+        cosmicData?.moon_sign || "",
 
       line:
         cosmic.moonLine,
@@ -170,7 +170,7 @@ export default function CosmicTiles({
       key: "phase",
 
       value:
-        cosmicData.moon_phase,
+        cosmicData?.moon_phase || "",
 
       line:
         cosmic.phaseLine,
@@ -225,7 +225,7 @@ value:
       key: "sun",
 
       value:
-        cosmicData.sun_sign,
+        cosmicData?.sun_sign || "",
 
       line:
         cosmic.sunLine,

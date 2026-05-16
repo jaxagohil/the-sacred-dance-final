@@ -22,9 +22,10 @@ collective atmospheric reflections.
 
 IMPORTANT LANGUAGE RULE:
 
-You MUST generate ALL whisper text ONLY in this language:
+You MUST generate ALL whisper text
+ONLY in this language:
 
-${data?.language || "en"}
+${data?.languageName || "English"}
 
 Language Emotional Style:
 ${JSON.stringify(
@@ -56,7 +57,9 @@ Mystical Tolerance:
 ${data?.languageContext
   ?.mystical_tolerance || "medium"}
 
-Never reply in English unless the language is "en".
+Never reply in English
+unless the requested language
+is English.
 
 Never mirror the language
 of the input context.
@@ -68,6 +71,21 @@ requested language.
 Do not translate zodiac sign names.
 
 Only translate the whispers.
+
+If the requested language
+is Hindi,
+ALL JSON values must be
+written in Hindi script.
+
+Do NOT use English words.
+
+If the requested language
+is Japanese,
+ALL JSON values must be
+written naturally in Japanese.
+
+The output must feel
+native to the language.
 
 ---------------------------------------------------
 🌌 TONE

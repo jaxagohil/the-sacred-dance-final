@@ -25,15 +25,9 @@ export type MirrorContext = {
 
     emotions: string[];
 
-    behaviours: {
+    behaviours: any[];
 
-      id: string;
-
-      weight: number;
-
-    }[];
-
-    patterns: string[];
+    patterns: any[];
 
     dominantPattern?: string | null;
 
@@ -51,12 +45,6 @@ export type MirrorContext = {
   evolution: {
 
     recurringPatterns: string[];
-
-    risingPatterns: string[];
-
-    healingPatterns: string[];
-
-    dormantPatterns: string[];
   };
 
   lens: {
@@ -106,8 +94,6 @@ export type MirrorContext = {
 
     awarenessChakra?: string | null;
 
-    distortions?: any[];
-
     chakras?: Record<
       string,
       number
@@ -142,22 +128,22 @@ export type MirrorContext = {
 
   language: any;
 
-story: {
+  story: {
 
-  primaryScene?: string | null;
+    primaryScene?: string | null;
 
-  confrontation?: string | null;
+    confrontation?: string | null;
 
-  dominantManifestation?: string | null;
+    dominantManifestation?: string | null;
 
-  dominantCopingStrategy?: string | null;
+    dominantCopingStrategy?: string | null;
 
-  dominantPattern?: string | null;
+    dominantPattern?: string | null;
 
-  emotionalTension?: string | null;
+    emotionalTension?: string | null;
 
-  nervousSystemState?: string | null;
-};
+    nervousSystemState?: string | null;
+  };
 };
 
 // --------------------------------------------------
@@ -165,8 +151,6 @@ story: {
 // --------------------------------------------------
 
 export type BuildMirrorContextInput = {
-
-  mirror?: any;
 
   energy?: any;
 
@@ -181,6 +165,16 @@ export type BuildMirrorContextInput = {
     | "places"
     | "things"
     | "general";
+
+  realityLayers?: any;
+
+  enrichedBehaviours?: any[];
+
+  enrichedPatterns?: any[];
+
+  distortions?: any;
+
+  lensEntries?: any[];
 };
 
 // --------------------------------------------------
@@ -190,49 +184,11 @@ export type BuildMirrorContextInput = {
 const unique = (arr: any[]) =>
   [...new Set(arr)].filter(Boolean);
 
-const extractPatterns = (
-  signals: any[]
-) =>
-
-  signals
-
-    .flatMap(
-      (s) =>
-        s?.ai_patterns || []
-    )
-
-    .map(
-      (p: any) =>
-        p?.id || p?.name
-    )
-
-    .filter(Boolean);
-
-const extractEmotions = (
-  signals: any[]
-) =>
-
-  signals
-
-    .flatMap(
-      (s) =>
-        s?.emotions || []
-    )
-
-    .map(
-      (e: any) =>
-        e?.id || e?.name
-    )
-
-    .filter(Boolean);
-
 // --------------------------------------------------
 // 🚀 MAIN
 // --------------------------------------------------
 
 export async function buildMirrorContext({
-
-  mirror,
 
   energy,
 
@@ -243,6 +199,16 @@ export async function buildMirrorContext({
   signals = [],
 
   activeLens = "general",
+
+  realityLayers = {},
+
+  enrichedBehaviours = [],
+
+  enrichedPatterns = [],
+
+  distortions = {},
+
+  lensEntries = [],
 
 }: BuildMirrorContextInput): Promise<MirrorContext> {
 
@@ -268,20 +234,22 @@ export async function buildMirrorContext({
     );
 
   // --------------------------------------------------
-  // 🌊 PATTERNS
+  // 🌊 CURRENT FIELD
   // --------------------------------------------------
 
   const currentPatterns =
-    unique(
-      extractPatterns(
-        currentSignals
-      )
-    );
+    enrichedPatterns || [];
+
+  const currentBehaviours =
+    enrichedBehaviours || [];
 
   const baselinePatterns =
+
     unique(
-      extractPatterns(
-        baselineSignals
+
+      baselineSignals.flatMap(
+        (s) =>
+          s?.ai_patterns || []
       )
     );
 
@@ -291,32 +259,12 @@ export async function buildMirrorContext({
 
   const currentEmotions =
     unique(
-      extractEmotions(
-        currentSignals
-      )
-    );
 
-  // --------------------------------------------------
-  // 🧿 BEHAVIOURS
-  // --------------------------------------------------
-
-  const currentBehaviours =
-
-    unique(
       currentSignals.flatMap(
         (s) =>
-          s?.ai_behaviours || []
+          s?.emotions || []
       )
-    ).map((b: any) => ({
-
-      id:
-        b?.statement ||
-        b?.id ||
-        b?.name,
-
-      weight:
-        b?.weight || 1,
-    }));
+    );
 
   // --------------------------------------------------
   // 🗣 REFLECTION ECHOES
@@ -468,80 +416,27 @@ export async function buildMirrorContext({
   // --------------------------------------------------
 
   const peopleCount =
-    currentSignals.filter(
-      (s) =>
-        s?.ai_lens?.people
-          ?.length
+    lensEntries.filter(
+      (l: any) =>
+        l?.lens === "people"
     ).length;
 
   const placesCount =
-    currentSignals.filter(
-      (s) =>
-        s?.ai_lens?.places
-          ?.length
+    lensEntries.filter(
+      (l: any) =>
+        l?.lens === "places"
     ).length;
 
   const thingsCount =
-    currentSignals.filter(
-      (s) =>
-        s?.ai_lens?.things
-          ?.length
+    lensEntries.filter(
+      (l: any) =>
+        l?.lens === "things"
     ).length;
 
   const totalLens =
     peopleCount +
       placesCount +
       thingsCount || 1;
-
-  // --------------------------------------------------
-  // 🌍 LEVELS
-  // --------------------------------------------------
-
-  const levels = {
-
-    physical: {
-
-      behaviours:
-        currentBehaviours,
-
-      actions: [],
-
-      bodyThemes: [],
-    },
-
-    emotional: {
-
-      emotions:
-        currentEmotions,
-
-      themes:
-        currentPatterns,
-    },
-
-    energetic: {
-
-      dominantChakra:
-        energy?.dominant_chakra,
-
-      awarenessChakra:
-
-        energy
-          ?.awareness_chakra ||
-
-        energy
-          ?.dominant_chakra,
-
-      contraction:
-        energy?.contraction,
-
-      expansion:
-        energy?.expansion,
-
-      distortions:
-        energy?.distortions ||
-        [],
-    },
-  };
 
   // --------------------------------------------------
   // 🪞 LENS CONTEXTS
@@ -552,18 +447,14 @@ export async function buildMirrorContext({
 
       lens: "people",
 
-      reflections:
-        reflectionEchoes,
-
-      behaviours:
-        currentBehaviours,
+      lensEntries,
 
       patterns:
         currentPatterns,
 
-      levels,
+      distortions,
 
-      mirror,
+      realityLayers,
 
       energy,
     });
@@ -573,18 +464,14 @@ export async function buildMirrorContext({
 
       lens: "places",
 
-      reflections:
-        reflectionEchoes,
-
-      behaviours:
-        currentBehaviours,
+      lensEntries,
 
       patterns:
         currentPatterns,
 
-      levels,
+      distortions,
 
-      mirror,
+      realityLayers,
 
       energy,
     });
@@ -594,18 +481,14 @@ export async function buildMirrorContext({
 
       lens: "things",
 
-      reflections:
-        reflectionEchoes,
-
-      behaviours:
-        currentBehaviours,
+      lensEntries,
 
       patterns:
         currentPatterns,
 
-      levels,
+      distortions,
 
-      mirror,
+      realityLayers,
 
       energy,
     });
@@ -665,86 +548,90 @@ export async function buildMirrorContext({
         ?.retrogrades || [],
   };
 
-// --------------------------------------------------
-// 🧭 STORY FIELD
-// --------------------------------------------------
+  // --------------------------------------------------
+  // 🧭 STORY FIELD
+  // --------------------------------------------------
 
-const dominantPattern =
+  const dominantPattern =
 
-  currentPatterns?.[0] ||
+    currentPatterns?.[0]
+      ?.id ||
 
-  mirror?.primary?.id ||
+    currentPatterns?.[0]
+      ?.name ||
 
-  null;
+    null;
 
-const allMirrorPrompts = [
+  const allMirrorPrompts = [
 
-  ...(peopleLensContext
-    ?.mirrorPrompts || []),
+    ...(peopleLensContext
+      ?.mirrorPrompts || []),
 
-  ...(placesLensContext
-    ?.mirrorPrompts || []),
+    ...(placesLensContext
+      ?.mirrorPrompts || []),
 
-  ...(thingsLensContext
-    ?.mirrorPrompts || []),
-];
+    ...(thingsLensContext
+      ?.mirrorPrompts || []),
+  ];
 
-const allScenes = [
+  const allScenes = [
 
-  ...(peopleLensContext
-    ?.observableScenes || []),
+    ...(peopleLensContext
+      ?.observableScenes || []),
 
-  ...(placesLensContext
-    ?.observableScenes || []),
+    ...(placesLensContext
+      ?.observableScenes || []),
 
-  ...(thingsLensContext
-    ?.observableScenes || []),
-];
+    ...(thingsLensContext
+      ?.observableScenes || []),
+  ];
 
-const allManifestations = [
+  const allManifestations = [
 
-  ...(peopleLensContext
-    ?.manifestations || []),
+    ...(peopleLensContext
+      ?.manifestations || []),
 
-  ...(placesLensContext
-    ?.manifestations || []),
+    ...(placesLensContext
+      ?.manifestations || []),
 
-  ...(thingsLensContext
-    ?.manifestations || []),
-];
+    ...(thingsLensContext
+      ?.manifestations || []),
+  ];
 
-const allCopingStrategies = [
+  const allCopingStrategies = [
 
-  ...(peopleLensContext
-    ?.copingStrategies || []),
+    ...(peopleLensContext
+      ?.copingStrategies || []),
 
-  ...(placesLensContext
-    ?.copingStrategies || []),
+    ...(placesLensContext
+      ?.copingStrategies || []),
 
-  ...(thingsLensContext
-    ?.copingStrategies || []),
-];
+    ...(thingsLensContext
+      ?.copingStrategies || []),
+  ];
 
-const primaryScene =
-  allScenes?.[0] || null;
+  const primaryScene =
+    allScenes?.[0] || null;
 
-const confrontation =
-  allMirrorPrompts?.[0] || null;
+  const confrontation =
+    allMirrorPrompts?.[0] || null;
 
-const dominantManifestation =
-  allManifestations?.[0] || null;
+  const dominantManifestation =
+    allManifestations?.[0] || null;
 
-const dominantCopingStrategy =
-  allCopingStrategies?.[0] || null;
+  const dominantCopingStrategy =
+    allCopingStrategies?.[0] || null;
 
-const emotionalTension =
+  const emotionalTension =
 
-  energy?.contraction > 0.7
+    realityLayers
+      ?.physical
+      ?.nervousSystemState ===
+    "protective"
 
-    ? dominantCopingStrategy
+      ? dominantCopingStrategy
 
-    : null;
-
+      : null;
 
   // --------------------------------------------------
   // ✅ FINAL
@@ -756,6 +643,7 @@ const emotionalTension =
     baseline: {
 
       corePatterns:
+
         baselinePatterns.slice(
           0,
           5
@@ -766,12 +654,18 @@ const emotionalTension =
         currentBehaviours
 
           .map(
-            (b) => b.id
+            (b: any) =>
+
+              b?.id
           )
 
           .slice(0, 5),
 
-      attachmentThemes: [],
+attachmentThemes:
+
+  realityLayers
+    ?.emotional
+    ?.recurringCopingStrategies || [],
     },
 
     // 🌊 CURRENT
@@ -807,28 +701,28 @@ const emotionalTension =
 
       nervousSystemState:
 
-        energy?.contraction >
-        0.7
+        realityLayers
+          ?.physical
+          ?.nervousSystemState ||
 
-          ? "protective"
-
-          : "open",
+        "open",
     },
 
     // 📈 EVOLUTION
     evolution: {
 
       recurringPatterns:
-        currentPatterns.slice(
-          0,
-          5
-        ),
 
-      risingPatterns: [],
+        currentPatterns
 
-      healingPatterns: [],
+          .map(
+            (p: any) =>
 
-      dormantPatterns: [],
+              p?.id ||
+              p?.name
+          )
+
+          .slice(0, 5),
     },
 
     // 🪞 LENS
@@ -898,17 +792,14 @@ const emotionalTension =
         energy
           ?.dominant_chakra,
 
-      distortions:
-        energy?.distortions ||
-        [],
-
       chakras:
         energy?.chakras ||
         {},
     },
 
     // 🌍 LEVELS
-    levels,
+    levels:
+      realityLayers,
 
     // ✨ CONSCIOUSNESS
     consciousness: {
@@ -924,7 +815,16 @@ const emotionalTension =
       reflectionEchoes,
 
       emotionalThemes:
-        currentPatterns,
+
+        currentPatterns.map(
+          (p: any) =>
+
+            p?.mirror_theme ||
+
+            p?.name ||
+
+            p?.id
+        ),
     },
 
     // 🌌 COSMIC
@@ -935,29 +835,28 @@ const emotionalTension =
     language:
       languageContext || {},
 
-// 🧭 STORY
-story: {
+    // 🧭 STORY
+    story: {
 
-  primaryScene,
+      primaryScene,
 
-  confrontation,
+      confrontation,
 
-  dominantManifestation,
+      dominantManifestation,
 
-  dominantCopingStrategy,
+      dominantCopingStrategy,
 
-  dominantPattern,
+      dominantPattern,
 
-  emotionalTension,
+      emotionalTension,
 
-  nervousSystemState:
+      nervousSystemState:
 
-    energy?.contraction >
-    0.7
+        realityLayers
+          ?.physical
+          ?.nervousSystemState ||
 
-      ? "protective"
-
-      : "open",
-},
+        "open",
+    },
   };
 }

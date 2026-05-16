@@ -249,7 +249,7 @@ export default function ReadingContainer({
 
         .eq(
           "card_number",
-          selectedOracle.card_number
+          selectedOracle?.card_number
         )
 
         .eq(
@@ -292,8 +292,8 @@ export default function ReadingContainer({
         patterns:
           ctx?.activePatterns || [],
 
-        distortions:
-          ctx?.distortions || {},
+distortions:
+  ctx?.distortions || [],
 
         oracleCard:
           selectedOracle,
@@ -433,16 +433,23 @@ export default function ReadingContainer({
               ctx?.observableScenes || [],
 
             distortions:
+  ctx?.distortions || [],
 
-              ctx?.distortions || {},
+awarenessChakra:
 
-            awarenessChakra:
+  ctx
+    ?.energy
+    ?.awareness_chakra ||
 
-              ctx?.awarenessChakra,
+  null,
 
-            dominantChakra:
+dominantChakra:
 
-              ctx?.dominantChakra,
+  ctx
+    ?.energy
+    ?.dominant_chakra ||
+
+  null,
 
             cycles:
               ctx?.cycles || [],
@@ -497,17 +504,25 @@ export default function ReadingContainer({
 
               ctx?.observableScenes || [],
 
-            distortions:
+distortions:
 
-              ctx?.distortions || {},
+  ctx?.distortions || [],
 
-            awarenessChakra:
+awarenessChakra:
 
-              ctx?.awarenessChakra,
+  ctx
+    ?.energy
+    ?.awareness_chakra ||
 
-            dominantChakra:
+  null,
 
-              ctx?.dominantChakra,
+dominantChakra:
+
+  ctx
+    ?.energy
+    ?.dominant_chakra ||
+
+  null,
 
             childhoodSignals:
 

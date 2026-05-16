@@ -1,6 +1,10 @@
 // /lib/ai/buildPrompt.ts
 
 import {
+  getLanguageName,
+} from "../i18n/getLanguageName";
+
+import {
   buildDivinePrompt,
 } from "./prompts/buildDivinePrompt";
 
@@ -24,7 +28,7 @@ import {
   buildTarotPrompt,
 } from "./prompts/buildTarotPrompt";
 
-export function buildPrompt({
+export async function buildPrompt({
 
   type,
 
@@ -33,6 +37,24 @@ export function buildPrompt({
   data,
 
 }: any) {
+
+  /*
+   * -------------------------------------------------------
+   * 🌍 LANGUAGE NAME
+   * -------------------------------------------------------
+   */
+
+  const languageName =
+    await getLanguageName(
+      data?.language
+    );
+
+  const enrichedData = {
+
+    ...data,
+
+    languageName,
+  };
 
   switch (type) {
 
@@ -48,7 +70,7 @@ export function buildPrompt({
 
         context,
 
-        data,
+        data: enrichedData,
       });
 
     /*
@@ -63,7 +85,7 @@ export function buildPrompt({
 
         context,
 
-        data,
+        data: enrichedData,
       });
 
     /*
@@ -78,23 +100,23 @@ export function buildPrompt({
 
         context,
 
-        data,
+        data: enrichedData,
       });
 
-      /*
- * -------------------------------------------------------
- * TAROT
- * -------------------------------------------------------
- */
+    /*
+     * -------------------------------------------------------
+     * TAROT
+     * -------------------------------------------------------
+     */
 
-case "tarot":
+    case "tarot":
 
-  return buildTarotPrompt({
+      return buildTarotPrompt({
 
-    context,
+        context,
 
-    data,
-  });
+        data: enrichedData,
+      });
 
     /*
      * -------------------------------------------------------
@@ -108,7 +130,7 @@ case "tarot":
 
         context,
 
-        data,
+        data: enrichedData,
       });
 
     /*
@@ -123,7 +145,7 @@ case "tarot":
 
         context,
 
-        data,
+        data: enrichedData,
       });
 
     /*
@@ -138,7 +160,7 @@ case "tarot":
 
         context,
 
-        data,
+        data: enrichedData,
       });
   }
 }

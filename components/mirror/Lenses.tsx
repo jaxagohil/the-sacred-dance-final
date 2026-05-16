@@ -171,6 +171,11 @@ const hasPeople =
     );
   };
 
+console.log(
+  "👁 LENS CONTEXTS:",
+  lensContexts
+);
+
   // --------------------------------------------------
   // 🚀 HANDLE PRESS
   // --------------------------------------------------
@@ -318,10 +323,12 @@ integratedExpressions:
               userContext
                 ?.distortions || {},
 
-            awarenessChakra:
+awarenessChakra:
 
-              userContext
-                ?.awarenessChakra,
+  userContext
+    ?.energy
+    ?.awareness_chakra ||
+  null,
 
             dominantChakra:
 

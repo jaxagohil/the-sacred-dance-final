@@ -1,7 +1,5 @@
 // /lib/context/buildLensContext.ts
 
-import { supabase } from "../../services/supabase";
-
 // --------------------------------------------------
 // 🪞 BUILD LENS CONTEXT
 // --------------------------------------------------
@@ -13,11 +11,13 @@ type BuildLensContextInput = {
     | "places"
     | "things";
 
-  behaviours?: any[];
+  lensEntries?: any[];
 
-  patterns?: string[];
+  patterns?: any[];
 
-  mirror?: any;
+  distortions?: any;
+
+  realityLayers?: any;
 
   energy?: any;
 };
@@ -40,56 +40,33 @@ export async function buildLensContext({
 
   lens,
 
-  behaviours = [],
+  lensEntries = [],
 
   patterns = [],
 
-  mirror,
+  distortions,
+
+  realityLayers,
 
   energy,
 
 }: BuildLensContextInput) {
 
   // --------------------------------------------------
-  // 🧠 BEHAVIOUR IDS
+  // 🪞 FILTER ENTRIES
   // --------------------------------------------------
 
-  const behaviourIds =
-    behaviours
+  const entries =
 
-      .map(
-        (b: any) =>
-          b?.id
-      )
+    lensEntries.filter(
+      (e: any) =>
+        e?.lens === lens
+    );
 
-      .filter(Boolean);
-
-  // --------------------------------------------------
-  // 🪞 DB LOOKUP
-  // --------------------------------------------------
-
-  const { data: lensMappings } =
-    await supabase
-
-      .from(
-        "behaviour_lens_weights"
-      )
-
-      .select("*")
-
-      .eq("lens", lens)
-
-      .in(
-        "behaviour_id",
-        behaviourIds
-      )
-
-      .order(
-        "weight",
-        {
-          ascending: false,
-        }
-      );
+    console.log(
+  "🪞 RAW LENS ENTRIES:",
+  lensEntries
+);
 
   // --------------------------------------------------
   // 🪞 OBSERVABLE SCENES
@@ -98,10 +75,10 @@ export async function buildLensContext({
   const observableScenes =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.observable_scene
-      ) || []
+          m?.observable_scene
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
@@ -111,10 +88,10 @@ export async function buildLensContext({
   const manifestations =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.manifestation
-      ) || []
+          m?.manifestation
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
@@ -124,10 +101,10 @@ export async function buildLensContext({
   const bodyResponses =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.body_response
-      ) || []
+          m?.body_response
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
@@ -137,10 +114,10 @@ export async function buildLensContext({
   const copingStrategies =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.coping_strategy
-      ) || []
+          m?.coping_strategy
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
@@ -150,10 +127,10 @@ export async function buildLensContext({
   const mirrorPrompts =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.mirror_prompt
-      ) || []
+          m?.mirror_prompt
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
@@ -163,34 +140,45 @@ export async function buildLensContext({
   const integratedExpressions =
     unique(
 
-      lensMappings?.map(
+      entries.map(
         (m: any) =>
-          m.integrated_expression
-      ) || []
+          m?.integrated_expression
+      )
     ).slice(0, 10);
 
   // --------------------------------------------------
-  // 🔥 STRONGEST BEHAVIOURS
+  // 🔥 STRONGEST ENTRIES
   // --------------------------------------------------
 
-  const strongestBehaviours =
-    lensMappings?.slice(
-      0,
-      5
-    ) || [];
+  const strongestEntries =
+
+    [...entries]
+
+      .sort(
+        (a, b) =>
+
+          Number(
+            b?.weight || 0
+          ) -
+
+          Number(
+            a?.weight || 0
+          )
+      )
+
+      .slice(0, 5);
 
   // --------------------------------------------------
   // ⚡ NERVOUS SYSTEM
   // --------------------------------------------------
 
-  const nervousSystemState =
+const nervousSystemState =
 
-    energy?.contraction >
-    0.7
+  realityLayers
+    ?.physical
+    ?.nervousSystemState ||
 
-      ? "protective"
-
-      : "open";
+  "open";
 
   // --------------------------------------------------
   // 🌊 LENS TENSION
@@ -228,7 +216,81 @@ export async function buildLensContext({
   // --------------------------------------------------
 
   const mirrorThreads =
-    patterns.slice(0, 5);
+
+    patterns
+
+      .map(
+        (p: any) =>
+
+          p?.mirror_theme ||
+
+          p?.name ||
+
+          p?.id
+      )
+
+      .filter(Boolean)
+
+      .slice(0, 5);
+
+  // --------------------------------------------------
+  // 🌈 CHAKRA THEMES
+  // --------------------------------------------------
+
+  const chakraThemes =
+    unique(
+
+      patterns.flatMap(
+        (p: any) => [
+
+          p?.chakra,
+
+          ...(p?.secondary_chakras || [])
+        ]
+      )
+    );
+
+  // --------------------------------------------------
+  // ⚡ DISTORTION FIELD
+  // --------------------------------------------------
+
+  const dominantDistortions =
+
+    distortions
+      ?.distorted
+
+      ?.map(
+        (b: any) =>
+
+          b?.shadow_meaning ||
+
+          b?.id
+      )
+
+      ?.filter(Boolean)
+
+      ?.slice(0, 5) || [];
+
+  // --------------------------------------------------
+  // 🌱 INTEGRATED FIELD
+  // --------------------------------------------------
+
+  const integratedField =
+
+    distortions
+      ?.integrated
+
+      ?.map(
+        (b: any) =>
+
+          b?.integrated_meaning ||
+
+          b?.id
+      )
+
+      ?.filter(Boolean)
+
+      ?.slice(0, 5) || [];
 
   // --------------------------------------------------
   // ✨ RETURN
@@ -238,11 +300,20 @@ export async function buildLensContext({
 
     lens,
 
+    // 🪞 patterns
     dominantPattern:
-      patterns?.[0] || null,
+
+      patterns?.[0]?.id ||
+
+      patterns?.[0]?.name ||
+
+      null,
 
     mirrorThreads,
 
+    chakraThemes,
+
+    // 👁 observable
     observableScenes,
 
     manifestations,
@@ -255,8 +326,10 @@ export async function buildLensContext({
 
     integratedExpressions,
 
-    strongestBehaviours,
+    // 🔥 strongest
+    strongestEntries,
 
+    // ⚡ nervous system
     nervousSystemState,
 
     contraction:
@@ -265,6 +338,7 @@ export async function buildLensContext({
     expansion:
       energy?.expansion || 0,
 
+    // 🌈 chakra
     dominantChakra:
       energy?.dominant_chakra ||
       null,
@@ -279,9 +353,15 @@ export async function buildLensContext({
 
       null,
 
+    // 🌊 tensions
     lensTension,
 
+    dominantDistortions,
+
+    integratedField,
+
+    // 🌍 inherited
     levels:
-      mirror?.levels || {},
+      realityLayers || {},
   };
 }

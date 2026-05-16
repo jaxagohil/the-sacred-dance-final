@@ -1,86 +1,165 @@
 // /lib/context/buildUserContext.ts
 
-// --------------------------------------------------
-// 🧠 SACRED DANCE USER CONTEXT
-// --------------------------------------------------
-//
-// RESPONSIBLE FOR:
-//
-// ✅ loading DB truth
-// ✅ loading patterns table
-// ✅ loading chakra meanings
-// ✅ loading lens keywords
-// ✅ loading profile signals
-// ✅ loading recurring cycles
-// ✅ loading distortions
-// ✅ calculating dominant patterns
-// ✅ calculating awareness chakra
-// ✅ preparing observable behavioural evidence
-// ✅ preparing reality layers
-// ✅ preparing mirror-ready emotional field
-//
-// ❌ NOT responsible for prose
-// ❌ NOT responsible for mirror writing
-// ❌ NOT responsible for emotional explanations
-//
-// --------------------------------------------------
-
 import { supabase } from "../../services/supabase";
-
-import {
-  getEnergyFromSignals,
-} from "../energy/getEnergyFromSignals";
-
-import {
-  interpretMirror,
-} from "../interpretMirror";
-
-import {
-  getCosmicMessage,
-} from "../cosmic/getCosmicMessage";
-
-import {
-  buildFullChakraScores,
-  getAwarenessChakra,
-} from "../energy";
 
 import {
   buildMirrorContext,
 } from "./buildMirrorContext";
 
+/*
+ * --------------------------------------------------
+ * 🧠 TYPES
+ * --------------------------------------------------
+ */
+
 type BuildUserContextParams = {
   userId: string;
+
   source?: string;
+
   activeLens?: string;
 };
 
-const unique = (arr: any[]) =>
-  [...new Set(arr)].filter(Boolean);
+type EnergyTotals = {
+  feminine: number;
 
-export async function buildUserContext({
+  masculine: number;
+
+  contraction: number;
+
+  expansion: number;
+
+  chakras:
+    Record<string, number>;
+
+  dominant_chakra:
+    string | null;
+
+    awareness_chakra:
+  string | null;
+};
+
+/*
+ * --------------------------------------------------
+ * 🧠 HELPERS
+ * --------------------------------------------------
+ */
+
+const unique = (
+  arr: any[]
+) => [
+
+  ...new Set(arr)
+
+].filter(Boolean);
+
+function average(
+  values: number[]
+) {
+
+  if (!values.length)
+    return 0;
+
+  return (
+
+    values.reduce(
+      (a, b) => a + b,
+      0
+    ) /
+
+    values.length
+
+  );
+}
+
+function normalizeChakras(
+  chakraMap:
+    Record<string, number>
+) {
+
+  const total =
+
+    Object.values(
+      chakraMap
+    ).reduce(
+      (a, b) => a + b,
+      0
+    ) || 1;
+
+  const normalized:
+    Record<string, number>
+      = {};
+
+  Object.entries(
+    chakraMap
+  ).forEach(([k, v]) => {
+
+    normalized[k] =
+      Number(v) / total;
+  });
+
+  return normalized;
+}
+
+function getDominantChakra(
+  chakras:
+    Record<string, number>
+) {
+
+  return Object.entries(
+    chakras
+  )
+
+    .sort(
+      (a, b) =>
+        Number(b[1]) -
+        Number(a[1])
+    )[0]?.[0] || null;
+}
+
+/*
+ * --------------------------------------------------
+ * 🚀 BUILD USER CONTEXT
+ * --------------------------------------------------
+ */
+
+export async function
+buildUserContext({
+
   userId,
+
   source = "system",
+
   activeLens = "general",
+
 }: BuildUserContextParams) {
 
-  // --------------------------------------------------
-  // 👤 PROFILE
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 👤 PROFILE
+   * ------------------------------------------------
+   */
 
-  const { data: profile } =
-    await supabase
+  const {
+    data: profile,
+  } = await supabase
 
-      .from("profiles")
+    .from("profiles")
 
-      .select("*")
+    .select("*")
 
-      .eq("user_id", userId)
+    .eq(
+      "user_id",
+      userId
+    )
 
-      .maybeSingle();
+    .maybeSingle();
 
-  // --------------------------------------------------
-  // 🌊 SIGNALS
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🌊 SIGNALS
+   * ------------------------------------------------
+   */
 
   const {
     data: signals,
@@ -91,13 +170,25 @@ export async function buildUserContext({
 
     .select("*")
 
-    .eq("user_id", userId)
+    .eq(
+      "user_id",
+      userId
+    )
 
-    .order("created_at", {
-      ascending: false,
-    })
+    .order(
+      "created_at",
+      {
+        ascending: false,
+      }
+    )
 
-    .limit(20);
+    .limit(30);
+
+  /*
+   * ------------------------------------------------
+   * ❌ EMPTY
+   * ------------------------------------------------
+   */
 
   if (
     error ||
@@ -111,439 +202,765 @@ export async function buildUserContext({
 
       source,
 
+      activeLens,
+
       profile:
         profile || null,
+
+      language:
+        profile?.language ||
+        "en",
 
       signals: [],
 
       energy: null,
 
-      mirror: null,
-
-      cosmic: null,
-
-      dailyField: null,
-
-      context: null,
-
-      chakraPatterns: {},
-
-      chakraScores: {},
-
-      awarenessChakra: null,
-
-      dominantChakra: null,
-
-      activePatterns: [],
-
-      recurringPatterns: [],
-
-      dominantPattern: null,
-
       behaviours: [],
 
-      distortions: {
+      enrichedBehaviours: [],
 
-        masculine: [],
+      patterns: [],
 
-        feminine: [],
-      },
+      enrichedPatterns: [],
+
+      distortions: {},
 
       observableScenes: [],
 
-      cycles: [],
+      recurringManifestations: [],
+
+      recurringCopingStrategies: [],
+
+      recurringBodyResponses: [],
+
+      recurringMirrorPrompts: [],
+
+      chakraManifestations: {},
+
+      lensEntries: [],
 
       realityLayers: {},
-    };
-  }
-
-  // --------------------------------------------------
-  // ⚡ ENERGY ENGINE
-  // --------------------------------------------------
-
-  const energyResult =
-    await getEnergyFromSignals(
-      signals
-    );
-
-  if (
-    !energyResult ||
-    !energyResult.patterns
-  ) {
-
-    return {
-
-      ready: false,
-
-      source,
-
-      profile:
-        profile || null,
-
-      signals,
-
-      energy: null,
-
-      mirror: null,
-
-      cosmic: null,
-
-      dailyField: null,
 
       context: null,
     };
   }
 
-  // --------------------------------------------------
-  // 🌊 PATTERNS
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🌍 LANGUAGE
+   * ------------------------------------------------
+   */
 
-  const patterns =
-    energyResult.patterns || [];
+  const language =
+    profile?.language ||
+    "en";
 
-  const activePatterns =
-    patterns.map(
-      (p: any) =>
-        p?.id || p?.name
+  /*
+   * ------------------------------------------------
+   * 🧿 RAW IDS
+   * ------------------------------------------------
+   */
+
+const behaviourIds =
+  unique(
+
+    signals.flatMap(
+      (s) =>
+
+        (s?.ai_behaviours || [])
+          .map(
+            (b: any) =>
+
+              typeof b ===
+              "string"
+
+                ? b
+
+                : b?.id
+          )
+    )
+  );
+
+const patternIds =
+  unique(
+
+    signals.flatMap(
+      (s) =>
+
+        (s?.ai_patterns || [])
+          .map(
+            (p: any) =>
+
+              typeof p ===
+              "string"
+
+                ? p
+
+                : p?.id
+          )
+    )
+  );
+
+  /*
+   * ------------------------------------------------
+   * 🧠 LOAD BEHAVIOURS
+   * ------------------------------------------------
+   */
+
+  const {
+    data: behaviourRows,
+  } = await supabase
+
+    .from("behaviours")
+
+    .select("*")
+
+    .in(
+      "id",
+      behaviourIds.length
+        ? behaviourIds
+        : ["___empty___"]
     );
 
-  const dominantPattern =
-    activePatterns?.[0] || null;
+  /*
+   * ------------------------------------------------
+   * 🌊 LOAD PATTERNS
+   * ------------------------------------------------
+   */
 
-  const recurringPatterns =
+  const {
+    data: patternRows,
+  } = await supabase
 
-    activePatterns.filter(
-      (p: any, i: number, arr: any[]) =>
+    .from("patterns")
 
-        arr.indexOf(p) !== i
+    .select("*")
+
+    .in(
+      "id",
+      patternIds.length
+        ? patternIds
+        : ["___empty___"]
     );
 
-  // --------------------------------------------------
-  // 🧬 PATTERN DEFINITIONS
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🪞 LOAD LENS WEIGHTS
+   * ------------------------------------------------
+   */
 
-  const { data: patternDefinitions } =
-    await supabase
+const {
+  data: lensRows,
+} = await supabase
 
-      .from("patterns")
+  .from(
+    "behaviour_lens_weights"
+  )
 
-      .select("*")
+  .select("*")
 
-      .in(
-        "id",
-        unique(activePatterns)
+  .in(
+    "behaviour_id",
+
+    behaviourIds.length
+      ? behaviourIds
+      : ["___empty___"]
+  )
+
+  .eq(
+    "language",
+    language
+  );
+
+  /*
+   * ------------------------------------------------
+   * 🧠 ENRICHED BEHAVIOURS
+   * ------------------------------------------------
+   */
+
+  const enrichedBehaviours =
+    behaviourRows || [];
+
+  /*
+   * ------------------------------------------------
+   * 🌊 ENRICHED PATTERNS
+   * ------------------------------------------------
+   */
+
+  const enrichedPatterns =
+    patternRows || [];
+
+  /*
+   * ------------------------------------------------
+   * ⚡ ENERGY FROM BEHAVIOURS
+   * ------------------------------------------------
+   */
+
+  const feminineValues:
+    number[] = [];
+
+  const masculineValues:
+    number[] = [];
+
+  const contractionValues:
+    number[] = [];
+
+  const expansionValues:
+    number[] = [];
+
+  const chakraMap:
+    Record<string, number>
+      = {};
+
+  enrichedBehaviours.forEach(
+    (b: any) => {
+
+      feminineValues.push(
+        Number(
+          b?.feminine || 0
+        )
       );
 
-  // --------------------------------------------------
-  // 🪞 MIRROR
-  // --------------------------------------------------
+      masculineValues.push(
+        Number(
+          b?.masculine || 0
+        )
+      );
 
-  const mirror =
-    interpretMirror(
-      patterns
+      contractionValues.push(
+        Number(
+          b?.contraction || 0
+        )
+      );
+
+      expansionValues.push(
+        Number(
+          b?.expansion || 0
+        )
+      );
+
+      Object.entries(
+        b?.chakra_weights || {}
+      ).forEach(
+        ([chakra, value]) => {
+
+          chakraMap[
+            chakra
+          ] =
+
+            (
+              chakraMap[
+                chakra
+              ] || 0
+            ) +
+
+            Number(value);
+        }
+      );
+    }
+  );
+
+  /*
+   * ------------------------------------------------
+   * 🌊 PATTERN CHAKRAS
+   * ------------------------------------------------
+   */
+
+  enrichedPatterns.forEach(
+    (p: any) => {
+
+      if (p?.chakra) {
+
+        chakraMap[
+          p.chakra
+        ] =
+
+          (
+            chakraMap[
+              p.chakra
+            ] || 0
+          ) + 1;
+      }
+
+      (
+        p?.secondary_chakras || []
+      ).forEach(
+        (chakra: string) => {
+
+          chakraMap[
+            chakra
+          ] =
+
+            (
+              chakraMap[
+                chakra
+              ] || 0
+            ) + 0.5;
+        }
+      );
+    }
+  );
+
+    const distortedBehaviours =
+
+    enrichedBehaviours.filter(
+      (b: any) =>
+
+        b?.quality ===
+        "distorted"
     );
 
-  // --------------------------------------------------
-  // 🌌 COSMIC
-  // --------------------------------------------------
+  const integratedBehaviours =
 
-  const cosmicResult =
-    await getCosmicMessage({
+    enrichedBehaviours.filter(
+      (b: any) =>
 
-      energy:
-        energyResult.energy,
+        b?.quality ===
+        "divine"
+    );
 
-      patterns,
-    });
+  /*
+   * ------------------------------------------------
+   * 🌈 NORMALIZE CHAKRAS
+   * ------------------------------------------------
+   */
 
-  // --------------------------------------------------
-  // 🧿 DISTORTIONS
-  // --------------------------------------------------
+  const normalizedChakras =
+    normalizeChakras(
+      chakraMap
+    );
 
-  const masculine: any[] = [];
+    const awarenessMap:
+  Record<string, number>
+    = {};
 
-  const feminine: any[] = [];
+    /*
+ * ------------------------------------------------
+ * 🌈 AWARENESS CHAKRA
+ * ------------------------------------------------
+ */
 
-  const allBehaviours: any[] = [];
+const chakraKeys =
+  Object.keys(
+    normalizedChakras
+  );
 
-  signals.forEach((s) => {
+const avg =
 
-    const behaviours =
-      s?.ai_behaviours || [];
+  1 / (
+    chakraKeys.length || 1
+  );
 
-    behaviours.forEach(
-      (b: any) => {
+const distortionMap:
+  Record<string, number>
+    = {};
 
-        if (!b) return;
+/*
+ * ------------------------------------------------
+ * 🌑 DISTORTION DENSITY
+ * ------------------------------------------------
+ */
 
-        allBehaviours.push(b);
+distortedBehaviours.forEach(
+  (b: any) => {
 
-        if (
-          b.side ===
-          "masculine"
-        ) {
+    Object.entries(
+      b?.chakra_weights || {}
+    ).forEach(
+      ([chakra, value]) => {
 
-          masculine.push(b);
-        }
+        distortionMap[
+          chakra
+        ] =
 
-        if (
-          b.side ===
-          "feminine"
-        ) {
+          (
+            distortionMap[
+              chakra
+            ] || 0
+          ) +
 
-          feminine.push(b);
-        }
+          Number(value);
       }
     );
-  });
+  }
+);
+
+/*
+ * ------------------------------------------------
+ * 🌊 AWARENESS SCORE
+ * ------------------------------------------------
+ */
+
+chakraKeys.forEach(
+  (chakra) => {
+
+    const activation =
+
+      normalizedChakras[
+        chakra
+      ] || 0;
+
+    const deviation =
+
+      Math.abs(
+        activation - avg
+      );
+
+    const distortion =
+
+      distortionMap[
+        chakra
+      ] || 0;
+
+    awarenessMap[
+      chakra
+    ] =
+
+      deviation +
+
+      distortion * 0.7 +
+
+      activation * 0.3;
+  }
+);
+
+/*
+ * ------------------------------------------------
+ * 👁 AWARENESS CHAKRA
+ * ------------------------------------------------
+ */
+
+const awarenessChakra =
+  Object.entries(
+    awarenessMap
+  )
+
+    .sort(
+      (a, b) =>
+
+        Number(b[1]) -
+
+        Number(a[1])
+    )[0]?.[0] || null;
+
+  const dominantChakra =
+    getDominantChakra(
+      normalizedChakras
+    );
+
+  /*
+   * ------------------------------------------------
+   * ⚡ ENERGY TOTALS
+   * ------------------------------------------------
+   */
+
+  const energy:
+    EnergyTotals = {
+
+    feminine:
+      average(
+        feminineValues
+      ),
+
+    masculine:
+      average(
+        masculineValues
+      ),
+
+    contraction:
+      average(
+        contractionValues
+      ),
+
+    expansion:
+      average(
+        expansionValues
+      ),
+
+    chakras:
+      normalizedChakras,
+
+    dominant_chakra:
+      dominantChakra,
+
+   awareness_chakra:
+  awarenessChakra,
+  };
+
+  /*
+   * ------------------------------------------------
+   * ⚡ DISTORTIONS
+   * ------------------------------------------------
+   */
 
   const distortions = {
 
-    masculine:
-      masculine.slice(0, 5),
+    distorted:
+      distortedBehaviours,
 
-    feminine:
-      feminine.slice(0, 5),
+    integrated:
+      integratedBehaviours,
+
+    contractionLevel:
+
+      energy.contraction,
+
+    expansionLevel:
+
+      energy.expansion,
+
+    dominantPolarity:
+
+      energy.feminine >
+      energy.masculine
+
+        ? "feminine"
+
+        : "masculine",
   };
 
-// --------------------------------------------------
-// 🪞 LENS MEMORIES
-// --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🪞 LENS MEMORY
+   * ------------------------------------------------
+   */
 
-const allLensEntries = [
+const allLensEntries =
 
-  ...signals.flatMap(
-    (s) =>
-      s?.ai_lens?.people || []
-  ),
+  signals.flatMap(
+    (s: any) => [
 
-  ...signals.flatMap(
-    (s) =>
-      s?.ai_lens?.places || []
-  ),
+      ...(s?.ai_lens
+        ?.people || []),
 
-  ...signals.flatMap(
-    (s) =>
-      s?.ai_lens?.things || []
-  ),
-];
+      ...(s?.ai_lens
+        ?.places || []),
 
-// --------------------------------------------------
-// 👁 OBSERVABLE SCENES
-// --------------------------------------------------
-
-const observableScenes =
-  unique(
-
-    allLensEntries
-
-      .map(
-        (l: any) =>
-          l?.observable_scene
-      )
-
-      .filter(Boolean)
-  ).slice(0, 20);
-
-// --------------------------------------------------
-// 🛡 COPING STRATEGIES
-// --------------------------------------------------
-
-const recurringCopingStrategies =
-  unique(
-
-    allLensEntries
-
-      .map(
-        (l: any) =>
-          l?.coping_strategy
-      )
-
-      .filter(Boolean)
+      ...(s?.ai_lens
+        ?.things || []),
+    ]
   );
 
-// --------------------------------------------------
-// 🌊 MANIFESTATIONS
-// --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 👁 OBSERVABLE SCENES
+   * ------------------------------------------------
+   */
 
-const recurringManifestations =
-  unique(
+  const observableScenes =
+    unique(
 
-    allLensEntries
+      allLensEntries
 
-      .map(
-        (l: any) =>
-          l?.manifestation
-      )
+        .map(
+          (l: any) =>
+            l?.observable_scene
+        )
 
-      .filter(Boolean)
-  );
+        .filter(Boolean)
 
-// --------------------------------------------------
-// 🫀 BODY RESPONSES
-// --------------------------------------------------
+    ).slice(0, 20);
 
-const recurringBodyResponses =
-  unique(
+  /*
+   * ------------------------------------------------
+   * 🌊 MANIFESTATIONS
+   * ------------------------------------------------
+   */
 
-    allLensEntries
+  const recurringManifestations =
+    unique(
 
-      .map(
-        (l: any) =>
-          l?.body_response
-      )
+      allLensEntries
 
-      .filter(Boolean)
-  );
+        .map(
+          (l: any) =>
+            l?.manifestation
+        )
 
-// --------------------------------------------------
-// 🪞 MIRROR PROMPTS
-// --------------------------------------------------
-
-const recurringMirrorPrompts =
-  unique(
-
-    allLensEntries
-
-      .map(
-        (l: any) =>
-          l?.mirror_prompt
-      )
-
-      .filter(Boolean)
-  );
-
-  // --------------------------------------------------
-  // 🔁 CYCLES
-  // --------------------------------------------------
-
-  const cycles =
-    recurringPatterns.map(
-      (patternId: string) => {
-
-        const definition =
-          patternDefinitions?.find(
-            (p: any) =>
-              p.id === patternId
-          );
-
-        return {
-
-          id:
-            patternId,
-
-          name:
-            definition?.name,
-
-          description:
-            definition?.description,
-
-          soulLesson:
-            definition?.soul_lesson,
-
-          integration:
-            definition?.integration,
-
-          fear:
-            definition?.fear,
-
-          gift:
-            definition?.gift,
-        };
-      }
+        .filter(Boolean)
     );
 
-  // --------------------------------------------------
-  // 🧠 CHAKRAS
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🛡 COPING
+   * ------------------------------------------------
+   */
 
-  const chakraPatterns =
-    energyResult
-      ?.chakraPatterns || {};
+  const recurringCopingStrategies =
+    unique(
 
-  let chakraScores: any = {};
+      allLensEntries
 
-  let awarenessChakra: any =
-    null;
+        .map(
+          (l: any) =>
+            l?.coping_strategy
+        )
 
-  let dominantChakra: any =
-    null;
+        .filter(Boolean)
+    );
 
-  if (
-    energyResult.energy &&
-    energyResult.energy.chakras
-  ) {
+  /*
+   * ------------------------------------------------
+   * 🫀 BODY RESPONSES
+   * ------------------------------------------------
+   */
 
-    chakraScores =
-      buildFullChakraScores(
+  const recurringBodyResponses =
+    unique(
 
-        energyResult.energy
-          .chakras
+      allLensEntries
+
+        .map(
+          (l: any) =>
+            l?.body_response
+        )
+
+        .filter(Boolean)
+    );
+
+  /*
+   * ------------------------------------------------
+   * 🪞 MIRROR PROMPTS
+   * ------------------------------------------------
+   */
+
+  const recurringMirrorPrompts =
+    unique(
+
+      allLensEntries
+
+        .map(
+          (l: any) =>
+            l?.mirror_prompt
+        )
+
+        .filter(Boolean)
+    );
+
+  /*
+   * ------------------------------------------------
+   * 🌈 CHAKRA MANIFESTATIONS
+   * ------------------------------------------------
+   */
+
+  const chakraManifestations:
+    Record<string, any[]>
+      = {};
+
+  allLensEntries.forEach(
+    (entry: any) => {
+
+      const behaviour =
+        enrichedBehaviours.find(
+          (b: any) =>
+
+            b.id ===
+            entry.behaviour_id
+        );
+
+      const weights =
+        behaviour
+          ?.chakra_weights || {};
+
+      Object.entries(
+        weights
+      ).forEach(
+        ([chakra, value]) => {
+
+          if (
+            Number(value) <= 0.5
+          ) {
+            return;
+          }
+
+          if (
+            !chakraManifestations[
+              chakra
+            ]
+          ) {
+
+            chakraManifestations[
+              chakra
+            ] = [];
+          }
+
+          chakraManifestations[
+            chakra
+          ].push({
+
+            ...entry,
+
+            chakra_weight:
+              value,
+
+            behaviour,
+          });
+        }
       );
+    }
+  );
 
-    awarenessChakra =
-      getAwarenessChakra(
-        chakraScores
-      );
+  /*
+   * ------------------------------------------------
+   * 🧹 DEDUPE CHAKRAS
+   * ------------------------------------------------
+   */
 
-    dominantChakra =
-      energyResult.energy
-        ?.dominant_chakra;
-  }
+  Object.keys(
+    chakraManifestations
+  ).forEach((chakra) => {
 
-  // --------------------------------------------------
-  // 🌍 LANGUAGE
-  // --------------------------------------------------
+    chakraManifestations[
+      chakra
+    ] =
 
-  const language =
-    profile?.language || "en";
+      chakraManifestations[
+        chakra
+      ].slice(0, 12);
+  });
 
-  // --------------------------------------------------
-  // 🧠 REALITY LAYERS
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🌍 REALITY LAYERS
+   * ------------------------------------------------
+   */
 
   const realityLayers = {
 
-physical: {
+    physical: {
 
-  observableScenes,
+      observableScenes,
 
-  recurringBodyResponses,
+      recurringBodyResponses,
 
-  nervousSystemState:
+      nervousSystemState:
 
-    energyResult.energy
-      ?.contraction > 0.7
+        energy.contraction > 0.7
 
-      ? "protective"
+          ? "protective"
 
-      : "open",
+          : "open",
 
-  contraction:
-    energyResult.energy
-      ?.contraction,
+      contraction:
+        energy.contraction,
 
-  expansion:
-    energyResult.energy
-      ?.expansion,
-},
+      expansion:
+        energy.expansion,
+    },
 
-emotional: {
+    emotional: {
 
-  activePatterns,
+      patterns:
+        enrichedPatterns,
 
-  recurringPatterns,
+      distortions,
 
-  dominantPattern,
+      recurringManifestations,
 
-  recurringManifestations,
+      recurringCopingStrategies,
 
-  recurringCopingStrategies,
-
-  recurringMirrorPrompts,
-
-  distortions,
-},
+      recurringMirrorPrompts,
+    },
 
     energetic: {
 
@@ -551,144 +968,217 @@ emotional: {
 
       awarenessChakra,
 
-      chakraScores,
+      chakras:
+        normalizedChakras,
 
-      chakraPatterns,
+      chakraManifestations,
     },
 
-    soul: {
+    consciousness: {
+
+      dominantStates:
+
+        unique(
+
+          signals.map(
+            (s) =>
+              s?.dominant_state
+          )
+        ),
+
+      nervousSystemStates:
+
+        unique(
+
+          signals.map(
+            (s) =>
+              s?.nervous_system_state
+          )
+        ),
+
+      energeticDirections:
+
+        unique(
+
+          signals.map(
+            (s) =>
+              s?.energetic_direction
+          )
+        ),
+
+      integrationNeeds:
+
+        unique(
+
+          enrichedBehaviours.map(
+            (b: any) =>
+
+              b?.integration_step
+          )
+        ),
 
       soulLessons:
 
-        patternDefinitions?.map(
-          (p: any) =>
-            p?.soul_lesson
-        ) || [],
+        unique(
+
+          enrichedPatterns.map(
+            (p: any) =>
+
+              p?.soul_lesson
+          )
+        ),
 
       gifts:
 
-        patternDefinitions?.map(
-          (p: any) =>
-            p?.gift
-        ) || [],
+        unique(
 
-      integrations:
-
-        patternDefinitions?.map(
-          (p: any) =>
-            p?.integration
-        ) || [],
+          enrichedPatterns.map(
+            (p: any) =>
+              p?.gift
+          )
+        ),
     },
   };
 
-  // --------------------------------------------------
-  // 🧠 CONTEXT
-  // --------------------------------------------------
+  /*
+   * ------------------------------------------------
+   * 🪞 MIRROR CONTEXT
+   * ------------------------------------------------
+   */
 
-  const context =
-    await buildMirrorContext({
+ /*
+ * ------------------------------------------------
+ * 🪞 MIRROR CONTEXT
+ * ------------------------------------------------
+ */
 
-      mirror,
+const context =
+  await buildMirrorContext({
 
-      energy:
-        energyResult.energy,
-
-      cosmic:
-        cosmicResult.cosmic,
-
-      languageContext: {
-        code: language,
-      },
-
-      signals,
-
-      activeLens,
-    });
-
-  // --------------------------------------------------
-  // ✨ FINAL
-  // --------------------------------------------------
-
-  return {
-
-    ready: true,
-
-    source,
-
-    activeLens,
-
-    // 👤 PROFILE
-    profile,
-
-    language,
-
-    childhoodSignals:
-
-      profile
-        ?.childhood_signals || {},
+    // ⚡ ENERGY
+    energy,
 
     // 🌊 SIGNALS
     signals,
 
-    // ⚡ ENERGY
-    energy:
-      energyResult.energy,
-
-    chakraPatterns,
-
-    chakraScores,
-
-    dominantChakra,
-
-    awarenessChakra,
-
-    // 🌊 PATTERNS
-    activePatterns,
-
-    recurringPatterns,
-
-    dominantPattern,
-
-    patternDefinitions,
-
-    // 🧿 BEHAVIOURS
-    behaviours:
-      allBehaviours,
-
-    distortions,
-
-    observableScenes,
-
-// 🪞 LONGITUDINAL MEMORY
-
-recurringManifestations,
-
-recurringCopingStrategies,
-
-recurringBodyResponses,
-
-recurringMirrorPrompts,
-
-    // 🔁 CYCLES
-    cycles,
-
-    // 🌌 COSMIC
-    cosmic:
-      cosmicResult.cosmic,
-
-    cosmicMessage:
-      cosmicResult.aiMessage,
-
-    dailyField:
-      cosmicResult.dailyField,
-
-    // 🪞 MIRROR
-    mirror,
+    // 👁 ACTIVE LENS
+    activeLens,
 
     // 🌍 REALITY
     realityLayers,
 
-    // 🧠 CONTEXT
-    context,
-  };
+    // 🧠 HYDRATED FIELD
+    enrichedBehaviours,
+
+    enrichedPatterns,
+
+    distortions,
+
+    // 🪞 RELATIONAL MEMORY
+    lensEntries:
+      allLensEntries,
+
+    // 🌍 LANGUAGE
+    languageContext: {
+
+      code:
+        language,
+    },
+  });
+
+/*
+ * ------------------------------------------------
+ * ✨ FINAL
+ * ------------------------------------------------
+ */
+
+return {
+
+  ready: true,
+
+  source,
+
+  activeLens,
+
+  /*
+   * 👤 PROFILE
+   */
+
+  profile,
+
+  language,
+
+  childhoodSignals:
+
+    profile
+      ?.childhood_signals || {},
+
+  /*
+   * 🌊 SIGNALS
+   */
+
+  signals,
+
+  /*
+   * ⚡ ENERGY
+   */
+
+  energy,
+
+  dominantChakra,
+
+  awarenessChakra,
+
+  /*
+   * 🧿 FIELD
+   */
+
+  behaviours:
+    behaviourIds,
+
+  enrichedBehaviours,
+
+  patterns:
+    patternIds,
+
+  enrichedPatterns,
+
+  distortions,
+
+  chakraManifestations,
+
+  // 🪞 NEW
+  lensEntries:
+    allLensEntries,
+
+  /*
+   * 👁 OBSERVABLE
+   */
+
+  observableScenes,
+
+  /*
+   * 🪞 LONGITUDINAL
+   */
+
+  recurringManifestations,
+
+  recurringCopingStrategies,
+
+  recurringBodyResponses,
+
+  recurringMirrorPrompts,
+
+  /*
+   * 🌍 REALITY
+   */
+
+  realityLayers,
+
+  /*
+   * 🪞 CONTEXT
+   */
+
+  context,
+};
 }

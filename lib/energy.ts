@@ -28,7 +28,7 @@ export const chakraOrder: Chakra[] = [
 //
 
 export const chakraY: Record<Chakra, number> = {
-  soul_star: 15,
+  soul_star: 22,
   crown: 65,
   third_eye: 85,
   throat: 120,

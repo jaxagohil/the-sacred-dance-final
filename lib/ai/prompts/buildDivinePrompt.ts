@@ -592,7 +592,7 @@ LANGUAGE + OUTPUT RULES
 
 Generate ALL output ONLY in:
 
-${data?.language || "en"}
+${data?.languageName || "English"}
 
 Never mix languages.
 

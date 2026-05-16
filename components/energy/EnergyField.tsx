@@ -69,14 +69,115 @@ export default function EnergyField({
   const chakraPatterns =
     userContext?.chakraPatterns || {};
 
-  const awarenessChakra =
-    userContext?.awarenessChakra;
+const awarenessChakra =
+
+  userContext
+    ?.energy
+    ?.awareness_chakra ||
+
+  null;
 
   const distortions =
-    userContext?.distortions || {};
+  userContext?.distortions || {
+
+    distorted: [],
+
+    integrated: [],
+
+    contractionLevel: 0,
+
+    expansionLevel: 0,
+
+    dominantPolarity:
+      "feminine",
+  };
 
   const observableScenes =
     userContext?.observableScenes || [];
+
+  /*
+ * --------------------------------------------------
+ * 🌌 EMPTY FIELD
+ * --------------------------------------------------
+ */
+
+if (
+  !energy
+) {
+
+  return (
+
+    <View
+      style={styles.container}
+    >
+
+      <View
+        style={styles.fieldContainer}
+      >
+
+        <View style={styles.inner}>
+
+          <View
+            style={styles.energyBall}
+          >
+
+            <EnergyBallSkia
+
+              energy={{
+
+                feminine: 0.5,
+
+                masculine: 0.5,
+
+                contraction: 0.5,
+
+                expansion: 0.5,
+
+                chakras: {},
+
+                dominant_chakra:
+                  null,
+
+                awareness_chakra:
+                  null,
+              }}
+
+              distortions={{
+
+                distorted: [],
+
+                integrated: [],
+
+                contractionLevel: 0,
+
+                expansionLevel: 0,
+
+                dominantPolarity:
+                  "feminine",
+              }}
+
+              observableScenes={[]}
+
+              awarenessChakra={
+                null
+              }
+            />
+
+          </View>
+
+          <View style={styles.body}>
+
+            <EnergyBody />
+
+          </View>
+
+        </View>
+
+      </View>
+
+    </View>
+  );
+}  
 
   // --------------------------------------------------
   // 🧩 STATE
@@ -103,41 +204,51 @@ export default function EnergyField({
 
       : null;
 
-const selectedChakraData =
+  const selectedChakraData =
 
-  selectedChakra
+    selectedChakra
 
-    ? chakraContent?.[
-        selectedChakra
-      ]
+      ? chakraContent?.[
+          selectedChakra
+        ]
 
-    : null;
+      : null;
 
-const chakraManifestations =
+  // --------------------------------------------------
+  // 🌈 CHAKRA MANIFESTATIONS
+  // --------------------------------------------------
 
-  selectedChakra
+  const chakraManifestations =
 
-    ? Object.values(
-        energy
-          ?.distortions ||
-          {}
-      )
-        .flat()
-        .filter(
-          (d: any) => {
+    selectedChakra
 
-            const weights =
-              d?.chakra_weights || {};
+      ? [
 
-            return (
-              weights[
-                selectedChakra
-              ] > 0.5
-            );
-          }
-        )
+          ...(distortions
+            ?.distorted || []),
 
-    : [];
+          ...(distortions
+            ?.integrated || []),
+        ]
+
+          .filter(
+            (d: any) => {
+
+              const weights =
+                d?.chakra_weights || {};
+
+return (
+
+  Number(
+    weights?.[
+      selectedChakra
+    ] || 0
+  ) > 0.5
+);
+            }
+          )
+
+      : [];
 
   // --------------------------------------------------
   // 🧩 CLICK HANDLER
@@ -221,7 +332,7 @@ const chakraManifestations =
 
               <ChakraSystem
 
-                dominant={
+                awareness={
                   awarenessChakra
                 }
 
@@ -258,74 +369,77 @@ const chakraManifestations =
 
       </View>
 
-{selectedChakraData && (
+      {/* 🌈 CHAKRA REVEAL */}
 
-  <View
-    style={
-      styles.chakraReveal
-    }
-  >
+      {selectedChakraData && (
 
-    <Text
-      style={
-        styles.chakraTitle
-      }
-    >
+        <View
+          style={
+            styles.chakraReveal
+          }
+        >
 
-      {
-        selectedChakraData
-          ?.name
-      }
+          <Text
+            style={
+              styles.chakraTitle
+            }
+          >
 
-    </Text>
+            {
+              selectedChakraData
+                ?.name
+            }
 
-    <Text
-      style={
-        styles.chakraBody
-      }
-    >
+          </Text>
 
-{chakraManifestations
-  ?.slice(0, 3)
-  ?.map(
-    (
-      item: any,
-      i: number
-    ) => (
+          <Text
+            style={
+              styles.chakraBody
+            }
+          >
 
-      <Text
+            {chakraManifestations
+              ?.slice(0, 3)
+              ?.map(
+                (
+                  item: any,
+                  i: number
+                ) => (
 
-        key={i}
+                  <Text
 
-        style={
-          styles.manifestation
-        }
-      >
+                    key={i}
 
-        • {
+                    style={
+                      styles.manifestation
+                    }
+                  >
 
-          item
-            ?.manifestation ||
+                    • {
 
-          item
-            ?.observable_scene ||
+                      item
+                        ?.manifestation ||
 
-          item
-            ?.mirror_prompt
-        }
+                      item
+                        ?.observable_scene ||
 
-      </Text>
-    )
-  )}
-      {
-        selectedChakraData
-          ?.affirmation
-      }
+                      item
+                        ?.mirror_prompt
+                    }
 
-    </Text>
+                  </Text>
+                )
+              )}
 
-  </View>
-)}
+            {
+              selectedChakraData
+                ?.affirmation
+            }
+
+          </Text>
+
+        </View>
+      )}
 
       {/* ✨ AFFIRMATION */}
 
@@ -367,18 +481,13 @@ const styles =
         "center",
     },
 
-    fieldContainer: {
-
-      width: 240,
-
-      height: 430,
-
-      justifyContent:
-        "center",
-
-      alignItems:
-        "center",
-    },
+fieldContainer: {
+  width: "100%",
+  height: 430,
+  justifyContent: "center",
+  alignItems: "center",
+  overflow: "visible",
+},
 
     inner: {
 
@@ -477,81 +586,59 @@ const styles =
       opacity: 0.82,
     },
 
-    insightWrapper: {
+    chakraReveal: {
 
-      marginTop: 6,
+      marginTop: 18,
 
-      paddingHorizontal: 20,
+      paddingHorizontal: 22,
 
-      maxWidth: 260,
+      paddingVertical: 16,
+
+      borderRadius: 20,
+
+      backgroundColor:
+        "rgba(255,255,255,0.03)",
+
+      maxWidth: 280,
     },
 
-    insightText: {
+    chakraTitle: {
+
+      color: "white",
+
+      fontSize: 16,
+
+      textAlign: "center",
+
+      marginBottom: 8,
+
+      opacity: 0.9,
+    },
+
+    chakraBody: {
 
       color:
-        "rgba(255,255,255,0.6)",
+        "rgba(255,255,255,0.72)",
 
       fontSize: 13,
 
-      textAlign:
-        "center",
+      textAlign: "center",
 
-      lineHeight: 18,
+      lineHeight: 20,
     },
 
-chakraReveal: {
+    manifestation: {
 
-  marginTop: 18,
+      color:
+        "rgba(255,255,255,0.62)",
 
-  paddingHorizontal: 22,
+      fontSize: 12,
 
-  paddingVertical: 16,
+      lineHeight: 18,
 
-  borderRadius: 20,
+      marginTop: 8,
 
-  backgroundColor:
-    "rgba(255,255,255,0.03)",
-
-  maxWidth: 280,
-},
-
-chakraTitle: {
-
-  color: "white",
-
-  fontSize: 16,
-
-  textAlign: "center",
-
-  marginBottom: 8,
-
-  opacity: 0.9,
-},
-
-chakraBody: {
-
-  color:
-    "rgba(255,255,255,0.72)",
-
-  fontSize: 13,
-
-  textAlign: "center",
-
-  lineHeight: 20,
-},
-
-manifestation: {
-
-  color:
-    "rgba(255,255,255,0.62)",
-
-  fontSize: 12,
-
-  lineHeight: 18,
-
-  marginTop: 8,
-
-  textAlign: "center",
-},
+      textAlign: "center",
+    },
 
   });

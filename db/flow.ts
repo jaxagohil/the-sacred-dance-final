@@ -6,10 +6,6 @@ import { interpretInput } from "../lib/ai/interpretInput";
 
 import { derivePatternsFromBehaviours } from "../lib/derivePatternsFromBehaviours";
 
-import { buildEnergyFromBehaviours } from "../lib/energy/buildEnergyFromBehaviours";
-
-import { getBehaviourLookup } from "../lib/energy/getBehaviourLookup";
-
 import { loadValidSignals } from "../lib/loadValidSignals";
 
 import { createReflection } from "./reflections";
@@ -21,15 +17,19 @@ import { createSignal } from "./signals";
 // --------------------------------------------------
 
 type Behaviour = {
+
   id: string;
+
   weight: number;
 
   shadow_meaning?: string;
+
   integrated_meaning?: string;
 
   nervous_system_need?: string;
 
   mirror_question?: string;
+
   integration_step?: string;
 
   embodiment?: string;
@@ -37,9 +37,11 @@ type Behaviour = {
   energetic_state?: string;
 
   contraction?: number;
+
   expansion?: number;
 
   masculine?: number;
+
   feminine?: number;
 
   quality?:
@@ -51,6 +53,7 @@ type Behaviour = {
 };
 
 type Emotion = {
+
   id: string;
 
   emotional_family?: string;
@@ -62,6 +65,28 @@ type Emotion = {
   core_need?: string;
 
   integration?: string;
+};
+
+// --------------------------------------------------
+// HELPERS
+// --------------------------------------------------
+
+const average = (
+  values: number[]
+) => {
+
+  if (!values.length)
+    return 0;
+
+  return (
+
+    values.reduce(
+      (a, b) => a + b,
+      0
+    ) /
+
+    values.length
+  );
 };
 
 // --------------------------------------------------
@@ -87,16 +112,27 @@ export async function processReflection(
   // --------------------------------------------------
 
   const {
+
     userId,
+
     text,
+
     emotions,
+
     childhoodSignals,
+
     pattern,
+
     energyAxes,
+
     source,
+
     metadata,
+
     signalDepth,
+
     language,
+
   } = input;
 
   // --------------------------------------------------
@@ -105,12 +141,19 @@ export async function processReflection(
 
   const interpretation =
     await interpretInput({
+
       language,
+
       text,
+
       emotions,
+
       childhoodSignals,
+
       pattern,
+
       energyAxes,
+
       source,
     });
 
@@ -136,11 +179,17 @@ export async function processReflection(
   // --------------------------------------------------
 
   const {
+
     data: emotionRows,
+
     error: emotionError,
+
   } = await supabase
+
     .from("emotions")
+
     .select("*")
+
     .in("id", rawEmotions);
 
   if (emotionError) {
@@ -151,9 +200,12 @@ export async function processReflection(
     );
   }
 
-  const enrichedEmotions: Emotion[] =
+  const enrichedEmotions:
+    Emotion[] =
+
     (emotionRows || []).map(
       (e: any) => ({
+
         id: e.id,
 
         emotional_family:
@@ -182,11 +234,15 @@ export async function processReflection(
   // 🧠 RAW BEHAVIOURS
   // --------------------------------------------------
 
-  let rawBehaviours: string[] =
+  let rawBehaviours:
+    string[] =
+
     interpretation.behaviours || [];
 
-  // 🛡 fallback
-  if (rawBehaviours.length === 0) {
+  if (
+    rawBehaviours.length === 0
+  ) {
+
     console.log(
       "⚠️ No behaviours derived"
     );
@@ -202,11 +258,17 @@ export async function processReflection(
   // --------------------------------------------------
 
   const {
+
     data: behaviourRows,
+
     error: behaviourError,
+
   } = await supabase
+
     .from("behaviours")
+
     .select("*")
+
     .in("id", rawBehaviours);
 
   if (behaviourError) {
@@ -217,89 +279,368 @@ export async function processReflection(
     );
   }
 
-  const behaviourMap = new Map(
-    (behaviourRows || []).map(
-      (b: any) => [b.id, b]
-    )
-  );
+  const behaviourMap =
+    new Map(
+
+      (behaviourRows || []).map(
+        (b: any) => [b.id, b]
+      )
+    );
 
   const intensity =
     interpretation.intensity || 1;
 
-  const behaviours: Behaviour[] =
-    rawBehaviours.map((id) => {
+  const behaviours:
+    Behaviour[] =
 
-      const row =
-        behaviourMap.get(id);
+    rawBehaviours.map(
+      (id) => {
 
-      return {
+        const row =
+          behaviourMap.get(id);
 
-        id,
+        return {
 
-        weight:
-          intensity,
+          id,
 
-        // 🧠 semantic
-        shadow_meaning:
-          row?.shadow_meaning || null,
+          weight:
+            intensity,
 
-        integrated_meaning:
-          row?.integrated_meaning || null,
+          shadow_meaning:
+            row?.shadow_meaning || null,
 
-        nervous_system_need:
-          row?.nervous_system_need || null,
+          integrated_meaning:
+            row?.integrated_meaning || null,
 
-        mirror_question:
-          row?.mirror_question || null,
+          nervous_system_need:
+            row?.nervous_system_need || null,
 
-        integration_step:
-          row?.integration_step || null,
+          mirror_question:
+            row?.mirror_question || null,
 
-        embodiment:
-          row?.embodiment || null,
+          integration_step:
+            row?.integration_step || null,
 
-        energetic_state:
-          row?.energetic_state ||
-          "neutral",
+          embodiment:
+            row?.embodiment || null,
 
-        // ⚡ energetic
-        contraction:
-          row?.contraction || 0,
+          energetic_state:
+            row?.energetic_state ||
+            "neutral",
 
-        expansion:
-          row?.expansion || 0,
+          contraction:
+            row?.contraction || 0,
 
-        masculine:
-          row?.masculine || 0,
+          expansion:
+            row?.expansion || 0,
 
-        feminine:
-          row?.feminine || 0,
+          masculine:
+            row?.masculine || 0,
 
-        quality:
-          row?.quality || "distorted",
+          feminine:
+            row?.feminine || 0,
 
-        chakra_weights:
-          row?.chakra_weights || {},
-      };
-    });
+          quality:
+            row?.quality ||
+            "distorted",
+
+          chakra_weights:
+            row?.chakra_weights || {},
+        };
+      }
+    );
 
   console.log(
     "🧠 ENRICHED BEHAVIOURS:",
     behaviours
   );
 
-// --------------------------------------------------
-// 🪞 LENS MANIFESTATIONS
-// --------------------------------------------------
+  // --------------------------------------------------
+  // ⚡ ENERGY SYNTHESIS
+  // --------------------------------------------------
 
-const behaviourIds =
+  const feminine =
+    average(
+
+      behaviours.map(
+        (b) =>
+          b.feminine || 0
+      )
+    );
+
+  const masculine =
+    average(
+
+      behaviours.map(
+        (b) =>
+          b.masculine || 0
+      )
+    );
+
+  const contraction =
+    average(
+
+      behaviours.map(
+        (b) =>
+          b.contraction || 0
+      )
+    );
+
+  const expansion =
+    average(
+
+      behaviours.map(
+        (b) =>
+          b.expansion || 0
+      )
+    );
+
+  // --------------------------------------------------
+  // 🌈 CHAKRAS
+  // --------------------------------------------------
+
+  const chakraMap:
+    Record<string, number>
+      = {};
+
+  behaviours.forEach((b) => {
+
+    Object.entries(
+      b?.chakra_weights || {}
+    ).forEach(
+      ([chakra, value]) => {
+
+        chakraMap[chakra] =
+
+          (
+            chakraMap[
+              chakra
+            ] || 0
+          ) +
+
+          Number(value);
+      }
+    );
+  });
+
+    const distorted =
+    behaviours.filter(
+      (b) =>
+        b.quality ===
+        "distorted"
+    );
+
+  const integrated =
+    behaviours.filter(
+      (b) =>
+        b.quality ===
+        "divine"
+    );
+
+  const chakraTotal =
+
+    Object.values(
+      chakraMap
+    ).reduce(
+      (a, b) => a + b,
+      0
+    ) || 1;
+
+  const normalizedChakras:
+    Record<string, number>
+      = {};
+
+  Object.entries(
+    chakraMap
+  ).forEach(([k, v]) => {
+
+    normalizedChakras[k] =
+      v / chakraTotal;
+  });
+
+  /*
+ * --------------------------------------------------
+ * 👁 AWARENESS CHAKRA
+ * --------------------------------------------------
+ */
+
+const chakraKeys =
+  Object.keys(
+    normalizedChakras
+  );
+
+const avg =
+
+  1 / (
+    chakraKeys.length || 1
+  );
+
+const distortionMap:
+  Record<string, number>
+    = {};
+
+distorted.forEach(
+  (b) => {
+
+    Object.entries(
+      b?.chakra_weights || {}
+    ).forEach(
+      ([chakra, value]) => {
+
+        distortionMap[
+          chakra
+        ] =
+
+          (
+            distortionMap[
+              chakra
+            ] || 0
+          ) +
+
+          Number(value);
+      }
+    );
+  }
+);
+
+const awarenessMap:
+  Record<string, number>
+    = {};
+
+chakraKeys.forEach(
+  (chakra) => {
+
+    const activation =
+
+      normalizedChakras[
+        chakra
+      ] || 0;
+
+    const deviation =
+
+      Math.abs(
+        activation - avg
+      );
+
+    const distortion =
+
+      distortionMap[
+        chakra
+      ] || 0;
+
+    awarenessMap[
+      chakra
+    ] =
+
+      deviation +
+
+      distortion * 0.7 +
+
+      activation * 0.3;
+  }
+);
+
+const awarenessChakra =
+
+  Object.entries(
+    awarenessMap
+  )
+
+    .sort(
+      (a, b) =>
+        Number(b[1]) -
+        Number(a[1])
+    )[0]?.[0] ||
+
+  null;
+
+  const dominant_chakra =
+
+    Object.entries(
+      normalizedChakras
+    )
+
+      .sort(
+        (a, b) =>
+          b[1] - a[1]
+      )[0]?.[0] ||
+
+    null;
+
+  // --------------------------------------------------
+  // ⚡ DISTORTIONS
+  // --------------------------------------------------
+
+  const distortions = {
+
+    distorted,
+
+    integrated,
+
+    contractionLevel:
+      contraction,
+
+    expansionLevel:
+      expansion,
+
+    dominantPolarity:
+
+      feminine >
+      masculine
+
+        ? "feminine"
+
+        : "masculine",
+  };
+
+  // --------------------------------------------------
+  // ✨ FINAL ENERGY
+  // --------------------------------------------------
+
+  const energy = {
+
+    feminine,
+
+    masculine,
+
+    contraction,
+
+    expansion,
+
+    chakras:
+      normalizedChakras,
+
+    dominant_chakra,
+
+awareness_chakra:
+  awarenessChakra,
+  };
+
+  console.log(
+    "⚡ ENERGY:",
+    energy
+  );
+
+  console.log(
+    "⚡ DISTORTIONS:",
+    distortions
+  );
+
+  // --------------------------------------------------
+  // 🪞 LENS MANIFESTATIONS
+  // --------------------------------------------------
+
+  const behaviourIds =
   behaviours.map(
     (b) => b.id
   );
 
 const {
+
   data: lensMappings,
+
   error: lensError,
+
 } = await supabase
 
   .from(
@@ -311,6 +652,11 @@ const {
   .in(
     "behaviour_id",
     behaviourIds
+  )
+
+  .eq(
+    "language",
+    language
   );
 
 if (lensError) {
@@ -321,10 +667,10 @@ if (lensError) {
   );
 }
 
-console.log(
-  "🪞 LENS MAPPINGS:",
-  lensMappings
-);
+  console.log(
+    "🪞 LENS MAPPINGS:",
+    lensMappings
+  );
 
   // --------------------------------------------------
   // 🪞 DERIVE PATTERNS
@@ -346,11 +692,17 @@ console.log(
   );
 
   const {
+
     data: patternRows,
+
     error: patternError,
+
   } = await supabase
+
     .from("patterns")
+
     .select("*")
+
     .in("id", rawPatterns);
 
   if (patternError) {
@@ -367,168 +719,151 @@ console.log(
   );
 
   // --------------------------------------------------
-  // ⚡ ENERGY
+  // 🪞 SHAPE LENS MEMORY
   // --------------------------------------------------
 
-  const lookup =
-    await getBehaviourLookup();
+  const shapeLensEntries = (
+    lens: string
+  ) =>
 
-  const energy =
-    buildEnergyFromBehaviours(
-      behaviours,
-      lookup
-    );
+    lensMappings
+
+      ?.filter(
+        (m: any) =>
+          m.lens === lens
+      )
+
+.map((m: any) => ({
+
+  lens,
+
+  behaviour_id:
+    m.behaviour_id,
+
+  weight:
+    m.weight,
+
+  manifestation:
+    m.manifestation,
+
+  observable_scene:
+    m.observable_scene,
+
+  body_response:
+    m.body_response,
+
+  coping_strategy:
+    m.coping_strategy,
+
+  relational_effect:
+    m.relational_effect,
+
+  mirror_prompt:
+    m.mirror_prompt,
+
+  integrated_expression:
+    m.integrated_expression,
+})) || [];
+
+  // --------------------------------------------------
+  // 🧠 EMBODIED LENS
+  // --------------------------------------------------
+
+  const aiLens = {
+
+    people:
+      shapeLensEntries(
+        "people"
+      ),
+
+    places:
+      shapeLensEntries(
+        "places"
+      ),
+
+    things:
+      shapeLensEntries(
+        "things"
+      ),
+  };
+
+  // --------------------------------------------------
+  // 🌍 LEVELS
+  // --------------------------------------------------
+
+  const levels =
+    interpretation?.levels || {
+
+      physical: 0.5,
+
+      emotional: 0.5,
+
+      energetic: 0.5,
+    };
 
   console.log(
-    "⚡ ENERGY:",
-    energy
+    "🌍 LEVELS:",
+    levels
   );
 
-// --------------------------------------------------
-// 🪞 SHAPE LENS MEMORY
-// --------------------------------------------------
-
-const shapeLensEntries = (
-  lens: string
-) =>
-
-  lensMappings
-
-    ?.filter(
-      (m: any) =>
-        m.lens === lens
-    )
-
-    ?.map((m: any) => ({
-
-      behaviour_id:
-        m.behaviour_id,
-
-      weight:
-        m.weight,
-
-      manifestation:
-        m.manifestation,
-
-      observable_scene:
-        m.observable_scene,
-
-      body_response:
-        m.body_response,
-
-      coping_strategy:
-        m.coping_strategy,
-
-      relational_effect:
-        m.relational_effect,
-
-      mirror_prompt:
-        m.mirror_prompt,
-
-      integrated_expression:
-        m.integrated_expression,
-    })) || [];
-
-// --------------------------------------------------
-// 🧠 EMBODIED LENS
-// --------------------------------------------------
-
-const aiLens = {
-
-  people:
-    shapeLensEntries(
-      "people"
-    ),
-
-  places:
-    shapeLensEntries(
-      "places"
-    ),
-
-  things:
-    shapeLensEntries(
-      "things"
-    ),
-};
-
   // --------------------------------------------------
-// 🌍 LEVELS
-// --------------------------------------------------
+  // ✨ CONSCIOUSNESS MOVEMENT
+  // --------------------------------------------------
 
-const levels =
-  interpretation?.levels || {
+  const consciousnessMovement =
+    interpretation
+      ?.consciousness_movement || {
 
-    physical: 0.5,
+      reactivity: 0.5,
 
-    emotional: 0.5,
+      awareness: 0.5,
 
-    energetic: 0.5,
-  };
+      responsibility: 0.5,
 
-console.log(
-  "🌍 LEVELS:",
-  levels
-);
+      embodiment: 0.5,
 
-// --------------------------------------------------
-// ✨ CONSCIOUSNESS MOVEMENT
-// --------------------------------------------------
+      integration: 0.5,
+    };
 
-const consciousnessMovement =
-  interpretation?.consciousness_movement || {
-
-    reactivity: 0.5,
-
-    awareness: 0.5,
-
-    responsibility: 0.5,
-
-    embodiment: 0.5,
-
-    integration: 0.5,
-  };
-
-console.log(
-  "✨ CONSCIOUSNESS:",
-  consciousnessMovement
-);
+  console.log(
+    "✨ CONSCIOUSNESS:",
+    consciousnessMovement
+  );
 
   // --------------------------------------------------
   // 🌈 DOMINANT STATE
   // --------------------------------------------------
 
-  const contraction =
-    energy?.contraction || 0;
-
-  const expansion =
-    energy?.expansion || 0;
-
   let dominant_state =
     "processing";
 
   if (contraction > 0.7) {
+
     dominant_state =
       "contracted";
   }
 
   if (expansion > 0.7) {
+
     dominant_state =
       "expansive";
   }
 
   // --------------------------------------------------
-  // 🧠 NERVOUS SYSTEM STATE
+  // 🧠 NERVOUS SYSTEM
   // --------------------------------------------------
 
   let nervous_system_state =
     "processing";
 
   if (contraction > 0.75) {
+
     nervous_system_state =
       "protective";
   }
 
   if (expansion > 0.7) {
+
     nervous_system_state =
       "open";
   }
@@ -544,18 +879,21 @@ console.log(
     dominant_state ===
     "expansive"
   ) {
+
     energetic_direction =
       "outward";
   }
 
-  // 🌱 grounding phase
   if (
-    energy?.dominant_chakra ===
+
+    dominant_chakra ===
       "root" ||
 
-    energy?.dominant_chakra ===
+    dominant_chakra ===
       "earth_star"
+
   ) {
+
     energetic_direction =
       "grounding";
   }
@@ -565,7 +903,8 @@ console.log(
   // --------------------------------------------------
 
   const emotionNeed =
-    enrichedEmotions[0]?.core_need;
+    enrichedEmotions[0]
+      ?.core_need;
 
   const behaviourNeed =
     behaviours.find(
@@ -574,20 +913,28 @@ console.log(
     )?.nervous_system_need;
 
   const integration_needed =
+
     emotionNeed ||
+
     behaviourNeed ||
+
     "self awareness";
 
   // --------------------------------------------------
   // 🧾 REFLECTION TYPE
   // --------------------------------------------------
 
-const content_type =
-  source === "baseline"
-    ? "baseline"
-    : emotions?.length
-    ? "emotion"
-    : "text";
+  const content_type =
+
+    source === "baseline"
+
+      ? "baseline"
+
+      : emotions?.length
+
+        ? "emotion"
+
+        : "text";
 
   // --------------------------------------------------
   // 🧠 REFLECTION SUMMARY
@@ -618,9 +965,12 @@ const content_type =
       .slice(0, 2);
 
   const reflection_summary =
+
     [
       ...emotionSummary,
+
       ...behaviourSummary,
+
     ].join(". ");
 
   console.log(
@@ -638,42 +988,42 @@ const content_type =
       userId,
 
       content:
+
         text ||
+
         pattern ||
+
         "",
 
       content_type,
 
       source,
 
-metadata: {
+      metadata: {
 
-language:
-  language || "en",
+        language:
+          language || "en",
 
-  emotions:
-    emotions || [],
+        emotions:
+          emotions || [],
 
-  childhood_signals:
-    childhoodSignals || null,
+        childhood_signals:
+          childhoodSignals || null,
 
-  pattern:
-    pattern || null,
+        pattern:
+          pattern || null,
 
-  energyAxes:
-    energyAxes || null,
+        energyAxes:
+          energyAxes || null,
 
-  // 🌍 levels
-  levels,
+        levels,
 
-  // ✨ consciousness
-  consciousness_movement:
-    consciousnessMovement,
+        consciousness_movement:
+          consciousnessMovement,
 
-  ...(metadata || {}),
-},
+        ...(metadata || {}),
+      },
 
-      // 🧠 semantic extraction
       extracted_emotions:
         rawEmotions,
 
@@ -716,6 +1066,7 @@ language:
   };
 
   const finalDepth =
+
     signalDepth ||
 
     DEFAULT_WEIGHTS[
@@ -743,7 +1094,6 @@ language:
       signal_depth:
         finalDepth,
 
-      // 🧠 semantic
       ai_behaviours:
         behaviours,
 
@@ -754,24 +1104,28 @@ language:
         aiLens,
 
       ai_confidence:
-        interpretation.ai_confidence ??
+
+        interpretation
+          .ai_confidence ??
+
         null,
 
       ai_intensity:
-        interpretation.intensity ??
+
+        interpretation
+          .intensity ??
+
         null,
 
-      // ⚡ energy synthesis
       energy,
 
-      // 🌍 levels
+      distortions,
+
       levels,
 
-      // ✨ consciousness
       consciousness_movement:
         consciousnessMovement,
 
-      // 🌈 states
       dominant_state,
 
       energetic_direction,
@@ -791,11 +1145,21 @@ language:
   // --------------------------------------------------
 
   return {
+
     reflection,
+
     signal,
+
     energy,
-    patterns: patternRows || [],
+
+    distortions,
+
+    patterns:
+      patternRows || [],
+
     behaviours,
-    emotions: enrichedEmotions,
+
+    emotions:
+      enrichedEmotions,
   };
 }

@@ -3,6 +3,7 @@
 import { supabase } from "../services/supabase";
 
 type CreateSignalInput = {
+
   reflection_id: string;
 
   user_id: string;
@@ -11,21 +12,74 @@ type CreateSignalInput = {
 
   signal_depth?: number;
 
-  // 🧠 AI / semantic
+  /*
+   * --------------------------------------------------
+   * 🧠 AI / SEMANTIC
+   * --------------------------------------------------
+   */
+
   ai_behaviours?: any[];
 
   ai_patterns?: any[];
 
   ai_lens?: any;
 
-  ai_confidence?: number | null;
+  ai_confidence?:
+    number | null;
 
-  ai_intensity?: number | null;
+  ai_intensity?:
+    number | null;
 
-  // ⚡ energy
-  energy?: any;
+  /*
+   * --------------------------------------------------
+   * ⚡ ENERGY
+   * --------------------------------------------------
+   */
 
-  // 🌍 levels
+  energy?: {
+
+    feminine?: number;
+
+    masculine?: number;
+
+    contraction?: number;
+
+    expansion?: number;
+
+    chakras?:
+      Record<string, number>;
+
+    dominant_chakra?:
+      string | null;
+  };
+
+  /*
+   * --------------------------------------------------
+   * ⚡ DISTORTIONS
+   * --------------------------------------------------
+   */
+
+  distortions?: {
+
+    distorted?: any[];
+
+    integrated?: any[];
+
+    contractionLevel?: number;
+
+    expansionLevel?: number;
+
+    dominantPolarity?:
+      | "feminine"
+      | "masculine";
+  };
+
+  /*
+   * --------------------------------------------------
+   * 🌍 LEVELS
+   * --------------------------------------------------
+   */
+
   levels?: {
 
     physical?: number;
@@ -35,7 +89,12 @@ type CreateSignalInput = {
     energetic?: number;
   };
 
-  // ✨ consciousness movement
+  /*
+   * --------------------------------------------------
+   * ✨ CONSCIOUSNESS MOVEMENT
+   * --------------------------------------------------
+   */
+
   consciousness_movement?: {
 
     reactivity?: number;
@@ -49,7 +108,12 @@ type CreateSignalInput = {
     integration?: number;
   };
 
-  // 🌈 semantic layers
+  /*
+   * --------------------------------------------------
+   * 🌈 SEMANTIC LAYERS
+   * --------------------------------------------------
+   */
+
   dominant_state?: string;
 
   energetic_direction?: string;
@@ -59,21 +123,33 @@ type CreateSignalInput = {
   integration_needed?: string;
 };
 
-export async function createSignal({
+export async function
+createSignal({
+
   reflection_id,
+
   user_id,
 
   sourcetype = "unknown",
 
   signal_depth = 1,
 
+  /*
+   * --------------------------------------------------
+   * 🧠 AI
+   * --------------------------------------------------
+   */
+
   ai_behaviours = [],
 
   ai_patterns = [],
 
   ai_lens = {
+
     people: [],
+
     places: [],
+
     things: [],
   },
 
@@ -81,39 +157,109 @@ export async function createSignal({
 
   ai_intensity = null,
 
-  energy = {},
+  /*
+   * --------------------------------------------------
+   * ⚡ ENERGY
+   * --------------------------------------------------
+   */
 
-  // 🌍 levels
+  energy = {
+
+    feminine: 0.5,
+
+    masculine: 0.5,
+
+    contraction: 0.5,
+
+    expansion: 0.5,
+
+    chakras: {},
+
+    dominant_chakra:
+      null,
+  },
+
+  /*
+   * --------------------------------------------------
+   * ⚡ DISTORTIONS
+   * --------------------------------------------------
+   */
+
+  distortions = {
+
+    distorted: [],
+
+    integrated: [],
+
+    contractionLevel: 0.5,
+
+    expansionLevel: 0.5,
+
+    dominantPolarity:
+      "feminine",
+  },
+
+  /*
+   * --------------------------------------------------
+   * 🌍 LEVELS
+   * --------------------------------------------------
+   */
+
   levels = {
+
     physical: 0.5,
+
     emotional: 0.5,
+
     energetic: 0.5,
   },
 
-  // ✨ consciousness
+  /*
+   * --------------------------------------------------
+   * ✨ CONSCIOUSNESS
+   * --------------------------------------------------
+   */
+
   consciousness_movement = {
+
     reactivity: 0.5,
+
     awareness: 0.5,
+
     responsibility: 0.5,
+
     embodiment: 0.5,
+
     integration: 0.5,
   },
 
-  // 🌈 semantic
-  dominant_state = "processing",
+  /*
+   * --------------------------------------------------
+   * 🌈 SEMANTIC
+   * --------------------------------------------------
+   */
 
-  energetic_direction = "inward",
+  dominant_state =
+    "processing",
 
-  nervous_system_state = "processing",
+  energetic_direction =
+    "inward",
+
+  nervous_system_state =
+    "processing",
 
   integration_needed = "",
+
 }: CreateSignalInput) {
 
-  // ---------------------------------
-  // 📦 PAYLOAD
-  // ---------------------------------
+  /*
+   * --------------------------------------------------
+   * 📦 PAYLOAD
+   * --------------------------------------------------
+   */
 
   const payload = {
+
     reflection_id,
 
     user_id,
@@ -122,7 +268,12 @@ export async function createSignal({
 
     signal_depth,
 
-    // 🧠 AI
+    /*
+     * ------------------------------------------------
+     * 🧠 AI
+     * ------------------------------------------------
+     */
+
     ai_behaviours,
 
     ai_patterns,
@@ -133,16 +284,44 @@ export async function createSignal({
 
     ai_intensity,
 
-    // ⚡ energy
+    /*
+     * ------------------------------------------------
+     * ⚡ ENERGY
+     * ------------------------------------------------
+     */
+
     energy,
 
-    // 🌍 levels
+    /*
+     * ------------------------------------------------
+     * ⚡ DISTORTIONS
+     * ------------------------------------------------
+     */
+
+    distortions,
+
+    /*
+     * ------------------------------------------------
+     * 🌍 LEVELS
+     * ------------------------------------------------
+     */
+
     levels,
 
-    // ✨ consciousness
+    /*
+     * ------------------------------------------------
+     * ✨ CONSCIOUSNESS
+     * ------------------------------------------------
+     */
+
     consciousness_movement,
 
-    // 🌈 semantic
+    /*
+     * ------------------------------------------------
+     * 🌈 SEMANTIC
+     * ------------------------------------------------
+     */
+
     dominant_state,
 
     energetic_direction,
@@ -157,20 +336,30 @@ export async function createSignal({
     payload
   );
 
-  // ---------------------------------
-  // 💾 INSERT
-  // ---------------------------------
+  /*
+   * --------------------------------------------------
+   * 💾 INSERT
+   * --------------------------------------------------
+   */
 
-  const { data, error } =
-    await supabase
-      .from("signals")
-      .insert([payload])
-      .select()
-      .maybeSingle();
+  const {
+    data,
+    error,
+  } = await supabase
 
-  // ---------------------------------
-  // ❌ ERROR
-  // ---------------------------------
+    .from("signals")
+
+    .insert([payload])
+
+    .select()
+
+    .maybeSingle();
+
+  /*
+   * --------------------------------------------------
+   * ❌ ERROR
+   * --------------------------------------------------
+   */
 
   if (error) {
 
@@ -182,20 +371,44 @@ export async function createSignal({
     throw error;
   }
 
-  // ---------------------------------
-  // ✅ DONE
-  // ---------------------------------
+  /*
+   * --------------------------------------------------
+   * ✅ DONE
+   * --------------------------------------------------
+   */
 
   console.log(
     "⚡ SIGNAL CREATED:",
     {
-      id: data?.id,
+
+      id:
+        data?.id,
 
       behaviours:
-        data?.ai_behaviours?.length || 0,
+
+        data
+          ?.ai_behaviours
+          ?.length || 0,
 
       patterns:
-        data?.ai_patterns?.length || 0,
+
+        data
+          ?.ai_patterns
+          ?.length || 0,
+
+      distorted:
+
+        data
+          ?.distortions
+          ?.distorted
+          ?.length || 0,
+
+      integrated:
+
+        data
+          ?.distortions
+          ?.integrated
+          ?.length || 0,
 
       hasLens:
         !!data?.ai_lens,
@@ -207,12 +420,22 @@ export async function createSignal({
         !!data?.levels,
 
       hasConsciousness:
-        !!data?.consciousness_movement,
+
+        !!data
+          ?.consciousness_movement,
 
       dominant_state:
-        data?.dominant_state,
+
+        data
+          ?.dominant_state,
     }
   );
+
+  /*
+   * --------------------------------------------------
+   * ✨ RETURN
+   * --------------------------------------------------
+   */
 
   return data;
 }

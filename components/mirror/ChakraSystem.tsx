@@ -25,7 +25,7 @@ import type {
 
 type Props = {
 
-  dominant?: Chakra;
+  awareness?: Chakra;
 
   scores?: Record<
     Chakra,
@@ -48,12 +48,18 @@ type Props = {
     }
   >;
 
-  distortions?: {
+distortions?: {
 
-    masculine: any[];
+  distorted?: any[];
 
-    feminine: any[];
-  };
+  integrated?: any[];
+
+  contractionLevel?: number;
+
+  expansionLevel?: number;
+
+  dominantPolarity?: string;
+};
 
   observableScenes?:
     string[];
@@ -65,7 +71,7 @@ type Props = {
 
 export default function ChakraSystem({
 
-  dominant,
+  awareness,
 
   scores,
 
@@ -85,23 +91,32 @@ export default function ChakraSystem({
   // 🌊 AVERAGE
   // --------------------------------------------------
 
-  const avg =
+ const avg =
 
-    scores
+  scores &&
 
-      ? Object.values(
-          scores
-        ).reduce(
-          (a, b) =>
-            a + b.score,
-          0
-        ) /
+  Object.keys(scores)
+    .length > 0
 
-        Object.keys(scores)
-          .length
+    ? Object.values(
+        scores
+      ).reduce(
+        (a, b) =>
 
-      : 1 /
-        chakraOrder.length;
+          a +
+
+          Number(
+            b?.score || 0
+          ),
+
+        0
+      ) /
+
+      Object.keys(scores)
+        .length
+
+    : 1 /
+      chakraOrder.length;
 
   // --------------------------------------------------
   // 🧠 CHAKRA STATE
@@ -201,7 +216,7 @@ export default function ChakraSystem({
             );
 
           const isActive =
-            dominant === key;
+            awareness === key;
 
           const y =
             chakraY[key] ??

@@ -11,8 +11,9 @@ export function buildTarotPrompt({
 Generate a VERY short tarot whisper
 for The Sacred Dance.
 
-Write ONLY in:
-${data?.language || "en"}
+Write ALL output ONLY in:
+
+${data?.languageName || "English"}
 
 The whisper MUST:
 
