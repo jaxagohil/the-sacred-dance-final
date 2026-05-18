@@ -27,32 +27,43 @@ export const chakraOrder: Chakra[] = [
 // 🎯 Y positions
 //
 
-export const chakraY: Record<Chakra, number> = {
-  soul_star: 22,
-  crown: 65,
-  third_eye: 85,
-  throat: 120,
-  heart: 180,
-  solar_plexus: 230,
-  sacral: 250,
-  root: 275,
-  earth_star: 390,
-};
+export const chakraY: Record<
+  Chakra,
+  number
+> = {
 
+  soul_star: -15,
+
+  crown: 13,
+
+  third_eye: 30,
+
+  throat: 57,
+
+  heart: 105,
+
+  solar_plexus: 140,
+
+  sacral: 160,
+
+  root: 185,
+
+  earth_star: 270,
+};
 //
 // 🎨 Colors
 //
 
 export const chakraColours: Record<Chakra, string> = {
-  soul_star: "#e5ccff",
-  crown: "#b084ff",
+  soul_star: "#f8f2dc",
+  crown: "#de9fed",
   third_eye: "#7a6cff",
-  throat: "#4cc9f0",
-  heart: "#22c55e",
+  throat: "#34b3da",
+  heart: "#0c5c29",
   solar_plexus: "#facc15",
   sacral: "#fb923c",
-  root: "#ef4444",
-  earth_star: "#8b5cf6",
+  root: "#a11f1f",
+  earth_star: "#4f4e52",
 };
 
 //

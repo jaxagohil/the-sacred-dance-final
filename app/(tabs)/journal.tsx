@@ -27,6 +27,15 @@ import {
 import EmotionCloudSkia from "../../components/signals/EmotionCloudSkia";
 import { getLanguage, t } from "../../lib/i18n/t";
 
+import {
+  Audio,
+} from "expo-av";
+import * as ImagePicker from "expo-image-picker";
+
+ import {
+  buildReflectionPacket,
+} from "../../lib/buildReflectionsPacket";
+
 const { height } =
   Dimensions.get("window");
 
@@ -59,15 +68,37 @@ const [selected, setSelected] =
   const [language, setLanguageState] =
   useState("en");  
 
+  const [imageBase64,
+  setImageBase64] =
+    useState<string | null>(
+      null
+    );
+
+const [audioUri,
+  setAudioUri] =
+    useState<string | null>(
+      null
+    );
+
+        const [recording,
+  setRecording] =
+    useState<Audio.Recording | null>(
+      null
+    );
+
   //
   // ✨ DERIVED
   //
 
-  const hasContent =
+const hasContent =
 
-    text.trim().length > 0 ||
+  text.trim().length > 0 ||
 
-    selected.length > 0;
+  selected.length > 0 ||
+
+  !!imageBase64 ||
+
+  !!audioUri;
 
   //
   // 🌿 LOAD EMOTIONS
@@ -154,63 +185,235 @@ const { data } =
   // ✨ RELEASE
   //
 
-  const handleRelease =
-    async () => {
+  /*
+ * --------------------------------------------------
+ * 📷 IMAGE
+ * --------------------------------------------------
+ */
 
-      if (!hasContent)
+  // IMAGE
+  const handleImage = async () => {
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) return;
+
+    const res = await ImagePicker.launchImageLibraryAsync({
+      base64: true,
+      quality: 0.5,
+    });
+
+    if (!res.canceled) {
+      setImageBase64(res.assets[0].base64 || null);
+    }
+  };
+  /*
+ * --------------------------------------------------
+ * 🎤 VOICE
+ * --------------------------------------------------
+ */
+
+const handleVoice =
+  async () => {
+
+    try {
+
+      /*
+       * --------------------------------------------------
+       * 🎙 START
+       * --------------------------------------------------
+       */
+
+      if (!recording) {
+
+        await Audio
+          .requestPermissionsAsync();
+
+        await Audio
+          .setAudioModeAsync({
+
+            allowsRecordingIOS:
+              true,
+
+            playsInSilentModeIOS:
+              true,
+          });
+
+        const {
+          recording,
+        } = await Audio
+          .Recording
+          .createAsync(
+
+            Audio
+              .RecordingOptionsPresets
+              .HIGH_QUALITY
+          );
+
+        setRecording(
+          recording
+        );
+
+        console.log(
+          "🎙 Recording started"
+        );
+
         return;
+      }
 
-      const userId =
-        await getUserId();
+      /*
+       * --------------------------------------------------
+       * ⏹ STOP
+       * --------------------------------------------------
+       */
 
-      if (!userId)
-        return;
+      await recording
+        .stopAndUnloadAsync();
 
-      try {
+      const uri =
+        recording.getURI();
 
-        setSaving(true);
+      setAudioUri(
+        uri || null
+      );
 
-        await processReflection({
+      setRecording(
+        null
+      );
 
-          userId,
+      console.log(
+        "🎙 Saved:",
+        uri
+      );
 
-          language,
+    } catch (err) {
+
+      console.log(
+        "🎤 AUDIO ERROR",
+        err
+      );
+    }
+  };
+  
+ const handleRelease =
+  async () => {
+
+    if (!hasContent)
+      return;
+
+    if (saving)
+  return;
+
+    const userId =
+      await getUserId();
+
+    if (!userId)
+      return;
+
+    try {
+
+      setSaving(true);
+
+      /*
+       * --------------------------------------------------
+       * 🌊 BUILD REFLECTION PACKET
+       * --------------------------------------------------
+       */
+
+      const packet =
+
+        await buildReflectionPacket({
 
           text,
 
           emotions:
             selected,
 
-          source:
-            "journal",
+          imageBase64,
+
+          audioUri,
         });
 
-        Keyboard.dismiss();
+      /*
+       * --------------------------------------------------
+       * 🪞 PROCESS REFLECTION
+       * --------------------------------------------------
+       */
 
-        setText("");
+      await processReflection({
 
-        setSelected([]);
+        userId,
 
-        setAck(true);
+        language,
 
-        setTimeout(() => {
+        text:
+          packet.text,
 
-          setAck(false);
+        emotions:
+          packet.emotions,
 
-        }, 1200);
+        source:
+          "journal",
 
-      } catch (error) {
+        metadata: {
 
-        console.log(
-          "❌ JOURNAL ERROR",
-          error
-        );
+          observableScenes:
+            packet.observableScenes,
 
-      } finally {
+          bodyResponses:
+            packet.bodyResponses,
 
-        setSaving(false);
-      }
-    };
+          copingStrategies:
+            packet.copingStrategies,
+
+          manifestations:
+            packet.manifestations,
+
+          nervousSystem:
+            packet.nervousSystem,
+        },
+      });
+
+      /*
+       * --------------------------------------------------
+       * ✨ RESET
+       * --------------------------------------------------
+       */
+
+      Keyboard.dismiss();
+
+      setText("");
+
+      setSelected([]);
+
+      setImageBase64(
+  null
+);
+
+setAudioUri(
+  null
+);
+
+      setAck(true);
+
+      setTimeout(() => {
+
+        setAck(false);
+
+      }, 1200);
+
+    } catch (error) {
+
+      console.log(
+        "❌ JOURNAL ERROR",
+        error
+      );
+
+    } finally {
+
+      setSaving(false);
+    }
+  };
 
   //
   // 🌌 UI
@@ -317,7 +520,11 @@ const { data } =
           }}
         >
 
-          <TouchableOpacity>
+<TouchableOpacity
+  onPress={
+    handleImage
+  }
+>
 
             <Text
               style={{
@@ -332,7 +539,11 @@ const { data } =
 
           </TouchableOpacity>
 
-          <TouchableOpacity>
+<TouchableOpacity
+  onPress={
+    handleVoice
+  }
+>
 
             <Text
               style={{
@@ -342,7 +553,11 @@ const { data } =
                 fontSize: 18,
               }}
             >
-              🎤
+{
+  recording
+    ? "⏺"
+    : "🎤"
+}
             </Text>
 
           </TouchableOpacity>

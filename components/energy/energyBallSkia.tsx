@@ -70,6 +70,9 @@ distortions?: {
   observableScenes?:
     string[];
 
+    lensEntries?:
+    any[];
+
   awarenessChakra?:
     string | null;
 };
@@ -110,6 +113,8 @@ export default function EnergyBallSkia({
   distortions,
 
   observableScenes,
+
+   lensEntries,
 
   awarenessChakra,
 
@@ -233,11 +238,56 @@ const coherence =
   // 🧿 DISTORTIONS
   // --------------------------------------------------
 
-const distortionList = [
+const distortionList = (
 
-  ...(distortions
-    ?.distorted || []),
-];
+  distortions?.distorted || []
+
+).map(
+  (d: any) => {
+
+    const matchingLens =
+
+      lensEntries?.find(
+        (l: any) =>
+
+          l?.behaviour_id ===
+          d?.id
+      );
+
+    return {
+
+      ...d,
+
+      manifestation:
+
+        matchingLens
+          ?.manifestation ||
+
+        d?.manifestation,
+
+      mirror_prompt:
+
+        matchingLens
+          ?.mirror_prompt ||
+
+        d?.mirror_prompt,
+
+      observable_scene:
+
+        matchingLens
+          ?.observable_scene ||
+
+        d?.observable_scene,
+
+      coping_strategy:
+
+        matchingLens
+          ?.coping_strategy ||
+
+        d?.coping_strategy,
+    };
+  }
+);
 
   // --------------------------------------------------
   // 🌑 DOT POSITIONS
@@ -348,29 +398,29 @@ const r =
       if (!behaviour)
         return "";
 
-      return (
+return (
 
-        behaviour
-          ?.manifestation ||
+  behaviour
+    ?.observable_scene ||
 
-        behaviour
-          ?.mirror_prompt ||
+  observableScenes?.[
+    selected
+  ] ||
 
-        behaviour
-          ?.observable_scene ||
+  behaviour
+    ?.manifestation ||
 
-        behaviour
-          ?.coping_strategy ||
+  behaviour
+    ?.mirror_prompt ||
 
-        behaviour
-          ?.statement ||
+  behaviour
+    ?.coping_strategy ||
 
-        observableScenes?.[
-          selected
-        ] ||
+  behaviour
+    ?.statement ||
 
-        ""
-      );
+  ""
+);
     };
 
   // --------------------------------------------------
@@ -709,9 +759,8 @@ const r =
           position:
             "absolute",
 
-          width: SIZE,
-
-          height: SIZE,
+width: CANVAS_SIZE,
+height: CANVAS_SIZE,
         }}
 
         onPress={(e) => {
@@ -745,12 +794,15 @@ const r =
 
               if (
                 distance <
-                dot.r + 12
+                dot.r + 2
               ) {
 
-                setSelected(
-                  i
-                );
+setSelected(
+
+  selected === i
+    ? null
+    : i
+);
               }
             }
           );
@@ -759,65 +811,69 @@ const r =
 
       {/* ✨ BEHAVIOUR */}
 
-      {selected !== null &&
+ {selected !== null &&
+
+  dotPositions[
+    selected
+  ] && (
+
+  <Pressable
+
+    onPress={() =>
+      setSelected(null)
+    }
+
+    style={{
+
+      position:
+        "absolute",
+
+      left:
 
         dotPositions[
           selected
-        ] && (
+        ].x + 10,
 
-        <View
+      top:
 
-          style={{
+        dotPositions[
+          selected
+        ].y - 10,
 
-            position:
-              "absolute",
+      maxWidth: 100,
 
-            left:
+      flexShrink: 1,
+    }}
+  >
 
-              dotPositions[
-                selected
-              ].x + 10,
+    <Text
 
-            top:
+      style={{
 
-              dotPositions[
-                selected
-              ].y - 10,
+        color:
+          "white",
 
-            maxWidth: 170,
-          }}
-        >
+        fontSize: 12,
+        
+        lineHeight: 18,
 
-          <Text
+        opacity: 0.85,
 
-            style={{
+        backgroundColor:
+          "rgba(0,0,0,0.22)",
 
-              color:
-                "white",
+        padding: 8,
 
-              fontSize: 12,
-              
-              lineHeight: 18,
+        borderRadius: 12,
+      }}
+    >
 
-              opacity: 0.85,
+      {getBehaviourText()}
 
-backgroundColor:
-  "rgba(0,0,0,0.22)",
+    </Text>
 
-padding: 8,
-
-borderRadius: 12,
-
-            }}
-          >
-
-            {getBehaviourText()}
-
-          </Text>
-
-        </View>
-      )}
-
+  </Pressable>
+)}
     </View>
   );
 }

@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import ChakraSystem from "../mirror/ChakraSystem";
+import ChakraSystem from "./ChakraSystemRN";
 
 import EnergyBallSkia from "./energyBallSkia";
 
@@ -95,6 +95,9 @@ const awarenessChakra =
   const observableScenes =
     userContext?.observableScenes || [];
 
+  const lensEntries =
+  userContext?.lensEntries || [];  
+
   /*
  * --------------------------------------------------
  * 🌌 EMPTY FIELD
@@ -157,6 +160,8 @@ if (
               }}
 
               observableScenes={[]}
+
+              lensEntries={null}
 
               awarenessChakra={
                 null
@@ -231,22 +236,33 @@ if (
             ?.integrated || []),
         ]
 
-          .filter(
-            (d: any) => {
+.filter(
+  (d: any) => {
 
-              const weights =
-                d?.chakra_weights || {};
+    if (
+      !selectedChakra
+    ) {
 
-return (
+      return false;
+    }
 
-  Number(
-    weights?.[
-      selectedChakra
-    ] || 0
-  ) > 0.5
-);
-            }
-          )
+    const weights =
+      d?.chakra_weights;
+
+    if (!weights) {
+
+      return false;
+    }
+
+    return (
+      Number(
+        weights[
+          selectedChakra
+        ] || 0
+      ) > 0
+    );
+  }
+)
 
       : [];
 
@@ -263,9 +279,14 @@ return (
       chakra
     );
 
-    setSelectedChakra(
-      chakra
-    );
+setSelectedChakra(
+
+  selectedChakra === chakra
+
+    ? null
+
+    : chakra
+);
   };
 
   // --------------------------------------------------
@@ -301,6 +322,9 @@ return (
                 observableScenes
               }
 
+              lensEntries={
+              lensEntries}
+  
               awarenessChakra={
                 awarenessChakra
               }
@@ -318,10 +342,10 @@ return (
 
           {/* 🟣 CHAKRAS */}
 
-          <View
-            style={styles.chakras}
-            pointerEvents="box-none"
-          >
+<View
+  style={styles.chakras}
+  pointerEvents="box-none"
+>
 
             <View
               style={{
@@ -330,36 +354,32 @@ return (
               }}
             >
 
-              <ChakraSystem
+<ChakraSystem
 
-                awareness={
-                  awarenessChakra
-                }
+  awareness={
+    awarenessChakra
+  }
 
-                scores={
-                  chakraScores
-                }
+  scores={
+    chakraScores
+  }
 
-                patterns={
-                  chakraPatterns
-                }
+  selectedChakra={
+    selectedChakra
+  }
 
-                distortions={
-                  distortions
-                }
+  onChakraPress={
+    handleChakraPress
+  }
 
-                observableScenes={
-                  observableScenes
-                }
+  bodyResponse={
 
-                onChakraPress={
-                  handleChakraPress
-                }
+    chakraManifestations?.[0]
+      ?.body_response ||
 
-                selectedChakra={
-                  selectedChakra
-                }
-              />
+    ""
+  }
+/>
 
             </View>
 
@@ -369,77 +389,6 @@ return (
 
       </View>
 
-      {/* 🌈 CHAKRA REVEAL */}
-
-      {selectedChakraData && (
-
-        <View
-          style={
-            styles.chakraReveal
-          }
-        >
-
-          <Text
-            style={
-              styles.chakraTitle
-            }
-          >
-
-            {
-              selectedChakraData
-                ?.name
-            }
-
-          </Text>
-
-          <Text
-            style={
-              styles.chakraBody
-            }
-          >
-
-            {chakraManifestations
-              ?.slice(0, 3)
-              ?.map(
-                (
-                  item: any,
-                  i: number
-                ) => (
-
-                  <Text
-
-                    key={i}
-
-                    style={
-                      styles.manifestation
-                    }
-                  >
-
-                    • {
-
-                      item
-                        ?.manifestation ||
-
-                      item
-                        ?.observable_scene ||
-
-                      item
-                        ?.mirror_prompt
-                    }
-
-                  </Text>
-                )
-              )}
-
-            {
-              selectedChakraData
-                ?.affirmation
-            }
-
-          </Text>
-
-        </View>
-      )}
 
       {/* ✨ AFFIRMATION */}
 
@@ -537,7 +486,7 @@ fieldContainer: {
       alignItems:
         "center",
 
-      zIndex: 10,
+      zIndex: 1,
     },
 
     chakras: {
@@ -571,7 +520,7 @@ fieldContainer: {
       color:
         Colors.softText,
 
-      fontSize: 13,
+      fontSize: 15,
 
       fontStyle:
         "italic",
@@ -583,7 +532,7 @@ fieldContainer: {
 
       fontWeight: "300",
 
-      opacity: 0.82,
+      opacity: 0.85,
     },
 
     chakraReveal: {

@@ -258,6 +258,18 @@ console.log(
 
             dailyField,
 
+            aiLens:
+
+  userContext
+    ?.aiLens?.[
+      lens
+    ] || {},
+
+    cosmicField:
+
+  userContext
+    ?.dailyField || {},
+
             // --------------------------------------------------
             // 🪞 OBSERVABLE REALITY
             // --------------------------------------------------

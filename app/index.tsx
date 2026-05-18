@@ -15,16 +15,19 @@ import {
   View,
 } from "react-native";
 
-import {
-  addLanguage,
-} from "../lib/i18n/addLanguage";
-
 import { processReflection } from "../db/flow";
 import { getOrCreateProfile } from "../db/getProfile";
 import { getDailyPrompt } from "../db/prompts";
 import { getUserId, initUser } from "../lib/user";
 
+import {
+  Audio,
+} from "expo-av";
 import * as ImagePicker from "expo-image-picker";
+
+ import {
+  buildReflectionPacket,
+} from "../lib/buildReflectionsPacket";
 
 import {
   Colors,
@@ -48,9 +51,26 @@ export default function LandingScreen() {
   const [language, setAppLanguage] = useState("en");
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [audioBase64, setAudioBase64] = useState<string | null>(null);
+ const [audioUri,
+  setAudioUri] =
+    useState<string | null>(
+      null
+    );
+
+    const [recording,
+  setRecording] =
+    useState<Audio.Recording | null>(
+      null
+    );
 
   const [typingTimeout, setTypingTimeout] = useState<any>(null);
+
+  const [tapCount,
+  setTapCount] =
+    useState(0);
+
+    const CREATOR_ID =
+  "145649f8-2c0f-4883-9d0c-1c3b2c72d17a";
 
   // INIT
   useEffect(() => {
@@ -117,6 +137,41 @@ setPrompt(pr);
     setTypingTimeout(timeout);
   };
 
+
+// 🌌 CREATOR ACCESS
+const handleLogoPress =
+  async () => {
+
+    const next =
+      tapCount + 1;
+
+    setTapCount(next);
+
+    if (next >= 3) {
+
+      const userId =
+        await getUserId();
+
+      if (
+        userId ===
+        CREATOR_ID
+      ) {
+
+        router.push(
+          "/creatorStudio"
+        );
+      }
+
+      setTapCount(0);
+    }
+
+    setTimeout(() => {
+
+      setTapCount(0);
+
+    }, 1500);
+  };
+
   // IMAGE
   const handleImage = async () => {
     const permission =
@@ -134,26 +189,143 @@ setPrompt(pr);
     }
   };
 
+const handleVoice =
+  async () => {
+
+    try {
+
+      /*
+       * --------------------------------------------------
+       * 🎙 START
+       * --------------------------------------------------
+       */
+
+      if (!recording) {
+
+        await Audio
+          .requestPermissionsAsync();
+
+        await Audio
+          .setAudioModeAsync({
+
+            allowsRecordingIOS:
+              true,
+
+            playsInSilentModeIOS:
+              true,
+          });
+
+        const {
+          recording,
+        } = await Audio
+          .Recording
+          .createAsync(
+
+            Audio
+              .RecordingOptionsPresets
+              .HIGH_QUALITY
+          );
+
+        setRecording(
+          recording
+        );
+
+        console.log(
+          "🎙 Recording started"
+        );
+
+        return;
+      }
+
+      /*
+       * --------------------------------------------------
+       * ⏹ STOP
+       * --------------------------------------------------
+       */
+
+      await recording
+        .stopAndUnloadAsync();
+
+      const uri =
+        recording.getURI();
+
+      setAudioUri(
+        uri || null
+      );
+
+      setRecording(
+        null
+      );
+
+      console.log(
+        "🎙 Saved:",
+        uri
+      );
+
+    } catch (err) {
+
+      console.log(
+        "🎤 AUDIO ERROR",
+        err
+      );
+    }
+  };
+
   // SUBMIT (UNCHANGED)
   const handleSubmit = async () => {
+
+    if (saving)
+  return;
+
     const userId = await getUserId();
 
-    if (
-      text.trim() ||
-      selected.length > 0 ||
-      imageBase64 ||
-      audioBase64
-    ) {
-      await processReflection({
-        userId,
-        language,
-        text,
-        emotions: selected,
-        imageBase64: imageBase64 || undefined,
-        audioBase64: audioBase64 || undefined,
-        source: "landing",
-      });
-    }
+const packet =
+
+  await buildReflectionPacket({
+
+    text,
+
+    emotions:
+      selected,
+
+    imageBase64,
+
+    audioUri,
+  });
+
+await processReflection({
+
+  userId,
+
+  language,
+
+  text:
+    packet.text,
+
+  emotions:
+    packet.emotions,
+
+  source:
+    "landing",
+
+  metadata: {
+
+    observableScenes:
+      packet.observableScenes,
+
+    bodyResponses:
+      packet.bodyResponses,
+
+    copingStrategies:
+      packet.copingStrategies,
+
+    manifestations:
+      packet.manifestations,
+
+    nervousSystem:
+      packet.nervousSystem,
+  },
+});
 
     router.push("/mirror");
   };
@@ -183,10 +355,25 @@ setPrompt(pr);
       >
         {/* TOP */}
         <View style={{ alignItems: "center", marginTop: 140 }}>
-          <Image
-            source={require("../assets/logo.png")}
-            style={{ width: 100, height: 100, marginBottom: 20 }}
-          />
+<TouchableOpacity
+  onPress={
+    handleLogoPress
+  }
+>
+
+  <Image
+    source={require(
+      "../assets/logo.png"
+    )}
+
+    style={{
+      width: 100,
+      height: 100,
+      marginBottom: 20,
+    }}
+  />
+
+</TouchableOpacity>
 
           <Text
   style={{
@@ -316,19 +503,28 @@ setPrompt(pr);
 
       </TouchableOpacity>
 
-      <TouchableOpacity>
+<TouchableOpacity
+  onPress={
+    handleVoice
+  }
+>
 
-        <Text
-          style={{
-            color:Colors.mutedText,
+            <Text
+              style={{
+                color:
+                  Colors.mutedText,
 
-            fontSize: 18,
-          }}
-        >
-          🎤
-        </Text>
+                fontSize: 18,
+              }}
+            >
+{
+  recording
+    ? "⏺"
+    : "🎤"
+}
+            </Text>
 
-      </TouchableOpacity>
+          </TouchableOpacity>
 
       <TouchableOpacity
 
@@ -415,46 +611,6 @@ placeholder={t("landing.write_freely")}
 
   
 
-)}
-
-{__DEV__ && (
-
-  <TouchableOpacity
-
-    style={{
-
-      marginTop: 40,
-
-      padding: 12,
-
-      alignSelf: "center",
-    }}
-
-    onPress={async () => {
-
-      await addLanguage({
-
-        language: "es",
-      });
-
-      console.log(
-        "✅ Spanish generated"
-      );
-    }}
-  >
-
-    <Text style={{
-
-      color: "white",
-
-      opacity: 0.6,
-    }}>
-
-      🌍 Generate Spanish
-
-    </Text>
-
-  </TouchableOpacity>
 )}
       </Pressable>
     </KeyboardAvoidingView>

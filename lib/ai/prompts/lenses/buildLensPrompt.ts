@@ -31,7 +31,7 @@ export function buildLensPrompt({
    */
 
   const lensContext =
-    data?.lensContext || {};
+    data?.lensContext || {};  
 
   /*
    * ---------------------------------------------------------
@@ -75,25 +75,28 @@ export function buildLensPrompt({
    * ---------------------------------------------------------
    */
 
+ const cosmicField =
+  data?.cosmicField || {}; 
+
   const symbolicThemes =
-    dailyField
+    cosmicField
       ?.symbolicThemes || [];
 
   const guideTone =
-    dailyField
+    cosmicField
       ?.guideTone || [];
 
   const imagery =
-    dailyField
+    cosmicField
       ?.imagery || [];
 
   const oracleBias =
-    dailyField
+    cosmicField
       ?.oracleBias || [];
 
   const cadenceStyles =
-    dailyField
-      ?.cadenceStyles || [];
+    cosmicField
+      ?.cadenceStyles || [];    
 
   /*
    * ---------------------------------------------------------
@@ -152,6 +155,31 @@ ACTIVE LENS
 ${lens}
 
 --------------------------------------------------
+AI LENS FIELD
+--------------------------------------------------
+
+Emotional Structure:
+${data?.aiLens?.emotionalStructure || "unknown"}
+
+Primary Protection:
+${data?.aiLens?.primaryProtection || "unknown"}
+
+Relational Dynamic:
+${data?.aiLens?.relationalDynamic || "unknown"}
+
+Avoidance Pattern:
+${data?.aiLens?.avoidancePattern || "unknown"}
+
+Current Mirror:
+${data?.aiLens?.currentMirror || "unknown"}
+
+Energetic Atmosphere:
+${data?.aiLens?.energeticAtmosphere || "unknown"}
+
+Life Theme:
+${data?.aiLens?.lifeTheme || "unknown"}
+
+--------------------------------------------------
 MANIFESTATION FIELD
 --------------------------------------------------
 
@@ -203,7 +231,7 @@ DOMINANT CHAKRA:
 ${lensContext?.dominantChakra || energy?.dominant_chakra || "unknown"}
 
 AWARENESS CHAKRA:
-${userContext?.awarenessChakra?.name || "unknown"}
+${energy?.awareness_chakra || "unknown"}
 
 NERVOUS SYSTEM:
 ${lensContext?.nervousSystemState || "unknown"}
@@ -469,6 +497,26 @@ Examples:
 "Different situations keep leading you toward the same coping behaviour."
 
 "You keep trying to leave the feeling before fully experiencing it."
+
+--------------------------------------------------
+LANGUAGE
+--------------------------------------------------
+
+The user language is:
+
+${data?.languageName || "English"}
+
+You MUST respond fully in this language.
+
+Do NOT:
+- switch to English
+- explain translations
+- mix languages
+
+The emotional tone,
+psychological precision,
+and conversational realism
+must remain natural in the user's language.
 
 --------------------------------------------------
 FINAL RULES

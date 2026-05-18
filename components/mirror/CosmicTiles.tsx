@@ -391,6 +391,6 @@ const styles =
 
     lineHeight: 14,
 
-    opacity: 0.72,
+    opacity: 0.85,
   },
 });
