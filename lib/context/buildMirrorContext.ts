@@ -16,7 +16,7 @@ export type MirrorContext = {
 
     corePatterns: string[];
 
-    protectionPatterns: string[];
+    activatedBehaviours: string[];
 
     attachmentThemes: string[];
   };
@@ -30,6 +30,8 @@ export type MirrorContext = {
     patterns: any[];
 
     dominantPattern?: string | null;
+
+    activatedPatterns?: string[];
 
     dominantChakra?: string | null;
 
@@ -94,6 +96,11 @@ export type MirrorContext = {
 
     awarenessChakra?: string | null;
 
+    mirrorChakraScores?: Record<
+  string,
+  number
+>;
+
     chakras?: Record<
       string,
       number
@@ -121,7 +128,7 @@ export type MirrorContext = {
 
     reflectionEchoes: string[];
 
-    emotionalThemes: string[];
+    mirrorThemes: string[];
   };
 
   cosmic: any;
@@ -549,6 +556,69 @@ export async function buildMirrorContext({
   };
 
   // --------------------------------------------------
+// 🌈 MIRROR CHAKRA SCORES
+// --------------------------------------------------
+
+const mirrorChakraScores:
+  Record<string, number> = {};
+
+currentPatterns.forEach(
+  (p: any) => {
+
+    const weights =
+
+      p?.chakra_weights ||
+      {};
+
+    Object.entries(
+      weights
+    ).forEach(
+
+      ([chakra, value]) => {
+
+        mirrorChakraScores[
+          chakra
+        ] =
+
+          (
+            mirrorChakraScores[
+              chakra
+            ] || 0
+          ) +
+
+          Number(value || 0);
+      }
+    );
+  }
+);
+
+// --------------------------------------------------
+// 🌈 NORMALIZE
+// --------------------------------------------------
+
+const maxScore =
+
+  Math.max(
+    ...Object.values(
+      mirrorChakraScores
+    ),
+    1
+  );
+
+Object.keys(
+  mirrorChakraScores
+).forEach((key) => {
+
+  mirrorChakraScores[
+    key
+  ] =
+
+    mirrorChakraScores[
+      key
+    ] / maxScore;
+});
+
+  // --------------------------------------------------
   // 🧭 STORY FIELD
   // --------------------------------------------------
 
@@ -649,17 +719,17 @@ export async function buildMirrorContext({
           5
         ),
 
-      protectionPatterns:
+activatedBehaviours:
 
-        currentBehaviours
+  currentBehaviours
 
-          .map(
-            (b: any) =>
+    .map(
+      (b: any) =>
 
-              b?.id
-          )
+        b?.id
+    )
 
-          .slice(0, 5),
+    .slice(0, 5),
 
 attachmentThemes:
 
@@ -682,6 +752,20 @@ attachmentThemes:
 
       dominantPattern,
 
+      activatedPatterns:
+
+  currentPatterns
+
+    .map(
+      (p: any) =>
+
+        p?.id ||
+
+        p?.name
+    )
+
+    .slice(0, 5),
+
       contraction:
         energy?.contraction,
 
@@ -691,13 +775,12 @@ attachmentThemes:
       dominantChakra:
         energy?.dominant_chakra,
 
-      awarenessChakra:
+awarenessChakra:
 
-        energy
-          ?.awareness_chakra ||
+  energy
+    ?.awareness_chakra ||
 
-        energy
-          ?.dominant_chakra,
+  null,
 
       nervousSystemState:
 
@@ -784,13 +867,14 @@ attachmentThemes:
       dominantChakra:
         energy?.dominant_chakra,
 
-      awarenessChakra:
+awarenessChakra:
 
-        energy
-          ?.awareness_chakra ||
+  energy
+    ?.awareness_chakra ||
 
-        energy
-          ?.dominant_chakra,
+  null,
+
+      mirrorChakraScores,    
 
       chakras:
         energy?.chakras ||
@@ -809,23 +893,23 @@ attachmentThemes:
       dominantMovement,
     },
 
-    // 🗣 VOICE
-    voice: {
+// 🗣 VOICE
+voice: {
 
-      reflectionEchoes,
+  reflectionEchoes,
 
-      emotionalThemes:
+  mirrorThemes:
 
-        currentPatterns.map(
-          (p: any) =>
+    currentPatterns.map(
+      (p: any) =>
 
-            p?.mirror_theme ||
+        p?.mirror_theme ||
 
-            p?.name ||
+        p?.name ||
 
-            p?.id
-        ),
-    },
+        p?.id
+    ),
+},
 
     // 🌌 COSMIC
     cosmic:

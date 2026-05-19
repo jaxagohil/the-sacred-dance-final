@@ -194,122 +194,134 @@ export default function Guidance() {
     });
   };
 
-  /*
-   * ---------------------------------------------------------
-   * 🧠 LOAD CONTEXT
-   * ---------------------------------------------------------
-   */
+// ---------------------------------------------------------
+// 🧠 LOAD CONTEXT
+// ---------------------------------------------------------
 
-  useEffect(() => {
+useEffect(() => {
 
-    async function loadContext() {
+  async function loadContext() {
 
-      try {
+    try {
 
-        const userId =
-          await getUserId();
+      const userId =
+        await getUserId();
 
-        const currentLanguage =
-          getLanguage();
+      const currentLanguage =
+        getLanguage();
 
-        setLanguage(
-          currentLanguage
-        );
+      setLanguage(
+        currentLanguage
+      );
 
-        /*
-         * ---------------------------------------------------
-         * 🧹 CLEANUP
-         * ---------------------------------------------------
-         */
+      /*
+       * ---------------------------------------------------
+       * ⚡ RENDER UI IMMEDIATELY
+       * ---------------------------------------------------
+       */
 
-        await cleanupGuideMessages();
+      setContextReady(true);
 
-        /*
-         * ---------------------------------------------------
-         * 🌌 BUILD FIELD
-         * ---------------------------------------------------
-         */
+      /*
+       * ---------------------------------------------------
+       * 🧹 CLEANUP (BACKGROUND)
+       * ---------------------------------------------------
+       */
 
-        const built =
-          await buildUserContext({
+      cleanupGuideMessages();
 
-            userId,
+      /*
+       * ---------------------------------------------------
+       * 🌌 LOAD IN PARALLEL
+       * ---------------------------------------------------
+       */
 
-            source:
-              "guidance",
+      const [
+        built,
+        messages,
+      ] = await Promise.all([
 
-            activeLens:
-              "general",
-          });
+        buildUserContext({
 
-        setFieldContext(
-          built
-        );
+          userId,
 
-        /*
-         * ---------------------------------------------------
-         * 👤 GUIDE NAMES
-         * ---------------------------------------------------
-         */
+          source:
+            "guidance",
 
-        if (built?.profile) {
+          activeLens:
+            "general",
+        }),
 
-          setGuideNames({
+        loadGuideMessages(
+          userId
+        ),
+      ]);
 
-            guide_heart:
+      /*
+       * ---------------------------------------------------
+       * 🌌 FIELD
+       * ---------------------------------------------------
+       */
 
-              built.profile
-                .heart_guide_name ||
+      setFieldContext(
+        built
+      );
 
-              "nani",
+      /*
+       * ---------------------------------------------------
+       * 👤 GUIDE NAMES
+       * ---------------------------------------------------
+       */
 
-            guide_structure:
+      if (built?.profile) {
 
-              built.profile
-                .structure_guide_name ||
+        setGuideNames({
 
-              "lala",
+          guide_heart:
 
-            guide_cosmic:
+            built.profile
+              .heart_guide_name ||
 
-              built.profile
-                .cosmic_guide_name ||
+            "nani",
 
-              "ammaarah",
-          });
-        }
+          guide_structure:
 
-        /*
-         * ---------------------------------------------------
-         * 🌊 LOAD MESSAGES
-         * ---------------------------------------------------
-         */
+            built.profile
+              .structure_guide_name ||
 
-        const messages =
-          await loadGuideMessages(
-            userId
-          );
+            "lala",
 
-        setSegments(
-          messages
-        );
+          guide_cosmic:
 
-      } catch (e) {
+            built.profile
+              .cosmic_guide_name ||
 
-        console.log(
-          "❌ CONTEXT LOAD ERROR",
-          e
-        );
-
-      } finally {
-
-        setContextReady(true);
+            "ammaarah",
+        });
       }
+
+      /*
+       * ---------------------------------------------------
+       * 🌊 MESSAGES
+       * ---------------------------------------------------
+       */
+
+      setSegments(
+        messages
+      );
+
+    } catch (e) {
+
+      console.log(
+        "❌ CONTEXT LOAD ERROR",
+        e
+      );
     }
+  }
 
-    loadContext();
+  loadContext();
 
-  }, []);
+}, []);
 
   /*
    * ---------------------------------------------------------

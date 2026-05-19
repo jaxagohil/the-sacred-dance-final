@@ -345,35 +345,6 @@ const patternIds =
 
   /*
    * ------------------------------------------------
-   * 🪞 LOAD LENS WEIGHTS
-   * ------------------------------------------------
-   */
-
-const {
-  data: lensRows,
-} = await supabase
-
-  .from(
-    "behaviour_lens_weights"
-  )
-
-  .select("*")
-
-  .in(
-    "behaviour_id",
-
-    behaviourIds.length
-      ? behaviourIds
-      : ["___empty___"]
-  )
-
-  .eq(
-    "language",
-    language
-  );
-
-  /*
-   * ------------------------------------------------
    * 🧠 ENRICHED BEHAVIOURS
    * ------------------------------------------------
    */
@@ -389,6 +360,35 @@ const {
 
   const enrichedPatterns =
     patternRows || [];
+  
+  /*
+ * ------------------------------------------------
+ * 🌈 LOAD PATTERN CHAKRA MANIFESTATIONS
+ * ------------------------------------------------
+ */
+
+const {
+  data: chakraRows,
+} = await supabase
+
+  .from(
+    "pattern_chakra_manifestations"
+  )
+
+  .select("*")
+
+  .in(
+    "pattern_key",
+
+    patternIds.length
+      ? patternIds
+      : ["___empty___"]
+  )
+
+  .eq(
+    "language",
+    language
+  );  
 
   /*
    * ------------------------------------------------
@@ -412,103 +412,82 @@ const {
     Record<string, number>
       = {};
 
-  enrichedBehaviours.forEach(
-    (b: any) => {
-
-      feminineValues.push(
-        Number(
-          b?.feminine || 0
-        )
-      );
-
-      masculineValues.push(
-        Number(
-          b?.masculine || 0
-        )
-      );
-
-      contractionValues.push(
-        Number(
-          b?.contraction || 0
-        )
-      );
-
-      expansionValues.push(
-        Number(
-          b?.expansion || 0
-        )
-      );
-
-      Object.entries(
-        b?.chakra_weights || {}
-      ).forEach(
-        ([chakra, value]) => {
-
-          chakraMap[
-            chakra
-          ] =
-
-            (
-              chakraMap[
-                chakra
-              ] || 0
-            ) +
-
-            Number(value);
-        }
-      );
-    }
-  );
-
   /*
-   * ------------------------------------------------
-   * 🌊 PATTERN CHAKRAS
-   * ------------------------------------------------
-   */
+ * ------------------------------------------------
+ * 🌈 BUILD CHAKRA MAP
+ * ------------------------------------------------
+ */
 
-  enrichedPatterns.forEach(
-    (p: any) => {
+(chakraRows || []).forEach(
+  (row: any) => {
 
-      if (p?.chakra) {
+    const chakra =
+      row?.chakra_key;
 
-        chakraMap[
-          p.chakra
-        ] =
+    const weight =
+      Number(
+        row?.weight || 0
+      );
 
-          (
-            chakraMap[
-              p.chakra
-            ] || 0
-          ) + 1;
-      }
+    chakraMap[
+      chakra
+    ] =
 
       (
-        p?.secondary_chakras || []
-      ).forEach(
-        (chakra: string) => {
+        chakraMap[
+          chakra
+        ] || 0
+      ) + weight;
+  }
+);    
 
-          chakraMap[
-            chakra
-          ] =
 
-            (
-              chakraMap[
-                chakra
-              ] || 0
-            ) + 0.5;
-        }
-      );
-    }
-  );
+const distortedBehaviours =
 
-    const distortedBehaviours =
+  enrichedBehaviours
 
-    enrichedBehaviours.filter(
+    .filter(
       (b: any) =>
 
         b?.quality ===
         "distorted"
-    );
+    )
+
+    /*
+     * --------------------------------------------
+     * ⚡ MOST ACTIVE FIRST
+     * --------------------------------------------
+     */
+
+    .sort(
+      (a: any, b: any) => {
+
+        const aStrength =
+
+          Number(
+            a?.contraction || 0
+          );
+
+        const bStrength =
+
+          Number(
+            b?.contraction || 0
+          );
+
+        return (
+          bStrength -
+          aStrength
+        );
+      }
+    )
+
+    /*
+     * --------------------------------------------
+     * 🌊 MAX 3
+     * --------------------------------------------
+     */
+
+    .slice(0, 3);
 
   const integratedBehaviours =
 
@@ -518,6 +497,41 @@ const {
         b?.quality ===
         "divine"
     );
+
+  /*
+ * ------------------------------------------------
+ * ⚡ ENERGY VALUES
+ * ------------------------------------------------
+ */
+
+enrichedBehaviours.forEach(
+  (b: any) => {
+
+    feminineValues.push(
+      Number(
+        b?.feminine || 0
+      )
+    );
+
+    masculineValues.push(
+      Number(
+        b?.masculine || 0
+      )
+    );
+
+    contractionValues.push(
+      Number(
+        b?.contraction || 0
+      )
+    );
+
+    expansionValues.push(
+      Number(
+        b?.expansion || 0
+      )
+    );
+  }
+);  
 
   /*
    * ------------------------------------------------
@@ -555,33 +569,72 @@ const distortionMap:
   Record<string, number>
     = {};
 
+
+/*
+ * ------------------------------------------------
+ * 🌑 ACTIVATED PATTERNS
+ * ------------------------------------------------
+ */
+
+const activatedPatternIds =
+  unique(
+
+    distortedBehaviours.flatMap(
+      (b: any) =>
+
+        enrichedPatterns
+
+          .filter(
+            (p: any) =>
+
+              (
+                p?.linked_behaviours || []
+              ).includes(
+                b?.id
+              )
+          )
+
+          .map(
+            (p: any) =>
+              p.id
+          )
+    )
+  );
 /*
  * ------------------------------------------------
  * 🌑 DISTORTION DENSITY
  * ------------------------------------------------
  */
 
-distortedBehaviours.forEach(
-  (b: any) => {
+(chakraRows || []).forEach(
+  (row: any) => {
 
-    Object.entries(
-      b?.chakra_weights || {}
-    ).forEach(
-      ([chakra, value]) => {
+    if (
 
-        distortionMap[
-          chakra
-        ] =
+      activatedPatternIds.includes(
+        row?.pattern_key
+      )
 
-          (
-            distortionMap[
-              chakra
-            ] || 0
-          ) +
+    ) {
 
-          Number(value);
-      }
-    );
+      const chakra =
+        row?.chakra_key;
+
+      const weight =
+        Number(
+          row?.weight || 0
+        );
+
+      distortionMap[
+        chakra
+      ] =
+
+        (
+          distortionMap[
+            chakra
+          ] || 0
+        ) + weight;
+    }
   }
 );
 
@@ -837,87 +890,97 @@ const allLensEntries =
         .filter(Boolean)
     );
 
-  /*
-   * ------------------------------------------------
-   * 🌈 CHAKRA MANIFESTATIONS
-   * ------------------------------------------------
-   */
+/*
+ * ------------------------------------------------
+ * 🌈 CHAKRA MANIFESTATIONS
+ * ------------------------------------------------
+ */
 
-  const chakraManifestations:
-    Record<string, any[]>
-      = {};
+const chakraManifestations:
+  Record<string, any[]>
+    = {};
 
-  allLensEntries.forEach(
-    (entry: any) => {
+/*
+ * ------------------------------------------------
+ * 🌈 BUILD PER CHAKRA
+ * ------------------------------------------------
+ */
 
-      const behaviour =
-        enrichedBehaviours.find(
-          (b: any) =>
+Object.keys(
+  normalizedChakras
+).forEach((chakra) => {
 
-            b.id ===
-            entry.behaviour_id
-        );
+/*
+ * ----------------------------------------------
+ * 🌈 RELATED MANIFESTATIONS
+ * ----------------------------------------------
+ */
 
-      const weights =
-        behaviour
-          ?.chakra_weights || {};
+const relatedManifestations =
 
-      Object.entries(
-        weights
-      ).forEach(
-        ([chakra, value]) => {
+  (chakraRows || [])
 
-          if (
-            Number(value) <= 0.5
-          ) {
-            return;
-          }
+    .filter(
+      (row: any) =>
 
-          if (
-            !chakraManifestations[
-              chakra
-            ]
-          ) {
+        row?.chakra_key ===
+        chakra
+    )
 
-            chakraManifestations[
-              chakra
-            ] = [];
-          }
+    .sort(
+      (a: any, b: any) =>
 
-          chakraManifestations[
-            chakra
-          ].push({
+        Number(
+          b?.weight || 0
+        ) -
 
-            ...entry,
+        Number(
+          a?.weight || 0
+        )
+    );
 
-            chakra_weight:
-              value,
+/*
+ * ----------------------------------------------
+ * 🪞 BUILD MANIFESTATIONS
+ * ----------------------------------------------
+ */
 
-            behaviour,
-          });
-        }
-      );
-    }
+chakraManifestations[
+  chakra
+] =
+
+  relatedManifestations.map(
+    (row: any) => ({
+
+      pattern_key:
+        row?.pattern_key,
+
+      chakra_weight:
+        row?.weight || 0,
+
+      body_response:
+        row?.body_response ||
+
+        null,
+
+      manifestation:
+        row?.manifestation ||
+
+        null,
+
+      observable_scene:
+        row?.observable_scene ||
+
+        null,
+
+      integration:
+        row?.integration ||
+
+        null,
+    })
   );
 
-  /*
-   * ------------------------------------------------
-   * 🧹 DEDUPE CHAKRAS
-   * ------------------------------------------------
-   */
-
-  Object.keys(
-    chakraManifestations
-  ).forEach((chakra) => {
-
-    chakraManifestations[
-      chakra
-    ] =
-
-      chakraManifestations[
-        chakra
-      ].slice(0, 12);
-  });
+});
 
   /*
    * ------------------------------------------------

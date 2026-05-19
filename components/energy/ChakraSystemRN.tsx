@@ -5,8 +5,7 @@ import React from "react";
 import {
   Pressable,
   StyleSheet,
-  Text,
-  View,
+  View
 } from "react-native";
 
 import {
@@ -40,8 +39,6 @@ type Props = {
   onChakraPress?: (
     chakra: Chakra
   ) => void;
-
-  bodyResponse?: string;
 };
 
 // --------------------------------------------------
@@ -58,8 +55,6 @@ ChakraSystemRN({
   selectedChakra,
 
   onChakraPress,
-
-  bodyResponse,
 
 }: Props) {
 
@@ -168,9 +163,25 @@ const size =
 
   key === "heart"
 
-    ? 20
+    ? (
 
-    : 12;
+        isSelected
+          ? 24
+          : isActive
+            ? 22
+            : 20
+
+      )
+
+    : (
+
+        isSelected
+          ? 18
+          : isActive
+            ? 16
+            : 12
+
+      );
 
           // --------------------------------------------------
           // 🌑 OPACITY
@@ -186,165 +197,120 @@ const size =
           }
 
           // --------------------------------------------------
-          // 🌈 NODE
+          // 🌈 RING
+          // --------------------------------------------------
+
+          let ringColor =
+            "transparent";
+
+          if (
+            state === "low"
+          ) {
+
+            ringColor =
+              "rgba(220,220,220,0.30)";
+          }
+
+          if (
+            state === "high"
+          ) {
+
+            ringColor =
+              "rgba(80,80,80,0.90)";
+          }
+
+          // --------------------------------------------------
+          // 🌌 NODE
           // --------------------------------------------------
 
           return (
 
-<View
+            <View
 
-  key={key}
+              key={key}
 
-  style={[
+              style={[
 
-    styles.nodeWrapper,
+                styles.nodeWrapper,
 
-    {
-      top: y,
-    },
-  ]}
->
-  {/* 💚 HEART FIELD */}
-
-  {key === "heart" && (
-
-    <Text
-
-      style={{
-
-        position:
-          "absolute",
-
-        fontSize: 70,
-
-        color:
-          "rgba(220,220,220,0.10)",
-
-        zIndex: 2,
-
-        top: 40,
-      }}
-    >
-
-      ♡
-
-    </Text>
-  )}
+                {
+                  top: y,
+                },
+              ]}
+            >
 
               {/* ✨ GLOW */}
 
-<View
+              <View
 
-  style={[
+                style={[
 
-    styles.glow,
+                  styles.glow,
 
-    {
+                  {
 
-      width: size + 4,
+                    width:
+                      size + 4,
 
-      height: size + 4,
+                    height:
+                      size + 4,
 
-      borderRadius:
-        (size + 4) / 2,
+                    borderRadius:
+                      (size + 4) / 2,
 
-      backgroundColor:
-        baseColor,
+                    backgroundColor:
+                      baseColor,
 
-      opacity: 0.12,
+                    opacity: 0.12,
 
-      zIndex: 1,
-    },
-  ]}
-/>
+                    zIndex: 1,
+                  },
+                ]}
+              />
 
-{/* 🌟 AWARENESS HALO */}
+              {/* 🌟 AWARENESS HALO */}
 
-{isActive && (
+              {isActive && (
 
-  <View
+                <View
 
-    style={{
+                  style={{
 
-      position:
-        "absolute",
+                    position:
+                      "absolute",
 
-      width:
-        size + 10,
+                    width:
+                      size + 10,
 
-      height:
-        size + 10,
+                    height:
+                      size + 10,
 
-      borderRadius:
-        (size + 10) / 2,
+                    borderRadius:
+                      (size + 10) / 2,
 
-      borderWidth: 1.5,
+                    borderWidth:
+                      1.5,
 
-      borderColor:
-        "rgba(255,240,180,0.55)",
+                    borderColor:
+                      "rgba(255,240,180,0.55)",
 
-      opacity: 0.9,
+opacity: 1,
 
-      zIndex: 8,
-    }}
-  />
-)}
+shadowColor:
+  "#FFF0C0",
 
-              {/* 🔘 CORE */}
+shadowOpacity:
+  0.95,
 
-              {isSelected &&
- bodyResponse && (
+shadowRadius:
+  12,
 
-  <Pressable
+                    zIndex: 8,
+                  }}
+                />
+              )}
 
-    onPress={() =>
-      onChakraPress?.(
-        key
-      )
-    }
-
-    style={{
-
-      position:
-        "absolute",
-
-      left:
-        size + 18,
-
-      maxWidth: 120,
-
-      backgroundColor:
-        "rgba(0,0,0,0.22)",
-
-      padding: 8,
-
-      borderRadius: 12,
-
-      zIndex: 50,
-    }}
-  >
-
-    <Text
-
-      style={{
-
-        color:
-          "white",
-
-        fontSize: 12,
-
-        lineHeight: 18,
-
-        opacity: 0.9,
-      }}
-    >
-
-      {bodyResponse}
-
-    </Text>
-
-  </Pressable>
-)}
+              {/* 🔘 CHAKRA */}
 
 <Pressable
 
@@ -358,93 +324,128 @@ const size =
 >
 
   <View
+    style={{
+      justifyContent:
+        "center",
 
-    style={[
+      alignItems:
+        "center",
 
-      styles.core,
+      overflow:
+        "visible",
+    }}
+  >
 
-    (() => {
+    {/* 🔘 CHAKRA CORE */}
 
-let ringColor =
-  "transparent";
+    <View
 
-if (
-  state === "low"
-) {
+      style={[
 
-  ringColor =
-    "rgba(220,220,220,0.30)";
-}
+        styles.core,
 
-if (
-  state === "high"
-) {
+        {
 
-  ringColor =
-    "rgba(80,80,80,0.90)";
-}
+          width: size,
 
-      return {
+          height: size,
 
-        width: size,
+          borderRadius:
+            size / 2,
 
-        height: size,
+          backgroundColor:
+            baseColor,
 
-        borderRadius:
-          size / 2,
+          borderWidth:
 
-        backgroundColor:
-          baseColor,
+            state ===
+            "balanced"
 
-borderWidth:
+              ? 0
 
-  state ===
-  "balanced"
+              : 2,
 
-    ? 0
+          borderColor:
+            ringColor,
 
-    : 2,
+          opacity,
 
-        borderColor:
-          ringColor,
+          zIndex: 20,
 
-        opacity,
+          elevation: 20,
 
-        zIndex: 20,
+          justifyContent:
+            "center",
 
-        elevation: 20,
+          alignItems:
+            "center",
 
-        ...(key ===
-        "heart"
+          ...(key ===
+          "heart"
 
-          ? {
+            ? {
 
-              shadowColor:
-                "#63FF9B",
+                shadowColor:
+                  "#63FF9B",
 
-              shadowOpacity: 0.9,
+                shadowOpacity:
+                  0.9,
 
-              shadowRadius: 30,
-            }
+                shadowRadius:
+                  30,
 
-          : {}),
-      };
+                borderWidth:
+                  2.5,
 
-    })(),
+                borderColor:
+                  "rgba(180,255,210,0.55)",
+              }
 
-    isSelected &&
+            : {}),
+        },
 
-      styles.selected,
-  ]}
-/>
+        isSelected && {
+
+          transform: [
+            {
+              scale: 1.22,
+            },
+          ],
+
+          shadowColor:
+
+            key === "heart"
+
+              ? "#63FF9B"
+
+              : baseColor,
+
+          shadowOpacity:
+            0.9,
+
+          shadowRadius:
+            18,
+
+          elevation: 30,
+
+          borderColor:
+            "rgba(255,255,255,0.55)",
+
+          borderWidth:
+            2.5,
+        },
+      ]}
+    />
+
+  </View>
 
 </Pressable>
 
-</View>
-
+            </View>
           );
         }
       )}
+
     </View>
   );
 }
@@ -461,9 +462,9 @@ const styles =
       position:
         "absolute",
 
-      width: 180,
+      width: 70,
 
-      height: 520,
+      height: 430,
 
       alignItems:
         "center",
@@ -474,11 +475,12 @@ const styles =
       position:
         "absolute",
 
-      width: 160,
+      width: 44,
 
-      height: 160,
+      height: 44,
 
-      overflow: "visible",
+      overflow:
+        "visible",
 
       justifyContent:
         "center",
@@ -499,5 +501,14 @@ const styles =
 
       borderColor:
         "rgba(255,255,255,0.22)",
+    },
+
+    selected: {
+
+      transform: [
+        {
+          scale: 1.08,
+        },
+      ],
     },
   });

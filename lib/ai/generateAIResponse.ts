@@ -60,7 +60,7 @@ const prompt =
       setTimeout(
         () =>
           controller.abort(),
-        25000
+        60000
       );
 
     /*

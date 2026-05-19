@@ -32,21 +32,21 @@ export const chakraY: Record<
   number
 > = {
 
-  soul_star: -15,
+  soul_star: -20,
 
-  crown: 13,
+  crown: 7,
 
-  third_eye: 30,
+  third_eye: 25,
 
-  throat: 57,
+  throat: 50,
 
-  heart: 105,
+  heart: 88,
 
-  solar_plexus: 140,
+  solar_plexus: 130,
 
-  sacral: 160,
+  sacral: 150,
 
-  root: 185,
+  root: 175,
 
   earth_star: 270,
 };

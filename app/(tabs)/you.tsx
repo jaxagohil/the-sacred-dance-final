@@ -130,6 +130,9 @@ const [language, setLanguage] =
   const [showPicker, setShowPicker] =
     useState(false);
 
+    const [saving, setSaving] =
+  useState(false);
+
     const [languages, setLanguages] =
   useState<any[]>([]);
 
@@ -370,6 +373,54 @@ setEarthRegions(
     );
   };
 
+      // --------------------------------------------------
+// 🧹 CLEAR BASELINE LAYER
+// --------------------------------------------------
+
+const clearBaselineLayer =
+  async (
+    userId: string,
+    baselineType: string
+  ) => {
+
+    await supabase
+
+      .from("signals")
+      .delete()
+
+      .eq("user_id", userId)
+
+      .eq(
+        "sourcetype",
+        "baseline"
+      )
+
+      .eq(
+        "baseline_type",
+        baselineType
+      );
+
+    await supabase
+
+      .from("reflections")
+      .delete()
+
+      .eq("user_id", userId)
+
+      .eq(
+        "source",
+        "baseline"
+      )
+
+      .contains(
+        "metadata",
+        {
+          baseline_type:
+            baselineType,
+        }
+      );
+  };
+
     //
   // 🎨 HAS CHANGES
   //
@@ -415,6 +466,8 @@ setEarthRegions(
   guideNames.guide_cosmic !==
     (originalProfile?.guide_3_name || "ammaarah");
 
+
+
   //
   // 🎨 SAVE
   //
@@ -422,6 +475,7 @@ const handleSave = async () => {
 
   try {
 
+    setSaving(true);
     const userId =
       await getUserId();
 
@@ -432,6 +486,7 @@ const handleSave = async () => {
       );
 
       return;
+      
     }
 
     //
@@ -608,10 +663,25 @@ const handleSave = async () => {
   (originalProfile?.what_repeats || "")
 ) {
 
+  await clearBaselineLayer(
+  userId,
+  "repeats"
+);
+
+if (!repeats.trim()) {
+
+  console.log(
+    "🧹 Repeats layer cleared"
+  );
+
+} else {
   await processReflection({
     userId,
 
     language,
+
+        baselineType:
+  "repeats",
 
     source: "baseline",
 
@@ -624,6 +694,7 @@ const handleSave = async () => {
     "✨ Pattern reflection created"
   );
 }
+}
 
 if (
   line !==
@@ -633,10 +704,25 @@ if (
   )
 ) {
 
+   await clearBaselineLayer(
+  userId,
+  "core_belief"
+); 
+
+if (!line.trim()) {
+
+  console.log(
+    "🧹 Core belief cleared"
+  );
+
+} else { 
   await processReflection({
     userId,
 
     language,
+
+    baselineType:
+  "core_belief",
 
     source: "baseline",
 
@@ -649,6 +735,7 @@ if (
   console.log(
     "✨ Line reflection created"
   );
+}
 }
 
 if (
@@ -673,10 +760,18 @@ if (
 
 ) {
 
+    await clearBaselineLayer(
+  userId,
+  "energy_axes"
+);
+
   await processReflection({
     userId,
 
     language,
+
+        baselineType:
+  "energy_axes",
 
     source: "baseline",
 
@@ -717,11 +812,7 @@ if (
   JSON.stringify(
     originalProfile?.childhood_signals ||
     INITIAL_CHILDHOOD_SIGNALS
-  ) &&
-
-  Object.values(
-    childhoodSignals
-  ).some((v) => v === 1)
+  )
 
 ) {
 
@@ -742,10 +833,34 @@ if (
 
       .join(", ");
 
+
+      await clearBaselineLayer(
+  userId,
+  "childhood"
+);  
+
+const hasSignals =
+
+  Object.values(
+    childhoodSignals
+  ).some(
+    (v) => v === 1
+  );
+
+if (!hasSignals) {
+
+  console.log(
+    "🧹 Childhood layer cleared"
+  );
+
+} else {
   await processReflection({
     userId,
 
     language,
+
+        baselineType:
+  "childhood",
 
     source: "baseline",
 
@@ -764,6 +879,7 @@ if (
     "✨ Childhood reflection created"
   );
 }
+}
     //
     // ✨ UPDATE STATE
     //
@@ -773,66 +889,9 @@ if (
       null
     );
 
-setOriginalProfile({
-
-  //
-  // 👤
-  //
-
-  name,
-
-  location,
-
-  language,
-
-  avatar_url:
-    safeAvatar || null,
-
-  //
-  // ✨ GUIDES
-  //
-
-  guide_1_name:
-    guideNames.guide_heart,
-
-  guide_2_name:
-    guideNames.guide_structure,
-
-  guide_3_name:
-    guideNames.guide_cosmic,
-
-  //
-  // 🌊 SLIDERS
-  //
-
-  givingreceiving:
-    sliders.givingreceiving,
-
-  flowstructure:
-    sliders.flowstructure,
-
-  lackabundance:
-    sliders.abundancelack,
-
-  //
-  // 🌿 CHILDHOOD
-  //
-
-  childhood_signals:
-    {
-      ...childhoodSignals,
-    },
-
-  //
-  // ✨ TEXT
-  //
-
-  what_repeats:
-    repeats,
-
-  line_that_feels_like_you:
-    line,
-});
+setOriginalProfile(
+  data?.[0] || null
+);
 
   } catch (error) {
 
@@ -840,6 +899,10 @@ setOriginalProfile({
       "❌ SAVE ERROR:",
       error
     );
+
+  } finally {
+
+    setSaving(false);
   }
 };
 
@@ -860,21 +923,35 @@ backgroundColor:
 {/* ✦ SAVE */}
 <TouchableOpacity
   onPress={handleSave}
-  disabled={!hasChanges}
+disabled={
+  !hasChanges || saving
+}
   style={{
     position: "absolute",
     top: 60,
     right: 24,
     zIndex: 10,
+
+    opacity:
+  saving
+    ? 0.35
+    : 1,
   }}
 >
 
   <Text
     style={{
 color:
-  hasChanges
-    ? Colors.white
-    : Colors.subtleText,
+
+  saving
+
+    ? Colors.subtleText
+
+    : hasChanges
+
+      ? Colors.white
+
+      : Colors.subtleText,
       fontSize: 18,
     }}
   >

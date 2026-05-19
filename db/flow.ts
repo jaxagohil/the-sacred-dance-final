@@ -12,9 +12,26 @@ import { createReflection } from "./reflections";
 
 import { createSignal } from "./signals";
 
+import { unique } from "../lib/unique";
+
 // --------------------------------------------------
 // TYPES
 // --------------------------------------------------
+
+type Pattern = {
+
+  id: string;
+
+  name?: string;
+
+  description?: string;
+
+  soul_lesson?: string;
+
+  mirror_theme?: string;
+
+  affirmation?: string;
+};
 
 type Behaviour = {
 
@@ -47,9 +64,6 @@ type Behaviour = {
   quality?:
     | "divine"
     | "distorted";
-
-  chakra_weights?:
-    Record<string, number>;
 };
 
 type Emotion = {
@@ -133,6 +147,8 @@ export async function processReflection(
 
     language,
 
+    baselineType,
+
   } = input;
 
   // --------------------------------------------------
@@ -169,6 +185,12 @@ export async function processReflection(
   const rawEmotions =
     interpretation.emotions || [];
 
+  const uniqueEmotions =
+
+  unique(
+    rawEmotions
+  );  
+
   console.log(
     "😊 RAW EMOTIONS:",
     rawEmotions
@@ -190,7 +212,7 @@ export async function processReflection(
 
     .select("*")
 
-    .in("id", rawEmotions);
+    .in("id", uniqueEmotions);
 
   if (emotionError) {
 
@@ -253,6 +275,12 @@ export async function processReflection(
     rawBehaviours
   );
 
+    const uniqueBehaviours =
+
+  unique(
+    rawBehaviours
+  );
+
   // --------------------------------------------------
   // 🧠 ENRICH BEHAVIOURS
   // --------------------------------------------------
@@ -269,7 +297,7 @@ export async function processReflection(
 
     .select("*")
 
-    .in("id", rawBehaviours);
+    .in("id", uniqueBehaviours);
 
   if (behaviourError) {
 
@@ -293,7 +321,7 @@ export async function processReflection(
   const behaviours:
     Behaviour[] =
 
-    rawBehaviours.map(
+    uniqueBehaviours.map(
       (id) => {
 
         const row =
@@ -343,9 +371,6 @@ export async function processReflection(
           quality:
             row?.quality ||
             "distorted",
-
-          chakra_weights:
-            row?.chakra_weights || {},
         };
       }
     );
@@ -353,6 +378,52 @@ export async function processReflection(
   console.log(
     "🧠 ENRICHED BEHAVIOURS:",
     behaviours
+  );
+
+    // --------------------------------------------------
+  // 🪞 DERIVE PATTERNS
+  // --------------------------------------------------
+
+  const derivedPatterns =
+    await derivePatternsFromBehaviours(
+      behaviours
+    );
+
+  const rawPatterns =
+    derivedPatterns.map(
+      (p) => p.id
+    );
+
+  console.log(
+    "🪞 RAW PATTERNS:",
+    rawPatterns
+  );
+
+  const {
+
+    data: patternRows,
+
+    error: patternError,
+
+  } = await supabase
+
+    .from("patterns")
+
+    .select("*")
+
+    .in("id", rawPatterns);
+
+  if (patternError) {
+
+    console.error(
+      "❌ Pattern enrichment error:",
+      patternError
+    );
+  }
+
+  console.log(
+    "🪞 ENRICHED PATTERNS:",
+    patternRows
   );
 
   // --------------------------------------------------
@@ -395,74 +466,119 @@ export async function processReflection(
       )
     );
 
-  // --------------------------------------------------
-  // 🌈 CHAKRAS
-  // --------------------------------------------------
+// --------------------------------------------------
+// 🌈 PATTERN CHAKRA MANIFESTATIONS
+// --------------------------------------------------
 
-  const chakraMap:
-    Record<string, number>
-      = {};
+const {
 
-  behaviours.forEach((b) => {
+  data: chakraManifestations,
 
-    Object.entries(
-      b?.chakra_weights || {}
-    ).forEach(
-      ([chakra, value]) => {
+  error: chakraError,
 
-        chakraMap[chakra] =
+} = await supabase
 
-          (
-            chakraMap[
-              chakra
-            ] || 0
-          ) +
+  .from(
+    "pattern_chakra_manifestations"
+  )
 
-          Number(value);
-      }
-    );
-  });
+  .select("*")
 
-    const distorted =
-    behaviours.filter(
-      (b) =>
-        b.quality ===
-        "distorted"
-    );
+  .in(
+    "pattern_key",
+    rawPatterns
+  )
 
-  const integrated =
-    behaviours.filter(
-      (b) =>
-        b.quality ===
-        "divine"
-    );
+  .eq(
+    "language",
+    language
+  );
 
-  const chakraTotal =
+if (chakraError) {
 
-    Object.values(
-      chakraMap
-    ).reduce(
-      (a, b) => a + b,
-      0
-    ) || 1;
+  console.error(
+    "❌ Chakra manifestation error:",
+    chakraError
+  );
+}
 
-  const normalizedChakras:
-    Record<string, number>
-      = {};
+console.log(
+  "🌈 CHAKRA MANIFESTATIONS:",
+  chakraManifestations
+);
+
+// --------------------------------------------------
+// 🌈 BUILD CHAKRA MAP
+// --------------------------------------------------
+
+const chakraMap:
+  Record<string, number>
+    = {};
+
+chakraManifestations?.forEach(
+  (m: any) => {
+
+    const chakra =
+      m.chakra_key;
+
+    const weight =
+      Number(m.weight || 0);
+
+    chakraMap[chakra] =
+
+      (
+        chakraMap[
+          chakra
+        ] || 0
+      ) + weight;
+  }
+);
+
+// --------------------------------------------------
+// 🌈 NORMALIZE CHAKRAS
+// --------------------------------------------------
+
+const chakraTotal =
+
+  Object.values(
+    chakraMap
+  ).reduce(
+    (a, b) => a + b,
+    0
+  ) || 1;
+
+const normalizedChakras:
+  Record<string, number>
+    = {};
+
+Object.entries(
+  chakraMap
+).forEach(([k, v]) => {
+
+  normalizedChakras[k] =
+    v / chakraTotal;
+});
+
+// --------------------------------------------------
+// 🌈 DOMINANT CHAKRA
+// --------------------------------------------------
+
+const dominant_chakra =
 
   Object.entries(
-    chakraMap
-  ).forEach(([k, v]) => {
+    normalizedChakras
+  )
 
-    normalizedChakras[k] =
-      v / chakraTotal;
-  });
+    .sort(
+      (a, b) =>
+        b[1] - a[1]
+    )[0]?.[0] ||
 
-  /*
- * --------------------------------------------------
- * 👁 AWARENESS CHAKRA
- * --------------------------------------------------
- */
+  null;
+
+// --------------------------------------------------
+// 👁 AWARENESS CHAKRA
+// --------------------------------------------------
 
 const chakraKeys =
   Object.keys(
@@ -474,34 +590,6 @@ const avg =
   1 / (
     chakraKeys.length || 1
   );
-
-const distortionMap:
-  Record<string, number>
-    = {};
-
-distorted.forEach(
-  (b) => {
-
-    Object.entries(
-      b?.chakra_weights || {}
-    ).forEach(
-      ([chakra, value]) => {
-
-        distortionMap[
-          chakra
-        ] =
-
-          (
-            distortionMap[
-              chakra
-            ] || 0
-          ) +
-
-          Number(value);
-      }
-    );
-  }
-);
 
 const awarenessMap:
   Record<string, number>
@@ -522,19 +610,11 @@ chakraKeys.forEach(
         activation - avg
       );
 
-    const distortion =
-
-      distortionMap[
-        chakra
-      ] || 0;
-
     awarenessMap[
       chakra
     ] =
 
       deviation +
-
-      distortion * 0.7 +
 
       activation * 0.3;
   }
@@ -553,19 +633,20 @@ const awarenessChakra =
     )[0]?.[0] ||
 
   null;
+  
+  const distorted =
+  behaviours.filter(
+    (b) =>
+      b.quality ===
+      "distorted"
+  );
 
-  const dominant_chakra =
-
-    Object.entries(
-      normalizedChakras
-    )
-
-      .sort(
-        (a, b) =>
-          b[1] - a[1]
-      )[0]?.[0] ||
-
-    null;
+const integrated =
+  behaviours.filter(
+    (b) =>
+      b.quality ===
+      "divine"
+  );
 
   // --------------------------------------------------
   // ⚡ DISTORTIONS
@@ -630,11 +711,6 @@ awareness_chakra:
   // 🪞 LENS MANIFESTATIONS
   // --------------------------------------------------
 
-  const behaviourIds =
-  behaviours.map(
-    (b) => b.id
-  );
-
 const {
 
   data: lensMappings,
@@ -643,16 +719,16 @@ const {
 
 } = await supabase
 
-  .from(
-    "behaviour_lens_weights"
-  )
+.from(
+  "pattern_lens_weights"
+)
 
   .select("*")
 
-  .in(
-    "behaviour_id",
-    behaviourIds
-  )
+.in(
+  "pattern_key",
+  rawPatterns
+)
 
   .eq(
     "language",
@@ -670,52 +746,6 @@ if (lensError) {
   console.log(
     "🪞 LENS MAPPINGS:",
     lensMappings
-  );
-
-  // --------------------------------------------------
-  // 🪞 DERIVE PATTERNS
-  // --------------------------------------------------
-
-  const derivedPatterns =
-    await derivePatternsFromBehaviours(
-      behaviours
-    );
-
-  const rawPatterns =
-    derivedPatterns.map(
-      (p) => p.id
-    );
-
-  console.log(
-    "🪞 RAW PATTERNS:",
-    rawPatterns
-  );
-
-  const {
-
-    data: patternRows,
-
-    error: patternError,
-
-  } = await supabase
-
-    .from("patterns")
-
-    .select("*")
-
-    .in("id", rawPatterns);
-
-  if (patternError) {
-
-    console.error(
-      "❌ Pattern enrichment error:",
-      patternError
-    );
-  }
-
-  console.log(
-    "🪞 ENRICHED PATTERNS:",
-    patternRows
   );
 
   // --------------------------------------------------
@@ -737,8 +767,8 @@ if (lensError) {
 
   lens,
 
-  behaviour_id:
-    m.behaviour_id,
+pattern_key:
+  m.pattern_key,
 
   weight:
     m.weight,
@@ -1004,6 +1034,9 @@ if (lensError) {
         language:
           language || "en",
 
+          baseline_type:
+  baselineType || null,
+
         emotions:
           emotions || [],
 
@@ -1025,13 +1058,13 @@ if (lensError) {
       },
 
       extracted_emotions:
-        rawEmotions,
+        uniqueEmotions,
 
       extracted_patterns:
         rawPatterns,
 
       extracted_behaviours:
-        rawBehaviours,
+        uniqueBehaviours,
 
       reflection_summary,
     });
@@ -1090,6 +1123,9 @@ if (lensError) {
 
       sourcetype:
         source || "unknown",
+
+      baseline_type:
+  baselineType || null,  
 
       signal_depth:
         finalDepth,

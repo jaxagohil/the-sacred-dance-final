@@ -27,6 +27,26 @@ export default function EnergyBody() {
           strokeWidth={1.8}
         />
 
+        {/* ♡ HEART FIELD */}
+
+<Path
+  d="
+    M90 113
+    C78 95, 54 103, 54 125
+    C54 147, 78 161, 90 177
+    C102 161, 126 147, 126 125
+    C126 103, 102 95, 90 113
+  "
+
+  fill="none"
+
+  stroke="rgba(190, 151, 35, 0.16)"
+
+  strokeWidth={2.2}
+
+  strokeLinecap="round"
+/>
+
         {/* LEGS */}
         <Path
           d="M90 235 L72 325 M90 235 L108 325"

@@ -1,115 +1,146 @@
 // /lib/ai/ingestVoice.ts
 
 import {
-    extractReflectionData,
+  API_URL,
+} from "../config";
+
+import {
+  extractReflectionData,
 } from "./extractReflectionData";
+
+// --------------------------------------------------
+// 🎙 INGEST VOICE
+// --------------------------------------------------
 
 export async function ingestVoice(
   audioUri: string
 ) {
 
-  /*
-   * --------------------------------------------------
-   * 🎙 BUILD FORM DATA
-   * --------------------------------------------------
-   */
+  try {
 
-  const formData =
-    new FormData();
+    /*
+     * --------------------------------------------------
+     * 🎙 BUILD FORM DATA
+     * --------------------------------------------------
+     */
 
-  formData.append(
-    "file",
-    {
-      uri: audioUri,
+    const formData =
+      new FormData();
 
-      name:
-        "reflection.m4a",
-
-      type:
-        "audio/m4a",
-    } as any
-  );
-
-  formData.append(
-    "model",
-    "gpt-4o-mini-transcribe"
-  );
-
-  /*
-   * --------------------------------------------------
-   * 🧠 TRANSCRIBE
-   * --------------------------------------------------
-   */
-
-  const response =
-    await fetch(
-
-      "https://api.openai.com/v1/audio/transcriptions",
-
+    formData.append(
+      "file",
       {
+        uri: audioUri,
 
-        method: "POST",
+        name:
+          "reflection.m4a",
 
-        headers: {
-
-          Authorization:
-            `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-
-        body: formData,
-      }
+        type:
+          "audio/m4a",
+      } as any
     );
 
-  const transcription =
-    await response.json();
+    /*
+     * --------------------------------------------------
+     * 🎙 TRANSCRIBE API
+     * --------------------------------------------------
+     */
 
-  const text =
-    transcription?.text || "";
+    const response =
+      await fetch(
 
-  /*
-   * --------------------------------------------------
-   * 🪞 EXTRACT REFLECTION DATA
-   * --------------------------------------------------
-   */
+        `${API_URL}/api/transcribe`,
 
-  const extraction =
-    await extractReflectionData(
-      text
+        {
+
+          method: "POST",
+
+          body: formData,
+        }
+      );
+
+    const result =
+      await response.json();
+
+    /*
+     * --------------------------------------------------
+     * ❌ API ERROR
+     * --------------------------------------------------
+     */
+
+    if (!response.ok) {
+
+      console.log(
+        "❌ TRANSCRIBE API ERROR",
+        result
+      );
+
+      return null;
+    }
+
+    /*
+     * --------------------------------------------------
+     * 🪞 TRANSCRIPTION
+     * --------------------------------------------------
+     */
+
+    const text =
+      result?.text || "";
+
+    /*
+     * --------------------------------------------------
+     * 🧠 EXTRACT REFLECTION DATA
+     * --------------------------------------------------
+     */
+
+    const extraction =
+      await extractReflectionData(
+        text
+      );
+
+    /*
+     * --------------------------------------------------
+     * 🌌 RETURN
+     * --------------------------------------------------
+     */
+
+    return {
+
+      source:
+        "voice",
+
+      reflection:
+        text,
+
+      emotions:
+        extraction?.emotions || [],
+
+      behaviours:
+        extraction?.behaviours || [],
+
+      bodyResponses:
+        extraction?.bodyResponses || [],
+
+      observableScenes:
+        extraction?.observableScenes || [],
+
+      copingStrategies:
+        extraction?.copingStrategies || [],
+
+      manifestations:
+        extraction?.manifestations || [],
+
+      nervousSystem:
+        extraction?.nervousSystem || null,
+    };
+
+  } catch (error) {
+
+    console.log(
+      "❌ INGEST VOICE ERROR",
+      error
     );
 
-  /*
-   * --------------------------------------------------
-   * 🌌 RETURN
-   * --------------------------------------------------
-   */
-
-  return {
-
-    source:
-      "voice",
-
-    reflection:
-      text,
-
-    emotions:
-      extraction?.emotions || [],
-
-    behaviours:
-      extraction?.behaviours || [],
-
-    bodyResponses:
-      extraction?.bodyResponses || [],
-
-    observableScenes:
-      extraction?.observableScenes || [],
-
-    copingStrategies:
-      extraction?.copingStrategies || [],
-
-    manifestations:
-      extraction?.manifestations || [],
-
-    nervousSystem:
-      extraction?.nervousSystem || null,
-  };
+    return null;
+  }
 }

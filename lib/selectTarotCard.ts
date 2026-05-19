@@ -51,7 +51,12 @@ type SelectionContext = {
 
   patterns?: string[];
 
-  distortion?: string[];
+  distortions?: {
+
+  distorted?: string[];
+
+  integrated?: string[];
+};
 
   oracleCard?: any;
 
@@ -153,7 +158,7 @@ selectTarotCard({
 
   patterns = [],
 
-  distortion = [],
+ distortions = {},
 
   oracleCard,
 
@@ -217,9 +222,19 @@ selectTarotCard({
         p.toLowerCase()
     );
 
-  const normalizedDistortions =
+const normalizedDistortions =
 
-    distortion.map(
+  (
+    distortions?.distorted || []
+  )
+
+    .filter(
+      (d): d is string =>
+        typeof d ===
+        "string"
+    )
+
+    .map(
       (d) =>
         d.toLowerCase()
     );

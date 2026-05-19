@@ -1,134 +1,136 @@
 // /lib/ai/ingestImage.ts
 
-import OpenAI from "openai";
+import {
+  API_URL,
+} from "../config";
 
 import {
-    extractReflectionData,
+  extractReflectionData,
 } from "./extractReflectionData";
 
-const openai = new OpenAI({
-  apiKey:
-    process.env
-      .OPENAI_API_KEY,
-});
+// --------------------------------------------------
+// 👁 INGEST IMAGE
+// --------------------------------------------------
 
 export async function ingestImage(
   imageUrl: string
 ) {
 
-  /*
-   * --------------------------------------------------
-   * 👁 IMAGE OBSERVATION
-   * --------------------------------------------------
-   */
+  try {
 
-  const result =
-    await openai.chat
-      .completions.create({
+    /*
+     * --------------------------------------------------
+     * 👁 CALL VISION API
+     * --------------------------------------------------
+     */
 
-        model:
-          "gpt-4o",
+    const response =
+      await fetch(
 
-        messages: [
-          {
-            role:
-              "user",
+        `${API_URL}/api/vision`,
 
-            content: [
+        {
 
-              {
-                type:
-                  "text",
+          method: "POST",
 
-                text: `
+          headers: {
 
-Observe the image.
-
-Identify ONLY:
-- visible emotional atmosphere
-- visible body tension
-- visible nervous system cues
-- visible behavioural cues
-- visible relational energy
-- observable scene details
-
-Do NOT interpret spiritually.
-
-Return grounded observations only.
-
-`,
-              },
-
-              {
-                type:
-                  "image_url",
-
-                image_url: {
-                  url:
-                    imageUrl,
-                },
-              },
-            ],
+            "Content-Type":
+              "application/json",
           },
-        ],
-      });
 
-  /*
-   * --------------------------------------------------
-   * 🪞 RAW OBSERVATIONS
-   * --------------------------------------------------
-   */
+          body:
+            JSON.stringify({
 
-  const observations =
+              imageUrl,
+            }),
+        }
+      );
 
-    result
-      ?.choices?.[0]
-      ?.message?.content || "";
+    const result =
+      await response.json();
 
-  /*
-   * --------------------------------------------------
-   * 🧠 STRUCTURED EXTRACTION
-   * --------------------------------------------------
-   */
+    /*
+     * --------------------------------------------------
+     * ❌ API ERROR
+     * --------------------------------------------------
+     */
 
-  const extraction =
-    await extractReflectionData(
-      observations
+    if (!response.ok) {
+
+      console.log(
+        "❌ VISION API ERROR",
+        result
+      );
+
+      return null;
+    }
+
+    /*
+     * --------------------------------------------------
+     * 🪞 OBSERVATIONS
+     * --------------------------------------------------
+     */
+
+    const observations =
+
+      result
+        ?.observations || "";
+
+    /*
+     * --------------------------------------------------
+     * 🧠 STRUCTURED EXTRACTION
+     * --------------------------------------------------
+     */
+
+    const extraction =
+      await extractReflectionData(
+        observations
+      );
+
+    /*
+     * --------------------------------------------------
+     * 🌌 RETURN
+     * --------------------------------------------------
+     */
+
+    return {
+
+      source:
+        "image",
+
+      reflection:
+        observations,
+
+      emotions:
+        extraction?.emotions || [],
+
+      behaviours:
+        extraction?.behaviours || [],
+
+      bodyResponses:
+        extraction?.bodyResponses || [],
+
+      observableScenes:
+        extraction?.observableScenes || [],
+
+      copingStrategies:
+        extraction?.copingStrategies || [],
+
+      manifestations:
+        extraction?.manifestations || [],
+
+      nervousSystem:
+        extraction?.nervousSystem || null,
+    };
+
+  } catch (error) {
+
+    console.log(
+      "❌ INGEST IMAGE ERROR",
+      error
     );
 
-  /*
-   * --------------------------------------------------
-   * 🌌 RETURN
-   * --------------------------------------------------
-   */
-
-  return {
-
-    source:
-      "image",
-
-    reflection:
-      observations,
-
-    emotions:
-      extraction?.emotions || [],
-
-    behaviours:
-      extraction?.behaviours || [],
-
-    bodyResponses:
-      extraction?.bodyResponses || [],
-
-    observableScenes:
-      extraction?.observableScenes || [],
-
-    copingStrategies:
-      extraction?.copingStrategies || [],
-
-    manifestations:
-      extraction?.manifestations || [],
-
-    nervousSystem:
-      extraction?.nervousSystem || null,
-  };
+    return null;
+  }
 }

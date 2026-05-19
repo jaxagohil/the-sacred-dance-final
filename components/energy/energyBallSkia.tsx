@@ -7,8 +7,6 @@ import React, {
 
 import {
   Dimensions,
-  Pressable,
-  Text,
   View,
 } from "react-native";
 
@@ -21,10 +19,6 @@ import {
   vec,
 } from "@shopify/react-native-skia";
 
-import {
-  chakraY,
-} from "../../lib/energy";
-
 // --------------------------------------------------
 // 🌌 DIMENSIONS
 // --------------------------------------------------
@@ -35,14 +29,13 @@ const { width } =
 const SIZE = width * 0.84;
 
 const CANVAS_SIZE =
-  SIZE + 80;  
+  SIZE + 80;
 
 const CENTER =
-  CANVAS_SIZE / 2;  
+  CANVAS_SIZE / 2;
 
 const RADIUS =
   CENTER * 0.8;
-
 
 // --------------------------------------------------
 // 🧠 TYPES
@@ -52,55 +45,38 @@ type Props = {
 
   energy: any;
 
-distortions?: {
+  distortions?: {
 
-  distorted?: any[];
+    distorted?: any[];
 
-  integrated?: any[];
+    integrated?: any[];
 
-  contractionLevel?: number;
+    contractionLevel?: number;
 
-  expansionLevel?: number;
+    expansionLevel?: number;
 
-  dominantPolarity?:
-    | "feminine"
-    | "masculine";
-};
-
-  observableScenes?:
-    string[];
-
-    lensEntries?:
-    any[];
+    dominantPolarity?:
+      | "feminine"
+      | "masculine";
+  };
 
   awarenessChakra?:
     string | null;
+
+  dotPositions?: {
+
+    x: number;
+
+    y: number;
+
+    r: number;
+
+    side: string;
+
+    index: number;
+
+  }[];
 };
-
-// --------------------------------------------------
-// 🧠 HELPERS
-// --------------------------------------------------
-
-const getPrimaryChakra =
-  (
-    chakraWeights?: Record<
-      string,
-      number
-    >
-  ) => {
-
-    if (!chakraWeights)
-      return "heart";
-
-    return Object
-      .entries(
-        chakraWeights
-      )
-      .sort(
-        (a, b) =>
-          b[1] - a[1]
-      )[0]?.[0];
-  };
 
 // --------------------------------------------------
 // ⚡ ENERGY BALL
@@ -112,33 +88,20 @@ export default function EnergyBallSkia({
 
   distortions,
 
-  observableScenes,
-
-   lensEntries,
-
   awarenessChakra,
+
+  dotPositions = [],
 
 }: Props) {
 
   // --------------------------------------------------
-  // 🧩 STATE
+  // 🌊 ANIMATION
   // --------------------------------------------------
 
   const [
     t,
     setT,
   ] = useState(0);
-
-  const [
-    selected,
-    setSelected,
-  ] = useState<
-    number | null
-  >(null);
-
-  // --------------------------------------------------
-  // 🌊 ANIMATION
-  // --------------------------------------------------
 
   useEffect(() => {
 
@@ -182,36 +145,35 @@ export default function EnergyBallSkia({
   const feminineRatio =
     feminine / total;
 
-const balance =
+  const balance =
 
-  1 -
+    1 -
 
-  Math.abs(
-    masculine -
-    feminine
-  );
+    Math.abs(
+      masculine -
+      feminine
+    );
 
-const contraction =
+  const contraction =
 
-  energy?.contraction ??
-  0.5;
+    energy?.contraction ??
+    0.5;
 
-const expansion =
+  const expansion =
 
-  energy?.expansion ??
-  0.5;
+    energy?.expansion ??
+    0.5;
 
-const coherence =
+  const coherence =
 
-  (
-    balance * 0.4 +
+    (
+      balance * 0.4 +
 
-    expansion * 0.4 +
+      expansion * 0.4 +
 
-    (1 - contraction) *
-      0.2
-  );
-
+      (1 - contraction) *
+        0.2
+    );
 
   const splitX =
 
@@ -234,194 +196,13 @@ const coherence =
   const HEART_Y =
     CENTER - 40;
 
-  // --------------------------------------------------
-  // 🧿 DISTORTIONS
-  // --------------------------------------------------
+  const awarenessGlow =
 
-const distortionList = (
+  awarenessChakra
 
-  distortions?.distorted || []
+    ? 0.18
 
-).map(
-  (d: any) => {
-
-    const matchingLens =
-
-      lensEntries?.find(
-        (l: any) =>
-
-          l?.behaviour_id ===
-          d?.id
-      );
-
-    return {
-
-      ...d,
-
-      manifestation:
-
-        matchingLens
-          ?.manifestation ||
-
-        d?.manifestation,
-
-      mirror_prompt:
-
-        matchingLens
-          ?.mirror_prompt ||
-
-        d?.mirror_prompt,
-
-      observable_scene:
-
-        matchingLens
-          ?.observable_scene ||
-
-        d?.observable_scene,
-
-      coping_strategy:
-
-        matchingLens
-          ?.coping_strategy ||
-
-        d?.coping_strategy,
-    };
-  }
-);
-
-  // --------------------------------------------------
-  // 🌑 DOT POSITIONS
-  // --------------------------------------------------
-
-  const dotPositions =
-    distortionList.map(
-      (d: any, i: number) => {
-
-        const primaryChakra =
-
-          getPrimaryChakra(
-            d?.chakra_weights
-          );
-
-        const y =
-
-          chakraY[
-            primaryChakra as keyof typeof chakraY
-          ] || CENTER;
-
-const side =
-
-  (
-    Number(
-      d?.masculine || 0
-    ) >
-
-    Number(
-      d?.feminine || 0
-    )
-  )
-
-    ? "right"
-
-    : "left";
-
-        const x =
-
-          side === "left"
-
-            ? CENTER - 55
-
-            : CENTER + 55;
-
-const intensity =
-
-  Number(
-
-    distortions
-      ?.contractionLevel || 0.5
-
-  ) *
-
-  (
-
-    d?.quality ===
-    "distorted"
-
-      ? 1.2
-
-      : 0.7
-  );
-
-const r =
-
-  6 +
-
-  Number(
-    intensity || 0
-  ) * 8;
-
-        return {
-
-          x,
-
-          y,
-
-          r,
-
-          side,
-
-          index: i,
-        };
-      }
-    );
-
-  // --------------------------------------------------
-  // 🧠 BEHAVIOUR TEXT
-  // --------------------------------------------------
-
-  const getBehaviourText =
-    () => {
-
-      if (
-        selected === null
-      ) {
-
-        return "";
-      }
-
-      const behaviour =
-
-        distortionList[
-          selected
-        ];
-
-      if (!behaviour)
-        return "";
-
-return (
-
-  behaviour
-    ?.observable_scene ||
-
-  observableScenes?.[
-    selected
-  ] ||
-
-  behaviour
-    ?.manifestation ||
-
-  behaviour
-    ?.mirror_prompt ||
-
-  behaviour
-    ?.coping_strategy ||
-
-  behaviour
-    ?.statement ||
-
-  ""
-);
-    };
+    : 0.08;  
 
   // --------------------------------------------------
   // 🌌 RENDER
@@ -429,20 +210,29 @@ return (
 
   return (
 
-<View
-  style={{
-    width: CANVAS_SIZE,
-    height: CANVAS_SIZE,
-    overflow: "visible",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
+    <View
+      style={{
+        width: CANVAS_SIZE,
+
+        height: CANVAS_SIZE,
+
+        overflow:
+          "visible",
+
+        alignItems:
+          "center",
+
+        justifyContent:
+          "center",
+      }}
+    >
+
       {/* 🎨 CANVAS */}
 
       <Canvas
         style={{
           width: CANVAS_SIZE,
+
           height: CANVAS_SIZE,
         }}
       >
@@ -486,10 +276,12 @@ return (
 
               Math.max(
                 0,
-                (splitX - 80) / CANVAS_SIZE
+                (splitX - 80) /
+                  CANVAS_SIZE
               ),
 
-              splitX / CANVAS_SIZE,
+              splitX /
+                CANVAS_SIZE,
 
               Math.min(
                 1,
@@ -582,67 +374,67 @@ return (
           }
         )}
 
+        {/* ✨ COHERENCE */}
+
+        <Circle
+
+          cx={CENTER}
+
+          cy={CENTER}
+
+          r={
+            RADIUS *
+            0.55 *
+            coherence
+          }
+        >
+
+          <RadialGradient
+
+            c={vec(
+              CENTER,
+              CENTER
+            )}
+
+            r={
+              RADIUS *
+              0.7
+            }
+
+            colors={[
+
+              `rgba(
+  255,
+  235,
+  180,
+                ${
+coherence *
+awarenessGlow
+                }
+              )`,
+
+              `rgba(
+  255,
+  235,
+  180,
+                ${
+coherence *
+(awarenessGlow * 0.7)
+                }
+              )`,
+
+              "rgba(255,215,120,0)",
+            ]}
+          />
+
+          <BlurMask
+            blur={40}
+            style="normal"
+          />
+
+        </Circle>
+
         {/* 💚 HEART */}
-
-{/* ✨ COHERENCE */}
-
-<Circle
-
-  cx={CENTER}
-
-  cy={CENTER}
-
-  r={
-    RADIUS *
-    0.55 *
-    coherence
-  }
->
-
-  <RadialGradient
-
-    c={vec(
-      CENTER,
-      CENTER
-    )}
-
-    r={
-      RADIUS *
-      0.7
-    }
-
-    colors={[
-
-      `rgba(
-        255,
-        215,
-        120,
-        ${
-          coherence *
-          0.28
-        }
-      )`,
-
-      `rgba(
-        255,
-        215,
-        120,
-        ${
-          coherence *
-          0.12
-        }
-      )`,
-
-      "rgba(255,215,120,0)",
-    ]}
-  />
-
-  <BlurMask
-    blur={40}
-    style="normal"
-  />
-
-</Circle>
 
         <Circle
 
@@ -651,8 +443,8 @@ return (
           cy={HEART_Y}
 
           r={
-            28 +
-            Math.sin(t) * 2
+30 +
+Math.sin(t * 1.2) * 3.5
           }
         >
 
@@ -674,6 +466,11 @@ return (
               "rgba(255,220,120,0)",
             ]}
           />
+
+          <BlurMask
+  blur={18}
+  style="normal"
+/>
 
         </Circle>
 
@@ -724,20 +521,19 @@ return (
                 dot.y +
                 Math.sin(
                   t + i
-                ) *
-                  3
+                ) * 1.8
               }
+
+              opacity={
+  dot.r > 10
+    ? 0.95
+    : 0.72
+}
 
               r={dot.r}
 
-              color={
-
-                selected === i
-
-                  ? "rgba(255,255,255,0.9)"
-
-                  : "rgba(180,180,180,0.5)"
-              }
+              color=
+                "rgba(180,180,180,0.5)"
             >
 
               <BlurMask
@@ -750,130 +546,6 @@ return (
 
       </Canvas>
 
-      {/* 🧠 TOUCH LAYER */}
-
-      <Pressable
-
-        style={{
-
-          position:
-            "absolute",
-
-width: CANVAS_SIZE,
-height: CANVAS_SIZE,
-        }}
-
-        onPress={(e) => {
-
-          const {
-
-            locationX,
-
-            locationY,
-
-          } = e.nativeEvent;
-
-          dotPositions.forEach(
-            (dot, i) => {
-
-              const dx =
-                locationX -
-                dot.x;
-
-              const dy =
-                locationY -
-                dot.y;
-
-              const distance =
-                Math.sqrt(
-
-                  dx * dx +
-
-                  dy * dy
-                );
-
-              if (
-                distance <
-                dot.r + 2
-              ) {
-
-setSelected(
-
-  selected === i
-    ? null
-    : i
-);
-              }
-            }
-          );
-        }}
-      />
-
-      {/* ✨ BEHAVIOUR */}
-
- {selected !== null &&
-
-  dotPositions[
-    selected
-  ] && (
-
-  <Pressable
-
-    onPress={() =>
-      setSelected(null)
-    }
-
-    style={{
-
-      position:
-        "absolute",
-
-      left:
-
-        dotPositions[
-          selected
-        ].x + 10,
-
-      top:
-
-        dotPositions[
-          selected
-        ].y - 10,
-
-      maxWidth: 100,
-
-      flexShrink: 1,
-    }}
-  >
-
-    <Text
-
-      style={{
-
-        color:
-          "white",
-
-        fontSize: 12,
-        
-        lineHeight: 18,
-
-        opacity: 0.85,
-
-        backgroundColor:
-          "rgba(0,0,0,0.22)",
-
-        padding: 8,
-
-        borderRadius: 12,
-      }}
-    >
-
-      {getBehaviourText()}
-
-    </Text>
-
-  </Pressable>
-)}
     </View>
   );
 }

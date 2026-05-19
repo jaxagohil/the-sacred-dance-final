@@ -190,11 +190,11 @@ export default function ReadingContainer({
   // 🧠 CONTEXT
   // --------------------------------------------------
 
-  const mirrorContext =
-    context || {};
+ const embodied =
+  userContext || {};
 
-  const ctx =
-    userContext || {};
+const mirror =
+  context || {};
 
   // --------------------------------------------------
   // ✨ OPEN READING
@@ -289,11 +289,16 @@ export default function ReadingContainer({
     const selectedTarot =
       await selectTarotCard({
 
-        patterns:
-          ctx?.activePatterns || [],
+patterns:
+
+  mirror
+    ?.current
+    ?.activatedPatterns || [],
 
 distortions:
-  ctx?.distortions || [],
+
+embodied
+  ?.distortions || [],
 
         oracleCard:
           selectedOracle,
@@ -333,9 +338,11 @@ distortions:
       const divineContext =
         await buildDivineContext({
 
-          userContext: ctx,
+          userContext:
+  embodied,
 
-          mirrorContext,
+          mirrorContext:
+  mirror,
 
           oracleCard:
             selectedOracle,
@@ -357,7 +364,7 @@ distortions:
 
           context: {
 
-            user: ctx,
+            user: embodied,
           },
 
           data: {
@@ -422,22 +429,30 @@ distortions:
 
             dominantPattern:
 
-              ctx?.dominantPattern,
+mirror
+  ?.current
+  ?.dominantPattern,
 
             recurringPatterns:
 
-              ctx?.recurringPatterns || [],
+mirror
+  ?.evolution
+  ?.recurringPatterns || [],
 
             observableScenes:
-
-              ctx?.observableScenes || [],
+[
+  mirror
+    ?.story
+    ?.primaryScene,
+].filter(Boolean),
 
             distortions:
-  ctx?.distortions || [],
+embodied
+  ?.distortions || [],
 
 awarenessChakra:
 
-  ctx
+  embodied
     ?.energy
     ?.awareness_chakra ||
 
@@ -445,24 +460,29 @@ awarenessChakra:
 
 dominantChakra:
 
-  ctx
+  embodied
     ?.energy
     ?.dominant_chakra ||
 
   null,
 
             cycles:
-              ctx?.cycles || [],
+mirror
+  ?.story || {},
 
             childhoodSignals:
 
-              ctx?.childhoodSignals || {},
+embodied
+  ?.childhoodSignals || {},
 
             patterns:
-              ctx?.activePatterns || [],
+mirror
+  ?.current
+  ?.activatedPatterns || [],
 
             energy:
-              ctx?.energy || {},
+embodied
+  ?.energy || {},
           },
         });
 
@@ -477,7 +497,7 @@ dominantChakra:
 
           context: {
 
-            user: ctx,
+            user: embodied,
           },
 
           data: {
@@ -494,23 +514,32 @@ dominantChakra:
 
             dominantPattern:
 
-              ctx?.dominantPattern,
+mirror
+  ?.current
+  ?.dominantPattern,
 
             recurringPatterns:
 
-              ctx?.recurringPatterns || [],
+mirror
+  ?.evolution
+  ?.recurringPatterns || [],
 
             observableScenes:
 
-              ctx?.observableScenes || [],
+[
+  mirror
+    ?.story
+    ?.primaryScene,
+].filter(Boolean),
 
 distortions:
 
-  ctx?.distortions || [],
+embodied
+  ?.distortions || [],
 
 awarenessChakra:
 
-  ctx
+  embodied
     ?.energy
     ?.awareness_chakra ||
 
@@ -518,7 +547,7 @@ awarenessChakra:
 
 dominantChakra:
 
-  ctx
+  embodied
     ?.energy
     ?.dominant_chakra ||
 
@@ -526,16 +555,19 @@ dominantChakra:
 
             childhoodSignals:
 
-              ctx?.childhoodSignals || {},
+              embodied
+  ?.childhoodSignals || {},
 
             cycles:
-              ctx?.cycles || [],
+              mirror
+  ?.story || {},
 
             //
             // 🪞 MIRROR
             //
 
-            mirrorContext,
+            mirrorContext:
+  mirror,
 
             //
             // 🃏 ORACLE

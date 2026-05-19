@@ -318,7 +318,7 @@ ${story?.confrontation || "unknown"}
 Dominant Manifestation:
 ${story?.dominantManifestation || "unknown"}
 
-Dominant Coping Strategy:
+Dominant protective response:
 ${story?.dominantCopingStrategy || "unknown"}
 
 Dominant Pattern:
@@ -343,7 +343,7 @@ The first sentence MUST:
 2. Reveal:
 - the emotional protection
 - the nervous system adaptation
-- the coping strategy
+- the protective response
 - the recurring behavioural pattern
 
 3. Show how life keeps mirroring the same emotional structure.
@@ -396,6 +396,7 @@ The Mirror SHOULD:
 - feel emotionally intelligent
 - feel conversational
 - feel confronting with love
+- feel honest without judgement
 
 --------------------------------------------------
 LENS EXECUTION

@@ -3,6 +3,7 @@
 import React from "react";
 
 import {
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -16,6 +17,10 @@ import EnergyBody from "./energyBody";
 
 import type {
   Chakra,
+} from "../../lib/energy";
+
+import {
+  chakraY,
 } from "../../lib/energy";
 
 import {
@@ -66,123 +71,116 @@ export default function EnergyField({
   const chakraScores =
     userContext?.chakraScores || {};
 
-  const chakraPatterns =
-    userContext?.chakraPatterns || {};
+  const awarenessChakra =
 
-const awarenessChakra =
+    userContext
+      ?.energy
+      ?.awareness_chakra ||
 
-  userContext
-    ?.energy
-    ?.awareness_chakra ||
-
-  null;
+    null;
 
   const distortions =
-  userContext?.distortions || {
+    userContext?.distortions || {
 
-    distorted: [],
+      distorted: [],
 
-    integrated: [],
+      integrated: [],
 
-    contractionLevel: 0,
+      contractionLevel: 0,
 
-    expansionLevel: 0,
+      expansionLevel: 0,
 
-    dominantPolarity:
-      "feminine",
-  };
-
-  const observableScenes =
-    userContext?.observableScenes || [];
+      dominantPolarity:
+        "feminine",
+    };
 
   const lensEntries =
-  userContext?.lensEntries || [];  
+    userContext?.lensEntries || [];
 
-  /*
- * --------------------------------------------------
- * 🌌 EMPTY FIELD
- * --------------------------------------------------
- */
 
-if (
-  !energy
-) {
+  // --------------------------------------------------
+  // 🌌 EMPTY FIELD
+  // --------------------------------------------------
 
-  return (
+  if (!energy) {
 
-    <View
-      style={styles.container}
-    >
+    return (
 
       <View
-        style={styles.fieldContainer}
+        style={styles.container}
       >
 
-        <View style={styles.inner}>
+        <View
+          style={
+            styles.fieldContainer
+          }
+        >
 
-          <View
-            style={styles.energyBall}
-          >
+          <View style={styles.inner}>
 
-            <EnergyBallSkia
-
-              energy={{
-
-                feminine: 0.5,
-
-                masculine: 0.5,
-
-                contraction: 0.5,
-
-                expansion: 0.5,
-
-                chakras: {},
-
-                dominant_chakra:
-                  null,
-
-                awareness_chakra:
-                  null,
-              }}
-
-              distortions={{
-
-                distorted: [],
-
-                integrated: [],
-
-                contractionLevel: 0,
-
-                expansionLevel: 0,
-
-                dominantPolarity:
-                  "feminine",
-              }}
-
-              observableScenes={[]}
-
-              lensEntries={null}
-
-              awarenessChakra={
-                null
+            <View
+              style={
+                styles.energyBall
               }
-            />
+            >
 
-          </View>
+              <EnergyBallSkia
 
-          <View style={styles.body}>
+                energy={{
 
-            <EnergyBody />
+                  feminine: 0.5,
+
+                  masculine: 0.5,
+
+                  contraction: 0.5,
+
+                  expansion: 0.5,
+
+                  chakras: {},
+
+                  dominant_chakra:
+                    null,
+
+                  awareness_chakra:
+                    null,
+                }}
+
+                distortions={{
+
+                  distorted: [],
+
+                  integrated: [],
+
+                  contractionLevel: 0,
+
+                  expansionLevel: 0,
+
+                  dominantPolarity:
+                    "feminine",
+                }}
+
+                awarenessChakra={
+                  null
+                }
+
+                dotPositions={[]}
+              />
+
+            </View>
+
+            <View style={styles.body}>
+
+              <EnergyBody />
+
+            </View>
 
           </View>
 
         </View>
 
       </View>
-
-    </View>
-  );
-}  
+    );
+  }
 
   // --------------------------------------------------
   // 🧩 STATE
@@ -193,6 +191,13 @@ if (
     setSelectedChakra,
   ] = React.useState<
     Chakra | null
+  >(null);
+
+  const [
+    selectedDistortion,
+    setSelectedDistortion,
+  ] = React.useState<
+    number | null
   >(null);
 
   // --------------------------------------------------
@@ -209,85 +214,219 @@ if (
 
       : null;
 
-  const selectedChakraData =
-
-    selectedChakra
-
-      ? chakraContent?.[
-          selectedChakra
-        ]
-
-      : null;
-
   // --------------------------------------------------
-  // 🌈 CHAKRA MANIFESTATIONS
+  // 🧿 DISTORTIONS
   // --------------------------------------------------
 
-  const chakraManifestations =
+  const distortionList = (
 
-    selectedChakra
+    distortions?.distorted || []
 
-      ? [
+  ).map(
+    (d: any) => {
 
-          ...(distortions
-            ?.distorted || []),
+      const matchingLens =
 
-          ...(distortions
-            ?.integrated || []),
-        ]
+        lensEntries?.find(
+          (l: any) =>
 
-.filter(
-  (d: any) => {
+            l?.behaviour_id ===
+            d?.id
+        );
 
-    if (
-      !selectedChakra
-    ) {
+return {
 
-      return false;
+  ...d,
+
+  manifestation:
+
+    matchingLens
+      ?.manifestation ||
+
+    d?.manifestation,
+
+  mirror_prompt:
+
+    matchingLens
+      ?.mirror_prompt ||
+
+    d?.mirror_prompt,
+
+  observable_scene:
+
+    matchingLens
+      ?.observable_scene ||
+
+    d?.observable_scene,
+
+  coping_strategy:
+
+    matchingLens
+      ?.coping_strategy ||
+
+    d?.coping_strategy,
+
+  body_response:
+
+    matchingLens
+      ?.body_response ||
+
+    d?.body_response,
+};
     }
+  );      
 
-    const weights =
-      d?.chakra_weights;
+ // --------------------------------------------------
+// 🌈 CHAKRA INTELLIGENCE
+// --------------------------------------------------
 
-    if (!weights) {
+const chakraManifestations =
 
-      return false;
-    }
+  selectedChakra
 
-    return (
-      Number(
-        weights[
-          selectedChakra
-        ] || 0
-      ) > 0
+    ? (
+
+        userContext
+          ?.chakraManifestations?.[
+            selectedChakra
+          ] || []
+
+      )
+
+    : [];
+
+  // --------------------------------------------------
+  // 🌑 DOT POSITIONS
+  // --------------------------------------------------
+
+  const dotPositions =
+    distortionList.map(
+      (d: any, i: number) => {
+
+        const primaryChakra =
+
+  awarenessChakra ||
+
+  energy?.dominant_chakra ||
+
+  "heart";
+
+        const y =
+
+          chakraY[
+            primaryChakra as keyof typeof chakraY
+          ] || 180;
+
+        const side =
+
+          (
+            Number(
+              d?.masculine || 0
+            ) >
+
+            Number(
+              d?.feminine || 0
+            )
+          )
+
+            ? "right"
+
+            : "left";
+
+        const x =
+
+          side === "left"
+
+            ? 145
+
+            : 255;
+
+        const intensity =
+
+          Number(
+
+            distortions
+              ?.contractionLevel || 0.5
+
+          ) *
+
+          (
+
+            d?.quality ===
+            "distorted"
+
+              ? 1.2
+
+              : 0.7
+          );
+
+        const r =
+
+          6 +
+
+          Number(
+            intensity || 0
+          ) * 8;
+
+        return {
+
+          x,
+
+          y,
+
+r:
+
+  selectedDistortion === i
+
+    ? r * 1.4
+
+    : r,
+
+          side,
+
+          index: i,
+        };
+      }
     );
-  }
-)
-
-      : [];
 
   // --------------------------------------------------
-  // 🧩 CLICK HANDLER
+  // 🧩 CLICK HANDLERS
   // --------------------------------------------------
 
   const handleChakraPress = (
     chakra: Chakra
   ) => {
 
-    console.log(
-      "👉 Chakra clicked:",
-      chakra
+    setSelectedDistortion(null);
+
+    setSelectedChakra(
+
+      selectedChakra === chakra
+
+        ? null
+
+        : chakra
     );
-
-setSelectedChakra(
-
-  selectedChakra === chakra
-
-    ? null
-
-    : chakra
-);
   };
+
+  console.log(
+  "🩷 CHAKRA DEBUG",
+  selectedChakra,
+  chakraManifestations
+);
+
+const chakraInsight =
+
+  chakraManifestations?.[0]
+    ?.manifestation ||
+
+  chakraManifestations?.[0]
+    ?.body_response ||
+
+  chakraManifestations?.[0]
+    ?.observable_scene ||
+
+  "";
 
   // --------------------------------------------------
   // 🌌 RENDER
@@ -299,15 +438,22 @@ setSelectedChakra(
 
       {/* 🌌 ENERGY FIELD */}
 
-      <View style={styles.fieldContainer}>
+      <View
+        style={
+          styles.fieldContainer
+        }
+      >
 
         <View style={styles.inner}>
 
           {/* 🔵 ENERGY BALL */}
 
           <View
-            style={styles.energyBall}
-            pointerEvents="box-none"
+            style={
+              styles.energyBall
+            }
+
+            pointerEvents="none"
           >
 
             <EnergyBallSkia
@@ -318,15 +464,12 @@ setSelectedChakra(
                 distortions
               }
 
-              observableScenes={
-                observableScenes
-              }
-
-              lensEntries={
-              lensEntries}
-  
               awarenessChakra={
                 awarenessChakra
+              }
+
+              dotPositions={
+                dotPositions
               }
             />
 
@@ -342,46 +485,241 @@ setSelectedChakra(
 
           {/* 🟣 CHAKRAS */}
 
-<View
+          <View
+
   style={styles.chakras}
   pointerEvents="box-none"
 >
 
             <View
+
               style={{
-                width: 180,
+
+                width: 70,
+
                 height: 430,
               }}
             >
 
-<ChakraSystem
+              <ChakraSystem
 
-  awareness={
-    awarenessChakra
-  }
+                awareness={
+                  awarenessChakra
+                }
 
-  scores={
-    chakraScores
-  }
+scores={
+  userContext
+    ?.mirrorChakraScores ||
 
-  selectedChakra={
-    selectedChakra
-  }
+  chakraScores
+}
 
-  onChakraPress={
-    handleChakraPress
-  }
+                selectedChakra={
+                  selectedChakra
+                }
 
-  bodyResponse={
-
-    chakraManifestations?.[0]
-      ?.body_response ||
-
-    ""
-  }
-/>
+                onChakraPress={
+                  handleChakraPress
+                }
+              />
 
             </View>
+
+          </View>
+
+          {/* 🌌 OVERLAY */}
+
+          <View
+
+            pointerEvents="box-none"
+
+            style={
+              styles.overlay
+            }
+          >
+
+            {/* 🌑 DISTORTION TOUCHES */}
+
+            {dotPositions.map(
+              (dot: any, i: number) => (
+
+                <Pressable
+
+                  key={i}
+
+                  onPress={() => {
+
+                    setSelectedChakra(null);
+
+                    setSelectedDistortion(
+
+                      selectedDistortion === i
+
+                        ? null
+
+                        : i
+                    );
+                  }}
+
+style={{
+
+  position:
+    "absolute",
+
+width: 60,
+height: 60,
+
+left:
+  dot.x - 30,
+
+top:
+  dot.y - 30,
+
+borderRadius: 30,
+
+  zIndex: 90,
+}}
+                />
+              )
+            )}
+
+            {/* ✨ CHAKRA LABEL */}           
+
+{selectedChakra &&
+ chakraInsight && ( 
+
+  <View
+
+    style={{
+
+      position:
+        "absolute",
+
+                  left: 210,
+
+                  top:
+
+  (
+    chakraY[
+      selectedChakra
+    ] || 180
+  ) + 40,
+
+                  maxWidth: 120,
+
+                  backgroundColor:
+                    "rgba(0,0,0,0.22)",
+
+                  padding: 10,
+
+                  borderRadius: 14,
+
+                  zIndex: 100,
+                }}
+              >
+
+                <Text
+
+                  style={{
+
+                    color:
+                      "white",
+
+                    fontSize: 12,
+
+                    lineHeight: 18,
+
+                    opacity: 0.92,
+                  }}
+                >
+
+{chakraInsight}
+
+                </Text>
+
+              </View>
+            )}
+
+            {/* 🌑 DISTORTION LABEL */}
+
+            {selectedDistortion !== null &&
+
+              dotPositions[
+                selectedDistortion
+              ] && (
+
+              <View
+
+                style={{
+
+                  position:
+                    "absolute",
+
+                  left:
+
+                    dotPositions[
+                      selectedDistortion
+                    ].x + 14,
+
+                  top:
+
+                    dotPositions[
+                      selectedDistortion
+                    ].y - 10,
+
+                  maxWidth: 120,
+
+                  backgroundColor:
+                    "rgba(0,0,0,0.22)",
+
+                  padding: 10,
+
+                  borderRadius: 14,
+
+                  zIndex: 100,
+                }}
+              >
+
+                <Text
+
+                  style={{
+
+                    color:
+                      "white",
+
+                    fontSize: 12,
+
+                    lineHeight: 18,
+
+                    opacity: 0.92,
+                  }}
+                >
+
+                  {
+
+distortionList[
+  selectedDistortion
+]
+  ?.observable_scene ||
+
+distortionList[
+  selectedDistortion
+]
+  ?.manifestation ||
+
+distortionList[
+  selectedDistortion
+]
+  ?.mirror_prompt ||
+
+""
+
+                  }
+
+                </Text>
+
+              </View>
+            )}
 
           </View>
 
@@ -389,18 +727,19 @@ setSelectedChakra(
 
       </View>
 
-
       {/* ✨ AFFIRMATION */}
 
       {affirmation && (
 
         <View
+
           style={
             styles.affirmationWrapper
           }
         >
 
           <Text
+
             style={
               styles.affirmationText
             }
@@ -430,13 +769,21 @@ const styles =
         "center",
     },
 
-fieldContainer: {
-  width: "100%",
-  height: 430,
-  justifyContent: "center",
-  alignItems: "center",
-  overflow: "visible",
-},
+    fieldContainer: {
+
+      width: "100%",
+
+      height: 430,
+
+      justifyContent:
+        "center",
+
+      alignItems:
+        "center",
+
+      overflow:
+        "visible",
+    },
 
     inner: {
 
@@ -468,7 +815,7 @@ fieldContainer: {
       alignItems:
         "center",
 
-      zIndex: 30,
+      zIndex: 10,
     },
 
     body: {
@@ -489,17 +836,31 @@ fieldContainer: {
       zIndex: 1,
     },
 
-    chakras: {
+chakras: {
 
-      ...StyleSheet.absoluteFillObject,
+  ...StyleSheet
+    .absoluteFillObject,
 
-      justifyContent:
-        "center",
+  justifyContent:
+    "center",
 
-      alignItems:
-        "center",
+  alignItems:
+    "center",
 
-      zIndex: 20,
+  paddingTop: 135,
+
+  zIndex: 50,
+},
+
+    overlay: {
+
+      ...StyleSheet
+        .absoluteFillObject,
+
+      zIndex: 60,
+
+      pointerEvents:
+        "box-none",
     },
 
     affirmationWrapper: {
@@ -533,61 +894,6 @@ fieldContainer: {
       fontWeight: "300",
 
       opacity: 0.85,
-    },
-
-    chakraReveal: {
-
-      marginTop: 18,
-
-      paddingHorizontal: 22,
-
-      paddingVertical: 16,
-
-      borderRadius: 20,
-
-      backgroundColor:
-        "rgba(255,255,255,0.03)",
-
-      maxWidth: 280,
-    },
-
-    chakraTitle: {
-
-      color: "white",
-
-      fontSize: 16,
-
-      textAlign: "center",
-
-      marginBottom: 8,
-
-      opacity: 0.9,
-    },
-
-    chakraBody: {
-
-      color:
-        "rgba(255,255,255,0.72)",
-
-      fontSize: 13,
-
-      textAlign: "center",
-
-      lineHeight: 20,
-    },
-
-    manifestation: {
-
-      color:
-        "rgba(255,255,255,0.62)",
-
-      fontSize: 12,
-
-      lineHeight: 18,
-
-      marginTop: 8,
-
-      textAlign: "center",
     },
 
   });

@@ -87,10 +87,10 @@ export default function Lenses({
   // 🌌 DAILY FIELD
   // --------------------------------------------------
 
-  const dailyField =
+const dailyField =
 
-    userContext
-      ?.dailyField || {};
+  context
+    ?.cosmic || {};
 
   // --------------------------------------------------
   // 🪞 LENS CONTEXTS
@@ -249,8 +249,6 @@ console.log(
 
             lens,
 
-            userContext,
-
             mirrorContext:
               context,
 
@@ -260,15 +258,15 @@ console.log(
 
             aiLens:
 
-  userContext
-    ?.aiLens?.[
-      lens
-    ] || {},
+context
+  ?.aiLens?.[
+    lens
+  ] || {},
 
     cosmicField:
 
-  userContext
-    ?.dailyField || {},
+context
+  ?.cosmic || {},
 
             // --------------------------------------------------
             // 🪞 OBSERVABLE REALITY
@@ -322,18 +320,16 @@ integratedExpressions:
 
             dominantPattern:
 
-              userContext
-                ?.dominantPattern,
+context
+  ?.current
+  ?.dominantPattern,
 
-            recurringPatterns:
+            activatedPatterns:
 
-              userContext
-                ?.recurringPatterns || [],
+context
+  ?.current
+  ?.activatedPatterns || [],
 
-            distortions:
-
-              userContext
-                ?.distortions || {},
 
 awarenessChakra:
 

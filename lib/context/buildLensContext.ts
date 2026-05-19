@@ -233,22 +233,28 @@ const nervousSystemState =
 
       .slice(0, 5);
 
-  // --------------------------------------------------
-  // 🌈 CHAKRA THEMES
-  // --------------------------------------------------
+// --------------------------------------------------
+// 🌈 CHAKRA THEMES
+// --------------------------------------------------
 
-  const chakraThemes =
-    unique(
+const chakraThemes =
+  Object.keys(
+    energy?.chakras || {}
+  )
 
-      patterns.flatMap(
-        (p: any) => [
+    .sort(
+      (a, b) =>
 
-          p?.chakra,
+        Number(
+          energy?.chakras?.[b] || 0
+        ) -
 
-          ...(p?.secondary_chakras || [])
-        ]
-      )
-    );
+        Number(
+          energy?.chakras?.[a] || 0
+        )
+    )
+
+    .slice(0, 5);
 
   // --------------------------------------------------
   // ⚡ DISTORTION FIELD

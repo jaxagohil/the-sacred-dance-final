@@ -48,6 +48,10 @@ export default function LandingScreen() {
   const [prompt, setPrompt] = useState("...");
   const [loading, setLoading] = useState(true);
 
+  const [saving,
+  setSaving] =
+    useState(false);
+
   const [language, setAppLanguage] = useState("en");
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -272,62 +276,114 @@ const handleVoice =
   };
 
   // SUBMIT (UNCHANGED)
-  const handleSubmit = async () => {
+const handleSubmit =
+  async () => {
 
+    console.log("✦ SUBMIT");
     if (saving)
+      return;
+
+    try {
+
+      setSaving(true);
+
+      // --------------------------------------------------
+// 🌌 EMPTY ENTRY
+// --------------------------------------------------
+
+const hasInput =
+
+  text?.trim() ||
+
+  selected.length > 0 ||
+
+  imageBase64 ||
+
+  audioUri;
+
+if (!hasInput) {
+
+  router.push(
+    "/mirror"
+  );
+
   return;
+}
 
-    const userId = await getUserId();
+      const userId =
+        await getUserId();
+      
 
-const packet =
+      const packet =
 
-  await buildReflectionPacket({
+        await buildReflectionPacket({
 
-    text,
+          text,
 
-    emotions:
-      selected,
+          emotions:
+            selected,
 
-    imageBase64,
+          imageBase64,
 
-    audioUri,
-  });
+          audioUri,
+        });
 
-await processReflection({
+       
 
-  userId,
+      await processReflection({
 
-  language,
+        userId,
 
-  text:
-    packet.text,
+        language,
 
-  emotions:
-    packet.emotions,
+        text:
+          packet.text,
 
-  source:
-    "landing",
+        emotions:
+          packet.emotions,
 
-  metadata: {
+        source:
+          "landing",
 
-    observableScenes:
-      packet.observableScenes,
+        metadata: {
 
-    bodyResponses:
-      packet.bodyResponses,
+          observableScenes:
+            packet.observableScenes,
 
-    copingStrategies:
-      packet.copingStrategies,
+          bodyResponses:
+            packet.bodyResponses,
 
-    manifestations:
-      packet.manifestations,
+          copingStrategies:
+            packet.copingStrategies,
 
-    nervousSystem:
-      packet.nervousSystem,
-  },
-});
+          manifestations:
+            packet.manifestations,
 
-    router.push("/mirror");
+          nervousSystem:
+            packet.nervousSystem,
+        },
+      });
+
+      setText("");
+setSelected([]);
+setImageBase64(null);
+setAudioUri(null);
+
+      router.push(
+        "/mirror"
+      );
+
+    } catch (error) {
+
+      console.log(
+        "❌ LANDING ERROR",
+        error
+      );
+
+    } finally {
+
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -446,10 +502,16 @@ await processReflection({
 
     <TouchableOpacity
 
+    disabled={saving}
+
       onPress={handleSubmit}
 
       style={{
         marginBottom: 26,
+        opacity:
+  saving
+    ? 0.35
+    : 0.92,
       }}
     >
 

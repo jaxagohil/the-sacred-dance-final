@@ -1,12 +1,12 @@
 // /lib/buildReflectionPacket.ts
 
 import {
-    ingestImage,
+  ingestImage,
 } from "./ai/ingestImage";
 
 import {
-    ingestVoice,
-} from "./ai/ingestvoice";
+  ingestVoice,
+} from "./ai/ingestVoice";
 
 type BuildPacketArgs = {
 
