@@ -2,7 +2,16 @@
 
 import { supabase } from "../services/supabase";
 
+// --------------------------------------------------
+// TYPES
+// --------------------------------------------------
+
 type CreateReflectionInput = {
+
+  // --------------------------------------------------
+  // 👤 CORE
+  // --------------------------------------------------
+
   userId: string;
 
   content?: string;
@@ -11,37 +20,72 @@ type CreateReflectionInput = {
 
   source?: string;
 
-  metadata?: Record<string, any>;
+  metadata?: Record<
+    string,
+    any
+  >;
 
-  // 🧠 semantic extraction
-  extracted_emotions?: string[];
+  // --------------------------------------------------
+  // 🧠 SEMANTIC EXTRACTION
+  // --------------------------------------------------
 
-  extracted_patterns?: string[];
+  extracted_emotions?:
+    string[];
 
-  extracted_behaviours?: string[];
+  extracted_patterns?:
+    string[];
 
-  reflection_summary?: string;
+  extracted_behaviours?:
+    string[];
+
+  reflection_summary?:
+    string;
 };
 
-export async function createReflection({
+// --------------------------------------------------
+// 🚀 CREATE REFLECTION
+// --------------------------------------------------
+
+export async function
+createReflection({
+
+  // --------------------------------------------------
+  // 👤 CORE
+  // --------------------------------------------------
+
   userId,
+
   content,
+
   content_type,
+
   source,
+
   metadata,
 
+  // --------------------------------------------------
+  // 🧠 SEMANTIC EXTRACTION
+  // --------------------------------------------------
+
   extracted_emotions = [],
+
   extracted_patterns = [],
+
   extracted_behaviours = [],
 
   reflection_summary = "",
+
 }: CreateReflectionInput) {
 
   // ---------------------------------
   // 🛡 SAFETY
   // ---------------------------------
 
-  if (!content && !metadata) {
+  if (
+    !content &&
+    !metadata
+  ) {
+
     console.warn(
       "⚠️ Empty reflection — skipping insert"
     );
@@ -54,20 +98,32 @@ export async function createReflection({
   // ---------------------------------
 
   const payload = {
+
+    // ---------------------------------
+    // 👤 CORE
+    // ---------------------------------
+
     user_id: userId,
 
-    content: content || null,
+    content:
+      content || null,
 
     content_type:
-      content_type || "text",
+
+      content_type ||
+      "text",
 
     source:
-      source || "unknown",
+      source ||
+      "unknown",
 
     metadata:
       metadata || {},
 
-    // 🧠 semantic layer
+    // ---------------------------------
+    // 🧠 SEMANTIC EXTRACTION
+    // ---------------------------------
+
     extracted_emotions,
 
     extracted_patterns,
@@ -75,7 +131,24 @@ export async function createReflection({
     extracted_behaviours,
 
     reflection_summary,
+
+    // ---------------------------------
+    // ⚡ PROCESSING STATE
+    // ---------------------------------
+
+    signal_processed:
+      false,
+
+    processing_started_at:
+      null,
+
+    processed_at:
+      null,
   };
+
+  // ---------------------------------
+  // 🪞 DEBUG
+  // ---------------------------------
 
   console.log(
     "📦 REFLECTION INSERT:",
@@ -86,18 +159,25 @@ export async function createReflection({
   // 💾 INSERT
   // ---------------------------------
 
-  const { data, error } =
-    await supabase
-      .from("reflections")
-      .insert([payload])
-      .select()
-      .maybeSingle();
+  const {
+    data,
+    error,
+  } = await supabase
+
+    .from("reflections")
+
+    .insert([payload])
+
+    .select()
+
+    .maybeSingle();
 
   // ---------------------------------
   // ❌ ERROR
   // ---------------------------------
 
   if (error) {
+
     console.error(
       "❌ REFLECTION INSERT ERROR:",
       error
@@ -107,7 +187,33 @@ export async function createReflection({
   }
 
   // ---------------------------------
-  // ✅ DONE
+  // ✅ SUCCESS
+  // ---------------------------------
+
+  console.log(
+    "🪞 REFLECTION CREATED:",
+    {
+
+      id:
+        data?.id,
+
+      source:
+        data?.source,
+
+      content_type:
+
+        data
+          ?.content_type,
+
+      signal_processed:
+
+        data
+          ?.signal_processed,
+    }
+  );
+
+  // ---------------------------------
+  // ✨ RETURN
   // ---------------------------------
 
   return data;

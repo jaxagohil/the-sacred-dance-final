@@ -68,8 +68,12 @@ export default function EnergyField({
   const energy =
     userContext?.energy;
 
-  const chakraScores =
-    userContext?.chakraScores || {};
+  console.log(
+  "👁 AWARENESS CHAKRA:",
+  userContext
+    ?.energy
+    ?.awareness_chakra
+);  
 
   const awarenessChakra =
 
@@ -238,6 +242,13 @@ return {
 
   ...d,
 
+  mirror_question:
+
+  matchingLens
+    ?.mirror_question ||
+
+  d?.mirror_question,
+
   manifestation:
 
     matchingLens
@@ -280,6 +291,11 @@ return {
 // 🌈 CHAKRA INTELLIGENCE
 // --------------------------------------------------
 
+console.log(
+  "🌈 CHAKRA MANIFESTATIONS:",
+  userContext?.chakraManifestations
+);
+
 const chakraManifestations =
 
   selectedChakra
@@ -303,7 +319,9 @@ const chakraManifestations =
     distortionList.map(
       (d: any, i: number) => {
 
-        const primaryChakra =
+const primaryChakra =
+
+  d?.chakra_key ||
 
   awarenessChakra ||
 
@@ -393,40 +411,241 @@ r:
   // 🧩 CLICK HANDLERS
   // --------------------------------------------------
 
-  const handleChakraPress = (
-    chakra: Chakra
-  ) => {
+const handleChakraPress = (
+  chakra: Chakra
+) => {
 
-    setSelectedDistortion(null);
+  setSelectedDistortion(
+    null
+  );
 
-    setSelectedChakra(
+  setSelectedChakra(
+    chakra
+  );
+};
 
-      selectedChakra === chakra
+ const getChakraState = (
+  value: number
+) => {
 
-        ? null
+  if (value <= -0.6) {
+    return "contracted";
+  }
 
-        : chakra
-    );
-  };
+  if (value <= -0.2) {
+    return "underactive";
+  }
 
-  console.log(
-  "🩷 CHAKRA DEBUG",
-  selectedChakra,
-  chakraManifestations
-);
+  if (value < 0.2) {
+    return "balanced";
+  }
 
-const chakraInsight =
+  if (value < 0.6) {
+    return "activated";
+  }
 
-  chakraManifestations?.[0]
-    ?.manifestation ||
+  return "overactive";
+}; 
 
-  chakraManifestations?.[0]
-    ?.body_response ||
+const chakraScore =
 
-  chakraManifestations?.[0]
-    ?.observable_scene ||
+  selectedChakra
 
-  "";
+    ? (
+
+        energy
+          ?.chakras?.[
+            selectedChakra
+          ] ||
+
+        0
+      )
+
+    : 0;
+
+const chakraState =
+  getChakraState(
+    chakraScore
+  );
+
+const manifestation =
+
+  chakraManifestations?.[0];
+
+const polarity =
+
+  selectedDistortion !== null
+
+    ? (
+
+        Number(
+
+          distortionList[
+            selectedDistortion
+          ]?.masculine || 0
+
+        ) >
+
+        Number(
+
+          distortionList[
+            selectedDistortion
+          ]?.feminine || 0
+
+        )
+
+          ? "masculine"
+
+          : "feminine"
+      )
+
+    : distortions
+        ?.dominantPolarity ||
+
+      "feminine";
+
+const isAwarenessChakra =
+
+  selectedChakra ===
+  awarenessChakra;
+
+let chakraInsight = "";
+
+if (manifestation) {
+
+  // 🧘 AWARENESS CHAKRA
+
+if (
+  isAwarenessChakra
+) {
+
+  chakraInsight =
+
+    manifestation
+      ?.reflective_prompt ||
+
+    manifestation
+      ?.wound_expression ||
+
+    manifestation
+      ?.integration_path ||
+
+    manifestation
+      ?.relational_expression ||
+
+    manifestation
+      ?.integration ||
+
+    manifestation
+      ?.body_response ||
+
+    "";
+}
+
+  // 🌑 DISTORTION ACTIVE
+
+  else if (
+    selectedDistortion !==
+    null
+  ) {
+
+    chakraInsight =
+
+      polarity ===
+      "masculine"
+
+        ? manifestation
+            ?.masculine_manifestation
+
+        : manifestation
+            ?.feminine_manifestation ||
+
+          "";
+  }
+
+  // 🌊 ENERGETIC STATES
+
+  else {
+
+    // 🌑 CONTRACTED
+
+    if (
+      chakraState ===
+      "contracted"
+    ) {
+
+      chakraInsight =
+
+        manifestation
+          ?.body_response ||
+
+        "";
+    }
+
+    // 🌘 UNDERACTIVE
+
+    else if (
+      chakraState ===
+      "underactive"
+    ) {
+
+      chakraInsight =
+
+        manifestation
+          ?.wound_expression ||
+
+        "";
+    }
+
+// ⚪ BALANCED
+
+else if (
+  chakraState ===
+  "balanced"
+) {
+
+  chakraInsight =
+
+    manifestation
+      ?.integration ||
+
+    manifestation
+      ?.reflective_prompt ||
+
+    "";
+}
+
+// 🌔 ACTIVATED
+
+else if (
+  chakraState ===
+  "activated"
+) {
+
+  chakraInsight =
+
+    manifestation
+      ?.relational_expression ||
+
+    "";
+}
+
+// 🌕 OVERACTIVE
+
+else {
+
+  chakraInsight =
+
+    manifestation
+      ?.reflective_prompt ||
+
+    manifestation
+      ?.manifestation ||
+
+    "";
+}
+  }
+}
 
   // --------------------------------------------------
   // 🌌 RENDER
@@ -501,27 +720,48 @@ const chakraInsight =
               }}
             >
 
-              <ChakraSystem
+<ChakraSystem
 
-                awareness={
-                  awarenessChakra
-                }
+  awareness={
+    awarenessChakra
+  }
 
 scores={
-  userContext
-    ?.mirrorChakraScores ||
 
-  chakraScores
+  Object.fromEntries(
+
+    Object.entries(
+      energy?.chakras || {}
+    ).map(
+      ([k, v]) => [
+
+        k,
+
+        {
+          score:
+            Number(v),
+        },
+      ]
+    )
+  ) as Record<
+    string,
+    { score: number }
+  >
 }
 
-                selectedChakra={
-                  selectedChakra
-                }
+  chakraManifestations={
+    userContext
+      ?.chakraManifestations || {}
+  }
 
-                onChakraPress={
-                  handleChakraPress
-                }
-              />
+  selectedChakra={
+    selectedChakra
+  }
+
+  onChakraPress={
+    handleChakraPress
+  }
+/>
 
             </View>
 
@@ -588,138 +828,147 @@ borderRadius: 30,
 {selectedChakra &&
  chakraInsight && ( 
 
-  <View
+ <Pressable
+
+  onPress={() =>
+    setSelectedChakra(null)
+  }
+
+  style={{
+
+    position:
+      "absolute",
+
+    left: 210,
+
+    top:
+
+      (
+        chakraY[
+          selectedChakra
+        ] || 180
+      ) + 32,
+
+    maxWidth: 180,
+
+    backgroundColor:
+      "rgba(0,0,0,0.22)",
+
+    padding: 10,
+
+    borderRadius: 14,
+
+zIndex: 999,
+elevation: 999,
+  }}
+>
+
+  <Text
 
     style={{
 
-      position:
-        "absolute",
+      color:
+        "white",
 
-                  left: 210,
+      fontSize: 10.5,
 
-                  top:
+      lineHeight: 16,
 
-  (
-    chakraY[
-      selectedChakra
-    ] || 180
-  ) + 40,
+      opacity: 0.92,
+    }}
+  >
 
-                  maxWidth: 120,
+    {chakraInsight}
 
-                  backgroundColor:
-                    "rgba(0,0,0,0.22)",
+  </Text>
 
-                  padding: 10,
-
-                  borderRadius: 14,
-
-                  zIndex: 100,
-                }}
-              >
-
-                <Text
-
-                  style={{
-
-                    color:
-                      "white",
-
-                    fontSize: 12,
-
-                    lineHeight: 18,
-
-                    opacity: 0.92,
-                  }}
-                >
-
-{chakraInsight}
-
-                </Text>
-
-              </View>
+</Pressable>
             )}
 
-            {/* 🌑 DISTORTION LABEL */}
+{/* 🌑 DISTORTION REFLECTION */}
 
-            {selectedDistortion !== null &&
+{selectedDistortion !== null &&
+  dotPositions[selectedDistortion] && (
 
-              dotPositions[
-                selectedDistortion
-              ] && (
+ <Pressable
 
-              <View
+  onPress={() =>
+    setSelectedDistortion(null)
+  }
 
-                style={{
+  style={{
 
-                  position:
-                    "absolute",
+    position: "absolute",
 
-                  left:
+    left:
+      dotPositions[
+        selectedDistortion
+      ].side === "left"
 
-                    dotPositions[
-                      selectedDistortion
-                    ].x + 14,
+        ? dotPositions[
+            selectedDistortion
+          ].x - 150
 
-                  top:
+        : dotPositions[
+            selectedDistortion
+          ].x + 20,
 
-                    dotPositions[
-                      selectedDistortion
-                    ].y - 10,
+    top:
+      dotPositions[
+        selectedDistortion
+      ].y - 12,
 
-                  maxWidth: 120,
+    width: 130,
 
-                  backgroundColor:
-                    "rgba(0,0,0,0.22)",
+zIndex: 999,
+elevation: 999,
+  }}
+>
 
-                  padding: 10,
+  <Text
+    style={{
 
-                  borderRadius: 14,
+      color:
+        "rgba(255,255,255,0.88)",
 
-                  zIndex: 100,
-                }}
-              >
+      fontSize: 10.5,
 
-                <Text
+      lineHeight: 16,
 
-                  style={{
+      fontWeight: "300",
 
-                    color:
-                      "white",
+      letterSpacing: 0.2,
 
-                    fontSize: 12,
+      opacity: 0.82,
 
-                    lineHeight: 18,
+      textAlign:
+        dotPositions[
+          selectedDistortion
+        ].side === "left"
 
-                    opacity: 0.92,
-                  }}
-                >
+          ? "right"
 
-                  {
+          : "left",
 
-distortionList[
-  selectedDistortion
-]
-  ?.observable_scene ||
+      textShadowColor:
+        "rgba(0,0,0,0.35)",
 
-distortionList[
-  selectedDistortion
-]
-  ?.manifestation ||
+      textShadowRadius: 8,
+    }}
+  >
 
-distortionList[
-  selectedDistortion
-]
-  ?.mirror_prompt ||
+    {
 
-""
+      distortionList[
+        selectedDistortion
+      ]?.mirror_question || ""
 
-                  }
+    }
 
-                </Text>
+  </Text>
 
-              </View>
-            )}
+</Pressable>
+)}
 
           </View>
 

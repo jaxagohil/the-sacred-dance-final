@@ -19,9 +19,13 @@ import {
   View,
 } from "react-native";
 
+import "react-native-get-random-values";
+
+import { v4 as uuidv4 } from "uuid";
+
 import {
-  processReflection,
-} from "../../db/flow";
+  processGuidanceReflection,
+} from "../../db/processGuidanceReflection";
 
 import {
   getUserId,
@@ -351,6 +355,12 @@ useEffect(() => {
       const userId =
         await getUserId();
 
+      if (!userId)
+  return;  
+
+      const batchId =
+  uuidv4();  
+
       /*
        * ---------------------------------------------------
        * 🌊 USER SEGMENT
@@ -420,21 +430,36 @@ useEffect(() => {
        * ---------------------------------------------------
        */
 
-      await processReflection({
+/*
+ * ---------------------------------------------------
+ * 🌊 PROCESS GUIDANCE REFLECTION
+ * ---------------------------------------------------
+ */
 
-        userId,
+await processGuidanceReflection({
 
-        language,
+  userId,
 
-        text,
+  language,
 
-        source:
-          "guidance",
+  batchId,
 
-        guide:
-          activeGuide,
-      });
+  text,
 
+  guide:
+    activeGuide,
+
+  conversationLength:
+    segments.length,
+
+  activeGuideName:
+
+    guideNames[
+      activeGuide
+    ],
+
+  fieldContext,
+});
       /*
        * ---------------------------------------------------
        * ✨ LOADING

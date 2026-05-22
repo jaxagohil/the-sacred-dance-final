@@ -13,9 +13,20 @@ import {
   View,
 } from "react-native";
 
-import { processReflection } from "../../db/flow";
+import "react-native-get-random-values";
+
+import { v4 as uuidv4 } from "uuid";
+
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
+
+import { processEnergyAxes } from "../../db/processEnergyAxes";
+
+import { processChildhoodField } from "../../db/processChildhoodField";
+
+import { processRepeatsField } from "../../db/processRepeatsField";
+
+import { processCoreBeliefField } from "../../db/processCoreBeliefField";
 
 import {
   Colors,
@@ -479,6 +490,9 @@ const handleSave = async () => {
     const userId =
       await getUserId();
 
+const batchId =
+  uuidv4();
+
     if (!userId) {
 
       console.log(
@@ -675,20 +689,18 @@ if (!repeats.trim()) {
   );
 
 } else {
-  await processReflection({
-    userId,
+await processRepeatsField({
 
-    language,
+  userId,
 
-        baselineType:
-  "repeats",
+  language,
 
-    source: "baseline",
+  source: "baseline",
 
-    signalDepth: 3,
+  batchId,
 
-    text: repeats,
-  });
+  repeats,
+});
 
   console.log(
     "✨ Pattern reflection created"
@@ -716,21 +728,18 @@ if (!line.trim()) {
   );
 
 } else { 
-  await processReflection({
-    userId,
+await processCoreBeliefField({
 
-    language,
+  userId,
 
-    baselineType:
-  "core_belief",
+  language,
 
-    source: "baseline",
+  source: "baseline",
 
-    signalDepth: 4,
+  batchId,
 
-    text:
-      `Core belief: ${line}`,
-  });
+  coreBelief: line,
+});
 
   console.log(
     "✨ Line reflection created"
@@ -765,39 +774,23 @@ if (
   "energy_axes"
 );
 
-  await processReflection({
-    userId,
 
-    language,
+await processEnergyAxes({
+  userId,
+  language,
+  source: "baseline",
+   batchId,
+  energyAxes: {
+    givingReceiving:
+      sliders.givingreceiving,
 
-        baselineType:
-  "energy_axes",
+    structureFlow:
+      sliders.flowstructure,
 
-    source: "baseline",
-
-    signalDepth: 4,
-
-    energyAxes: {
-
-      givingReceiving:
-        (
-          sliders.givingreceiving + 1
-        ) / 2,
-
-      structureFlow:
-        (
-          sliders.flowstructure + 1
-        ) / 2,
-
-      lackAbundance:
-        (
-          sliders.abundancelack + 1
-        ) / 2,
-    },
-
-    pattern:
-      repeats || undefined,
-  });
+    lackAbundance:
+      sliders.abundancelack,
+  },
+});
 
   console.log(
     "✨ Energy reflection created"
@@ -816,25 +809,8 @@ if (
 
 ) {
 
-  const selectedSignals =
-    WORDS
 
-      .filter(
-        (w) =>
-          childhoodSignals[
-            w.key as keyof typeof childhoodSignals
-          ] === 1
-      )
-
-.map(
-  (w) =>
-    t(`you.${w.labelKey}`)
-)
-
-      .join(", ");
-
-
-      await clearBaselineLayer(
+  await clearBaselineLayer(
   userId,
   "childhood"
 );  
@@ -854,26 +830,15 @@ if (!hasSignals) {
   );
 
 } else {
-  await processReflection({
-    userId,
 
-    language,
-
-        baselineType:
-  "childhood",
-
-    source: "baseline",
-
-    signalDepth: 5,
-
-    text:
-      selectedSignals,
-
-    childhoodSignals,
-
-    pattern:
-      repeats || undefined,
-  });
+  await processChildhoodField({
+  userId,
+  language,
+  source: "baseline",
+  batchId,
+  childhoodSignals,
+  repeats,
+});
 
   console.log(
     "✨ Childhood reflection created"
@@ -1225,18 +1190,18 @@ color:
 
 const config = {
   givingreceiving: {
-    left: t("you.receiving"),
-    right: t("you.giving"),
+    left: t("you.giving"),
+    right: t("you.receiving"),
   },
 
   flowstructure: {
-    left: t("you.flow"),
-    right: t("you.structure"),
+    left: t("you.structure"),
+    right: t("you.flow"),
   },
 
   abundancelack: {
-    left: t("you.abundance"),
-    right: t("you.lack"),
+    left: t("you.lack"),
+    right: t("you.abundance"),
   },
 }[key];
 

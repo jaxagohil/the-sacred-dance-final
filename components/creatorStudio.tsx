@@ -1,9 +1,12 @@
+// /app/creator.tsx
+
 import React from "react";
 
 import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -14,7 +17,7 @@ import {
 
 import {
   addLanguage,
-} from "../../lib/i18n/addLanguage";
+} from "../lib/i18n/addLanguage";
 
 // --------------------------------------------------
 // 🌌 CREATOR SCREEN
@@ -24,6 +27,20 @@ export default function CreatorScreen() {
 
   const router =
     useRouter();
+
+  /*
+   * --------------------------------------------------
+   * 🌍 LANGUAGE INPUT
+   * --------------------------------------------------
+   */
+
+  const [
+    languageCode,
+
+    setLanguageCode,
+  ] = React.useState(
+    "hi"
+  );
 
   // --------------------------------------------------
   // 🧩 SECTIONS
@@ -267,36 +284,107 @@ export default function CreatorScreen() {
 
         {__DEV__ && (
 
-          <TouchableOpacity
-
-            style={
-              styles.languageButton
-            }
-
-            onPress={async () => {
-
-              await addLanguage({
-
-                language: "es",
-              });
-
-              console.log(
-                "✅ Spanish generated"
-              );
+          <View
+            style={{
+              marginTop: 18,
             }}
           >
 
-            <Text
-              style={
-                styles.languageText
+            <TextInput
+
+              value={languageCode}
+
+              onChangeText={
+                setLanguageCode
               }
+
+              placeholder=
+                "Language code"
+
+              placeholderTextColor=
+                "rgba(255,255,255,0.3)"
+
+              autoCapitalize="none"
+
+              autoCorrect={false}
+
+              style={{
+
+                width: 180,
+
+                paddingHorizontal: 16,
+
+                paddingVertical: 12,
+
+                borderRadius: 16,
+
+                backgroundColor:
+                  "rgba(255,255,255,0.05)",
+
+                borderWidth: 1,
+
+                borderColor:
+                  "rgba(255,255,255,0.08)",
+
+                color: "white",
+
+                fontSize: 14,
+
+                marginBottom: 12,
+              }}
+            />
+
+            <TouchableOpacity
+
+              style={
+                styles.languageButton
+              }
+
+              onPress={async () => {
+
+                const code =
+
+                  languageCode
+                    .trim()
+                    .toLowerCase();
+
+                if (!code) {
+
+                  console.log(
+                    "❌ Missing language code"
+                  );
+
+                  return;
+                }
+
+                console.log(
+                  `🌍 Generating ${code}`
+                );
+
+                await addLanguage({
+
+                  language: code,
+                });
+
+                console.log(
+                  `✅ ${code} generated`
+                );
+              }}
             >
 
-              🌍 Generate Spanish
+              <Text
+                style={
+                  styles.languageText
+                }
+              >
 
-            </Text>
+                🌍 Generate {languageCode}
 
-          </TouchableOpacity>
+              </Text>
+
+            </TouchableOpacity>
+
+          </View>
         )}
 
       </View>
@@ -455,8 +543,6 @@ const styles =
     },
 
     languageButton: {
-
-      marginTop: 18,
 
       alignSelf:
         "flex-start",

@@ -8,38 +8,38 @@ export const TABLE_CONFIGS = [
    * ------------------------------------------------
    */
 
-  {
-    table: "emotions",
+{
+  table: "emotions",
 
-    mode: "full_rows",
+  mode: "full_rows",
 
-    sourceLanguage: "en",
+  sourceLanguage: "en",
 
-    translatableFields: [
+  translatableFields: [
 
-      "name",
+    "word",
 
-      "description",
+    "integration",
 
-      "integration",
+    "core_need",
 
-      "core_need",
+    "somatic_expression",
+  ],
 
-      "somatic_expression",
-    ],
+  preserveFields: [
 
-    preserveFields: [
+    "id",
 
-      "emotion_key",
+    "row_id",
 
-      "emotional_family",
+    "emotional_family",
 
-      "nervous_system_state",
-    ],
+    "nervous_system_state",
+  ],
 
-    onConflict:
-      "emotion_key,language",
-  },
+  onConflict:
+    "id,language",
+},
 
   /*
    * ------------------------------------------------
@@ -62,60 +62,11 @@ export const TABLE_CONFIGS = [
 
     preserveFields: [
 
-      "emotion_key",
+      "emotion_id",
     ],
 
     onConflict:
-      "emotion_key,synonym,language",
-  },
-
-  /*
-   * ------------------------------------------------
-   * 🧠 BEHAVIOURS
-   * ------------------------------------------------
-   */
-
-  {
-    table: "behaviours",
-
-    mode: "full_rows",
-
-    sourceLanguage: "en",
-
-    translatableFields: [
-
-      "shadow_meaning",
-
-      "integrated_meaning",
-
-      "nervous_system_need",
-
-      "mirror_question",
-
-      "integration_step",
-
-      "embodiment",
-    ],
-
-    preserveFields: [
-
-      "behaviour_key",
-
-      "quality",
-
-      "chakra_weights",
-
-      "contraction",
-
-      "expansion",
-
-      "masculine",
-
-      "feminine",
-    ],
-
-    onConflict:
-      "behaviour_key,language",
+      "emotion_id,synonym,language",
   },
 
   /*
@@ -139,11 +90,11 @@ export const TABLE_CONFIGS = [
 
     preserveFields: [
 
-      "behaviour_key",
+      "behaviour_id",
     ],
 
     onConflict:
-      "behaviour_key,synonym,language",
+      "behaviour_id,synonym,language",
   },
 
   /*
@@ -170,24 +121,22 @@ export const TABLE_CONFIGS = [
 
     preserveFields: [
 
-      "chakra_key",
-
       "color",
     ],
 
     onConflict:
-      "chakra_key,language",
+      "name,language",
   },
 
   /*
    * ------------------------------------------------
-   * 🪞 BEHAVIOUR LENS WEIGHTS
+   * 🌈 PATTERN CHAKRA MANIFESTATIONS
    * ------------------------------------------------
    */
 
   {
     table:
-      "behaviour_lens_weights",
+      "pattern_chakra_manifestations",
 
     mode: "full_rows",
 
@@ -195,45 +144,59 @@ export const TABLE_CONFIGS = [
 
     translatableFields: [
 
-      "manifestation",
-
-      "observable_scene",
+      "wound_expression",
 
       "body_response",
 
-      "coping_strategy",
+      "nervous_system_expression",
 
-      "relational_effect",
+      "relational_expression",
 
-      "mirror_prompt",
+      "manifestation",
+
+      "masculine_manifestation",
+
+      "feminine_manifestation",
 
       "integrated_expression",
+
+      "embodiment",
+
+      "integration_path",
+
+      "affirmation",
+
+      "mirror_observation",
+
+      "mirror_realisation",
+
+      "reflective_prompt",
     ],
 
     preserveFields: [
 
-      "behaviour_id",
+      "pattern_key",
 
-      "lens",
+      "chakra_key",
 
       "weight",
 
-      "activation_level",
+      "polarity_direction",
     ],
 
     onConflict:
-      "behaviour_id,lens,language",
+      "pattern_key,chakra_key,language",
   },
 
   /*
    * ------------------------------------------------
-   * 🎴 ORACLE CARDS
+   * 🎴 ORACLE CARD TRANSLATIONS
    * ------------------------------------------------
    */
 
   {
     table:
-      "oracle_cards",
+      "oracle_card_translations",
 
     mode: "full_rows",
 
@@ -243,26 +206,16 @@ export const TABLE_CONFIGS = [
 
       "title",
 
-      "message",
-
-      "integration",
-
-      "guide_message",
+      "affirmation",
     ],
 
     preserveFields: [
 
-      "card_key",
-
-      "guide",
-
-      "archetype",
-
-      "energy_type",
+      "card_number",
     ],
 
     onConflict:
-      "card_key,language",
+      "card_number,language",
   },
 
   /*
@@ -318,44 +271,10 @@ export const TABLE_CONFIGS = [
 
       "key",
 
-      "section",
+      "screen",
     ],
 
     onConflict:
-      "key,language",
-  },
-
-  /*
-   * ------------------------------------------------
-   * 🌍 LANGUAGES
-   * ------------------------------------------------
-   */
-
-  {
-    table:
-      "languages",
-
-    mode: "full_rows",
-
-    sourceLanguage: "en",
-
-    translatableFields: [
-
-      "name",
-
-      "native_name",
-    ],
-
-    preserveFields: [
-
-      "code",
-
-      "rtl",
-
-      "font_family",
-    ],
-
-    onConflict:
-      "code",
+      "screen,key,language",
   },
 ];

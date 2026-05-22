@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
 
 import { useEffect, useState } from "react";
 import {
@@ -15,8 +16,8 @@ import {
   View,
 } from "react-native";
 
-import { processReflection } from "../db/flow";
 import { getOrCreateProfile } from "../db/getProfile";
+import { processLandingReflection } from "../db/processLandingReflection";
 import { getDailyPrompt } from "../db/prompts";
 import { getUserId, initUser } from "../lib/user";
 
@@ -82,6 +83,7 @@ export default function LandingScreen() {
       await initUser();
 
       const userId = await getUserId();
+
       const p = await getOrCreateProfile(userId);
 
       await setLanguage(
@@ -161,9 +163,7 @@ const handleLogoPress =
         CREATOR_ID
       ) {
 
-        router.push(
-          "/creatorStudio"
-        );
+router.push("/creator");
       }
 
       setTapCount(0);
@@ -312,7 +312,8 @@ if (!hasInput) {
 
       const userId =
         await getUserId();
-      
+      const batchId =
+  uuidv4();
 
       const packet =
 
@@ -330,39 +331,39 @@ if (!hasInput) {
 
        
 
-      await processReflection({
+await processLandingReflection({
 
-        userId,
+  userId,
 
-        language,
+  language,
 
-        text:
-          packet.text,
+  batchId,
 
-        emotions:
-          packet.emotions,
+  text:
+    packet.text,
 
-        source:
-          "landing",
+  emotions:
+    packet.emotions,
 
-        metadata: {
+  imageBase64,
 
-          observableScenes:
-            packet.observableScenes,
+  audioUri,
 
-          bodyResponses:
-            packet.bodyResponses,
+  observableScenes:
+    packet.observableScenes,
 
-          copingStrategies:
-            packet.copingStrategies,
+  bodyResponses:
+    packet.bodyResponses,
 
-          manifestations:
-            packet.manifestations,
+  copingStrategies:
+    packet.copingStrategies,
 
-          nervousSystem:
-            packet.nervousSystem,
-        },
-      });
+  manifestations:
+    packet.manifestations,
+
+  nervousSystem:
+    packet.nervousSystem,
+});
 
       setText("");
 setSelected([]);

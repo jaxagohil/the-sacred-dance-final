@@ -13,7 +13,12 @@ type PatternScore = {
 };
 
 export async function derivePatternsFromBehaviours(
-  behaviours: BehaviourInput[]
+
+  behaviours: BehaviourInput[],
+
+  source: string = "reflection",
+
+  signalDepth: number = 1,
 ) {
 
   console.log(
@@ -74,6 +79,48 @@ export async function derivePatternsFromBehaviours(
   const patternScores:
     Record<string, number> = {};
 
+ // -----------------------------------
+// ⚖️ DYNAMIC THRESHOLD
+// -----------------------------------
+
+let minimumWeight = 0.5;
+
+// -----------------------------------
+// 🌱 BASELINE
+// -----------------------------------
+
+if (source === "baseline") {
+
+  minimumWeight = 0.75;
+}
+
+// -----------------------------------
+// 📓 JOURNAL
+// -----------------------------------
+
+if (source === "journal") {
+
+  minimumWeight = 0.55;
+}
+
+// -----------------------------------
+// 🌌 GUIDANCE
+// -----------------------------------
+
+if (source === "guidance") {
+
+  minimumWeight = 0.5;
+}
+
+// -----------------------------------
+// 🌊 SIGNAL DEPTH SOFTENING
+// -----------------------------------
+
+if (signalDepth >= 4) {
+
+  minimumWeight -= 0.1;
+}   
+
   for (const row of data || []) {
 
     console.log(
@@ -81,6 +128,22 @@ export async function derivePatternsFromBehaviours(
       row
     );
 
+    // -----------------------------------
+// 🚫 SKIP WEAK MAPS
+// -----------------------------------
+
+if (
+  (row.weight || 0)
+    < minimumWeight
+) {
+
+  console.log(
+    "⚖️ SKIPPING WEAK MAP:",
+    row
+  );
+
+  continue;
+}
     const behaviour =
       behaviours.find(
         (b) =>

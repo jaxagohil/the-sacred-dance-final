@@ -42,11 +42,20 @@ export type MirrorContext = {
     contraction?: number;
 
     expansion?: number;
+
+    patternField?: Record<
+      string,
+      any
+    >;
   };
 
   evolution: {
 
     recurringPatterns: string[];
+
+    dominantMovements?: string[];
+
+    activePolarities?: string[];
   };
 
   lens: {
@@ -96,11 +105,6 @@ export type MirrorContext = {
 
     awarenessChakra?: string | null;
 
-    mirrorChakraScores?: Record<
-  string,
-  number
->;
-
     chakras?: Record<
       string,
       number
@@ -129,6 +133,8 @@ export type MirrorContext = {
     reflectionEchoes: string[];
 
     mirrorThemes: string[];
+
+    dominantNarratives?: string[];
   };
 
   cosmic: any;
@@ -150,6 +156,8 @@ export type MirrorContext = {
     emotionalTension?: string | null;
 
     nervousSystemState?: string | null;
+
+    dominantPolarity?: string | null;
   };
 };
 
@@ -178,6 +186,11 @@ export type BuildMirrorContextInput = {
   enrichedBehaviours?: any[];
 
   enrichedPatterns?: any[];
+
+  patternField?: Record<
+    string,
+    any
+  >;
 
   distortions?: any;
 
@@ -213,6 +226,8 @@ export async function buildMirrorContext({
 
   enrichedPatterns = [],
 
+  patternField = {},
+
   distortions = {},
 
   lensEntries = [],
@@ -226,17 +241,68 @@ export async function buildMirrorContext({
   const cosmicTransit =
     await getTodaysTransit();
 
+  const {
+    data: fieldAmplification,
+  } = await supabase
+
+    .from("cosmic_fields")
+
+    .select("*")
+
+    .in(
+      "field_state",
+      [
+        "approaching",
+        "peak",
+        "integrating",
+      ]
+    );
+
   // --------------------------------------------------
   // 🌊 SIGNALS
   // --------------------------------------------------
 
-  const currentSignals =
-    signals.slice(0, 7);
+const currentSignals =
+
+  [...signals]
+
+    .sort(
+      (a: any, b: any) => {
+
+        const aScore =
+
+          (
+            Number(
+              a?.signal_depth || 1
+            ) *
+
+            Number(
+              a?.recognition_weight || 1
+            )
+          );
+
+        const bScore =
+
+          (
+            Number(
+              b?.signal_depth || 1
+            ) *
+
+            Number(
+              b?.recognition_weight || 1
+            )
+          );
+
+        return bScore - aScore;
+      }
+    )
+
+    .slice(0, 10);
 
   const baselineSignals =
     signals.filter(
       (s) =>
-        s?.sourcetype ===
+        s?.source_type ===
         "baseline"
     );
 
@@ -261,6 +327,106 @@ export async function buildMirrorContext({
     );
 
   // --------------------------------------------------
+  // 🌊 ACTIVE PATTERN FIELD
+  // --------------------------------------------------
+
+  const activePatternField =
+
+    Object.values(
+      patternField || {}
+    )
+
+.sort(
+  (a: any, b: any) => {
+
+    const aScore =
+
+      (
+        Number(
+          a?.activation || 0
+        ) *
+
+        Number(
+          a?.signalCount || 0
+        )
+      );
+
+    const bScore =
+
+      (
+        Number(
+          b?.activation || 0
+        ) *
+
+        Number(
+          b?.signalCount || 0
+        )
+      );
+
+    return bScore - aScore;
+  }
+)
+
+      .slice(0, 10);
+
+  // --------------------------------------------------
+  // 🌊 DOMINANT PATTERN
+  // --------------------------------------------------
+
+  const dominantPatternObject =
+
+    activePatternField?.[0];
+
+  const dominantPattern =
+
+    dominantPatternObject
+      ?.pattern?.id ||
+
+    dominantPatternObject
+      ?.pattern?.name ||
+
+    currentPatterns?.[0]
+      ?.id ||
+
+    currentPatterns?.[0]
+      ?.name ||
+
+    null;
+
+  // --------------------------------------------------
+  // 🌊 ACTIVE POLARITIES
+  // --------------------------------------------------
+
+  const activePolarities =
+
+    activePatternField.map(
+      (p: any) => {
+
+        const contracted =
+
+          Number(
+            p?.contraction || 0
+          );
+
+        const expanded =
+
+          Number(
+            p?.expansion || 0
+          );
+
+        if (
+          contracted >
+          expanded
+        ) {
+
+          return `${p?.pattern?.name}: contracted`;
+        }
+
+        return `${p?.pattern?.name}: expanding`;
+      }
+    );
+
+  // --------------------------------------------------
   // 🌊 EMOTIONS
   // --------------------------------------------------
 
@@ -269,7 +435,12 @@ export async function buildMirrorContext({
 
       currentSignals.flatMap(
         (s) =>
-          s?.emotions || []
+
+          s?.ai_emotions ||
+
+          s?.emotions ||
+
+          []
       )
     );
 
@@ -323,7 +494,7 @@ export async function buildMirrorContext({
 
         .filter(Boolean)
 
-        .slice(0, 10);
+        .slice(0, 5);
   }
 
   // --------------------------------------------------
@@ -354,6 +525,7 @@ export async function buildMirrorContext({
         );
 
     if (values.length === 0) {
+
       return 0.5;
     }
 
@@ -459,11 +631,15 @@ export async function buildMirrorContext({
       patterns:
         currentPatterns,
 
+      patternField,
+
       distortions,
 
       realityLayers,
 
       energy,
+
+      fieldAmplification,
     });
 
   const placesLensContext =
@@ -476,11 +652,15 @@ export async function buildMirrorContext({
       patterns:
         currentPatterns,
 
+      patternField,
+
       distortions,
 
       realityLayers,
 
       energy,
+
+      fieldAmplification,
     });
 
   const thingsLensContext =
@@ -493,11 +673,15 @@ export async function buildMirrorContext({
       patterns:
         currentPatterns,
 
+      patternField,
+
       distortions,
 
       realityLayers,
 
       energy,
+
+      fieldAmplification,
     });
 
   // --------------------------------------------------
@@ -556,81 +740,8 @@ export async function buildMirrorContext({
   };
 
   // --------------------------------------------------
-// 🌈 MIRROR CHAKRA SCORES
-// --------------------------------------------------
-
-const mirrorChakraScores:
-  Record<string, number> = {};
-
-currentPatterns.forEach(
-  (p: any) => {
-
-    const weights =
-
-      p?.chakra_weights ||
-      {};
-
-    Object.entries(
-      weights
-    ).forEach(
-
-      ([chakra, value]) => {
-
-        mirrorChakraScores[
-          chakra
-        ] =
-
-          (
-            mirrorChakraScores[
-              chakra
-            ] || 0
-          ) +
-
-          Number(value || 0);
-      }
-    );
-  }
-);
-
-// --------------------------------------------------
-// 🌈 NORMALIZE
-// --------------------------------------------------
-
-const maxScore =
-
-  Math.max(
-    ...Object.values(
-      mirrorChakraScores
-    ),
-    1
-  );
-
-Object.keys(
-  mirrorChakraScores
-).forEach((key) => {
-
-  mirrorChakraScores[
-    key
-  ] =
-
-    mirrorChakraScores[
-      key
-    ] / maxScore;
-});
-
-  // --------------------------------------------------
   // 🧭 STORY FIELD
   // --------------------------------------------------
-
-  const dominantPattern =
-
-    currentPatterns?.[0]
-      ?.id ||
-
-    currentPatterns?.[0]
-      ?.name ||
-
-    null;
 
   const allMirrorPrompts = [
 
@@ -647,50 +758,54 @@ Object.keys(
   const allScenes = [
 
     ...(peopleLensContext
-      ?.observableScenes || []),
+      ?.observableSceneThreads || []),
 
     ...(placesLensContext
-      ?.observableScenes || []),
+      ?.observableSceneThreads || []),
 
     ...(thingsLensContext
-      ?.observableScenes || []),
+      ?.observableSceneThreads || []),
   ];
 
   const allManifestations = [
 
     ...(peopleLensContext
-      ?.manifestations || []),
+      ?.manifestationThreads || []),
 
     ...(placesLensContext
-      ?.manifestations || []),
+      ?.manifestationThreads || []),
 
     ...(thingsLensContext
-      ?.manifestations || []),
+      ?.manifestationThreads || []),
   ];
 
   const allCopingStrategies = [
 
     ...(peopleLensContext
-      ?.copingStrategies || []),
+      ?.copingStrategyThreads || []),
 
     ...(placesLensContext
-      ?.copingStrategies || []),
+      ?.copingStrategyThreads || []),
 
     ...(thingsLensContext
-      ?.copingStrategies || []),
+      ?.copingStrategyThreads || []),
   ];
 
   const primaryScene =
-    allScenes?.[0] || null;
+    allScenes?.[0]?.text ||
+    null;
 
   const confrontation =
-    allMirrorPrompts?.[0] || null;
+    allMirrorPrompts?.[0] ||
+    null;
 
   const dominantManifestation =
-    allManifestations?.[0] || null;
+    allManifestations?.[0]
+      ?.text || null;
 
   const dominantCopingStrategy =
-    allCopingStrategies?.[0] || null;
+    allCopingStrategies?.[0]
+      ?.text || null;
 
   const emotionalTension =
 
@@ -702,6 +817,44 @@ Object.keys(
       ? dominantCopingStrategy
 
       : null;
+
+  // --------------------------------------------------
+  // 🌊 DOMINANT POLARITY
+  // --------------------------------------------------
+
+  const dominantPolarity =
+
+    energy?.feminine >
+    energy?.masculine
+
+      ? "feminine"
+
+      : "masculine";
+
+  // --------------------------------------------------
+  // 🪞 DOMINANT NARRATIVES
+  // --------------------------------------------------
+
+  const dominantNarratives =
+
+    activePatternField
+
+      .map(
+        (p: any) =>
+
+          p?.pattern
+            ?.mirror_theme ||
+
+          p?.pattern
+            ?.description ||
+
+          p?.pattern
+            ?.name
+      )
+
+      .filter(Boolean)
+
+      .slice(0, 5);
 
   // --------------------------------------------------
   // ✅ FINAL
@@ -719,23 +872,22 @@ Object.keys(
           5
         ),
 
-activatedBehaviours:
+      activatedBehaviours:
 
-  currentBehaviours
+        currentBehaviours
 
-    .map(
-      (b: any) =>
+          .map(
+            (b: any) =>
+              b?.id
+          )
 
-        b?.id
-    )
+          .slice(0, 5),
 
-    .slice(0, 5),
+      attachmentThemes:
 
-attachmentThemes:
-
-  realityLayers
-    ?.emotional
-    ?.recurringCopingStrategies || [],
+        realityLayers
+          ?.emotional
+          ?.recurringCopingStrategies || [],
     },
 
     // 🌊 CURRENT
@@ -752,19 +904,23 @@ attachmentThemes:
 
       dominantPattern,
 
+      patternField,
+
       activatedPatterns:
 
-  currentPatterns
+        activePatternField
 
-    .map(
-      (p: any) =>
+          .map(
+            (p: any) =>
 
-        p?.id ||
+              p?.pattern?.id ||
 
-        p?.name
-    )
+              p?.pattern?.name
+          )
 
-    .slice(0, 5),
+          .filter(Boolean)
+
+          .slice(0, 5),
 
       contraction:
         energy?.contraction,
@@ -775,12 +931,12 @@ attachmentThemes:
       dominantChakra:
         energy?.dominant_chakra,
 
-awarenessChakra:
+      awarenessChakra:
 
-  energy
-    ?.awareness_chakra ||
+        energy
+          ?.awareness_chakra ||
 
-  null,
+        null,
 
       nervousSystemState:
 
@@ -796,16 +952,26 @@ awarenessChakra:
 
       recurringPatterns:
 
-        currentPatterns
+        activePatternField
 
           .map(
             (p: any) =>
 
-              p?.id ||
-              p?.name
+              p?.pattern?.id ||
+
+              p?.pattern?.name
           )
 
+          .filter(Boolean)
+
           .slice(0, 5),
+
+      dominantMovements: [
+
+        dominantMovement,
+      ],
+
+      activePolarities,
     },
 
     // 🪞 LENS
@@ -867,14 +1033,12 @@ awarenessChakra:
       dominantChakra:
         energy?.dominant_chakra,
 
-awarenessChakra:
+      awarenessChakra:
 
-  energy
-    ?.awareness_chakra ||
+        energy
+          ?.awareness_chakra ||
 
-  null,
-
-      mirrorChakraScores,    
+        null,
 
       chakras:
         energy?.chakras ||
@@ -893,23 +1057,33 @@ awarenessChakra:
       dominantMovement,
     },
 
-// 🗣 VOICE
-voice: {
+    // 🗣 VOICE
+    voice: {
 
-  reflectionEchoes,
+      reflectionEchoes,
 
-  mirrorThemes:
+      mirrorThemes:
 
-    currentPatterns.map(
-      (p: any) =>
+        activePatternField
 
-        p?.mirror_theme ||
+          .map(
+            (p: any) =>
 
-        p?.name ||
+              p?.pattern
+                ?.mirror_theme ||
 
-        p?.id
-    ),
-},
+              p?.pattern
+                ?.name ||
+
+              p?.id
+          )
+
+          .filter(Boolean)
+
+          .slice(0, 10),
+
+      dominantNarratives,
+    },
 
     // 🌌 COSMIC
     cosmic:
@@ -933,6 +1107,8 @@ voice: {
       dominantPattern,
 
       emotionalTension,
+
+      dominantPolarity,
 
       nervousSystemState:
 

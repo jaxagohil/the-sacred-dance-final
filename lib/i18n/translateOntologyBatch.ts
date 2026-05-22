@@ -191,13 +191,24 @@ ${JSON.stringify(rows)}
      * ------------------------------------------------
      */
 
-    const text =
+let text =
 
-      completion
-        .choices?.[0]
-        ?.message?.content ||
+  completion
+    .choices?.[0]
+    ?.message?.content ||
 
-      "[]";
+  "[]";
+
+/*
+ * ------------------------------------------------
+ * 🧹 CLEAN JSON
+ * ------------------------------------------------
+ */
+
+text = text
+  .replace(/```json/g, "")
+  .replace(/```/g, "")
+  .trim();
 
     try {
 

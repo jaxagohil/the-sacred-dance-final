@@ -70,6 +70,74 @@ addLanguage({
 
   /*
    * ------------------------------------------------
+   * 🛡 ENGLISH PROTECTION
+   * ------------------------------------------------
+   */
+
+  if (
+    language === "en"
+  ) {
+
+    console.log(
+      "⚠️ English is canonical source language"
+    );
+
+    return;
+  }
+
+  /*
+   * ------------------------------------------------
+   * 🧹 CLEAR EXISTING LANGUAGE
+   * ------------------------------------------------
+   */
+
+  console.log(
+    `🧹 Clearing existing ${language} rows`
+  );
+
+  for (const config of TABLE_CONFIGS) {
+
+    try {
+
+      const {
+        error,
+      } = await supabase
+
+        .from(config.table)
+
+        .delete()
+
+        .eq(
+          "language",
+          language
+        );
+
+      if (error) {
+
+        console.error(
+          `❌ Failed clearing ${config.table}`,
+          error
+        );
+      }
+
+      else {
+
+        console.log(
+          `🧹 Cleared ${config.table}`
+        );
+      }
+
+    } catch (err) {
+
+      console.error(
+        `❌ Cleanup crash: ${config.table}`,
+        err
+      );
+    }
+  }
+
+  /*
+   * ------------------------------------------------
    * 🌍 LOOP TABLES
    * ------------------------------------------------
    */
@@ -88,23 +156,58 @@ addLanguage({
        * --------------------------------------------
        */
 
+      let sourceQuery;
+
+      /*
+       * --------------------------------------------
+       * 🎴 ORACLE SOURCE
+       * --------------------------------------------
+       */
+
+      if (
+
+        config.table ===
+        "oracle_card_translations"
+
+      ) {
+
+        sourceQuery = supabase
+
+          .from("oracle_cards")
+
+          .select("*");
+      }
+
+      /*
+       * --------------------------------------------
+       * 🌍 STANDARD SOURCE
+       * --------------------------------------------
+       */
+
+      else {
+
+        sourceQuery = supabase
+
+          .from(config.table)
+
+          .select("*")
+
+          .eq(
+            "language",
+
+            config.sourceLanguage ||
+              "en"
+          );
+      }
+
       const {
+
         data: sourceRows,
 
         error:
           sourceError,
-      } = await supabase
 
-        .from(config.table)
-
-        .select("*")
-
-        .eq(
-          "language",
-
-          config.sourceLanguage ||
-            "en"
-        );
+      } = await sourceQuery;
 
       if (
         sourceError
@@ -182,11 +285,59 @@ addLanguage({
 
             /*
              * --------------------------------------
+             * 🎴 ORACLE CLEANUP
+             * --------------------------------------
+             */
+
+            if (
+
+              config.table ===
+              "oracle_card_translations"
+
+            ) {
+
+              Object.keys(cleaned)
+                .forEach((key) => {
+
+                  if (
+
+                    ![
+                      "card_number",
+
+                      "title",
+
+                      "affirmation",
+
+                      "language",
+                    ].includes(key)
+
+                  ) {
+
+                    delete cleaned[key];
+                  }
+                });
+            }
+
+            /*
+             * --------------------------------------
              * 🧹 REMOVE IDS
              * --------------------------------------
              */
 
-            delete cleaned.id;
+if (
+
+  config.table !==
+  "emotions"
+
+  &&
+
+  config.table !==
+  "chakras"
+
+) {
+
+  delete cleaned.id;
+}
 
             /*
              * --------------------------------------
@@ -211,29 +362,52 @@ addLanguage({
           }
         );
 
-      /*
-       * --------------------------------------------
-       * 💾 UPSERT
-       * --------------------------------------------
-       */
+/*
+ * --------------------------------------------
+ * 🧹 REMOVE DUPLICATES
+ * --------------------------------------------
+ */
 
-      const {
-        error:
-          insertError,
-      } = await supabase
+const uniqueInserts =
+  Array.from(
 
-        .from(config.table)
+    new Map(
 
-        .upsert(
-          inserts,
+      inserts.map(
+        (item) => [
 
-          {
-            onConflict:
-              config.onConflict ||
+          JSON.stringify(item),
 
-              "language",
-          }
-        );
+          item,
+        ]
+      )
+
+    ).values()
+  );
+
+/*
+ * --------------------------------------------
+ * 💾 UPSERT
+ * --------------------------------------------
+ */
+
+const {
+  error:
+    insertError,
+} = await supabase
+
+  .from(config.table)
+
+  .upsert(
+    uniqueInserts,
+
+    {
+      onConflict:
+        config.onConflict ||
+
+        "language",
+    }
+  );
 
       if (
         insertError

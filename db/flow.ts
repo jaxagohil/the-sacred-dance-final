@@ -10,7 +10,7 @@ import { loadValidSignals } from "../lib/loadValidSignals";
 
 import { createReflection } from "./reflections";
 
-import { createSignal } from "./signals";
+import { createSignalFromInterpretation } from "./createSignalFromInterpretation";
 
 import { unique } from "../lib/unique";
 
@@ -21,6 +21,8 @@ import { unique } from "../lib/unique";
 type Pattern = {
 
   id: string;
+
+  score?: number;
 
   name?: string;
 
@@ -82,29 +84,7 @@ type Emotion = {
 };
 
 // --------------------------------------------------
-// HELPERS
-// --------------------------------------------------
-
-const average = (
-  values: number[]
-) => {
-
-  if (!values.length)
-    return 0;
-
-  return (
-
-    values.reduce(
-      (a, b) => a + b,
-      0
-    ) /
-
-    values.length
-  );
-};
-
-// --------------------------------------------------
-// MAIN
+// 🚀 MAIN
 // --------------------------------------------------
 
 export async function processReflection(
@@ -145,7 +125,7 @@ export async function processReflection(
 
     signalDepth,
 
-    language,
+    language = "en",
 
     baselineType,
 
@@ -186,10 +166,9 @@ export async function processReflection(
     interpretation.emotions || [];
 
   const uniqueEmotions =
-
-  unique(
-    rawEmotions
-  );  
+    unique(
+      rawEmotions
+    );
 
   console.log(
     "😊 RAW EMOTIONS:",
@@ -275,12 +254,6 @@ export async function processReflection(
     rawBehaviours
   );
 
-    const uniqueBehaviours =
-
-  unique(
-    rawBehaviours
-  );
-
   // --------------------------------------------------
   // 🧠 ENRICH BEHAVIOURS
   // --------------------------------------------------
@@ -297,7 +270,11 @@ export async function processReflection(
 
     .select("*")
 
-    .in("id", uniqueBehaviours);
+.in(
+  "id",
+
+  unique(rawBehaviours)
+);
 
   if (behaviourError) {
 
@@ -321,7 +298,7 @@ export async function processReflection(
   const behaviours:
     Behaviour[] =
 
-    uniqueBehaviours.map(
+    rawBehaviours.map(
       (id) => {
 
         const row =
@@ -380,24 +357,33 @@ export async function processReflection(
     behaviours
   );
 
-    // --------------------------------------------------
+  // --------------------------------------------------
   // 🪞 DERIVE PATTERNS
   // --------------------------------------------------
 
   const derivedPatterns =
-    await derivePatternsFromBehaviours(
-      behaviours
-    );
+await derivePatternsFromBehaviours(
+
+  behaviours,
+
+  source,
+
+  signalDepth,
+);
 
   const rawPatterns =
     derivedPatterns.map(
-      (p) => p.id
+      (p: Pattern) => p.id
     );
 
   console.log(
     "🪞 RAW PATTERNS:",
     rawPatterns
   );
+
+  // --------------------------------------------------
+  // 🪞 ENRICH PATTERNS
+  // --------------------------------------------------
 
   const {
 
@@ -425,546 +411,6 @@ export async function processReflection(
     "🪞 ENRICHED PATTERNS:",
     patternRows
   );
-
-  // --------------------------------------------------
-  // ⚡ ENERGY SYNTHESIS
-  // --------------------------------------------------
-
-  const feminine =
-    average(
-
-      behaviours.map(
-        (b) =>
-          b.feminine || 0
-      )
-    );
-
-  const masculine =
-    average(
-
-      behaviours.map(
-        (b) =>
-          b.masculine || 0
-      )
-    );
-
-  const contraction =
-    average(
-
-      behaviours.map(
-        (b) =>
-          b.contraction || 0
-      )
-    );
-
-  const expansion =
-    average(
-
-      behaviours.map(
-        (b) =>
-          b.expansion || 0
-      )
-    );
-
-// --------------------------------------------------
-// 🌈 PATTERN CHAKRA MANIFESTATIONS
-// --------------------------------------------------
-
-const {
-
-  data: chakraManifestations,
-
-  error: chakraError,
-
-} = await supabase
-
-  .from(
-    "pattern_chakra_manifestations"
-  )
-
-  .select("*")
-
-  .in(
-    "pattern_key",
-    rawPatterns
-  )
-
-  .eq(
-    "language",
-    language
-  );
-
-if (chakraError) {
-
-  console.error(
-    "❌ Chakra manifestation error:",
-    chakraError
-  );
-}
-
-console.log(
-  "🌈 CHAKRA MANIFESTATIONS:",
-  chakraManifestations
-);
-
-// --------------------------------------------------
-// 🌈 BUILD CHAKRA MAP
-// --------------------------------------------------
-
-const chakraMap:
-  Record<string, number>
-    = {};
-
-chakraManifestations?.forEach(
-  (m: any) => {
-
-    const chakra =
-      m.chakra_key;
-
-    const weight =
-      Number(m.weight || 0);
-
-    chakraMap[chakra] =
-
-      (
-        chakraMap[
-          chakra
-        ] || 0
-      ) + weight;
-  }
-);
-
-// --------------------------------------------------
-// 🌈 NORMALIZE CHAKRAS
-// --------------------------------------------------
-
-const chakraTotal =
-
-  Object.values(
-    chakraMap
-  ).reduce(
-    (a, b) => a + b,
-    0
-  ) || 1;
-
-const normalizedChakras:
-  Record<string, number>
-    = {};
-
-Object.entries(
-  chakraMap
-).forEach(([k, v]) => {
-
-  normalizedChakras[k] =
-    v / chakraTotal;
-});
-
-// --------------------------------------------------
-// 🌈 DOMINANT CHAKRA
-// --------------------------------------------------
-
-const dominant_chakra =
-
-  Object.entries(
-    normalizedChakras
-  )
-
-    .sort(
-      (a, b) =>
-        b[1] - a[1]
-    )[0]?.[0] ||
-
-  null;
-
-// --------------------------------------------------
-// 👁 AWARENESS CHAKRA
-// --------------------------------------------------
-
-const chakraKeys =
-  Object.keys(
-    normalizedChakras
-  );
-
-const avg =
-
-  1 / (
-    chakraKeys.length || 1
-  );
-
-const awarenessMap:
-  Record<string, number>
-    = {};
-
-chakraKeys.forEach(
-  (chakra) => {
-
-    const activation =
-
-      normalizedChakras[
-        chakra
-      ] || 0;
-
-    const deviation =
-
-      Math.abs(
-        activation - avg
-      );
-
-    awarenessMap[
-      chakra
-    ] =
-
-      deviation +
-
-      activation * 0.3;
-  }
-);
-
-const awarenessChakra =
-
-  Object.entries(
-    awarenessMap
-  )
-
-    .sort(
-      (a, b) =>
-        Number(b[1]) -
-        Number(a[1])
-    )[0]?.[0] ||
-
-  null;
-  
-  const distorted =
-  behaviours.filter(
-    (b) =>
-      b.quality ===
-      "distorted"
-  );
-
-const integrated =
-  behaviours.filter(
-    (b) =>
-      b.quality ===
-      "divine"
-  );
-
-  // --------------------------------------------------
-  // ⚡ DISTORTIONS
-  // --------------------------------------------------
-
-  const distortions = {
-
-    distorted,
-
-    integrated,
-
-    contractionLevel:
-      contraction,
-
-    expansionLevel:
-      expansion,
-
-    dominantPolarity:
-
-      feminine >
-      masculine
-
-        ? "feminine"
-
-        : "masculine",
-  };
-
-  // --------------------------------------------------
-  // ✨ FINAL ENERGY
-  // --------------------------------------------------
-
-  const energy = {
-
-    feminine,
-
-    masculine,
-
-    contraction,
-
-    expansion,
-
-    chakras:
-      normalizedChakras,
-
-    dominant_chakra,
-
-awareness_chakra:
-  awarenessChakra,
-  };
-
-  console.log(
-    "⚡ ENERGY:",
-    energy
-  );
-
-  console.log(
-    "⚡ DISTORTIONS:",
-    distortions
-  );
-
-  // --------------------------------------------------
-  // 🪞 LENS MANIFESTATIONS
-  // --------------------------------------------------
-
-const {
-
-  data: lensMappings,
-
-  error: lensError,
-
-} = await supabase
-
-.from(
-  "pattern_lens_weights"
-)
-
-  .select("*")
-
-.in(
-  "pattern_key",
-  rawPatterns
-)
-
-  .eq(
-    "language",
-    language
-  );
-
-if (lensError) {
-
-  console.error(
-    "❌ Lens mapping error:",
-    lensError
-  );
-}
-
-  console.log(
-    "🪞 LENS MAPPINGS:",
-    lensMappings
-  );
-
-  // --------------------------------------------------
-  // 🪞 SHAPE LENS MEMORY
-  // --------------------------------------------------
-
-  const shapeLensEntries = (
-    lens: string
-  ) =>
-
-    lensMappings
-
-      ?.filter(
-        (m: any) =>
-          m.lens === lens
-      )
-
-.map((m: any) => ({
-
-  lens,
-
-pattern_key:
-  m.pattern_key,
-
-  weight:
-    m.weight,
-
-  manifestation:
-    m.manifestation,
-
-  observable_scene:
-    m.observable_scene,
-
-  body_response:
-    m.body_response,
-
-  coping_strategy:
-    m.coping_strategy,
-
-  relational_effect:
-    m.relational_effect,
-
-  mirror_prompt:
-    m.mirror_prompt,
-
-  integrated_expression:
-    m.integrated_expression,
-})) || [];
-
-  // --------------------------------------------------
-  // 🧠 EMBODIED LENS
-  // --------------------------------------------------
-
-  const aiLens = {
-
-    people:
-      shapeLensEntries(
-        "people"
-      ),
-
-    places:
-      shapeLensEntries(
-        "places"
-      ),
-
-    things:
-      shapeLensEntries(
-        "things"
-      ),
-  };
-
-  // --------------------------------------------------
-  // 🌍 LEVELS
-  // --------------------------------------------------
-
-  const levels =
-    interpretation?.levels || {
-
-      physical: 0.5,
-
-      emotional: 0.5,
-
-      energetic: 0.5,
-    };
-
-  console.log(
-    "🌍 LEVELS:",
-    levels
-  );
-
-  // --------------------------------------------------
-  // ✨ CONSCIOUSNESS MOVEMENT
-  // --------------------------------------------------
-
-  const consciousnessMovement =
-    interpretation
-      ?.consciousness_movement || {
-
-      reactivity: 0.5,
-
-      awareness: 0.5,
-
-      responsibility: 0.5,
-
-      embodiment: 0.5,
-
-      integration: 0.5,
-    };
-
-  console.log(
-    "✨ CONSCIOUSNESS:",
-    consciousnessMovement
-  );
-
-  // --------------------------------------------------
-  // 🌈 DOMINANT STATE
-  // --------------------------------------------------
-
-  let dominant_state =
-    "processing";
-
-  if (contraction > 0.7) {
-
-    dominant_state =
-      "contracted";
-  }
-
-  if (expansion > 0.7) {
-
-    dominant_state =
-      "expansive";
-  }
-
-  // --------------------------------------------------
-  // 🧠 NERVOUS SYSTEM
-  // --------------------------------------------------
-
-  let nervous_system_state =
-    "processing";
-
-  if (contraction > 0.75) {
-
-    nervous_system_state =
-      "protective";
-  }
-
-  if (expansion > 0.7) {
-
-    nervous_system_state =
-      "open";
-  }
-
-  // --------------------------------------------------
-  // 🧭 ENERGETIC DIRECTION
-  // --------------------------------------------------
-
-  let energetic_direction =
-    "inward";
-
-  if (
-    dominant_state ===
-    "expansive"
-  ) {
-
-    energetic_direction =
-      "outward";
-  }
-
-  if (
-
-    dominant_chakra ===
-      "root" ||
-
-    dominant_chakra ===
-      "earth_star"
-
-  ) {
-
-    energetic_direction =
-      "grounding";
-  }
-
-  // --------------------------------------------------
-  // 🩷 INTEGRATION NEED
-  // --------------------------------------------------
-
-  const emotionNeed =
-    enrichedEmotions[0]
-      ?.core_need;
-
-  const behaviourNeed =
-    behaviours.find(
-      (b) =>
-        b.nervous_system_need
-    )?.nervous_system_need;
-
-  const integration_needed =
-
-    emotionNeed ||
-
-    behaviourNeed ||
-
-    "self awareness";
-
-  // --------------------------------------------------
-  // 🧾 REFLECTION TYPE
-  // --------------------------------------------------
-
-  const content_type =
-
-    source === "baseline"
-
-      ? "baseline"
-
-      : emotions?.length
-
-        ? "emotion"
-
-        : "text";
 
   // --------------------------------------------------
   // 🧠 REFLECTION SUMMARY
@@ -1025,7 +471,10 @@ pattern_key:
 
         "",
 
-      content_type,
+      content_type:
+        baselineType ||
+        source ||
+        "reflection",
 
       source,
 
@@ -1034,8 +483,8 @@ pattern_key:
         language:
           language || "en",
 
-          baseline_type:
-  baselineType || null,
+        baseline_type:
+          baselineType || null,
 
         emotions:
           emotions || [],
@@ -1049,11 +498,6 @@ pattern_key:
         energyAxes:
           energyAxes || null,
 
-        levels,
-
-        consciousness_movement:
-          consciousnessMovement,
-
         ...(metadata || {}),
       },
 
@@ -1063,8 +507,11 @@ pattern_key:
       extracted_patterns:
         rawPatterns,
 
-      extracted_behaviours:
-        uniqueBehaviours,
+extracted_behaviours:
+
+  unique(
+    rawBehaviours
+  ),
 
       reflection_summary,
     });
@@ -1082,99 +529,204 @@ pattern_key:
   );
 
   // --------------------------------------------------
-  // ⚖️ SIGNAL DEPTH
+  // ⚡ CREATE SIGNALS
   // --------------------------------------------------
 
-  const DEFAULT_WEIGHTS = {
+// --------------------------------------------------
+// ⚡ GROUP DISTINCT PATTERNS
+// --------------------------------------------------
 
-    baseline: 1.5,
+const groupedPatterns =
+  new Map<string, any>();
 
-    journal: 1.0,
+for (const pattern of derivedPatterns) {
 
-    guidance: 0.9,
+  const existing =
+    groupedPatterns.get(
+      pattern.id
+    );
 
-    landing: 0.6,
+  if (!existing) {
 
-    unknown: 0.8,
-  };
+groupedPatterns.set(
+  pattern.id,
+  {
+    ...pattern,
 
-  const finalDepth =
+behaviours:
 
-    signalDepth ||
+  behaviours.map(
+    (b) => ({
 
-    DEFAULT_WEIGHTS[
-      source as keyof typeof DEFAULT_WEIGHTS
-    ] ||
+      ...b,
 
-    DEFAULT_WEIGHTS.unknown;
+      occurrences: 1,
+    })
+  ),
 
-  // --------------------------------------------------
-  // ⚡ CREATE SIGNAL
-  // --------------------------------------------------
+    emotions: [
+      ...enrichedEmotions,
+    ],
+  }
+);
 
-  const signal =
-    await createSignal({
+  } else {
 
-      reflection_id:
-        reflection.id,
+existing.score =
+  Number(
+    (
+      existing.score +
+      pattern.score
+    ).toFixed(2)
+  );
 
-      user_id:
-        userId,
+// --------------------------------------------------
+// 🧠 MERGE BEHAVIOURS
+// --------------------------------------------------
 
-      sourcetype:
-        source || "unknown",
+const mergedBehaviourMap =
+  new Map<string, any>();
 
-      baseline_type:
-  baselineType || null,  
+[
+  ...(existing.behaviours || []),
 
-      signal_depth:
-        finalDepth,
+  ...behaviours.map(
+    (b) => ({
+      ...b,
 
-      ai_behaviours:
-        behaviours,
+      occurrences: 1,
+    })
+  ),
 
-      ai_patterns:
-        patternRows || [],
+].forEach((b: any) => {
 
-      ai_lens:
-        aiLens,
+  const existingBehaviour =
+    mergedBehaviourMap.get(
+      b.id
+    );
 
-      ai_confidence:
+  if (!existingBehaviour) {
 
-        interpretation
-          .ai_confidence ??
+    mergedBehaviourMap.set(
+      b.id,
+      {
+        ...b,
 
-        null,
+        occurrences: 1,
+      }
+    );
 
-      ai_intensity:
+  } else {
 
-        interpretation
-          .intensity ??
+    existingBehaviour.occurrences += 1;
+  }
+});
 
-        null,
+existing.behaviours =
+  Array.from(
+    mergedBehaviourMap.values()
+  );
 
-      energy,
+// --------------------------------------------------
+// 😊 MERGE EMOTIONS
+// --------------------------------------------------
+existing.emotions =
 
-      distortions,
+  Array.from(
 
-      levels,
+    new Map(
 
-      consciousness_movement:
-        consciousnessMovement,
+      [
 
-      dominant_state,
+        ...(existing.emotions || []),
 
-      energetic_direction,
+        ...enrichedEmotions,
 
-      nervous_system_state,
+      ].map((e: any) => [
+        e.id,
+        e
+      ])
 
-      integration_needed,
-    });
+    ).values()
+  );
+
+  }
+}
+// --------------------------------------------------
+// ⚡ CREATE DISTINCT SIGNALS
+// --------------------------------------------------
+
+const signals = [];
+
+for (const currentPattern of groupedPatterns.values()) {
 
   console.log(
-    "⚡ SIGNAL CREATED:",
-    signal
+    `⚡ PROCESSING DISTINCT PATTERN SIGNAL: ${currentPattern.id}`
   );
+
+  const signalResult =
+    await createSignalFromInterpretation({
+
+      reflection,
+
+      userId,
+
+      interpretation,
+
+      behaviours,
+
+      currentPattern,
+
+      enrichedEmotions,
+
+      source,
+
+      baselineType,
+
+      signalDepth,
+
+      language,
+
+      text,
+
+      reflection_summary,
+    });
+
+  if (
+    signalResult?.signal
+  ) {
+
+    signals.push(
+      signalResult.signal
+    );
+  }
+}
+
+  console.log(
+    `⚡ CREATED ${signals.length} SIGNALS`
+  );
+
+  // --------------------------------------------------
+  // ✅ MARK REFLECTION PROCESSED
+  // --------------------------------------------------
+
+  await supabase
+
+    .from("reflections")
+
+    .update({
+
+      signal_processed:
+        true,
+
+      processed_at:
+        new Date().toISOString(),
+    })
+
+    .eq(
+      "id",
+      reflection.id
+    );
 
   // --------------------------------------------------
   // ✅ DONE
@@ -1184,18 +736,14 @@ pattern_key:
 
     reflection,
 
-    signal,
-
-    energy,
-
-    distortions,
-
-    patterns:
-      patternRows || [],
+    signals,
 
     behaviours,
 
     emotions:
       enrichedEmotions,
+
+    patterns:
+      patternRows || [],
   };
 }

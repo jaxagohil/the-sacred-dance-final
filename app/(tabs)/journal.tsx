@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import "react-native-get-random-values";
+
+import { v4 as uuidv4 } from "uuid";
 
 import {
   Dimensions,
@@ -11,7 +14,7 @@ import {
   View
 } from "react-native";
 
-import { processReflection } from "../../db/flow";
+import { processJournalReflection } from "../../db/processJournalReflection";
 
 import { getUserId } from "../../lib/user";
 
@@ -310,6 +313,9 @@ const handleVoice =
     if (!userId)
       return;
 
+          const batchId =
+  uuidv4();
+  
     try {
 
       setSaving(true);
@@ -334,59 +340,63 @@ const handleVoice =
           audioUri,
         });
 
-      /*
-       * --------------------------------------------------
-       * 🪞 PROCESS REFLECTION
-       * --------------------------------------------------
-       */
+     /*
+ * --------------------------------------------------
+ * 🌊 PROCESS JOURNAL REFLECTION
+ * --------------------------------------------------
+ */
 
-      await processReflection({
+await processJournalReflection({
 
-        userId,
+  userId,
 
-        language,
+  language,
 
-        text:
-          packet.text,
+  batchId,
 
-        emotions:
-          packet.emotions,
+  text:
+    packet.text,
 
-        source:
-          "journal",
+  emotions:
+    packet.emotions,
 
-        metadata: {
+  imageBase64,
 
-          observableScenes:
-            packet.observableScenes,
+  audioUri,
 
-          bodyResponses:
-            packet.bodyResponses,
+  observableScenes:
+    packet.observableScenes,
 
-          copingStrategies:
-            packet.copingStrategies,
+  bodyResponses:
+    packet.bodyResponses,
 
-          manifestations:
-            packet.manifestations,
+  copingStrategies:
+    packet.copingStrategies,
 
-          nervousSystem:
-            packet.nervousSystem,
-        },
-      });
+  manifestations:
+    packet.manifestations,
 
-      /*
-       * --------------------------------------------------
-       * ✨ RESET
-       * --------------------------------------------------
-       */
+  nervousSystem:
+    packet.nervousSystem,
+});
 
-      Keyboard.dismiss();
+/*
+ * --------------------------------------------------
+ * ✨ RESET
+ * --------------------------------------------------
+ */
 
-      setText("");
+Keyboard.dismiss();
 
-      setSelected([]);
+setText("");
 
-      setImageBase64(
+setSelected([]);
+
+setImageBase64(
+  null
+);
+
+setAudioUri(
   null
 );
 

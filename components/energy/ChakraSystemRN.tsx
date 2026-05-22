@@ -33,6 +33,11 @@ type Props = {
     }
   >;
 
+  chakraManifestations?: Record<
+  Chakra,
+  any[]
+>;
+
   selectedChakra?:
     Chakra | null;
 
@@ -51,6 +56,8 @@ ChakraSystemRN({
   awareness,
 
   scores,
+
+  chakraManifestations,
 
   selectedChakra,
 
@@ -84,28 +91,28 @@ ChakraSystemRN({
   // 🧠 STATE
   // --------------------------------------------------
 
-  const getState = (
-    value: number
-  ) => {
+const getState = (
+  value: number
+) => {
 
-    if (
-      value <
-      avg * 0.6
-    ) {
+  if (value <= -0.6) {
+    return "contracted";
+  }
 
-      return "low";
-    }
+  if (value <= -0.2) {
+    return "underactive";
+  }
 
-    if (
-      value >
-      avg * 1.4
-    ) {
-
-      return "high";
-    }
-
+  if (value < 0.2) {
     return "balanced";
-  };
+  }
+
+  if (value < 0.6) {
+    return "activated";
+  }
+
+  return "overactive";
+};
 
   // --------------------------------------------------
   // 🌌 RENDER
@@ -120,7 +127,7 @@ ChakraSystemRN({
 
           const chakra =
             scores?.[key];
-
+ 
           const value =
 
             chakra?.score ??
@@ -130,6 +137,24 @@ ChakraSystemRN({
             getState(
               value
             );
+
+const manifestations =
+
+  chakraManifestations?.[
+    key
+  ] || [];
+
+const hasMessage =
+
+  manifestations.some(
+    (m: any) =>
+
+      m?.body_response ||
+      m?.wound_expression ||
+      m?.relational_expression ||
+      m?.reflective_prompt ||
+      m?.integration_path
+  );
 
           const isActive =
             awareness === key;
@@ -189,35 +214,18 @@ const size =
 
           let opacity = 0.95;
 
-          if (
-            state === "low"
-          ) {
-
-            opacity = 0.75;
-          }
-
           // --------------------------------------------------
           // 🌈 RING
           // --------------------------------------------------
 
-          let ringColor =
-            "transparent";
+let ringColor =
+  "transparent";
 
-          if (
-            state === "low"
-          ) {
+if (hasMessage) {
 
-            ringColor =
-              "rgba(220,220,220,0.30)";
-          }
-
-          if (
-            state === "high"
-          ) {
-
-            ringColor =
-              "rgba(80,80,80,0.90)";
-          }
+  ringColor =
+    "rgba(220,220,220,0.55)";
+}
 
           // --------------------------------------------------
           // 🌌 NODE
@@ -314,11 +322,16 @@ shadowRadius:
 
 <Pressable
 
-  onPress={() =>
+  onPress={() => {
+
+    if (!hasMessage) {
+      return;
+    }
+
     onChakraPress?.(
       key
-    )
-  }
+    );
+  }}
 
   hitSlop={20}
 >
@@ -356,17 +369,11 @@ shadowRadius:
           backgroundColor:
             baseColor,
 
-          borderWidth:
+borderWidth:
+  hasMessage ? 4 : 0,
 
-            state ===
-            "balanced"
-
-              ? 0
-
-              : 2,
-
-          borderColor:
-            ringColor,
+borderColor:
+  "rgba(220,220,220,0.5)",
 
           opacity,
 
@@ -380,60 +387,48 @@ shadowRadius:
           alignItems:
             "center",
 
-          ...(key ===
-          "heart"
+...(key ===
+"heart"
 
-            ? {
+  ? {
 
-                shadowColor:
-                  "#63FF9B",
+      shadowColor:
+        "#63FF9B",
 
-                shadowOpacity:
-                  0.9,
+      shadowOpacity:
+        0.9,
 
-                shadowRadius:
-                  30,
+      shadowRadius:
+        30,
+    }
 
-                borderWidth:
-                  2.5,
-
-                borderColor:
-                  "rgba(180,255,210,0.55)",
-              }
-
-            : {}),
+  : {}),
         },
 
-        isSelected && {
+isSelected && {
 
-          transform: [
-            {
-              scale: 1.22,
-            },
-          ],
+  transform: [
+    {
+      scale: 1.22,
+    },
+  ],
 
-          shadowColor:
+  shadowColor:
 
-            key === "heart"
+    key === "heart"
 
-              ? "#63FF9B"
+      ? "#63FF9B"
 
-              : baseColor,
+      : baseColor,
 
-          shadowOpacity:
-            0.9,
+  shadowOpacity:
+    0.9,
 
-          shadowRadius:
-            18,
+  shadowRadius:
+    18,
 
-          elevation: 30,
-
-          borderColor:
-            "rgba(255,255,255,0.55)",
-
-          borderWidth:
-            2.5,
-        },
+  elevation: 30,
+},
       ]}
     />
 

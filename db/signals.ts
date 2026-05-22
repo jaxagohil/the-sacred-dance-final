@@ -2,7 +2,15 @@
 
 import { supabase } from "../services/supabase";
 
+// --------------------------------------------------
+// TYPES
+// --------------------------------------------------
+
 type CreateSignalInput = {
+
+  // --------------------------------------------------
+  // CORE
+  // --------------------------------------------------
 
   reflection_id: string;
 
@@ -10,13 +18,17 @@ type CreateSignalInput = {
 
   sourcetype?: string;
 
+  signal_origin?: string;
+
+  baseline_type?: string;
+
   signal_depth?: number;
 
-  /*
-   * --------------------------------------------------
-   * 🧠 AI / SEMANTIC
-   * --------------------------------------------------
-   */
+  temporal_weight?: number;
+
+  // --------------------------------------------------
+  // 🧠 BEHAVIOURS / PATTERNS
+  // --------------------------------------------------
 
   ai_behaviours?: any[];
 
@@ -24,17 +36,46 @@ type CreateSignalInput = {
 
   ai_lens?: any;
 
+  primary_pattern?: string;
+
+  pattern_score?: number;
+
+  spectrum_side?: string;
+
+  // --------------------------------------------------
+  // 🌈 LENS SYSTEM
+  // --------------------------------------------------
+
+  lens_scores?: Record<
+    string,
+    number
+  >;
+
+  // --------------------------------------------------
+  // ⚡ CHAKRAS
+  // --------------------------------------------------
+
+  primary_chakra?:
+    string | null;
+
+  chakra_scores?: Record<
+    string,
+    number
+  >;
+
+  // --------------------------------------------------
+  // 🤖 AI CONFIDENCE
+  // --------------------------------------------------
+
   ai_confidence?:
     number | null;
 
   ai_intensity?:
     number | null;
 
-  /*
-   * --------------------------------------------------
-   * ⚡ ENERGY
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ⚡ ENERGY
+  // --------------------------------------------------
 
   energy?: {
 
@@ -53,11 +94,9 @@ type CreateSignalInput = {
       string | null;
   };
 
-  /*
-   * --------------------------------------------------
-   * ⚡ DISTORTIONS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ⚡ DISTORTIONS
+  // --------------------------------------------------
 
   distortions?: {
 
@@ -74,11 +113,9 @@ type CreateSignalInput = {
       | "masculine";
   };
 
-  /*
-   * --------------------------------------------------
-   * 🌍 LEVELS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🌍 LEVELS
+  // --------------------------------------------------
 
   levels?: {
 
@@ -89,11 +126,9 @@ type CreateSignalInput = {
     energetic?: number;
   };
 
-  /*
-   * --------------------------------------------------
-   * ✨ CONSCIOUSNESS MOVEMENT
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ✨ CONSCIOUSNESS
+  // --------------------------------------------------
 
   consciousness_movement?: {
 
@@ -108,23 +143,47 @@ type CreateSignalInput = {
     integration?: number;
   };
 
-  /*
-   * --------------------------------------------------
-   * 🌈 SEMANTIC LAYERS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🌈 SEMANTIC
+  // --------------------------------------------------
 
   dominant_state?: string;
 
-  energetic_direction?: string;
+  energetic_direction?:
+    string;
 
-  nervous_system_state?: string;
+  nervous_system_state?:
+    string;
 
-  integration_needed?: string;
+  integration_needed?:
+    string;
+
+  // --------------------------------------------------
+  // 🌗 SACRED DANCE
+  // --------------------------------------------------
+
+  polarity_score?: number;
+
+  integration_score?:
+    number;
+
+  embodiment_score?:
+    number;
+
+  nervous_system_activation?:
+    number;
 };
+
+// --------------------------------------------------
+// 🚀 MAIN
+// --------------------------------------------------
 
 export async function
 createSignal({
+
+  // --------------------------------------------------
+  // CORE
+  // --------------------------------------------------
 
   reflection_id,
 
@@ -132,13 +191,19 @@ createSignal({
 
   sourcetype = "unknown",
 
+  signal_origin =
+    "reflection",
+
+  baseline_type =
+    undefined,
+
   signal_depth = 1,
 
-  /*
-   * --------------------------------------------------
-   * 🧠 AI
-   * --------------------------------------------------
-   */
+  temporal_weight = 1,
+
+  // --------------------------------------------------
+  // 🧠 BEHAVIOURS / PATTERNS
+  // --------------------------------------------------
 
   ai_behaviours = [],
 
@@ -153,15 +218,46 @@ createSignal({
     things: [],
   },
 
+  primary_pattern = "",
+
+  pattern_score = 0,
+
+  spectrum_side =
+    "center",
+
+  // --------------------------------------------------
+  // 🌈 LENSES
+  // --------------------------------------------------
+
+  lens_scores = {
+
+    people: 0,
+
+    places: 0,
+
+    things: 0,
+  },
+
+  // --------------------------------------------------
+  // ⚡ CHAKRAS
+  // --------------------------------------------------
+
+  primary_chakra =
+    null,
+
+  chakra_scores = {},
+
+  // --------------------------------------------------
+  // 🤖 AI
+  // --------------------------------------------------
+
   ai_confidence = null,
 
   ai_intensity = null,
 
-  /*
-   * --------------------------------------------------
-   * ⚡ ENERGY
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ⚡ ENERGY
+  // --------------------------------------------------
 
   energy = {
 
@@ -179,11 +275,9 @@ createSignal({
       null,
   },
 
-  /*
-   * --------------------------------------------------
-   * ⚡ DISTORTIONS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ⚡ DISTORTIONS
+  // --------------------------------------------------
 
   distortions = {
 
@@ -199,11 +293,9 @@ createSignal({
       "feminine",
   },
 
-  /*
-   * --------------------------------------------------
-   * 🌍 LEVELS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🌍 LEVELS
+  // --------------------------------------------------
 
   levels = {
 
@@ -214,11 +306,9 @@ createSignal({
     energetic: 0.5,
   },
 
-  /*
-   * --------------------------------------------------
-   * ✨ CONSCIOUSNESS
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // ✨ CONSCIOUSNESS
+  // --------------------------------------------------
 
   consciousness_movement = {
 
@@ -233,11 +323,9 @@ createSignal({
     integration: 0.5,
   },
 
-  /*
-   * --------------------------------------------------
-   * 🌈 SEMANTIC
-   * --------------------------------------------------
-   */
+  // --------------------------------------------------
+  // 🌈 SEMANTIC
+  // --------------------------------------------------
 
   dominant_state =
     "processing",
@@ -248,194 +336,239 @@ createSignal({
   nervous_system_state =
     "processing",
 
-  integration_needed = "",
+  integration_needed =
+    "",
+
+  // --------------------------------------------------
+  // 🌗 SACRED DANCE
+  // --------------------------------------------------
+
+  polarity_score = 0,
+
+  integration_score = 0,
+
+  embodiment_score = 0,
+
+  nervous_system_activation = 0,
 
 }: CreateSignalInput) {
 
-  /*
-   * --------------------------------------------------
-   * 📦 PAYLOAD
-   * --------------------------------------------------
-   */
+  try {
 
-  const payload = {
+    // --------------------------------------------------
+    // 📦 PAYLOAD
+    // --------------------------------------------------
 
-    reflection_id,
+    const payload = {
 
-    user_id,
+      // ------------------------------------------------
+      // CORE
+      // ------------------------------------------------
 
-    sourcetype,
+      reflection_id,
 
-    signal_depth,
+      user_id,
 
-    /*
-     * ------------------------------------------------
-     * 🧠 AI
-     * ------------------------------------------------
-     */
+      sourcetype,
 
-    ai_behaviours,
+      signal_origin,
 
-    ai_patterns,
+      baseline_type,
 
-    ai_lens,
+      signal_depth,
 
-    ai_confidence,
+      temporal_weight,
 
-    ai_intensity,
+      // ------------------------------------------------
+      // 🧠 BEHAVIOURS / PATTERNS
+      // ------------------------------------------------
 
-    /*
-     * ------------------------------------------------
-     * ⚡ ENERGY
-     * ------------------------------------------------
-     */
+      ai_behaviours,
 
-    energy,
+      ai_patterns,
 
-    /*
-     * ------------------------------------------------
-     * ⚡ DISTORTIONS
-     * ------------------------------------------------
-     */
+      ai_lens,
 
-    distortions,
+      primary_pattern,
 
-    /*
-     * ------------------------------------------------
-     * 🌍 LEVELS
-     * ------------------------------------------------
-     */
+      pattern_key:
+  primary_pattern,
 
-    levels,
+      pattern_score,
 
-    /*
-     * ------------------------------------------------
-     * ✨ CONSCIOUSNESS
-     * ------------------------------------------------
-     */
+      spectrum_side,
 
-    consciousness_movement,
+      // ------------------------------------------------
+      // 🌈 LENSES
+      // ------------------------------------------------
 
-    /*
-     * ------------------------------------------------
-     * 🌈 SEMANTIC
-     * ------------------------------------------------
-     */
+      lens_scores,
 
-    dominant_state,
+      // ------------------------------------------------
+      // ⚡ CHAKRAS
+      // ------------------------------------------------
 
-    energetic_direction,
+      primary_chakra,
 
-    nervous_system_state,
+      chakra_scores,
 
-    integration_needed,
-  };
+      // ------------------------------------------------
+      // 🤖 AI
+      // ------------------------------------------------
 
-  console.log(
-    "⚡ SIGNAL INSERT:",
-    payload
-  );
+      ai_confidence,
 
-  /*
-   * --------------------------------------------------
-   * 💾 INSERT
-   * --------------------------------------------------
-   */
+      ai_intensity,
 
-  const {
-    data,
-    error,
-  } = await supabase
+      // ------------------------------------------------
+      // ⚡ ENERGY
+      // ------------------------------------------------
 
-    .from("signals")
+      energy,
 
-    .insert([payload])
+      // ------------------------------------------------
+      // ⚡ DISTORTIONS
+      // ------------------------------------------------
 
-    .select()
+      distortions,
 
-    .maybeSingle();
+      // ------------------------------------------------
+      // 🌍 LEVELS
+      // ------------------------------------------------
 
-  /*
-   * --------------------------------------------------
-   * ❌ ERROR
-   * --------------------------------------------------
-   */
+      levels,
 
-  if (error) {
+      // ------------------------------------------------
+      // ✨ CONSCIOUSNESS
+      // ------------------------------------------------
+
+      consciousness_movement,
+
+      // ------------------------------------------------
+      // 🌈 SEMANTIC
+      // ------------------------------------------------
+
+      dominant_state,
+
+      energetic_direction,
+
+      nervous_system_state,
+
+      integration_needed,
+
+      // ------------------------------------------------
+      // 🌗 SACRED DANCE
+      // ------------------------------------------------
+
+      polarity_score,
+
+      integration_score,
+
+      embodiment_score,
+
+      nervous_system_activation,
+    };
+
+    // --------------------------------------------------
+    // 🪞 DEBUG
+    // --------------------------------------------------
+
+    console.log(
+      "⚡ SIGNAL INSERT:",
+      payload
+    );
+
+    // --------------------------------------------------
+    // 💾 INSERT
+    // --------------------------------------------------
+
+    const {
+      data,
+      error,
+    } = await supabase
+
+      .from("signals")
+
+      .insert([payload])
+
+      .select()
+
+      .maybeSingle();
+
+    // --------------------------------------------------
+    // ❌ ERROR
+    // --------------------------------------------------
+
+    if (error) {
+
+      console.error(
+        "❌ SIGNAL INSERT ERROR:",
+        error
+      );
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // ✅ CREATED
+    // --------------------------------------------------
+
+    console.log(
+      "✨ SIGNAL CREATED:",
+      {
+
+        id:
+          data?.id,
+
+        pattern:
+          data?.primary_pattern,
+
+          pattern_key:
+  data?.primary_pattern,
+
+        pattern_score:
+          data?.pattern_score,
+
+        spectrum_side:
+          data?.spectrum_side,
+
+        primary_chakra:
+          data?.primary_chakra,
+
+        polarity_score:
+          data?.polarity_score,
+
+        integration_score:
+          data?.integration_score,
+
+        embodiment_score:
+          data?.embodiment_score,
+
+        nervous_system_activation:
+
+          data
+            ?.nervous_system_activation,
+
+        dominant_state:
+
+          data
+            ?.dominant_state,
+      }
+    );
+
+    // --------------------------------------------------
+    // ✨ RETURN
+    // --------------------------------------------------
+
+    return data;
+
+  } catch (error) {
 
     console.error(
-      "❌ SIGNAL INSERT ERROR:",
+      "❌ createSignal error:",
       error
     );
 
     throw error;
   }
-
-  /*
-   * --------------------------------------------------
-   * ✅ DONE
-   * --------------------------------------------------
-   */
-
-  console.log(
-    "⚡ SIGNAL CREATED:",
-    {
-
-      id:
-        data?.id,
-
-      behaviours:
-
-        data
-          ?.ai_behaviours
-          ?.length || 0,
-
-      patterns:
-
-        data
-          ?.ai_patterns
-          ?.length || 0,
-
-      distorted:
-
-        data
-          ?.distortions
-          ?.distorted
-          ?.length || 0,
-
-      integrated:
-
-        data
-          ?.distortions
-          ?.integrated
-          ?.length || 0,
-
-      hasLens:
-        !!data?.ai_lens,
-
-      hasEnergy:
-        !!data?.energy,
-
-      hasLevels:
-        !!data?.levels,
-
-      hasConsciousness:
-
-        !!data
-          ?.consciousness_movement,
-
-      dominant_state:
-
-        data
-          ?.dominant_state,
-    }
-  );
-
-  /*
-   * --------------------------------------------------
-   * ✨ RETURN
-   * --------------------------------------------------
-   */
-
-  return data;
 }

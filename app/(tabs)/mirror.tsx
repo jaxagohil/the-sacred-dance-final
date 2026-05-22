@@ -385,6 +385,10 @@ useFocusEffect(
             userContext
               ?.enrichedPatterns || [],
 
+              patternField:
+  userContext
+    ?.patternField || {},
+
           // 🌈 DISTORTIONS
 distortions:
 
@@ -428,7 +432,9 @@ if (
 
   !languageContext ||
 
-  !cosmic
+  !cosmic ||
+
+  !userContext
 
 ) {
 

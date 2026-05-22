@@ -120,40 +120,24 @@ const dailyField =
 
 const hasPeople =
 
-  !!(
+  (
     peopleContext
-      ?.observableScenes
-      ?.length ||
-
-    peopleContext
-      ?.manifestations
-      ?.length
-  );
+      ?.evidenceScore || 0
+  ) >= 2;
 
   const hasPlaces =
 
-
-    !!(
+    (
     placesContext
-      ?.observableScenes
-      ?.length ||
-
-    placesContext
-      ?.manifestations
-      ?.length
-  );
+      ?.evidenceScore || 0
+  ) >= 2;
 
   const hasThings =
 
-  !!(
+      (
     thingsContext
-      ?.observableScenes
-      ?.length ||
-
-    thingsContext
-      ?.manifestations
-      ?.length
-  );
+      ?.evidenceScore || 0
+  ) >= 2;
 
   // --------------------------------------------------
   // 🧠 GET CONTEXT
@@ -170,11 +154,6 @@ const hasPeople =
       lensContexts?.[lens]
     );
   };
-
-console.log(
-  "👁 LENS CONTEXTS:",
-  lensContexts
-);
 
   // --------------------------------------------------
   // 🚀 HANDLE PRESS
@@ -204,14 +183,14 @@ console.log(
         lens
       );
 
- if (
+if (
 
   !lensContext
-    ?.manifestations
+    ?.manifestationThreads
     ?.length &&
 
   !lensContext
-    ?.observableScenes
+    ?.observableSceneThreads
     ?.length
 ) {
 
@@ -272,10 +251,10 @@ context
             // 🪞 OBSERVABLE REALITY
             // --------------------------------------------------
 
-            observableScenes:
+observableSceneThreads:
 
-              lensContext
-                ?.observableScenes || [],
+  lensContext
+    ?.observableSceneThreads || [],
 
             nervousSystemState:
 
@@ -287,20 +266,25 @@ context
 // 🪞 MANIFESTATION FIELD
 // --------------------------------------------------
 
-manifestations:
+manifestationThreads:
 
   lensContext
-    ?.manifestations || [],
+    ?.manifestationThreads || [],
 
-copingStrategies:
-
-  lensContext
-    ?.copingStrategies || [],
-
-bodyResponses:
+  energeticWeather:
 
   lensContext
-    ?.bodyResponses || [],
+    ?.energeticWeather || {},  
+
+copingStrategyThreads:
+
+  lensContext
+    ?.copingStrategyThreads || [],
+
+bodyResponseThreads:
+
+  lensContext
+    ?.bodyResponseThreads || [],
 
 mirrorPrompts:
 
