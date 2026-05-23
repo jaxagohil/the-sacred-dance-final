@@ -66,6 +66,14 @@ type Behaviour = {
   quality?:
     | "divine"
     | "distorted";
+
+  physical_weight?: number;
+
+emotional_weight?: number;
+
+energetic_weight?: number;
+
+consciousness_weight?: number;  
 };
 
 type Emotion = {
@@ -240,6 +248,66 @@ export async function processReflection(
 
     interpretation.behaviours || [];
 
+  /*
+ * --------------------------------------------------
+ * 🌌 GUIDANCE TEXT FALLBACK
+ * --------------------------------------------------
+ */
+
+const lowerText =
+
+  String(text || "")
+    .toLowerCase();
+
+if (
+  rawBehaviours.length === 0
+) {
+
+  if (
+    lowerText.includes(
+      "potential"
+    )
+  ) {
+
+    rawBehaviours.push(
+      "future_projection"
+    );
+  }
+
+  if (
+    lowerText.includes(
+      "dream"
+    )
+  ) {
+
+    rawBehaviours.push(
+      "idealizing"
+    );
+  }
+
+  if (
+    lowerText.includes(
+      "not grounding"
+    )
+  ) {
+
+    rawBehaviours.push(
+      "ungrounded"
+    );
+  }
+
+  if (
+    lowerText.includes(
+      "pattern"
+    )
+  ) {
+
+    rawBehaviours.push(
+      "self_reflection"
+    );
+  }
+}  
+
   if (
     rawBehaviours.length === 0
   ) {
@@ -348,6 +416,18 @@ export async function processReflection(
           quality:
             row?.quality ||
             "distorted",
+
+          physical_weight:
+  row?.physical_weight || 0,
+
+emotional_weight:
+  row?.emotional_weight || 0,
+
+energetic_weight:
+  row?.energetic_weight || 0,
+
+consciousness_weight:
+  row?.consciousness_weight || 0,  
         };
       }
     );

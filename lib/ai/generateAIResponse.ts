@@ -31,6 +31,11 @@ export async function generateAIResponse({
    */
 
 const prompt =
+
+  context?.directPrompt
+
+  ||
+
   await buildPrompt({
 
     type,
@@ -39,11 +44,6 @@ const prompt =
 
     data,
   });
-
-  console.log(
-    "🧠 FINAL PROMPT:",
-    prompt
-  );
 
   try {
 

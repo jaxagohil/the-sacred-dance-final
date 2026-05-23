@@ -6,6 +6,8 @@ import { supabase } from "../services/supabase";
 
 import { createSignal } from "./signals";
 
+import { enrichSpiralState } from "../lib/spiral/enrichSpiralState";
+
 // --------------------------------------------------
 // HELPERS
 // --------------------------------------------------
@@ -463,20 +465,54 @@ const integrated =
     }
   );
 
-  // --------------------------------------------------
-  // 🌍 LEVELS
-  // --------------------------------------------------
+ // --------------------------------------------------
+// 🌍 REALITY LAYERS
+// --------------------------------------------------
 
-  const levels =
-    interpretation?.levels || {
+const realityLayers = {
 
-      physical: 0.5,
+  physical:
+    weightedAverage(
+      activeBehaviours,
+      "physical_weight"
+    ),
 
-      emotional: 0.5,
+  emotional:
+    weightedAverage(
+      activeBehaviours,
+      "emotional_weight"
+    ),
 
-      energetic: 0.5,
-    };
+  energetic:
+    weightedAverage(
+      activeBehaviours,
+      "energetic_weight"
+    ),
 
+  consciousness:
+    weightedAverage(
+      activeBehaviours,
+      "consciousness_weight"
+    ),
+};
+
+// --------------------------------------------------
+// 🌀 SPIRAL ENRICHMENT
+// --------------------------------------------------
+
+const spiralData =
+
+  enrichSpiralState({
+
+    behaviours:
+      activeBehaviours,
+
+    patterns:
+      [currentPattern],
+
+    reality_layers:
+      realityLayers,
+  });
   // --------------------------------------------------
   // ✨ CONSCIOUSNESS
   // --------------------------------------------------
@@ -722,7 +758,8 @@ ai_behaviours:
 
       distortions,
 
-      levels,
+reality_layers:
+  realityLayers,
 
       consciousness_movement:
         consciousnessMovement,
@@ -742,6 +779,32 @@ ai_behaviours:
       embodiment_score,
 
       nervous_system_activation,
+
+      // 🌀 SPIRAL
+
+spiral_state:
+  spiralData.spiral_state,
+
+spiral_direction:
+  spiralData.spiral_direction,
+
+dominant_pole:
+  spiralData.dominant_pole,
+
+integration_score_v2:
+  spiralData.integration_score,
+
+left_pole_score:
+  spiralData.left_pole_score,
+
+right_pole_score:
+  spiralData.right_pole_score,
+
+dominant_pattern_v2:
+  spiralData.dominant_pattern,
+
+chakra_activation:
+  spiralData.chakra_activation,
     });
 
   // --------------------------------------------------
@@ -756,7 +819,9 @@ ai_behaviours:
 
     distortions,
 
-    levels,
+    realityLayers,
+
+    spiralData,
 
     aiLens,
   };

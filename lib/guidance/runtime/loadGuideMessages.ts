@@ -1,4 +1,4 @@
-import { supabase } from "../../services/supabase";
+import { supabase } from "../../../services/supabase";
 
 export async function loadGuideMessages(
   userId: string

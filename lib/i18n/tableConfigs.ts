@@ -112,11 +112,9 @@ export const TABLE_CONFIGS = [
 
     translatableFields: [
 
+      "id",
+
       "name",
-
-      "description",
-
-      "guidance",
     ],
 
     preserveFields: [
@@ -125,7 +123,7 @@ export const TABLE_CONFIGS = [
     ],
 
     onConflict:
-      "name,language",
+      "id,language",
   },
 
   /*

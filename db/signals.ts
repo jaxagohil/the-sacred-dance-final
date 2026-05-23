@@ -114,18 +114,19 @@ type CreateSignalInput = {
   };
 
   // --------------------------------------------------
-  // 🌍 LEVELS
+  // 🌍 REALITY LAYERS
   // --------------------------------------------------
 
-  levels?: {
+reality_layers?: {
 
-    physical?: number;
+  physical?: number;
 
-    emotional?: number;
+  emotional?: number;
 
-    energetic?: number;
-  };
+  energetic?: number;
 
+  consciousness?: number;
+};
   // --------------------------------------------------
   // ✨ CONSCIOUSNESS
   // --------------------------------------------------
@@ -172,7 +173,27 @@ type CreateSignalInput = {
 
   nervous_system_activation?:
     number;
+
+    // 🌀 SPIRAL
+
+spiral_state?: string;
+
+spiral_direction?: string;
+
+dominant_pole?: string;
+
+integration_score_v2?: number;
+
+left_pole_score?: number;
+
+right_pole_score?: number;
+
+dominant_pattern_v2?: string | null;
+
+chakra_activation?:
+  Record<string, number>;
 };
+
 
 // --------------------------------------------------
 // 🚀 MAIN
@@ -294,17 +315,19 @@ createSignal({
   },
 
   // --------------------------------------------------
-  // 🌍 LEVELS
+  // 🌍 REALITY LAYERS
   // --------------------------------------------------
 
-  levels = {
+  reality_layers = {
 
-    physical: 0.5,
+  physical: 0,
 
-    emotional: 0.5,
+  emotional: 0,
 
-    energetic: 0.5,
-  },
+  energetic: 0,
+
+  consciousness: 0,
+},
 
   // --------------------------------------------------
   // ✨ CONSCIOUSNESS
@@ -350,6 +373,28 @@ createSignal({
   embodiment_score = 0,
 
   nervous_system_activation = 0,
+
+  // 🌀 SPIRAL
+
+spiral_state =
+  "processing",
+
+spiral_direction =
+  "processing",
+
+dominant_pole =
+  "center",
+
+integration_score_v2 = 0,
+
+left_pole_score = 0,
+
+right_pole_score = 0,
+
+dominant_pattern_v2 =
+  null,
+
+chakra_activation = {},
 
 }: CreateSignalInput) {
 
@@ -433,10 +478,10 @@ createSignal({
       distortions,
 
       // ------------------------------------------------
-      // 🌍 LEVELS
+      // 🌍 REALITY LAYER
       // ------------------------------------------------
 
-      levels,
+      reality_layers,
 
       // ------------------------------------------------
       // ✨ CONSCIOUSNESS
@@ -467,6 +512,24 @@ createSignal({
       embodiment_score,
 
       nervous_system_activation,
+
+      // 🌀 SPIRAL
+
+spiral_state,
+
+spiral_direction,
+
+dominant_pole,
+
+integration_score_v2,
+
+left_pole_score,
+
+right_pole_score,
+
+dominant_pattern_v2,
+
+chakra_activation,
     };
 
     // --------------------------------------------------
@@ -548,6 +611,18 @@ createSignal({
 
           data
             ?.nervous_system_activation,
+
+            spiral_state:
+  data?.spiral_state,
+
+spiral_direction:
+  data?.spiral_direction,
+
+dominant_pole:
+  data?.dominant_pole,
+
+integration_score_v2:
+  data?.integration_score_v2,
 
         dominant_state:
 

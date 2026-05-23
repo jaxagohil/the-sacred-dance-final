@@ -33,7 +33,7 @@ import {
 
 import {
   orchestrateGuideResponse,
-} from "../../lib/guidance/orchestrateGuideResponse";
+} from "../../lib/guidance/runtime/orchestrateGuideResponse";
 
 import {
   buildUserContext,
@@ -41,15 +41,15 @@ import {
 
 import {
   saveGuideMessage,
-} from "../../lib/guidance/saveGuideMessage";
+} from "../../lib/guidance/runtime/saveGuideMessage";
 
 import {
   loadGuideMessages,
-} from "../../lib/guidance/loadGuideMessages";
+} from "../../lib/guidance/runtime/loadGuideMessages";
 
 import {
   cleanupGuideMessages,
-} from "../../lib/guidance/cleanupGuideMessages";
+} from "../../lib/guidance/runtime/cleanupGuideMessages";
 
 import {
   Colors,
@@ -1037,7 +1037,7 @@ await processGuidanceReflection({
                   fontSize: 13,
                 }}
               >
-                listening...
+                ...
               </Text>
 
             </View>

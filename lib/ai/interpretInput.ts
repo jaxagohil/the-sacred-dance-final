@@ -9,6 +9,10 @@ import {
 import { loadBehaviourSynonyms } from "../loadBehaviourSynonyms";
 import { loadEmotionSynonyms } from "../loadEmotionSynonyms";
 
+import {
+  saveUnknownSignals,
+} from "../../services/signals/saveUnknownSignals";
+
 // ----------------------------------
 // 🧠 TYPES
 // ----------------------------------
@@ -100,53 +104,55 @@ export async function interpretInput(
       }
     );
 
-    // ----------------------------------
-    // ❌ FAILED
-    // ----------------------------------
+// ----------------------------------
+// ❌ FAILED
+// ----------------------------------
 
-    if (!res.ok) {
+if (!res.ok) {
 
-      console.error(
-        "❌ INTERPRET API FAILED"
-      );
+  const rawError =
+    await res.text();
 
-      return {
+  console.error(
+    "❌ INTERPRET API FAILED:",
+    rawError
+  );
 
-        emotions: [],
+  return {
 
-        behaviours: [],
+    emotions: [],
 
-        polarity: null,
+    behaviours: [],
 
-        intensity: 1,
+    polarity: null,
 
-        ai_confidence: null,
+    intensity: 1,
 
-        reflection_summary: null,
+    ai_confidence: null,
 
-        lens: {
-          people: [],
-          places: [],
-          things: [],
-        },
+    reflection_summary: null,
 
-        // 🌍 levels
-        levels: {
-          physical: 0.5,
-          emotional: 0.5,
-          energetic: 0.5,
-        },
+    lens: {
+      people: [],
+      places: [],
+      things: [],
+    },
 
-        // ✨ consciousness
-        consciousness_movement: {
-          reactivity: 0.5,
-          awareness: 0.5,
-          responsibility: 0.5,
-          embodiment: 0.5,
-          integration: 0.5,
-        },
-      };
-    }
+    levels: {
+      physical: 0.5,
+      emotional: 0.5,
+      energetic: 0.5,
+    },
+
+    consciousness_movement: {
+      reactivity: 0.5,
+      awareness: 0.5,
+      responsibility: 0.5,
+      embodiment: 0.5,
+      integration: 0.5,
+    },
+  };
+}
 
     // ----------------------------------
     // 📦 RAW RESPONSE
@@ -168,46 +174,117 @@ export async function interpretInput(
       data?.emotions
     );
 
-    // ----------------------------------
-    // 🧠 CLEAN EMOTIONS
-    // ----------------------------------
+// ----------------------------------
+// 🚨 NORMALIZED EMOTIONS
+// ----------------------------------
 
-    const aiEmotions =
-      normalize(data?.emotions)
+const normalizedEmotions =
 
-        .map((e) =>
-          emotionMap[e] || e
-        )
+  normalize(data?.emotions)
 
-        .filter((e) =>
-          VALID_EMOTIONS.includes(e)
-        );
-
-    console.log(
-      "😊 CLEANED EMOTIONS:",
-      aiEmotions
+    .map((e) =>
+      emotionMap[e] || e
     );
+
+// ----------------------------------
+// 🚨 UNKNOWN EMOTIONS
+// ----------------------------------
+
+const unknownEmotions =
+
+  normalizedEmotions.filter(
+    (e) =>
+      !VALID_EMOTIONS.includes(e)
+  );
+
+console.log(
+  "🚨 UNKNOWN EMOTIONS:",
+  unknownEmotions
+);
+
+await saveUnknownSignals({
+
+  rawTerms:
+    unknownEmotions,
+
+  signalType:
+    "emotion",
+
+  source:
+    input?.source ||
+    "runtime",
+});
+
+// ----------------------------------
+// 😊 CLEAN EMOTIONS
+// ----------------------------------
+
+const aiEmotions =
+
+  normalizedEmotions.filter(
+    (e) =>
+      VALID_EMOTIONS.includes(e)
+  );
+
+console.log(
+  "😊 CLEANED EMOTIONS:",
+  aiEmotions
+);
 
     // ----------------------------------
     // 🧠 CLEAN BEHAVIOURS
     // ----------------------------------
 
-    const aiBehaviours =
-      normalize(data?.behaviours)
+    // ----------------------------------
+// 🚨 UNKNOWN BEHAVIOURS
+// ----------------------------------
 
-        .map((b) =>
-          behaviourMap[b] || b
-        )
+const normalizedBehaviours =
 
-        .filter((b) =>
-          VALID_BEHAVIOURS.includes(b)
-        );
+  normalize(data?.behaviours)
+
+    .map((b) =>
+      behaviourMap[b] || b
+    );
+
+const unknownBehaviours =
+
+  normalizedBehaviours.filter(
+    (b) =>
+      !VALID_BEHAVIOURS.includes(b)
+  );
+
+console.log(
+  "🚨 UNKNOWN BEHAVIOURS:",
+  unknownBehaviours
+);
+
+await saveUnknownSignals({
+
+  rawTerms:
+    unknownBehaviours,
+
+  signalType:
+    "behaviour",
+
+  source:
+    input?.source ||
+    "runtime",
+});
+
+const aiBehaviours =
+
+  normalizedBehaviours.filter(
+    (b) =>
+      VALID_BEHAVIOURS.includes(b)
+  );
 
     console.log(
       "🧠 CLEANED BEHAVIOURS:",
       aiBehaviours
     );
 
+    
     // ----------------------------------
     // 🛡 FALLBACK EMOTIONS
     // ----------------------------------

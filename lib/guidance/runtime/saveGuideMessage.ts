@@ -1,4 +1,4 @@
-import { supabase } from "../../services/supabase";
+import { supabase } from "../../../services/supabase";
 
 import {
   buildFieldSnapshot,
@@ -21,6 +21,8 @@ type Params = {
   language?: string;
 
   userField?: any;
+
+  orchestrationSnapshot?: any;
 };
 
 export async function saveGuideMessage({
@@ -36,6 +38,8 @@ export async function saveGuideMessage({
   source = "guidance",
 
   userField,
+
+  orchestrationSnapshot,
 
 }: Params) {
 
@@ -99,6 +103,9 @@ export async function saveGuideMessage({
 
         context_snapshot:
           fieldSnapshot,
+
+        orchestration_snapshot:
+          orchestrationSnapshot,
       });
 
   /*
