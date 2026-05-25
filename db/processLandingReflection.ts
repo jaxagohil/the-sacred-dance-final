@@ -202,7 +202,7 @@ ${nervousSystem || "unknown"}
         "landing",
 
       baselineType:
-        "present_moment",
+        "reflection",
 
       signalDepth,
 

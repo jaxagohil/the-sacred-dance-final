@@ -1,3 +1,5 @@
+// /lib/i18n/translateOntologyBatch.ts
+
 import OpenAI from "openai";
 
 import {
@@ -37,6 +39,38 @@ type TranslateParams = {
   translatableFields:
     string[];
 };
+
+/*
+ * ------------------------------------------------
+ * 🧠 BATCH SIZES
+ * ------------------------------------------------
+ */
+
+const TABLE_BATCH_SIZES:
+  Record<string, number> = {
+
+  emotions: 20,
+
+  emotion_synonyms: 50,
+
+  behaviour_synonyms: 50,
+
+  chakras: 20,
+
+  pattern_chakra_manifestations: 5,
+
+  oracle_card_translations: 5,
+
+  daily_prompts: 20,
+
+  ui_translations: 50,
+};
+
+/*
+ * ------------------------------------------------
+ * 🌍 TRANSLATE ONTOLOGY
+ * ------------------------------------------------
+ */
 
 export async function
 translateOntologyBatch({
@@ -98,11 +132,186 @@ ${languageProfile?.directness || "balanced"}
 
   /*
    * ------------------------------------------------
-   * 🧠 PROMPT
+   * 🧠 BATCHING
    * ------------------------------------------------
    */
 
-  const prompt = `
+  const batchSize =
+
+    TABLE_BATCH_SIZES[
+      table
+    ] || 20;
+
+  const batches = [];
+
+  for (
+    let i = 0;
+
+    i < rows.length;
+
+    i += batchSize
+  ) {
+
+    batches.push(
+
+      rows.slice(
+        i,
+        i + batchSize
+      )
+    );
+  }
+
+  console.log(
+
+    `🌍 ${table}: ${rows.length} rows in ${batches.length} batches`
+  );
+
+  /*
+   * ------------------------------------------------
+   * 🌍 RESULTS
+   * ------------------------------------------------
+   */
+
+  const allResults: any[] =
+    [];
+
+  /*
+   * ------------------------------------------------
+   * 🌍 LOOP BATCHES
+   * ------------------------------------------------
+   */
+
+  for (
+    const batch of batches
+  ) {
+
+    /*
+     * --------------------------------------------
+     * 🧹 MINIMAL ROWS
+     * --------------------------------------------
+     */
+
+    const minimalRows =
+
+      batch.map(
+        (row: any) => {
+
+          const cleaned:
+            any = {};
+
+          /*
+           * --------------------------------------
+           * 🆔 PRESERVE IDS
+           * --------------------------------------
+           */
+
+          if (
+            row.id !==
+            undefined
+          ) {
+
+            cleaned.id =
+              row.id;
+          }
+
+          if (
+            row.row_id !==
+            undefined
+          ) {
+
+            cleaned.row_id =
+              row.row_id;
+          }
+
+          if (
+            row.card_number !==
+            undefined
+          ) {
+
+            cleaned.card_number =
+              row.card_number;
+          }
+
+          if (
+            row.pattern_key !==
+            undefined
+          ) {
+
+            cleaned.pattern_key =
+              row.pattern_key;
+          }
+
+          if (
+            row.chakra_key !==
+            undefined
+          ) {
+
+            cleaned.chakra_key =
+              row.chakra_key;
+          }
+
+          if (
+            row.emotion_id !==
+            undefined
+          ) {
+
+            cleaned.emotion_id =
+              row.emotion_id;
+          }
+
+          if (
+            row.behaviour_id !==
+            undefined
+          ) {
+
+            cleaned.behaviour_id =
+              row.behaviour_id;
+          }
+
+          if (
+            row.key !==
+            undefined
+          ) {
+
+            cleaned.key =
+              row.key;
+          }
+
+          if (
+            row.screen !==
+            undefined
+          ) {
+
+            cleaned.screen =
+              row.screen;
+          }
+
+          /*
+           * --------------------------------------
+           * 🌍 TRANSLATABLE FIELDS
+           * --------------------------------------
+           */
+
+          for (
+            const field of
+            translatableFields
+          ) {
+
+            cleaned[field] =
+              row[field];
+          }
+
+          return cleaned;
+        }
+      );
+
+    /*
+     * --------------------------------------------
+     * 🧠 PROMPT
+     * --------------------------------------------
+     */
+
+    const prompt = `
 
 You are translating symbolic emotional ontology
 for a contemplative spiritual reflection app.
@@ -133,11 +342,13 @@ ${styleContext}
 
 Return ONLY valid JSON array.
 
-Each row must preserve:
-- ids
-- keys
-- metadata
-- numeric values
+IMPORTANT:
+- Return EXACTLY ${minimalRows.length} rows
+- Preserve ids and metadata exactly
+- Do NOT remove fields
+- Do NOT add commentary
+- Do NOT wrap in markdown
+- Maintain field names exactly
 
 Translate ONLY these fields:
 ${JSON.stringify(
@@ -145,92 +356,205 @@ ${JSON.stringify(
 )}
 
 Rows:
-${JSON.stringify(rows)}
+${JSON.stringify(
+  minimalRows
+)}
 
 `;
 
-  /*
-   * ------------------------------------------------
-   * 🚀 OPENAI
-   * ------------------------------------------------
-   */
-
-  try {
-
-    const completion =
-
-      await openai.chat.completions.create({
-
-        model:
-          "gpt-4.1-mini",
-
-        temperature: 0.4,
-
-        messages: [
-
-          {
-            role: "system",
-
-            content:
-
-              "You translate symbolic emotional ontology.",
-          },
-
-          {
-            role: "user",
-
-            content:
-              prompt,
-          },
-        ],
-      });
-
     /*
-     * ------------------------------------------------
-     * 🧠 RESPONSE
-     * ------------------------------------------------
+     * --------------------------------------------
+     * 🚀 OPENAI
+     * --------------------------------------------
      */
-
-let text =
-
-  completion
-    .choices?.[0]
-    ?.message?.content ||
-
-  "[]";
-
-/*
- * ------------------------------------------------
- * 🧹 CLEAN JSON
- * ------------------------------------------------
- */
-
-text = text
-  .replace(/```json/g, "")
-  .replace(/```/g, "")
-  .trim();
 
     try {
 
-      return JSON.parse(text);
+      const completion =
+
+        await openai.chat.completions.create({
+
+          model:
+            "gpt-4.1-mini",
+
+          temperature:
+            0.4,
+
+          messages: [
+
+            {
+              role:
+                "system",
+
+              content:
+
+                "You translate symbolic emotional ontology.",
+            },
+
+            {
+              role:
+                "user",
+
+              content:
+                prompt,
+            },
+          ],
+        });
+
+      /*
+       * ------------------------------------------
+       * 🧠 RESPONSE
+       * ------------------------------------------
+       */
+
+      let text =
+
+        completion
+          .choices?.[0]
+          ?.message
+          ?.content ||
+
+        "[]";
+
+      /*
+       * ------------------------------------------
+       * 🧹 CLEAN JSON
+       * ------------------------------------------
+       */
+
+      text = text
+
+        .replace(
+          /```json/g,
+          ""
+        )
+
+        .replace(
+          /```/g,
+          ""
+        )
+
+        .trim();
+
+      /*
+       * ------------------------------------------
+       * 🧠 PARSE
+       * ------------------------------------------
+       */
+
+      try {
+
+        const parsed =
+          JSON.parse(text);
+
+        /*
+         * --------------------------------------
+         * 🛡 VALIDATE ARRAY
+         * --------------------------------------
+         */
+
+        if (
+
+          !Array.isArray(
+            parsed
+          )
+
+        ) {
+
+          console.error(
+
+            `❌ ${table} returned non-array`
+          );
+
+          continue;
+        }
+
+        /*
+         * --------------------------------------
+         * 🛡 VALIDATE COUNT
+         * --------------------------------------
+         */
+
+        if (
+
+          parsed.length !==
+          minimalRows.length
+
+        ) {
+
+          console.error(
+
+            `❌ ${table} row mismatch:
+expected ${minimalRows.length}
+received ${parsed.length}`
+          );
+
+          continue;
+        }
+
+        console.log(
+
+          `✅ ${table} batch translated:
+${parsed.length} rows`
+        );
+
+        allResults.push(
+          ...parsed
+        );
+
+      } catch (err) {
+
+        console.error(
+
+          `❌ ${table} parse error:`,
+
+          err
+        );
+
+        continue;
+      }
 
     } catch (err) {
 
       console.error(
-        "❌ Translation parse error:",
+
+        `❌ ${table} translation error:`,
+
         err
       );
 
-      return rows;
+      continue;
     }
+  }
 
-  } catch (err) {
+  /*
+   * ------------------------------------------------
+   * 🛡 FINAL VALIDATION
+   * ------------------------------------------------
+   */
+
+  if (
+
+    allResults.length !==
+    rows.length
+
+  ) {
 
     console.error(
-      "❌ translateOntologyBatch:",
-      err
+
+      `❌ FINAL ROW MISMATCH:
+expected ${rows.length}
+received ${allResults.length}`
     );
 
-    return rows;
+    return [];
   }
+
+  /*
+   * ------------------------------------------------
+   * ✅ DONE
+   * ------------------------------------------------
+   */
+
+  return allResults;
 }

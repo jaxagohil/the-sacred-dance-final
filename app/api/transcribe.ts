@@ -1,10 +1,10 @@
-// /app/api/transcribe/route.ts
+// /app/api/transcribe+api.ts
 
 import OpenAI from "openai";
 
 import {
   OPENAI_API_KEY,
-} from "../../../lib/config";
+} from "../../lib/config";
 
 const openai =
   new OpenAI({
@@ -12,7 +12,13 @@ const openai =
     apiKey:
       OPENAI_API_KEY,
   });
-  
+
+/*
+ * --------------------------------------------------
+ * 🎙 TRANSCRIBE API
+ * --------------------------------------------------
+ */
+
 export async function POST(
   req: Request
 ) {
@@ -48,6 +54,10 @@ export async function POST(
       );
     }
 
+    console.log(
+      "🎙 AUDIO RECEIVED"
+    );
+
     /*
      * --------------------------------------------------
      * 🎙 TRANSCRIBE
@@ -63,6 +73,10 @@ export async function POST(
           model:
             "gpt-4o-mini-transcribe",
         });
+
+    console.log(
+      "🎙 TRANSCRIPTION COMPLETE"
+    );
 
     /*
      * --------------------------------------------------

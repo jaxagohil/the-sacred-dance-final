@@ -203,8 +203,13 @@ export default function Mirror() {
 
     async function loadDailyField() {
 
-      const field =
-        await getDailyField();
+const userId =
+  await getUserId();
+
+const field =
+  await getDailyField(
+    userId
+  );
 
       setDailyField(
         field

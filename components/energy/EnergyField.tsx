@@ -329,11 +329,16 @@ const primaryChakra =
 
   "heart";
 
-        const y =
+const baseY =
 
-          chakraY[
-            primaryChakra as keyof typeof chakraY
-          ] || 180;
+  chakraY[
+    primaryChakra as keyof typeof chakraY
+  ] || 180;
+
+const y = Math.min(
+  baseY + 55,
+  315
+);
 
         const side =
 

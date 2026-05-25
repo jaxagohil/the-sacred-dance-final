@@ -118,26 +118,9 @@ const dailyField =
   // 👁 HAS DATA
   // --------------------------------------------------
 
-const hasPeople =
-
-  (
-    peopleContext
-      ?.evidenceScore || 0
-  ) >= 2;
-
-  const hasPlaces =
-
-    (
-    placesContext
-      ?.evidenceScore || 0
-  ) >= 2;
-
-  const hasThings =
-
-      (
-    thingsContext
-      ?.evidenceScore || 0
-  ) >= 2;
+const hasPeople = true;
+const hasPlaces = true;
+const hasThings = true;
 
   // --------------------------------------------------
   // 🧠 GET CONTEXT
@@ -182,20 +165,6 @@ const hasPeople =
       getLensContext(
         lens
       );
-
-if (
-
-  !lensContext
-    ?.manifestationThreads
-    ?.length &&
-
-  !lensContext
-    ?.observableSceneThreads
-    ?.length
-) {
-
-      return;
-    }
 
     setLoading(true);
 

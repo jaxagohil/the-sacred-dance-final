@@ -1,10 +1,10 @@
-// /app/api/vision/route.ts
+// /app/api/vision+api.ts
 
 import OpenAI from "openai";
 
 import {
   OPENAI_API_KEY,
-} from "../../../lib/config";
+} from "../../lib/config";
 
 const openai =
   new OpenAI({
@@ -12,6 +12,12 @@ const openai =
     apiKey:
       OPENAI_API_KEY,
   });
+
+/*
+ * --------------------------------------------------
+ * 👁 VISION API
+ * --------------------------------------------------
+ */
 
 export async function POST(
   req: Request
@@ -45,6 +51,10 @@ export async function POST(
         }
       );
     }
+
+    console.log(
+      "👁 IMAGE RECEIVED"
+    );
 
     /*
      * --------------------------------------------------
@@ -104,6 +114,10 @@ Return grounded observations only.
             },
           ],
         });
+
+    console.log(
+      "👁 VISION COMPLETE"
+    );
 
     /*
      * --------------------------------------------------

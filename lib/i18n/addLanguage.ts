@@ -268,6 +268,24 @@ addLanguage({
 
       /*
        * --------------------------------------------
+       * 🛡 EMPTY PROTECTION
+       * --------------------------------------------
+       */
+
+      if (
+        !translatedRows?.length
+      ) {
+
+        console.error(
+
+          `❌ No translated rows returned for ${config.table}`
+        );
+
+        continue;
+      }
+
+      /*
+       * --------------------------------------------
        * 🧠 PREPARE INSERTS
        * --------------------------------------------
        */
@@ -320,24 +338,35 @@ addLanguage({
 
             /*
              * --------------------------------------
-             * 🧹 REMOVE IDS
+             * 🧹 REMOVE DB IDS
              * --------------------------------------
              */
 
-if (
+            const preserveIdTables = [
 
-  config.table !==
-  "emotions"
+              "emotions",
 
-  &&
+              "chakras",
+            ];
 
-  config.table !==
-  "chakras"
+            if (
 
-) {
+              !preserveIdTables.includes(
+                config.table
+              )
 
-  delete cleaned.id;
-}
+            ) {
+
+              delete cleaned.id;
+            }
+
+            /*
+             * --------------------------------------
+             * 🧹 ALWAYS REMOVE ROW IDS
+             * --------------------------------------
+             */
+
+            delete cleaned.row_id;
 
             /*
              * --------------------------------------
@@ -362,52 +391,57 @@ if (
           }
         );
 
-/*
- * --------------------------------------------
- * 🧹 REMOVE DUPLICATES
- * --------------------------------------------
- */
+      /*
+       * --------------------------------------------
+       * 🧹 REMOVE DUPLICATES
+       * --------------------------------------------
+       */
 
-const uniqueInserts =
-  Array.from(
+      const uniqueInserts =
+        Array.from(
 
-    new Map(
+          new Map(
 
-      inserts.map(
-        (item) => [
+            inserts.map(
+              (item) => [
 
-          JSON.stringify(item),
+                JSON.stringify(item),
 
-          item,
-        ]
-      )
+                item,
+              ]
+            )
 
-    ).values()
-  );
+          ).values()
+        );
 
-/*
- * --------------------------------------------
- * 💾 UPSERT
- * --------------------------------------------
- */
+      console.log(
 
-const {
-  error:
-    insertError,
-} = await supabase
+        `💾 Inserting ${uniqueInserts.length} rows into ${config.table}`
+      );
 
-  .from(config.table)
+      /*
+       * --------------------------------------------
+       * 💾 UPSERT
+       * --------------------------------------------
+       */
 
-  .upsert(
-    uniqueInserts,
+      const {
+        error:
+          insertError,
+      } = await supabase
 
-    {
-      onConflict:
-        config.onConflict ||
+        .from(config.table)
 
-        "language",
-    }
-  );
+        .upsert(
+          uniqueInserts,
+
+          {
+            onConflict:
+              config.onConflict ||
+
+              "language",
+          }
+        );
 
       if (
         insertError

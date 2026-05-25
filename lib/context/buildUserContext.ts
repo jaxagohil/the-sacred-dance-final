@@ -6,6 +6,10 @@ import {
   buildMirrorContext,
 } from "./buildMirrorContext";
 
+import {
+  aggregateSpiralState,
+} from "@/lib/spiral/aggregateSpiralState";
+
 /*
  * --------------------------------------------------
  * 🧠 TYPES
@@ -1367,7 +1371,21 @@ awarenessMap[
    * ------------------------------------------------
    */
 
+  /*
+ * ------------------------------------------------
+ * 🌀 AGGREGATE SPIRAL
+ * ------------------------------------------------
+ */
+
+const spiral =
+
+  await aggregateSpiralState(
+    userId
+  );
+
   const realityLayers = {
+
+    spiral: spiral,
 
     physical: {
 
@@ -1614,6 +1632,8 @@ awarenessMap[
      */
 
     realityLayers,
+
+    spiral,
 
     /*
      * 🪞 CONTEXT

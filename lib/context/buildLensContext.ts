@@ -1,5 +1,7 @@
 // /lib/context/buildLensContext.ts
 
+import { supabase } from "../../services/supabase";
+
 // --------------------------------------------------
 // 🪞 BUILD LENS CONTEXT
 // --------------------------------------------------
@@ -25,6 +27,8 @@ type BuildLensContextInput = {
   realityLayers?: any;
 
   energy?: any;
+
+  spiralState?: any;
 
   fieldAmplification?: any[];
 };
@@ -107,6 +111,8 @@ export async function buildLensContext({
 
   energy,
 
+  spiralState,
+
   fieldAmplification = [],
 
 }: BuildLensContextInput) {
@@ -122,6 +128,21 @@ export async function buildLensContext({
         e?.lens === lens
     );
 
+  // --------------------------------------------------
+// 🧠 LOAD LENS KEYWORDS
+// --------------------------------------------------
+
+const {
+  data: lensKeywords = [],
+} = await supabase
+
+  .from("lens_keywords")
+
+  .select("*")
+
+  .eq("active", true);
+  
+  
   // --------------------------------------------------
   // 🌊 PATTERN FIELD
   // --------------------------------------------------
@@ -145,6 +166,45 @@ export async function buildLensContext({
       )
 
       .slice(0, 10);
+
+  // --------------------------------------------------
+// 🌀 SPIRAL FIELD
+// --------------------------------------------------
+
+const dominantPole =
+
+  spiralState
+    ?.dominant_pole ||
+
+  "center";
+
+const spiralMovement =
+
+  spiralState
+    ?.spiral_state ||
+
+  "processing";
+
+const integrationScore =
+
+  spiralState
+    ?.integration_score ||
+
+  0;
+
+const recurringPatterns =
+
+  spiralState
+    ?.recurring_patterns ||
+
+  [];
+
+const dominantLayer =
+
+  spiralState
+    ?.dominant_layer ||
+
+  "emotional";    
 
   // --------------------------------------------------
   // 🌊 DOMINANT LENS PATTERNS
@@ -430,6 +490,98 @@ if (totalSignals >= 45) {
       })
     );
 
+    // --------------------------------------------------
+// 👥 RELATIONAL MIRRORS
+// --------------------------------------------------
+
+const relationalMirrors =
+  buildThreads(
+
+    entries.flatMap(
+      (e: any) => [
+
+        e?.source_summary,
+        e?.source_reflection,
+        e?.observable_scene,
+      ]
+    )
+  )
+    .filter((t: any) => {
+
+      const text =
+        String(
+          t?.text || ""
+        );
+
+      // crude relational signal
+return (
+  text.length > 3
+);
+    })
+
+    .slice(0, 8);
+
+  // --------------------------------------------------
+// 🧠 SEMANTIC KEYWORDS
+// --------------------------------------------------
+
+const semanticKeywords =
+
+  (lensKeywords || []).filter(
+    (k: any) => {
+
+      if (
+        k?.category !== lens
+      ) {
+
+        return false;
+      }
+
+      return reflectionEvidence.some(
+        (e: any) => {
+
+          const text = [
+
+            e?.summary,
+
+            e?.reflection,
+          ]
+
+            .filter(Boolean)
+
+            .join(" ")
+
+            .toLowerCase();
+
+          return text.includes(
+
+            String(
+              k?.keyword || ""
+            ).toLowerCase()
+          );
+        }
+      );
+    }
+  );
+
+const symbolicThemes =
+  unique(
+
+    semanticKeywords.map(
+      (k: any) =>
+        k?.symbolic_meaning
+    )
+  );
+
+const emotionalThemes =
+  unique(
+
+    semanticKeywords.map(
+      (k: any) =>
+        k?.emotional_meaning
+    )
+  );  
+
   // --------------------------------------------------
   // 🪞 EVIDENCE SUMMARIES
   // --------------------------------------------------
@@ -446,7 +598,7 @@ if (totalSignals >= 45) {
 
         .filter(Boolean)
 
-    ).slice(0, 5);
+    ).slice(0, 8);
 
   // --------------------------------------------------
   // ⚡ EVIDENCE DENSITY
@@ -631,7 +783,7 @@ if (
   ) {
 
     lensTension =
-      "relational safety and emotional closeness";
+     "relational mirrors, reciprocity, emotional movement, connection, visibility, and relational awareness"
   }
 
   if (
@@ -639,7 +791,7 @@ if (
   ) {
 
     lensTension =
-      "environmental regulation and nervous system safety";
+    "belonging, movement, nervous system resonance, expansion, grounding, and environmental awareness"
   }
 
   if (
@@ -647,8 +799,15 @@ if (
   ) {
 
     lensTension =
-      "coping systems and emotional avoidance";
+      "symbolic attachment, identity, conditioning, emotional meaning, comfort seeking, expression, and subconscious patterns"
   }
+
+  const spiralReflection =
+
+  recurringPatterns?.length
+    ? "Recurring themes may be revisiting older emotional, relational, behavioural, or nervous system terrain with increasing awareness and embodiment."
+    : null;
+
 
   // --------------------------------------------------
   // 🪞 MIRROR THREADS
@@ -803,6 +962,11 @@ const chakraManifestationThreads =
 
     lens,
 
+    relationalMirrors:
+  lens === "people"
+    ? relationalMirrors
+    : [],
+
     // 🌊 pattern field
     patternNarratives,
 
@@ -901,5 +1065,18 @@ chakraManifestationThreads,
     // 🌍 inherited
     levels:
       realityLayers || {},
+
+      // 🌀 spiral
+spiralMovement,
+dominantPole,
+integrationScore,
+dominantLayer,
+recurringPatterns,
+
+semanticKeywords,
+symbolicThemes,
+emotionalThemes,
+
+spiralReflection,
   };
 }

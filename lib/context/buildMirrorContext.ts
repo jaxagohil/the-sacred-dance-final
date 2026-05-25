@@ -621,6 +621,9 @@ const currentSignals =
   // 🪞 LENS CONTEXTS
   // --------------------------------------------------
 
+  const spiralState =
+  realityLayers?.spiral || {};
+
   const peopleLensContext =
     await buildLensContext({
 
@@ -638,6 +641,8 @@ const currentSignals =
       realityLayers,
 
       energy,
+
+      spiralState,
 
       fieldAmplification,
     });
@@ -660,6 +665,8 @@ const currentSignals =
 
       energy,
 
+      spiralState,
+
       fieldAmplification,
     });
 
@@ -680,6 +687,8 @@ const currentSignals =
       realityLayers,
 
       energy,
+
+      spiralState,
 
       fieldAmplification,
     });

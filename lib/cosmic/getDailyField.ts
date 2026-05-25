@@ -3,7 +3,7 @@
 import { supabase } from "../../services/supabase";
 
 import {
-    buildDailyField,
+  buildDailyField,
 } from "./buildDailyField";
 
 /*
@@ -12,7 +12,34 @@ import {
  * ---------------------------------------------------------
  */
 
-export async function getDailyField() {
+export async function getDailyField(
+  userId: string
+) {
+
+  /*
+   * -------------------------------------------------------
+   * 🌍 PROFILE
+   * -------------------------------------------------------
+   */
+
+  const {
+    data: profile,
+  } = await supabase
+
+    .from("profiles")
+
+    .select("timezone")
+
+    .eq(
+      "user_id",
+      userId
+    )
+
+    .maybeSingle();
+
+  const timezone =
+    profile?.timezone ||
+    "Asia/Kolkata";
 
   /*
    * -------------------------------------------------------
@@ -21,9 +48,15 @@ export async function getDailyField() {
    */
 
   const today =
-    new Date()
-      .toISOString()
-      .split("T")[0];
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          timezone,
+      }
+    ).format(
+      new Date()
+    );
 
   /*
    * -------------------------------------------------------
@@ -58,12 +91,6 @@ export async function getDailyField() {
     console.log(
       "🌌 Using existing daily field"
     );
-
-    /*
-     * ---------------------------------------------------
-     * RETURN STORED FIELD
-     * ---------------------------------------------------
-     */
 
     return existing.field;
   }

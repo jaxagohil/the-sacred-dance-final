@@ -33,7 +33,7 @@ const CANVAS_SIZE =
 
 const CENTER =
   CANVAS_SIZE / 2;
-
+  
 const RADIUS =
   CENTER * 0.8;
 

@@ -129,6 +129,12 @@ export default function You() {
   const [location, setLocation] =
     useState("India");
 
+    const [timezone, setTimezone] =
+  useState("Asia/Kolkata");
+
+const [hemisphere, setHemisphere] =
+  useState("north");
+
 const [language, setLanguage] =
   useState("en");
 
@@ -227,6 +233,16 @@ const [earthRegions, setEarthRegions] =
         data.location ||
         "India"
       );
+
+      setTimezone(
+  data.timezone ||
+  "Asia/Kolkata"
+);
+
+setHemisphere(
+  data.hemisphere ||
+  "north"
+);
 
       setLanguage(
         data.language ||
@@ -444,6 +460,18 @@ const clearBaselineLayer =
 
   language !== (originalProfile?.language || "en") ||
 
+  timezone !==
+  (
+    originalProfile?.timezone ||
+    "Asia/Kolkata"
+  ) ||
+
+hemisphere !==
+  (
+    originalProfile?.hemisphere ||
+    "north"
+  ) ||
+
   repeats !==
     (originalProfile?.what_repeats || "") ||
 
@@ -614,6 +642,9 @@ const batchId =
           location,
 
           language,
+
+          timezone,
+hemisphere,
 
           avatar_url:
             safeAvatar,
@@ -1432,11 +1463,20 @@ style={{
       <Text
         key={r.code}
 
-        onPress={() =>
-          setLocation(
-            r.name
-          )
-        }
+onPress={() => {
+
+  setLocation(r.name);
+
+  setTimezone(
+    r.timezone ||
+    "Asia/Kolkata"
+  );
+
+  setHemisphere(
+    r.hemisphere ||
+    "north"
+  );
+}}
 
         style={{
 

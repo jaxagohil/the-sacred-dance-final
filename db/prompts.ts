@@ -2,11 +2,6 @@ import { supabase } from "../services/supabase";
 
 export async function getDailyPrompt(userId: string) {
 
-  const today =
-    new Date()
-      .toISOString()
-      .split("T")[0];
-
   //
   // 🌸 PROFILE
   //
@@ -18,7 +13,7 @@ export async function getDailyPrompt(userId: string) {
     .from("profiles")
 
     .select(
-      "created_at, language"
+     "created_at, language, timezone"
     )
 
     .eq(
@@ -27,6 +22,20 @@ export async function getDailyPrompt(userId: string) {
     )
 
     .maybeSingle();
+
+  const timezone =
+  profile?.timezone ||
+  "Asia/Kolkata";
+
+const today =
+  new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone: timezone,
+    }
+  ).format(
+    new Date()
+  );  
 
   const language =
     profile?.language || "en";

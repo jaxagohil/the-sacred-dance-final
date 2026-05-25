@@ -8,38 +8,36 @@ export const TABLE_CONFIGS = [
    * ------------------------------------------------
    */
 
-{
-  table: "emotions",
+  {
+    table: "emotions",
 
-  mode: "full_rows",
+    mode: "full_rows",
 
-  sourceLanguage: "en",
+    sourceLanguage: "en",
 
-  translatableFields: [
+    translatableFields: [
 
-    "word",
+      "word",
 
-    "integration",
+      "integration",
 
-    "core_need",
+      "core_need",
 
-    "somatic_expression",
-  ],
+      "somatic_expression",
+    ],
 
-  preserveFields: [
+    preserveFields: [
 
-    "id",
+      "id",
 
-    "row_id",
+      "emotional_family",
 
-    "emotional_family",
+      "nervous_system_state",
+    ],
 
-    "nervous_system_state",
-  ],
-
-  onConflict:
-    "id,language",
-},
+    onConflict:
+      "id,language",
+  },
 
   /*
    * ------------------------------------------------
@@ -222,29 +220,33 @@ export const TABLE_CONFIGS = [
    * ------------------------------------------------
    */
 
-  {
-    table:
-      "daily_prompts",
+ {
+  table:
+    "daily_prompts",
 
-    mode: "full_rows",
+  mode: "full_rows",
 
-    sourceLanguage: "en",
+  sourceLanguage: "en",
 
-    translatableFields: [
+  translatableFields: [
 
-      "prompt",
-    ],
+    "prompt",
+  ],
 
-    preserveFields: [
+  preserveFields: [
 
-      "category",
+    "type",
 
-      "tone",
-    ],
+    "day_number",
 
-    onConflict:
-      "prompt,language",
-  },
+    "event_key",
+
+    "tone",
+  ],
+
+  onConflict:
+    "type,day_number,language",
+},
 
   /*
    * ------------------------------------------------

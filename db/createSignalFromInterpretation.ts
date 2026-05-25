@@ -719,8 +719,17 @@ ai_behaviours:
         currentPattern,
       ],
 
-      ai_lens:
-        aiLens,
+ai_lens:
+  aiLens,
+
+people_entities:
+  interpretation?.people_entities || [],
+
+places_entities:
+  interpretation?.places_entities || [],
+
+things_entities:
+  interpretation?.things_entities || [],
 
       primary_pattern:
         patternKey,

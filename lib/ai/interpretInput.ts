@@ -334,12 +334,41 @@ const aiBehaviours =
         data?.reflection_summary
         || null,
 
-      lens:
-        data?.lens || {
-          people: [],
-          places: [],
-          things: [],
-        },
+lens: {
+
+  people:
+    data?.lens?.people || [],
+
+  places:
+    data?.lens?.places || [],
+
+  things:
+    data?.lens?.things || [],
+},
+
+people_entities:
+
+  data?.people_entities ||
+
+  data?.lens?.people ||
+
+  [],
+
+places_entities:
+
+  data?.places_entities ||
+
+  data?.lens?.places ||
+
+  [],
+
+things_entities:
+
+  data?.things_entities ||
+
+  data?.lens?.things ||
+
+  [],
 
       // 🌍 levels
       levels:

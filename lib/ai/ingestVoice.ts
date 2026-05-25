@@ -59,8 +59,41 @@ export async function ingestVoice(
         }
       );
 
-    const result =
-      await response.json();
+    /*
+     * --------------------------------------------------
+     * 📦 RAW RESPONSE
+     * --------------------------------------------------
+     */
+
+    const raw =
+      await response.text();
+
+    console.log(
+      "🎙 RAW TRANSCRIBE RESPONSE",
+      raw
+    );
+
+    /*
+     * --------------------------------------------------
+     * 🧠 SAFE JSON PARSE
+     * --------------------------------------------------
+     */
+
+    let result = null;
+
+    try {
+
+      result =
+        JSON.parse(raw);
+
+    } catch {
+
+      console.log(
+        "❌ Transcribe response was not JSON"
+      );
+
+      return null;
+    }
 
     /*
      * --------------------------------------------------

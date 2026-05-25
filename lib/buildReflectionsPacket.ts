@@ -75,42 +75,51 @@ export async function buildReflectionPacket({
         `data:image/jpeg;base64,${imageBase64}`
       );
 
-    packet.text +=
+    /*
+     * --------------------------------------------------
+     * 🛡 SAFE MERGE
+     * --------------------------------------------------
+     */
 
-      ` ${imageData.reflection}`;
+    if (imageData) {
 
-    packet.emotions.push(
-      ...(imageData
-        .emotions || [])
-    );
+      packet.text +=
 
-    packet.observableScenes.push(
-      ...(imageData
-        .observableScenes || [])
-    );
+        ` ${imageData.reflection || ""}`;
 
-    packet.bodyResponses.push(
-      ...(imageData
-        .bodyResponses || [])
-    );
+      packet.emotions.push(
+        ...(imageData
+          .emotions || [])
+      );
 
-    packet.copingStrategies.push(
-      ...(imageData
-        .copingStrategies || [])
-    );
+      packet.observableScenes.push(
+        ...(imageData
+          .observableScenes || [])
+      );
 
-    packet.manifestations.push(
-      ...(imageData
-        .manifestations || [])
-    );
+      packet.bodyResponses.push(
+        ...(imageData
+          .bodyResponses || [])
+      );
 
-    if (
-      imageData.nervousSystem
-    ) {
+      packet.copingStrategies.push(
+        ...(imageData
+          .copingStrategies || [])
+      );
 
-      packet.nervousSystem =
+      packet.manifestations.push(
+        ...(imageData
+          .manifestations || [])
+      );
 
-        imageData.nervousSystem;
+      if (
+        imageData.nervousSystem
+      ) {
+
+        packet.nervousSystem =
+
+          imageData.nervousSystem;
+      }
     }
   }
 
@@ -128,42 +137,51 @@ export async function buildReflectionPacket({
         audioUri
       );
 
-    packet.text +=
+    /*
+     * --------------------------------------------------
+     * 🛡 SAFE MERGE
+     * --------------------------------------------------
+     */
 
-      ` ${voiceData.reflection}`;
+    if (voiceData) {
 
-    packet.emotions.push(
-      ...(voiceData
-        .emotions || [])
-    );
+      packet.text +=
 
-    packet.observableScenes.push(
-      ...(voiceData
-        .observableScenes || [])
-    );
+        ` ${voiceData.reflection || ""}`;
 
-    packet.bodyResponses.push(
-      ...(voiceData
-        .bodyResponses || [])
-    );
+      packet.emotions.push(
+        ...(voiceData
+          .emotions || [])
+      );
 
-    packet.copingStrategies.push(
-      ...(voiceData
-        .copingStrategies || [])
-    );
+      packet.observableScenes.push(
+        ...(voiceData
+          .observableScenes || [])
+      );
 
-    packet.manifestations.push(
-      ...(voiceData
-        .manifestations || [])
-    );
+      packet.bodyResponses.push(
+        ...(voiceData
+          .bodyResponses || [])
+      );
 
-    if (
-      voiceData.nervousSystem
-    ) {
+      packet.copingStrategies.push(
+        ...(voiceData
+          .copingStrategies || [])
+      );
 
-      packet.nervousSystem =
+      packet.manifestations.push(
+        ...(voiceData
+          .manifestations || [])
+      );
 
-        voiceData.nervousSystem;
+      if (
+        voiceData.nervousSystem
+      ) {
+
+        packet.nervousSystem =
+
+          voiceData.nervousSystem;
+      }
     }
   }
 

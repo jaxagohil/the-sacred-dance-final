@@ -9,18 +9,9 @@ import {
 } from "../selectOracleCard";
 
 export async function
-buildDailyField() {
-
-  //
-  // 🌌 TODAY
-  //
-
-  const today =
-    new Date()
-
-      .toISOString()
-
-      .split("T")[0];
+buildDailyField(
+  today: string
+) {
 
   //
   // 🌌 EXISTING FIELD
@@ -268,12 +259,12 @@ buildDailyField() {
    * ---------------------------------------------------------
    */
 
-const fieldMessage =
+  const fieldMessage =
 
-  fields?.[0]
-    ?.guidance ||
+    fields?.[0]
+      ?.guidance ||
 
-  "The atmosphere is quietly shifting.";
+    "The atmosphere is quietly shifting.";
 
   /*
    * ---------------------------------------------------------

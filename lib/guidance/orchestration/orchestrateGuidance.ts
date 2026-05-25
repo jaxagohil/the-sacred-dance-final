@@ -37,13 +37,13 @@ export const orchestrateGuidance = ({
     cosmic: 1.0,
   };
 
-let conversationState:
-  keyof typeof conversationStates =
-    "protective_openness";
+  let conversationState:
+    keyof typeof conversationStates =
+      "protective_openness";
 
-let responseStrategy:
-  keyof typeof responseStrategies =
-    "reflective";
+  let responseStrategy:
+    keyof typeof responseStrategies =
+      "reflective";
 
   /*
    * ------------------------------------------------
@@ -55,12 +55,21 @@ let responseStrategy:
     "arrival";
 
   /*
- * ------------------------------------------------
- * 🪞 MIRROR DEPTH
- * ------------------------------------------------
- */
+   * ------------------------------------------------
+   * 🪞 MIRROR DEPTH
+   * ------------------------------------------------
+   */
 
-let mirrorDepth = 1;
+  let mirrorDepth = 1;
+
+  /*
+   * ------------------------------------------------
+   * 🌌 DOMINANT FIELD
+   * ------------------------------------------------
+   */
+
+  let dominantField =
+    "patterns";
 
   /*
    * ------------------------------------------------
@@ -106,6 +115,54 @@ let mirrorDepth = 1;
 
   /*
    * ------------------------------------------------
+   * 🌌 DOMINANT FIELD SELECTION
+   * ------------------------------------------------
+   */
+
+  if (
+    signals.spiralPhase ===
+    "threshold"
+  ) {
+
+    dominantField =
+      "spiral";
+  }
+
+  if (
+    signals.externalFocus > 0.7
+  ) {
+
+    dominantField =
+      "mirror";
+  }
+
+  if (
+    dominantRealityLayer ===
+    "physical"
+  ) {
+
+    dominantField =
+      "grounding";
+  }
+
+  if (
+    signals.symbolicTolerance > 0.75
+  ) {
+
+    dominantField =
+      "symbolic";
+  }
+
+  if (
+    signals.coherence > 0.8
+  ) {
+
+    dominantField =
+      "integration";
+  }
+
+  /*
+   * ------------------------------------------------
    * 🌊 EMOTIONAL FLOODING
    * ------------------------------------------------
    */
@@ -129,6 +186,9 @@ let mirrorDepth = 1;
 
     conversationMovement =
       "grounding";
+
+    dominantField =
+      "nervous_system";
 
     fieldInfluences = {
 
@@ -165,6 +225,9 @@ let mirrorDepth = 1;
     conversationMovement =
       "perspective_shift";
 
+    dominantField =
+      "mirror";
+
     fieldInfluences = {
 
       heart: 0.5,
@@ -176,56 +239,45 @@ let mirrorDepth = 1;
   }
 
   /*
- * ------------------------------------------------
- * 🌊 USER STUCKNESS
- * ------------------------------------------------
- */
+   * ------------------------------------------------
+   * 🌊 USER STUCKNESS
+   * ------------------------------------------------
+   */
 
-const userStuckness =
+  const userStuckness =
 
-  signals.repetition > 0.7
+    signals.repetition > 0.7
 
-  &&
+    &&
 
-  signals.contraction > 0.6;
+    signals.contraction > 0.6;
 
-if (
-  userStuckness
-) {
+  if (
+    userStuckness
+  ) {
 
     conversationState =
-    "stuck_reflection";
-    
-  /*
-   * Gentle movement
-   * without forcing insight
-   */
+      "stuck_reflection";
 
-  conversationMovement =
-    "gentle_perspective";
+    conversationMovement =
+      "gentle_perspective";
 
-  /*
-   * Less body-looping
-   * more relational movement
-   */
+    responseStrategy =
+      "relational";
 
-  responseStrategy =
-    "relational";
+    dominantField =
+      "patterns";
 
-  /*
-   * Structure helps grounding
-   * heart keeps softness
-   */
+    fieldInfluences = {
 
-  fieldInfluences = {
+      heart: 0.8,
 
-    heart: 0.8,
+      structure: 0.7,
 
-    structure: 0.7,
+      cosmic: 0.2,
+    };
+  }
 
-    cosmic: 0.2,
-  };
-}
   /*
    * ------------------------------------------------
    * 🌌 SYMBOLIC EXPANSION
@@ -250,6 +302,9 @@ if (
 
     conversationMovement =
       "deepening";
+
+    dominantField =
+      "symbolic";
 
     fieldInfluences = {
 
@@ -286,6 +341,9 @@ if (
     conversationMovement =
       "integrating";
 
+    dominantField =
+      "integration";
+
     fieldInfluences = {
 
       heart: 0.8,
@@ -313,7 +371,7 @@ if (
       "grounding";
   }
 
-    /*
+  /*
    * ------------------------------------------------
    * 🌿 GROUNDING PRIORITY
    * ------------------------------------------------
@@ -351,53 +409,54 @@ if (
   );
 
   /*
- * ------------------------------------------------
- * 🪞 MIRROR DEPTH EVOLUTION
- * ------------------------------------------------
- */
+   * ------------------------------------------------
+   * 🪞 MIRROR DEPTH EVOLUTION
+   * ------------------------------------------------
+   */
 
-if (
-  readinessForInsight > 0.55
-) {
+  if (
+    readinessForInsight > 0.55
+  ) {
 
-  mirrorDepth = 2;
-}
+    mirrorDepth = 2;
+  }
 
-if (
-  readinessForInsight > 0.7
-) {
+  if (
+    readinessForInsight > 0.7
+  ) {
 
-  mirrorDepth = 3;
-}
+    mirrorDepth = 3;
+  }
 
-if (
+  if (
 
-  readinessForInsight > 0.82
+    readinessForInsight > 0.82
 
-  &&
+    &&
 
-  signals.coherence > 0.7
+    signals.coherence > 0.7
 
-) {
+  ) {
 
-  mirrorDepth = 4;
-}
+    mirrorDepth = 4;
+  }
 
-/*
- * ------------------------------------------------
- * 🌊 NERVOUS SYSTEM SAFETY
- * ------------------------------------------------
- */
+  /*
+   * ------------------------------------------------
+   * 🌊 NERVOUS SYSTEM SAFETY
+   * ------------------------------------------------
+   */
 
-if (
-  groundingPriority
-) {
+  if (
+    groundingPriority
+  ) {
 
-  mirrorDepth = Math.min(
-    mirrorDepth,
-    2
-  );
-}
+    mirrorDepth = Math.min(
+      mirrorDepth,
+      2
+    );
+  }
+
   /*
    * ------------------------------------------------
    * 🌱 RELATIONAL OPENNESS
@@ -457,53 +516,45 @@ if (
    * ------------------------------------------------
    */
 
-const embodimentQuestionCount =
+  const embodimentQuestionCount =
 
-  recentQuestionTypes.filter(
-    (q: string) =>
-      q === "embodiment"
-  ).length;
+    recentQuestionTypes.filter(
+      (q: string) =>
+        q === "embodiment"
+    ).length;
 
-const avoidEmbodimentQuestions =
+  const avoidEmbodimentQuestions =
 
-  embodimentQuestionCount >= 1;
-
-  /*
- * ------------------------------------------------
- * 🌊 CONVERSATIONAL REDIRECTION
- * ------------------------------------------------
- */
-
-if (
-  avoidEmbodimentQuestions
-) {
+    embodimentQuestionCount >= 1;
 
   /*
-   * Shift movement away from body-looping
+   * ------------------------------------------------
+   * 🌊 CONVERSATIONAL REDIRECTION
+   * ------------------------------------------------
    */
 
   if (
-    conversationMovement ===
-    "grounding"
+    avoidEmbodimentQuestions
   ) {
 
-    conversationMovement =
-      "clarifying";
+    if (
+      conversationMovement ===
+      "grounding"
+    ) {
+
+      conversationMovement =
+        "clarifying";
+    }
+
+    if (
+      responseStrategy ===
+      "grounding"
+    ) {
+
+      responseStrategy =
+        "reflective";
+    }
   }
-
-  /*
-   * Shift response strategy
-   */
-
-  if (
-    responseStrategy ===
-    "grounding"
-  ) {
-
-    responseStrategy =
-      "reflective";
-  }
-}
 
   const avoidReflectiveQuestions =
 
@@ -535,39 +586,40 @@ if (
   };
 
   /*
- * ------------------------------------------------
- * 🌸 FIELD PACING REFINEMENT
- * ------------------------------------------------
- */
+   * ------------------------------------------------
+   * 🌸 FIELD PACING REFINEMENT
+   * ------------------------------------------------
+   */
 
-if (
-  emotionalField.peace > 0.7
-) {
+  if (
+    emotionalField.peace > 0.7
+  ) {
 
-  conversationMovement =
-    "softening";
-}
+    conversationMovement =
+      "softening";
+  }
 
-if (
+  if (
 
-  emotionalField.love > 0.85
+    emotionalField.love > 0.85
 
-  &&
+    &&
 
-  signals.coherence > 0.7
+    signals.coherence > 0.7
 
-) {
+  ) {
 
-  responseStrategy =
-    "relational";
-}
+    responseStrategy =
+      "relational";
+  }
 
-if (
-  emotionalField.joy > 0.65
-) {
+  if (
+    emotionalField.joy > 0.65
+  ) {
 
-  fieldInfluences.cosmic += 0.1;
-}
+    fieldInfluences.cosmic += 0.1;
+  }
+
   /*
    * ------------------------------------------------
    * 🌌 SACRED DANCE FIELD
@@ -588,6 +640,8 @@ if (
       || "recognizing",
 
     dominantRealityLayer,
+
+    dominantField,
 
     goldPresence:
       signals.coherence > 0.7,
@@ -618,9 +672,21 @@ if (
 
     "awareness_over_answers",
 
+    "patterns_over_reactions",
+
     "embodiment_over_performance",
 
     "coherence_over_certainty",
+
+    "spiral_awareness",
+
+    "reality_layer_awareness",
+
+    "masculine_feminine_balance",
+
+    "nervous_system_compassion",
+
+    "collective_conditioning_awareness",
 
     "self_return",
 
@@ -683,6 +749,8 @@ if (
 
     sacredDanceField,
 
+    dominantField,
+
     emotionalField,
 
     sacredDancePrinciples,
@@ -744,7 +812,21 @@ if (
       ].responseLength,
 
     shouldAskQuestions:
-      true,
+
+      mirrorDepth > 2
+
+      &&
+
+      readinessForInsight > 0.72
+
+      &&
+
+      !avoidReflectiveQuestions
+
+      &&
+
+      signals.nervousSystem !==
+        "activated",
 
     shouldMirrorPatterns:
       allowPatternReflection,
