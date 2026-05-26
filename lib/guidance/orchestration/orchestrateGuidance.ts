@@ -1,19 +1,50 @@
 // /lib/guidance/orchestration/orchestrateGuidance.ts
 
-import { conversationStates } from "./conversationStates";
-
-import { responseStrategies } from "./responseStrategies";
+/*
+ * ------------------------------------------------
+ * 🌌 ORCHESTRATE GUIDANCE
+ * ------------------------------------------------
+ *
+ * IMPORTANT:
+ *
+ * This file DOES NOT create meaning.
+ *
+ * Mirror already created:
+ * - manifestations
+ * - symbolic themes
+ * - tensions
+ * - mirror prompts
+ * - emotional movement
+ * - chakra field
+ * - narrative echoes
+ *
+ * Guidance ONLY:
+ * - orchestrates
+ * - sequences
+ * - surfaces
+ * - softens
+ * - stages the moment
+ *
+ * ------------------------------------------------
+ */
 
 export const orchestrateGuidance = ({
 
-  signals,
+  /*
+   * 🌌 REAL MIRROR FIELD
+   */
 
-  activePatterns,
+  mirrorContext = {},
 
-  userHistory,
+  /*
+   * 🌿 GUIDE STATE
+   */
 
-  selectedGuide =
-    "guide_cosmic",
+  selectedGuide,
+
+  /*
+   * 🌊 RECENT MESSAGES
+   */
 
   recentMessages = [],
 
@@ -21,858 +52,460 @@ export const orchestrateGuidance = ({
 
   /*
    * ------------------------------------------------
-   * 🌌 SACRED DANCE FIELD DEFAULTS
+   * 🌌 MIRROR FIELD
    * ------------------------------------------------
    */
 
-  let foregroundGuide =
-    selectedGuide;
+  const current =
 
-  let fieldInfluences = {
+    mirrorContext?.current
+      || {};
 
-    heart: 0.4,
+  const voice =
 
-    structure: 0.4,
+    mirrorContext?.voice
+      || {};
 
-    cosmic: 1.0,
-  };
+  const story =
 
-  let conversationState:
-    keyof typeof conversationStates =
-      "protective_openness";
+    mirrorContext?.story
+      || {};
 
-  let responseStrategy:
-    keyof typeof responseStrategies =
-      "reflective";
+  const lens =
+
+    mirrorContext?.lens
+      || {};
+
+  const lensContexts =
+
+    mirrorContext
+      ?.lensContexts
+      || {};
 
   /*
    * ------------------------------------------------
-   * 🌿 CONVERSATIONAL MOVEMENT
+   * 🌊 FIELD STATES
    * ------------------------------------------------
    */
 
-  let conversationMovement =
-    "arrival";
+  const coherence =
+
+    current?.coherence
+      || 0.5;
+
+  const openness =
+
+    current?.openness
+      || 0.5;
+
+  const symbolicTolerance =
+
+    current
+      ?.symbolicTolerance
+      || 0.5;
+
+  const nervousSystemState =
+
+    current
+      ?.nervousSystemState
+      || "regulated";
+
+  const spiralPhase =
+
+    current
+      ?.spiralPhase
+      || "observing";
 
   /*
    * ------------------------------------------------
-   * 🪞 MIRROR DEPTH
+   * 🌌 ORCHESTRATION MODE
    * ------------------------------------------------
    */
 
-  let mirrorDepth = 1;
-
-  /*
-   * ------------------------------------------------
-   * 🌌 DOMINANT FIELD
-   * ------------------------------------------------
-   */
-
-  let dominantField =
-    "patterns";
-
-  /*
-   * ------------------------------------------------
-   * 🌊 RECENT QUESTION TYPES
-   * ------------------------------------------------
-   */
-
-  const recentQuestionTypes =
-
-    recentMessages
-
-      .map(
-        (m: any) =>
-          m?.questionType
-      )
-
-      .filter(Boolean);
-
-  const lastQuestionType =
-
-    recentQuestionTypes[
-      recentQuestionTypes.length - 1
-    ] || null;
-
-  /*
-   * ------------------------------------------------
-   * 🌱 REALITY LAYER DETECTION
-   * ------------------------------------------------
-   */
-
-  const dominantRealityLayer =
-
-    Object.entries(
-      signals.realityLayers || {}
-    )
-
-      .sort(
-        (a: any, b: any) =>
-          b[1] - a[1]
-      )[0]?.[0]
-
-      || "emotional";
-
-  /*
-   * ------------------------------------------------
-   * 🌌 DOMINANT FIELD SELECTION
-   * ------------------------------------------------
-   */
+  let orchestrationMode =
+    "quiet";
 
   if (
-    signals.spiralPhase ===
+    symbolicTolerance > 0.7
+  ) {
+
+    orchestrationMode =
+      "symbolic";
+  }
+
+  if (
+    spiralPhase ===
     "threshold"
   ) {
 
-    dominantField =
-      "spiral";
+    orchestrationMode =
+      "threshold";
   }
 
   if (
-    signals.externalFocus > 0.7
+    nervousSystemState ===
+    "contracted"
   ) {
 
-    dominantField =
-      "mirror";
-  }
-
-  if (
-    dominantRealityLayer ===
-    "physical"
-  ) {
-
-    dominantField =
-      "grounding";
-  }
-
-  if (
-    signals.symbolicTolerance > 0.75
-  ) {
-
-    dominantField =
-      "symbolic";
-  }
-
-  if (
-    signals.coherence > 0.8
-  ) {
-
-    dominantField =
-      "integration";
-  }
-
-  /*
-   * ------------------------------------------------
-   * 🌊 EMOTIONAL FLOODING
-   * ------------------------------------------------
-   */
-
-  if (
-
-    signals.nervousSystem ===
-      "activated"
-
-    &&
-
-    signals.contraction > 0.7
-
-  ) {
-
-    conversationState =
-      "emotional_flooding";
-
-    responseStrategy =
-      "grounding";
-
-    conversationMovement =
-      "grounding";
-
-    dominantField =
-      "nervous_system";
-
-    fieldInfluences = {
-
-      heart: 1.0,
-
-      structure: 0.2,
-
-      cosmic: 0.2,
-    };
-  }
-
-  /*
-   * ------------------------------------------------
-   * 🔄 LOOPING ATTACHMENT
-   * ------------------------------------------------
-   */
-
-  if (
-
-    signals.repetition > 0.8
-
-    &&
-
-    signals.externalFocus > 0.7
-
-  ) {
-
-    conversationState =
-      "looping_attachment";
-
-    responseStrategy =
-      "redirecting";
-
-    conversationMovement =
-      "perspective_shift";
-
-    dominantField =
-      "mirror";
-
-    fieldInfluences = {
-
-      heart: 0.5,
-
-      structure: 1.0,
-
-      cosmic: 0.3,
-    };
-  }
-
-  /*
-   * ------------------------------------------------
-   * 🌊 USER STUCKNESS
-   * ------------------------------------------------
-   */
-
-  const userStuckness =
-
-    signals.repetition > 0.7
-
-    &&
-
-    signals.contraction > 0.6;
-
-  if (
-    userStuckness
-  ) {
-
-    conversationState =
-      "stuck_reflection";
-
-    conversationMovement =
-      "gentle_perspective";
-
-    responseStrategy =
-      "relational";
-
-    dominantField =
-      "patterns";
-
-    fieldInfluences = {
-
-      heart: 0.8,
-
-      structure: 0.7,
-
-      cosmic: 0.2,
-    };
-  }
-
-  /*
-   * ------------------------------------------------
-   * 🌌 SYMBOLIC EXPANSION
-   * ------------------------------------------------
-   */
-
-  if (
-
-    signals.symbolicTolerance > 0.8
-
-    &&
-
-    signals.grounding > 0.4
-
-  ) {
-
-    conversationState =
-      "symbolic_expansion";
-
-    responseStrategy =
-      "spaciousness";
-
-    conversationMovement =
-      "deepening";
-
-    dominantField =
-      "symbolic";
-
-    fieldInfluences = {
-
-      heart: 0.5,
-
-      structure: 0.3,
-
-      cosmic: 1.0,
-    };
-  }
-
-  /*
-   * ------------------------------------------------
-   * ✨ INTEGRATION
-   * ------------------------------------------------
-   */
-
-  if (
-
-    signals.selfAwareness > 0.7
-
-    &&
-
-    signals.embodiment > 0.6
-
-  ) {
-
-    conversationState =
-      "integration";
-
-    responseStrategy =
-      "reflective";
-
-    conversationMovement =
-      "integrating";
-
-    dominantField =
-      "integration";
-
-    fieldInfluences = {
-
-      heart: 0.8,
-
-      structure: 0.7,
-
-      cosmic: 0.9,
-    };
-  }
-
-  /*
-   * ------------------------------------------------
-   * 🌿 PHYSICAL GROUNDING
-   * ------------------------------------------------
-   */
-
-  if (
-
-    dominantRealityLayer ===
-      "physical"
-
-  ) {
-
-    responseStrategy =
+    orchestrationMode =
       "grounding";
   }
 
   /*
    * ------------------------------------------------
-   * 🌿 GROUNDING PRIORITY
+   * 🌿 ORCHESTRATION INTENSITY
    * ------------------------------------------------
    */
 
-  const groundingPriority =
+  const orchestrationIntensity = (
 
-    signals.contraction > 0.6
+    coherence * 0.35 +
 
-    ||
+    openness * 0.25 +
 
-    signals.nervousSystem ===
-      "activated";
-
-  /*
-   * ------------------------------------------------
-   * 🌌 READINESS FOR INSIGHT
-   * ------------------------------------------------
-   */
-
-  const readinessForInsight = (
-
-    (signals.selfAwareness || 0.5)
-      * 0.3 +
-
-    (signals.openness || 0.5)
-      * 0.3 +
-
-    (signals.embodiment || 0.5)
-      * 0.2 +
-
-    (signals.coherence || 0.5)
-      * 0.2
+    symbolicTolerance * 0.4
 
   );
 
   /*
    * ------------------------------------------------
-   * 🪞 MIRROR DEPTH EVOLUTION
+   * 🌊 FIELD ATMOSPHERE
    * ------------------------------------------------
    */
 
+  let emotionalField =
+    "soft";
+
   if (
-    readinessForInsight > 0.55
+    orchestrationMode ===
+    "symbolic"
   ) {
 
-    mirrorDepth = 2;
+    emotionalField =
+      "cosmic";
   }
 
   if (
-    readinessForInsight > 0.7
+    orchestrationMode ===
+    "grounding"
   ) {
 
-    mirrorDepth = 3;
+    emotionalField =
+      "tender";
   }
 
   if (
-
-    readinessForInsight > 0.82
-
-    &&
-
-    signals.coherence > 0.7
-
+    orchestrationMode ===
+    "threshold"
   ) {
 
-    mirrorDepth = 4;
+    emotionalField =
+      "emergent";
   }
 
   /*
    * ------------------------------------------------
-   * 🌊 NERVOUS SYSTEM SAFETY
+   * 🌌 SOURCE MATERIAL
+   * ------------------------------------------------
+   *
+   * IMPORTANT:
+   *
+   * These are ALREADY resolved by Mirror.
+   *
+   * Guidance only selects/orchestrates.
+   *
    * ------------------------------------------------
    */
 
-  if (
-    groundingPriority
-  ) {
+const symbolicThemes = [
 
-    mirrorDepth = Math.min(
-      mirrorDepth,
-      2
+  ...(lensContexts.people
+    ?.symbolicThemes || []),
+
+  ...(lensContexts.places
+    ?.symbolicThemes || []),
+
+  ...(lensContexts.things
+    ?.symbolicThemes || []),
+];
+
+const manifestationThreads = [
+
+  ...(lensContexts.people
+    ?.manifestationThreads || []),
+
+  ...(lensContexts.places
+    ?.manifestationThreads || []),
+
+  ...(lensContexts.things
+    ?.manifestationThreads || []),
+];
+
+const reflectionEchoes =
+
+  voice?.reflectionEchoes
+    || [];
+
+const contemplativeQuestions = [
+
+  ...(lensContexts.people
+    ?.contemplativeQuestions || []),
+
+  ...(lensContexts.places
+    ?.contemplativeQuestions || []),
+
+  ...(lensContexts.things
+    ?.contemplativeQuestions || []),
+];
+
+  /*
+   * ------------------------------------------------
+   * 🌊 FLOATING WHISPERS
+   * ------------------------------------------------
+   *
+   * Surface:
+   * - symbolic themes
+   * - manifestations
+   * - mirror echoes
+   *
+   * ------------------------------------------------
+   */
+
+  const atmosphericWhispers = [
+
+    ...symbolicThemes,
+
+    ...manifestationThreads,
+
+  ]
+
+    .slice(0, 5)
+
+    .map(
+      (
+        item: any,
+        index: number
+      ) => ({
+
+        id:
+          `whisper_${index}`,
+
+        guide:
+
+          index % 2 === 0
+
+            ? "guide_cosmic"
+
+            : "guide_heart",
+
+        intensity:
+
+          orchestrationIntensity,
+
+        /*
+         * 🌌 REAL MIRROR CONTENT
+         */
+
+text:
+
+  typeof item === "string"
+
+    ? item
+
+    : item?.text
+      || item?.theme
+      || item?.manifestation
+      || "",
+      })
+    )
+
+    .filter(
+      (w: any) => !!w.text
     );
-  }
 
   /*
    * ------------------------------------------------
-   * 🌱 RELATIONAL OPENNESS
+   * 🌿 GUIDE FRAGMENTS
+   * ------------------------------------------------
+   *
+   * Surface:
+   * - reflection echoes
+   * - contemplative questions
+   * - symbolic realizations
+   *
    * ------------------------------------------------
    */
 
-  const relationalOpenness = (
+  const orchestrationFragments = [
 
-    (signals.openness || 0.5)
-      * 0.5 +
+    ...reflectionEchoes,
 
-    (signals.selfAwareness || 0.5)
-      * 0.5
+    ...contemplativeQuestions,
 
-  );
+  ]
+
+    .slice(0, 3)
+
+    .map(
+      (
+        item: any,
+        index: number
+      ) => ({
+
+        id:
+          `fragment_${index}`,
+
+        guide:
+
+          index === 0
+
+            ? "guide_cosmic"
+
+            : index === 1
+
+              ? "guide_heart"
+
+              : "guide_structure",
+
+        intensity:
+
+          orchestrationIntensity,
+
+        /*
+         * 🌌 REAL MIRROR CONTENT
+         */
+
+        text:
+
+  typeof item === "string"
+
+    ? item
+
+    : item?.text
+      || item?.prompt
+      || item?.question
+      || "",
+      })
+    )
+
+    .filter(
+      (f: any) => !!f.text
+    );
 
   /*
    * ------------------------------------------------
-   * 🌌 GUIDE MOVEMENT PERMISSIONS
+   * 🌊 FIELD PACING
    * ------------------------------------------------
    */
 
-  const allowPatternReflection =
-
-    readinessForInsight > 0.55;
-
-  const allowPerspectiveShift =
-
-    readinessForInsight > 0.7
-
-    &&
-
-    signals.nervousSystem !==
-      "activated";
-
-  const allowSymbolicExpansion =
-
-    selectedGuide ===
-      "guide_cosmic"
-
-    &&
-
-    readinessForInsight > 0.7
-
-    &&
-
-    signals.symbolicTolerance > 0.6
-
-    &&
-
-    signals.nervousSystem !==
-      "activated";
-
-  /*
-   * ------------------------------------------------
-   * 🌊 REPEATED QUESTION PROTECTION
-   * ------------------------------------------------
-   */
-
-  const embodimentQuestionCount =
-
-    recentQuestionTypes.filter(
-      (q: string) =>
-        q === "embodiment"
-    ).length;
-
-  const avoidEmbodimentQuestions =
-
-    embodimentQuestionCount >= 1;
-
-  /*
-   * ------------------------------------------------
-   * 🌊 CONVERSATIONAL REDIRECTION
-   * ------------------------------------------------
-   */
+  let pacing =
+    "slow";
 
   if (
-    avoidEmbodimentQuestions
+    orchestrationIntensity
+      > 0.72
   ) {
 
-    if (
-      conversationMovement ===
-      "grounding"
-    ) {
-
-      conversationMovement =
-        "clarifying";
-    }
-
-    if (
-      responseStrategy ===
-      "grounding"
-    ) {
-
-      responseStrategy =
-        "reflective";
-    }
-  }
-
-  const avoidReflectiveQuestions =
-
-    recentQuestionTypes.filter(
-      (q: string) =>
-        q === "reflective"
-    ).length >= 2;
-
-  /*
-   * ------------------------------------------------
-   * 💛 LOVE • PEACE • JOY
-   * ------------------------------------------------
-   */
-
-  const emotionalField = {
-
-    love:
-      0.8,
-
-    peace:
-      signals.contraction < 0.5
-        ? 0.7
-        : 0.3,
-
-    joy:
-      signals.openness > 0.6
-        ? 0.6
-        : 0.2,
-  };
-
-  /*
-   * ------------------------------------------------
-   * 🌸 FIELD PACING REFINEMENT
-   * ------------------------------------------------
-   */
-
-  if (
-    emotionalField.peace > 0.7
-  ) {
-
-    conversationMovement =
-      "softening";
+    pacing =
+      "floating";
   }
 
   if (
-
-    emotionalField.love > 0.85
-
-    &&
-
-    signals.coherence > 0.7
-
+    orchestrationMode ===
+    "grounding"
   ) {
 
-    responseStrategy =
-      "relational";
-  }
-
-  if (
-    emotionalField.joy > 0.65
-  ) {
-
-    fieldInfluences.cosmic += 0.1;
+    pacing =
+      "gentle";
   }
 
   /*
    * ------------------------------------------------
-   * 🌌 SACRED DANCE FIELD
-   * ------------------------------------------------
-   */
-
-  const sacredDanceField = {
-
-    coherence:
-      signals.coherence || 0.5,
-
-    spiralDirection:
-      signals.spiralDirection
-      || "integrating",
-
-    spiralPhase:
-      signals.spiralPhase
-      || "recognizing",
-
-    dominantRealityLayer,
-
-    dominantField,
-
-    goldPresence:
-      signals.coherence > 0.7,
-
-    fieldTone:
-      signals.coherence > 0.7
-        ? "warm_coherent"
-        : "soft_emerging",
-  };
-
-  /*
-   * ------------------------------------------------
-   * 🌱 EMBODIMENT PRIORITY
-   * ------------------------------------------------
-   */
-
-  const embodimentPriority =
-
-    signals.embodiment < 0.5;
-
-  /*
-   * ------------------------------------------------
-   * 🌌 SACRED DANCE PRINCIPLES
-   * ------------------------------------------------
-   */
-
-  const sacredDancePrinciples = [
-
-    "awareness_over_answers",
-
-    "patterns_over_reactions",
-
-    "embodiment_over_performance",
-
-    "coherence_over_certainty",
-
-    "spiral_awareness",
-
-    "reality_layer_awareness",
-
-    "masculine_feminine_balance",
-
-    "nervous_system_compassion",
-
-    "collective_conditioning_awareness",
-
-    "self_return",
-
-    "grounded_love",
-
-    "sovereignty",
-
-    "peace",
-
-    "joy",
-
-    "compassion",
-  ];
-
-  /*
-   * ------------------------------------------------
-   * 📦 RETURN RELATIONAL BLUEPRINT
+   * 🌌 RETURN FIELD
    * ------------------------------------------------
    */
 
   return {
 
     /*
-     * 🌌 GUIDE FIELD
+     * 🌊 MODES
      */
 
-    foregroundGuide,
+    orchestrationMode,
 
-    fieldInfluences,
+    orchestrationStyle:
+      orchestrationMode,
+
+    orchestrationIntensity,
 
     /*
-     * 🌱 CONVERSATION STATE
+     * 🌌 FIELD
      */
-
-    conversationState,
-
-    conversationMovement,
-
-    stateConfig:
-
-      conversationStates[
-        conversationState
-      ],
-
-    /*
-     * 🌿 RESPONSE STRATEGY
-     */
-
-    responseStrategy,
-
-    strategyConfig:
-
-      responseStrategies[
-        responseStrategy
-      ],
-
-    /*
-     * 🌌 SACRED DANCE FIELD
-     */
-
-    sacredDanceField,
-
-    dominantField,
 
     emotionalField,
 
-    sacredDancePrinciples,
+    pacing,
 
     /*
-     * 🌊 CONVERSATIONAL MEMORY
+     * 🌿 GUIDES
      */
 
-    recentQuestionTypes,
-
-    lastQuestionType,
-
-    relationalOpenness,
-
-    readinessForInsight,
-
-    mirrorDepth,
+    foregroundGuide:
+      selectedGuide,
 
     /*
-     * 🌿 MOVEMENT PERMISSIONS
+     * ✨ LIVE CONTENT
      */
 
-    allowPatternReflection,
+    atmosphericWhispers,
 
-    allowPerspectiveShift,
-
-    allowSymbolicExpansion,
-
-    avoidEmbodimentQuestions,
-
-    avoidReflectiveQuestions,
+    orchestrationFragments,
 
     /*
-     * 🌱 ORCHESTRATION OUTPUTS
+     * 🌊 GUIDE MOVEMENT
      */
 
-    symbolicDepth:
+    allowGuideConversation:
+      orchestrationFragments
+        .length > 0,
 
-      responseStrategies[
-        responseStrategy
-      ].symbolicDepth,
+    allowPatternReflection:
+      true,
 
-    groundingNeeded:
-      groundingPriority,
+    allowSymbolicExpansion:
 
-    embodimentNeeded:
-      embodimentPriority,
-
-    pacing:
-
-      responseStrategies[
-        responseStrategy
-      ].pacing,
-
-    responseLength:
-
-      responseStrategies[
-        responseStrategy
-      ].responseLength,
-
-    shouldAskQuestions:
-
-      mirrorDepth > 2
-
-      &&
-
-      readinessForInsight > 0.72
-
-      &&
-
-      !avoidReflectiveQuestions
-
-      &&
-
-      signals.nervousSystem !==
-        "activated",
-
-    shouldMirrorPatterns:
-      allowPatternReflection,
-
-    shouldSuggestGrounding:
-      groundingPriority,
-
-    shouldSuggestEmbodiment:
-      embodimentPriority,
+      symbolicTolerance
+        > 0.65,
 
     /*
-     * 🌌 GUIDE FEELING
+     * 🌌 FIELD STATES
      */
 
-    atmosphere: [
+    mirrorDepth:
+      coherence,
 
-      "love",
-
-      "peace",
-
-      "joy",
-
-      "softness",
-
-      "coherence",
-
-      "presence",
-    ],
+    readinessForInsight:
+      openness,
 
     /*
-     * 🌿 AVOIDANCES
+     * 🌿 FIELD INFLUENCES
      */
 
-    avoid: [
+    fieldInfluences: {
 
-      "certainty",
+      symbolicThemes:
+        symbolicThemes.length,
 
-      "dependency",
+      manifestations:
+        manifestationThreads.length,
 
-      "fear_based_spirituality",
+      echoes:
+        reflectionEchoes.length,
 
-      "emotional_overwhelm",
+      contemplations:
 
-      "guru_posturing",
-
-      "spiritual_inflation",
-    ],
+        contemplativeQuestions
+          .length,
+    },
   };
 };

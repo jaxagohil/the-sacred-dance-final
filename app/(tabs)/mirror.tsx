@@ -54,11 +54,49 @@ import {
   getLanguage,
 } from "../../lib/i18n/t";
 
+import {
+  useMirrorStore,
+} from "../../stores/mirrorStore";
+
 // --------------------------------------------------
 // 🪞 MIRROR
 // --------------------------------------------------
 
 export default function Mirror() {
+
+    /*
+   * --------------------------------------------------
+   * 🌌 MIRROR STORE
+   * --------------------------------------------------
+   */
+
+  const {
+
+    setUserContext:
+      setGlobalUserContext,
+
+    setMirrorContext:
+      setGlobalMirrorContext,
+
+    setCosmic:
+      setGlobalCosmic,
+
+    setDailyField:
+      setGlobalDailyField,
+
+    setLanguage:
+      setGlobalLanguage,
+
+    setLanguageContext:
+      setGlobalLanguageContext,
+
+    setActiveLens:
+  setGlobalActiveLens,  
+
+    setReady:
+      setGlobalReady,
+
+  } = useMirrorStore();
 
   // --------------------------------------------------
   // 🧠 STATE
@@ -123,6 +161,10 @@ export default function Mirror() {
           currentLanguage
         );
 
+      setGlobalLanguage(
+  currentLanguage
+);  
+
         const {
           data,
         } = await supabase
@@ -141,6 +183,10 @@ export default function Mirror() {
         setLanguageContext(
           data || {}
         );
+
+        setGlobalLanguageContext(
+  data || {}
+);
       }
 
       loadLanguage();
@@ -214,6 +260,10 @@ const field =
       setDailyField(
         field
       );
+
+      setGlobalDailyField(
+  field
+);
     }
 
     loadDailyField();
@@ -262,6 +312,16 @@ const field =
 
         dailyField,
       });
+
+    setGlobalCosmic({
+
+  ...cosmicMessage,
+
+  cosmic:
+    dailyField.cosmic,
+
+  dailyField,
+});  
     }
 
     loadCosmic();
@@ -313,6 +373,14 @@ useFocusEffect(
         setUserContext(
           context
         );
+
+      setGlobalUserContext(
+  context
+);  
+
+setGlobalActiveLens(
+  "general"
+);
 
         if (
           !context ||
@@ -414,6 +482,14 @@ distortions:
       setMirrorContext(
         context
       );
+
+    setGlobalMirrorContext(
+  context
+);
+
+setGlobalReady(
+  true
+);  
     }
 
     loadMirrorContext();

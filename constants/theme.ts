@@ -24,7 +24,7 @@ export const Colors = {
   //
 
   white:
-    "#FFFFFF",
+    "#FFFFFF", 
 
   softText:
     "rgba(255,255,255,0.68)",
@@ -36,13 +36,55 @@ export const Colors = {
     "rgba(255,255,255,0.18)",  
 
   pink:
-  "#D8A6FF",
+  "#F4B6D8",
 
 blue:
   "#8FB6FF",
 
 gold:
   "#FFD700",
+
+  /**
+ * 🌌 GUIDE ENERGIES
+ */
+
+guideHeart:
+  "#F4B6D8",
+
+guideStructure:
+  "#8FB6FF",
+
+guideCosmic:
+  "rgba(255,255,255,0.94)",
+
+guideCosmicSoft:
+  "rgba(255,255,255,0.72)",
+
+guideGlow:
+  "rgba(255,255,255,0.08)",
+
+  /**
+ * ✨ STARS
+ */
+
+starSoft:
+  "rgba(255,255,255,0.28)",
+
+starMedium:
+  "rgba(255,255,255,0.52)",
+
+starBright:
+  "rgba(255,255,255,0.82)",
+
+  /**
+ * 🌊 WHISPERS
+ */
+
+whisperBackground:
+  "rgba(255,255,255,0.012)",
+
+whisperBorder:
+  "rgba(255,255,255,0.03)",
 
   //
   // 🌿 ACCENTS

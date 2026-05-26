@@ -89,39 +89,11 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 📖 JOURNAL */}
-
-      <Tabs.Screen
-
-        name="journal"
-
-        options={{
-
-          title: "Journal",
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <BookOpen
-
-              size={19}
-
-              color={color}
-
-              strokeWidth={
-                1.8
-              }
-            />
-          ),
-        }}
-      />
-
       {/* 🧭 GUIDANCE */}
 
       <Tabs.Screen
 
-        name="guidance"
+        name="guidanceDivineOrchestration"
 
         options={{
 
@@ -172,6 +144,34 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* 📖 JOURNAL */}
+
+      <Tabs.Screen
+
+        name="journal"
+
+        options={{
+
+          title: "Journal",
+
+          tabBarIcon: ({
+            color,
+          }) => (
+
+            <BookOpen
+
+              size={19}
+
+              color={color}
+
+              strokeWidth={
+                1.8
+              }
+            />
+          ),
+        }}
+      />      
 
       {/* 👤 YOU */}
 
