@@ -1,8 +1,5 @@
 // /lib/ai/ingestVoice.ts
 
-import {
-  API_URL,
-} from "../config";
 
 import {
   extractReflectionData,
@@ -48,16 +45,17 @@ export async function ingestVoice(
 
     const response =
       await fetch(
+  "https://ezhqfbedncqrajfhsqhp.supabase.co/functions/v1/transcribe",
+  {
+    method: "POST",
+    body: formData,
+  }
+)
 
-        `${API_URL}/api/transcribe`,
-
-        {
-
-          method: "POST",
-
-          body: formData,
-        }
-      );
+console.log(
+  "🎙 TRANSCRIBE STATUS",
+  response.status
+);
 
     /*
      * --------------------------------------------------

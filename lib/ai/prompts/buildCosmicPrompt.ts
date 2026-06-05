@@ -200,9 +200,24 @@ IMPORTANT:
 
 Return ONLY valid JSON.
 
-Do not wrap in markdown.
-Do not explain anything.
-Do not add extra commentary.
+The response MUST be a valid JSON object.
+
+Never return plain text.
+
+Never return a single sentence.
+
+Never return markdown.
+
+Never explain anything.
+
+Never add commentary before or after JSON.
+
+All 4 fields are REQUIRED.
+
+Never leave fields empty.
+
+If the JSON structure is invalid,
+the entire cosmic system breaks.
 
 Return EXACTLY this structure:
 

@@ -1,7 +1,7 @@
-// /constants/guideConfig.ts
+// /guideConfig.ts
 
 import {
-    Colors,
+  Colors,
 } from "../../constants/theme";
 
 /*
@@ -20,6 +20,136 @@ export const GUIDE_TYPES = {
 
   COSMIC:
     "cosmic",
+};
+
+/*
+ * --------------------------------------------------------
+ * 🌊 GUIDE ATMOSPHERES
+ * --------------------------------------------------------
+ *
+ * PURPOSE:
+ *
+ * Shared emotional choreography
+ * across:
+ *
+ * - overlay
+ * - whispers
+ * - fragments
+ * - transmission
+ * - portal
+ *
+ * --------------------------------------------------------
+ */
+
+const guideAtmospheres = {
+
+  heart: {
+
+    /*
+     * 🌿 Emotional Feel
+     */
+
+    temperature:
+      "warm",
+
+    density:
+      "soft",
+
+    /*
+     * 🌊 Motion
+     */
+
+    breathing:
+      5200,
+
+    shimmer:
+      0.08,
+
+    drift:
+      1.2,
+
+    /*
+     * 🌫️ UI Feel
+     */
+
+    opacity:
+      0.88,
+
+    glow:
+      8,
+  },
+
+  structure: {
+
+    /*
+     * 🌿 Emotional Feel
+     */
+
+    temperature:
+      "grounded",
+
+    density:
+      "structured",
+
+    /*
+     * 🌊 Motion
+     */
+
+    breathing:
+      4200,
+
+    shimmer:
+      0.05,
+
+    drift:
+      0.7,
+
+    /*
+     * 🌫️ UI Feel
+     */
+
+    opacity:
+      0.78,
+
+    glow:
+      4,
+  },
+
+  cosmic: {
+
+    /*
+     * 🌿 Emotional Feel
+     */
+
+    temperature:
+      "expansive",
+
+    density:
+      "spacious",
+
+    /*
+     * 🌊 Motion
+     */
+
+    breathing:
+      7600,
+
+    shimmer:
+      0.22,
+
+    drift:
+      2,
+
+    /*
+     * 🌫️ UI Feel
+     */
+
+    opacity:
+      0.96,
+
+    glow:
+      12,
+  },
 };
 
 /*
@@ -49,6 +179,9 @@ export const guideConfig = {
 
     icon:
       "✦",
+
+    atmosphere:
+      guideAtmospheres.heart,
   },
 
   structure: {
@@ -70,6 +203,9 @@ export const guideConfig = {
 
     icon:
       "◌",
+
+    atmosphere:
+      guideAtmospheres.structure,
   },
 
   cosmic: {
@@ -91,6 +227,9 @@ export const guideConfig = {
 
     icon:
       "☼",
+
+    atmosphere:
+      guideAtmospheres.cosmic,
   },
 };
 
@@ -111,5 +250,24 @@ export function getGuideConfig(
     ] ||
 
     guideConfig.cosmic
+  );
+}
+
+/*
+ * --------------------------------------------------------
+ * 🌊 ATMOSPHERE HELPER
+ * --------------------------------------------------------
+ */
+
+export function getGuideAtmosphere(
+  type: string
+) {
+
+  return (
+
+    getGuideConfig(type)
+      ?.atmosphere ||
+
+    guideAtmospheres.cosmic
   );
 }

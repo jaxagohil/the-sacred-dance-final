@@ -1,80 +1,59 @@
 // /lib/guidance/orchestration/orchestrateGuidance.ts
 
+import {
+  GUIDE_TYPES,
+} from "../../../components/guidance/guideConfig";
+
+import {
+  Colors,
+} from "../../../constants/theme";
+
+import {
+  buildGuidanceWhispers,
+} from "./buildGuidanceWhispers";
+
+
+import {
+  buildGuidanceFragments,
+} from "./buildGuidanceFragments";
+
+import {
+  generateOrchestrationConversation,
+} from "./generateOrchestrationConversation";
+
+import {
+  resolveManifestations,
+} from "./resolveManifestations";
+
 /*
  * ------------------------------------------------
  * 🌌 ORCHESTRATE GUIDANCE
  * ------------------------------------------------
- *
- * IMPORTANT:
- *
- * This file DOES NOT create meaning.
- *
- * Mirror already created:
- * - manifestations
- * - symbolic themes
- * - tensions
- * - mirror prompts
- * - emotional movement
- * - chakra field
- * - narrative echoes
- *
- * Guidance ONLY:
- * - orchestrates
- * - sequences
- * - surfaces
- * - softens
- * - stages the moment
- *
- * ------------------------------------------------
  */
 
-export const orchestrateGuidance = ({
-
-  /*
-   * 🌌 REAL MIRROR FIELD
-   */
+export const orchestrateGuidance = async ({
 
   mirrorContext = {},
 
-  /*
-   * 🌿 GUIDE STATE
-   */
+  selectedGuide =
+    GUIDE_TYPES.COSMIC,
 
-  selectedGuide,
+  resolvedContent = {},
 
-  /*
-   * 🌊 RECENT MESSAGES
-   */
-
-  recentMessages = [],
+  emergenceMemory = {},
 
 }: any) => {
 
   /*
    * ------------------------------------------------
-   * 🌌 MIRROR FIELD
+   * 🌌 CURRENT FIELD
    * ------------------------------------------------
    */
 
   const current =
 
     mirrorContext?.current
-      || {};
-
-  const voice =
-
-    mirrorContext?.voice
-      || {};
-
-  const story =
-
-    mirrorContext?.story
-      || {};
-
-  const lens =
-
-    mirrorContext?.lens
-      || {};
+      || {};   
 
   const lensContexts =
 
@@ -118,7 +97,7 @@ export const orchestrateGuidance = ({
 
   /*
    * ------------------------------------------------
-   * 🌌 ORCHESTRATION MODE
+   * 🌿 ORCHESTRATION MODE
    * ------------------------------------------------
    */
 
@@ -126,7 +105,7 @@ export const orchestrateGuidance = ({
     "quiet";
 
   if (
-    symbolicTolerance > 0.7
+    symbolicTolerance > 0.72
   ) {
 
     orchestrationMode =
@@ -153,7 +132,7 @@ export const orchestrateGuidance = ({
 
   /*
    * ------------------------------------------------
-   * 🌿 ORCHESTRATION INTENSITY
+   * 🌌 ORCHESTRATION INTENSITY
    * ------------------------------------------------
    */
 
@@ -169,7 +148,7 @@ export const orchestrateGuidance = ({
 
   /*
    * ------------------------------------------------
-   * 🌊 FIELD ATMOSPHERE
+   * 🌊 EMOTIONAL FIELD
    * ------------------------------------------------
    */
 
@@ -205,209 +184,238 @@ export const orchestrateGuidance = ({
 
   /*
    * ------------------------------------------------
-   * 🌌 SOURCE MATERIAL
-   * ------------------------------------------------
-   *
-   * IMPORTANT:
-   *
-   * These are ALREADY resolved by Mirror.
-   *
-   * Guidance only selects/orchestrates.
-   *
+   * 🌿 ACTIVE PATTERNS
    * ------------------------------------------------
    */
 
-const symbolicThemes = [
+const activePatterns =
 
-  ...(lensContexts.people
-    ?.symbolicThemes || []),
+  current?.patterns
 
-  ...(lensContexts.places
-    ?.symbolicThemes || []),
+    || Object.values(
+      current
+        ?.patternField
+        || {}
+    )
 
-  ...(lensContexts.things
-    ?.symbolicThemes || []),
-];
-
-const manifestationThreads = [
-
-  ...(lensContexts.people
-    ?.manifestationThreads || []),
-
-  ...(lensContexts.places
-    ?.manifestationThreads || []),
-
-  ...(lensContexts.things
-    ?.manifestationThreads || []),
-];
-
-const reflectionEchoes =
-
-  voice?.reflectionEchoes
     || [];
 
-const contemplativeQuestions = [
-
-  ...(lensContexts.people
-    ?.contemplativeQuestions || []),
-
-  ...(lensContexts.places
-    ?.contemplativeQuestions || []),
-
-  ...(lensContexts.things
-    ?.contemplativeQuestions || []),
-];
 
   /*
    * ------------------------------------------------
-   * 🌊 FLOATING WHISPERS
-   * ------------------------------------------------
-   *
-   * Surface:
-   * - symbolic themes
-   * - manifestations
-   * - mirror echoes
-   *
+   * 🌊 ACTIVE CHAKRAS
    * ------------------------------------------------
    */
 
-  const atmosphericWhispers = [
+const activeChakras = [
 
-    ...symbolicThemes,
+  {
+    id:
+      current
+        ?.dominantChakra,
 
-    ...manifestationThreads,
+    symbol:
 
-  ]
-
-    .slice(0, 5)
-
-    .map(
       (
-        item: any,
-        index: number
-      ) => ({
+        current
+          ?.patterns
+          || []
+      ).find(
 
-        id:
-          `whisper_${index}`,
+        (pattern: any) =>
 
-        guide:
+          pattern?.chakra ===
 
-          index % 2 === 0
-
-            ? "guide_cosmic"
-
-            : "guide_heart",
-
-        intensity:
-
-          orchestrationIntensity,
-
-        /*
-         * 🌌 REAL MIRROR CONTENT
-         */
-
-text:
-
-  typeof item === "string"
-
-    ? item
-
-    : item?.text
-      || item?.theme
-      || item?.manifestation
-      || "",
-      })
-    )
-
-    .filter(
-      (w: any) => !!w.text
-    );
-
+          mirrorContext
+            ?.dominantChakra
+      )?.symbol,
+  },
+].filter(
+  (chakra) =>
+    chakra?.id
+);
   /*
    * ------------------------------------------------
-   * 🌿 GUIDE FRAGMENTS
-   * ------------------------------------------------
-   *
-   * Surface:
-   * - reflection echoes
-   * - contemplative questions
-   * - symbolic realizations
-   *
+   * 🌌 MANIFESTATIONS
    * ------------------------------------------------
    */
 
-  const orchestrationFragments = [
 
-    ...reflectionEchoes,
+const manifestations =
 
-    ...contemplativeQuestions,
+  resolveManifestations({
 
-  ]
+    activePatterns,
 
-    .slice(0, 3)
+    activeChakras,
 
-    .map(
-      (
-        item: any,
-        index: number
-      ) => ({
+    manifestationLibrary:
 
-        id:
-          `fragment_${index}`,
+      mirrorContext
+        ?.manifestationLibrary
 
-        guide:
-
-          index === 0
-
-            ? "guide_cosmic"
-
-            : index === 1
-
-              ? "guide_heart"
-
-              : "guide_structure",
-
-        intensity:
-
-          orchestrationIntensity,
-
-        /*
-         * 🌌 REAL MIRROR CONTENT
-         */
-
-        text:
-
-  typeof item === "string"
-
-    ? item
-
-    : item?.text
-      || item?.prompt
-      || item?.question
-      || "",
-      })
-    )
-
-    .filter(
-      (f: any) => !!f.text
-    );
+      || [],
+  });
 
   /*
    * ------------------------------------------------
-   * 🌊 FIELD PACING
+   * 🌊 WHISPERS
+   * ------------------------------------------------
+   */
+
+  const atmosphericWhispers =
+
+    buildGuidanceWhispers({
+
+      oracleCard:
+        current?.oracleCard,
+
+      activePatterns,
+
+      activeChakras,
+
+      manifestations,
+
+      mirrorContext,
+
+      cosmicContext:
+        current?.cosmicContext,
+
+      resolvedContent,
+
+      emergenceMemory,
+    })
+
+ .map(
+  (
+    whisper: any,
+    index: number
+  ) => ({
+
+    id:
+      `whisper_${index}`,
+
+    text:
+
+      typeof whisper === "string"
+
+        ? whisper
+
+        : whisper?.text || "",
+
+    weight:
+      whisper?.weight || 0.5,
+
+    source:
+      whisper?.source || "field",
+
+    recurrence:
+      whisper?.recurrence || false,
+
+    type:
+      "symbolic_sign",
+
+    opacity:
+
+      orchestrationIntensity > 0.72
+
+        ? 0.42
+
+        : orchestrationIntensity > 0.55
+
+          ? 0.34
+
+          : 0.26,
+
+    color:
+      Colors.gold,
+
+    intensity:
+      orchestrationIntensity,
+
+    drift:
+      "slow",
+
+    cinematic:
+      true,
+  })
+);
+
+  /*
+   * ------------------------------------------------
+   * 🌿 FRAGMENTS
+   * ------------------------------------------------
+   */
+
+ const orchestrationLead =
+
+  selectedGuide ||
+
+  GUIDE_TYPES.COSMIC; 
+
+const candidateFragments =
+
+  await generateOrchestrationConversation({
+
+      mirrorContext,
+
+      activePatterns,
+
+      activeChakras,
+
+      manifestations,
+
+selectedGuide:
+  orchestrationLead,
+
+      resolvedContent,
+
+      emergenceMemory,
+
+      sacredPrinciples:
+
+        resolvedContent
+          ?.principles || [],
+
+      sacredPressures:
+
+        resolvedContent
+          ?.pressures || [],
+
+          language:
+  mirrorContext
+    ?.language
+    || "en",
+    });
+
+  /*
+   * ------------------------------------------------
+   * 🌌 PACING
    * ------------------------------------------------
    */
 
   let pacing =
     "slow";
 
+  let silenceWindow =
+    5000;
+
+  let fragmentDuration =
+    10000;
+
   if (
-    orchestrationIntensity
-      > 0.72
+    orchestrationMode ===
+    "threshold"
   ) {
 
     pacing =
-      "floating";
+      "cinematic";
+
+    silenceWindow =
+      9000;
+
+    fragmentDuration =
+      12000;
   }
 
   if (
@@ -417,56 +425,98 @@ text:
 
     pacing =
       "gentle";
+
+    silenceWindow =
+      7000;
+
+    fragmentDuration =
+      5000;
   }
 
-  /*
-   * ------------------------------------------------
-   * 🌌 RETURN FIELD
-   * ------------------------------------------------
-   */
 
-  return {
+    const fragmentSequence =
 
-    /*
-     * 🌊 MODES
-     */
+  buildGuidanceFragments({
 
-    orchestrationMode,
+    fragments:
+      candidateFragments,
 
-    orchestrationStyle:
-      orchestrationMode,
+    silenceWindow,
+
+    fragmentDuration,
 
     orchestrationIntensity,
-
-    /*
-     * 🌌 FIELD
-     */
 
     emotionalField,
 
     pacing,
 
-    /*
-     * 🌿 GUIDES
-     */
+    selectedGuide,
+  });  
+  /*
+   * ------------------------------------------------
+   * 🌌 RECURRENCE
+   * ------------------------------------------------
+   */
 
-    foregroundGuide:
-      selectedGuide,
+  const recurrencePlan = {
 
-    /*
-     * ✨ LIVE CONTENT
-     */
+    allowRecurrence:
+      true,
+
+    recurrenceMode:
+      "evolving",
+
+    allowSymbolicReturn:
+      symbolicTolerance > 0.65,
+
+    allowDelayedEchoes:
+      orchestrationMode !==
+      "grounding",
+  };
+
+  /*
+   * ------------------------------------------------
+   * 🌊 RETURN
+   * ------------------------------------------------
+   */
+
+  return {
+
+    orchestrationMode,
+
+    orchestrationIntensity,
+
+    emotionalField,
+
+    pacing,
 
     atmosphericWhispers,
 
-    orchestrationFragments,
+    maxVisibleWhispers:
+      4,
 
-    /*
-     * 🌊 GUIDE MOVEMENT
-     */
+    fragmentSequence,
+
+    maxVisibleFragments:
+      2,
+
+    silenceWindow,
+
+    recurrencePlan,
+
+    foregroundGuide:
+      orchestrationLead,
+
+    mirrorDepth:
+      coherence,
+
+    readinessForInsight:
+      openness,
 
     allowGuideConversation:
-      orchestrationFragments
+
+      fragmentSequence
         .length > 0,
 
     allowPatternReflection:
@@ -477,35 +527,10 @@ text:
       symbolicTolerance
         > 0.65,
 
-    /*
-     * 🌌 FIELD STATES
-     */
+    cinematic:
+      true,
 
-    mirrorDepth:
-      coherence,
-
-    readinessForInsight:
-      openness,
-
-    /*
-     * 🌿 FIELD INFLUENCES
-     */
-
-    fieldInfluences: {
-
-      symbolicThemes:
-        symbolicThemes.length,
-
-      manifestations:
-        manifestationThreads.length,
-
-      echoes:
-        reflectionEchoes.length,
-
-      contemplations:
-
-        contemplativeQuestions
-          .length,
-    },
+    silenceAware:
+      true,
   };
 };

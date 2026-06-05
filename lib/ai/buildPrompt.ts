@@ -16,9 +16,6 @@ import {
   buildLensPrompt,
 } from "./prompts/lenses/buildLensPrompt";
 
-import {
-  buildConnectionsPrompt,
-} from "./prompts/buildConnectionsPrompts";
 
 import {
   buildCosmicPrompt,
@@ -124,14 +121,14 @@ export async function buildPrompt({
      * -------------------------------------------------------
      */
 
-    case "transmission":
+case "transmission":
 
-      return buildConnectionsPrompt({
+  return buildGuidePrompt({
 
-        context,
+    ...context,
 
-        data: enrichedData,
-      });
+    data: enrichedData,
+  });
 
     /*
      * -------------------------------------------------------
@@ -158,7 +155,7 @@ export async function buildPrompt({
 
       return buildGuidePrompt({
 
-        context,
+    ...context,
 
         data: enrichedData,
       });

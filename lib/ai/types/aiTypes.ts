@@ -5,6 +5,7 @@ export type AIType =
   | "divine"
   | "tarot"
   | "transmission"
+  | "orchestration"
   | "cosmic";
 
 export interface CompleteGuideContext {

@@ -2,20 +2,19 @@
 
 import React, {
   useEffect,
-  useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
 
 import {
   Animated,
+  Easing,
   Text,
   View,
 } from "react-native";
 
 import {
   Fonts,
-  Opacity,
 } from "../../constants/theme";
 
 import {
@@ -29,268 +28,167 @@ import {
  * --------------------------------------------------------
  */
 
-const FADE_DURATION = 2200;
+const LINE_FADE_IN =
+  2600;
 
-const HOLD_DURATION = 4200;
+const LINE_FADE_OUT =
+  9200;
 
-const SILENCE_DURATION = 1400;
+const SILENCE_WINDOW =
+  14000;
 
 /*
  * --------------------------------------------------------
- * 🌌 COMPONENT
+ * 🌌 SINGLE LINE
  * --------------------------------------------------------
  */
 
-export default function OrchestrationFragments({
+function ConversationLine({
 
-  fragments = [],
+  line,
 
-  intensity = 0.5,
+  index,
 
 }: any) {
 
   /*
    * --------------------------------------------------------
-   * 🌌 EMPTY FIELD
-   * --------------------------------------------------------
-   */
-
-  if (!fragments?.length) {
-
-    return null;
-  }
-
-  /*
-   * --------------------------------------------------------
-   * 🌊 ACTIVE FRAGMENT
-   * --------------------------------------------------------
-   */
-
-  const [
-    activeIndex,
-
-    setActiveIndex,
-
-  ] = useState(0);
-
-  /*
-   * --------------------------------------------------------
-   * 🌫️ SILENCE WINDOW
-   * --------------------------------------------------------
-   */
-
-  const [
-    inSilence,
-
-    setInSilence,
-
-  ] = useState(false);
-
-  /*
-   * --------------------------------------------------------
-   * ✨ CURRENT FRAGMENT
-   * --------------------------------------------------------
-   */
-
-  const activeFragment =
-
-    fragments[
-      activeIndex
-    ];
-
-  /*
-   * --------------------------------------------------------
-   * 🌌 FIELD POSITIONS
-   * --------------------------------------------------------
-   */
-
-const positions = [
-
-  {
-    top: 18,
-    left: 22,
-  },
-
-  {
-    top: 42,
-    right: 24,
-  },
-
-  {
-    top: 78,
-    left: 34,
-  },
-
-  {
-    top: 112,
-    right: 30,
-  },
-
-  {
-    top: 148,
-    left: 18,
-  },
-];
-
-  /*
-   * --------------------------------------------------------
-   * ✨ ACTIVE POSITION
-   * --------------------------------------------------------
-   */
-
-  const activePosition =
-
-    positions[
-      activeIndex %
-      positions.length
-    ];
-
-  /*
-   * --------------------------------------------------------
-   * 🌌 GUIDE CONFIG
+   * 🌌 GUIDE
    * --------------------------------------------------------
    */
 
   const guideType =
 
-    activeFragment?.guide
-      || GUIDE_TYPES.COSMIC;
+    line?.guide
+    || GUIDE_TYPES.COSMIC;
 
   const config =
+
     getGuideConfig(
       guideType
     );
 
-  const isCosmic =
+  const guideColor =
 
-    guideType ===
-    GUIDE_TYPES.COSMIC;
+    config?.fontColor
+    || "white";
 
   /*
    * --------------------------------------------------------
-   * 🌊 ANIMATION
+   * 🌿 ROLE
+   * --------------------------------------------------------
+   */
+
+  const role =
+
+    line?.role
+    || "recognition";
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 MOTION
    * --------------------------------------------------------
    */
 
   const opacity =
     useRef(
-
       new Animated.Value(0)
-
     ).current;
 
   const translateY =
     useRef(
-
-      new Animated.Value(8)
-
+      new Animated.Value(12)
     ).current;
-
-  const scale =
-    useRef(
-
-      new Animated.Value(0.985)
-
-    ).current;
-
-  /*
-   * --------------------------------------------------------
-   * 🌌 BREATHING
-   * --------------------------------------------------------
-   */
 
   const breathing =
-    useMemo(() => {
-
-      return Animated.loop(
-
-        Animated.sequence([
-
-          Animated.timing(scale, {
-
-            toValue: 1,
-
-            duration: 3200,
-
-            useNativeDriver: true,
-          }),
-
-          Animated.timing(scale, {
-
-            toValue: 0.985,
-
-            duration: 3200,
-
-            useNativeDriver: true,
-          }),
-        ])
-      );
-
-    }, []);
+    useRef(
+      new Animated.Value(0.985)
+    ).current;
 
   /*
    * --------------------------------------------------------
-   * 🌊 START BREATHING
+   * 🌌 DURATION
+   * --------------------------------------------------------
+   */
+
+  const wordCount =
+
+    line?.text
+      ?.split?.(" ")
+      ?.length || 0;
+
+  const lineDuration =
+
+    12000 +
+
+    (
+      wordCount * 220
+    );
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 OPACITY LAYERS
+   * --------------------------------------------------------
+   */
+
+const layeredOpacity = 0.96;
+
+  /*
+   * --------------------------------------------------------
+   * 🌿 ROLE ENERGY
+   * --------------------------------------------------------
+   */
+
+  const roleSpacing =
+
+    role === "widening"
+      ? 0.55
+
+      : role === "grounding"
+        ? 0.15
+
+        : 0.3;
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 ENTRY
    * --------------------------------------------------------
    */
 
   useEffect(() => {
-
-    breathing.start();
-
-    return () => {
-
-      breathing.stop();
-    };
-
-  }, []);
-
-  /*
-   * --------------------------------------------------------
-   * 🌌 ORCHESTRATION LOOP
-   * --------------------------------------------------------
-   */
-
-  useEffect(() => {
-
-    /*
-     * --------------------------------------------------------
-     * ✨ RESET
-     * --------------------------------------------------------
-     */
-
-    opacity.setValue(0);
-
-    translateY.setValue(8);
-
-    /*
-     * --------------------------------------------------------
-     * 🌊 FADE IN
-     * --------------------------------------------------------
-     */
 
     Animated.parallel([
 
       Animated.timing(opacity, {
 
         toValue:
-
-          isCosmic
-            ? 0.96
-            : 0.72 * intensity,
+          layeredOpacity,
 
         duration:
-          FADE_DURATION,
+          LINE_FADE_IN,
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
 
         useNativeDriver: true,
       }),
 
       Animated.timing(translateY, {
 
-        toValue: 0,
+        toValue:
+          role === "widening"
+            ? -4
+            : 0,
 
         duration:
-          FADE_DURATION,
+          LINE_FADE_IN,
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
 
         useNativeDriver: true,
       }),
@@ -299,26 +197,66 @@ const positions = [
 
     /*
      * --------------------------------------------------------
-     * 🌌 TRANSITION TIMER
+     * 🌌 BREATHING
      * --------------------------------------------------------
      */
 
-    const timer =
+    Animated.loop(
+
+      Animated.sequence([
+
+        Animated.timing(
+          breathing,
+
+          {
+
+            toValue:
+              1,
+
+            duration:
+              5200,
+
+            easing:
+              Easing.inOut(
+                Easing.sin
+              ),
+
+            useNativeDriver: true,
+          }
+        ),
+
+        Animated.timing(
+          breathing,
+
+          {
+
+            toValue:
+              0.985,
+
+            duration:
+              5200,
+
+            easing:
+              Easing.inOut(
+                Easing.sin
+              ),
+
+            useNativeDriver: true,
+          }
+        ),
+
+      ])
+
+    ).start();
+
+    /*
+     * --------------------------------------------------------
+     * 🌫️ EXIT
+     * --------------------------------------------------------
+     */
+
+    const exitTimer =
       setTimeout(() => {
-
-        /*
-         * --------------------------------------------------------
-         * 🌫️ ENTER SILENCE
-         * --------------------------------------------------------
-         */
-
-        setInSilence(true);
-
-        /*
-         * --------------------------------------------------------
-         * ✨ FADE OUT
-         * --------------------------------------------------------
-         */
 
         Animated.parallel([
 
@@ -326,185 +264,407 @@ const positions = [
 
             toValue: 0,
 
-            duration: 1800,
+            duration:
+              LINE_FADE_OUT,
+
+            easing:
+              Easing.inOut(
+                Easing.sin
+              ),
 
             useNativeDriver: true,
           }),
 
           Animated.timing(translateY, {
 
-            toValue: -6,
+            toValue:
+              -8,
 
-            duration: 1800,
+            duration:
+              LINE_FADE_OUT,
+
+            easing:
+              Easing.inOut(
+                Easing.sin
+              ),
 
             useNativeDriver: true,
           }),
 
         ]).start();
 
-        /*
-         * --------------------------------------------------------
-         * 🌌 NEXT FRAGMENT
-         * --------------------------------------------------------
-         */
-
-        setTimeout(() => {
-
-          setActiveIndex(
-
-            (prev: number) => (
-
-              prev + 1
-
-            ) % fragments.length
-          );
-
-          setInSilence(false);
-
-        }, SILENCE_DURATION);
-
-      }, HOLD_DURATION);
+      }, lineDuration);
 
     return () => {
 
-      clearTimeout(timer);
+      clearTimeout(
+        exitTimer
+      );
     };
 
-  }, [
-
-    activeIndex,
-
-    fragments,
-
-    intensity,
-  ]);
+  }, []);
 
   /*
    * --------------------------------------------------------
-   * 🌫️ SILENCE WINDOW
+   * 🌊 RENDER
    * --------------------------------------------------------
    */
 
-  if (
-    inSilence
-  ) {
+  return (
 
-    return (
+    <Animated.View
+      style={{
 
-      <View
+        alignSelf: "center",
+
+      maxWidth: "92%",
+
+opacity,
+
+        transform: [
+
+          {
+            translateY,
+          },
+
+          {
+            scale:
+              breathing,
+          },
+        ],
+
+        marginBottom:
+
+          8 +
+
+          roleSpacing * 6,
+
+        width: "100%",
+      }}
+    >
+
+      <Text
         style={{
-          height: 72,
+
+          color:
+            guideColor,
+
+  fontFamily:
+  Fonts.orchestration,
+
+          fontSize: 18,
+
+          lineHeight: 28,
+
+          textAlign: "center",
+
+          letterSpacing: 0,
+
+          textShadowColor:
+            guideColor,
+
+          textShadowOffset: {
+            width: 0,
+            height: 0,
+          },
+
+textShadowRadius:
+
+  index === 0
+
+    ? (
+        role === "widening"
+          ? 8
+          : 5
+      )
+
+    : 4,
+
+opacity:
+
+  index === 0
+    ? 0.94
+    : layeredOpacity,
         }}
-      />
-    );
-  }
+      >
+        {line?.text}
+      </Text>
+
+    </Animated.View>
+  );
+}
+
+/*
+ * --------------------------------------------------------
+ * 🌌 MAIN
+ * --------------------------------------------------------
+ */
+
+export default function OrchestrationFragments({
+
+  sequence = [],
+
+  onForegroundGuideChange,
+
+  showFragments = true,
+
+}: any) {
 
   /*
    * --------------------------------------------------------
-   * 🌌 RENDER
+   * 🌌 EMPTY
+   * --------------------------------------------------------
+   */
+
+if (
+
+  !sequence?.length ||
+
+  !showFragments
+
+) {
+
+  return null;
+}
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 ACTIVE
+   * --------------------------------------------------------
+   */
+
+  const [
+
+    activeLines,
+
+    setActiveLines,
+
+  ] = useState<any[]>([]);
+
+  const currentGuideRef =
+  useRef(null);
+      
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 LOOP
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    let mounted = true;
+
+    let currentIndex = 0;
+
+    /*
+     * --------------------------------------------------------
+     * 🌊 RUN
+     * --------------------------------------------------------
+     */
+
+    const runConversation = () => {
+
+      if (!mounted) {
+
+        return;
+      }
+
+      /*
+       * ----------------------------------------------------
+       * 🌫️ RESET
+       * ----------------------------------------------------
+       */
+
+      if (
+        currentIndex >=
+        sequence.length
+      ) {
+
+        setTimeout(() => {
+
+          currentIndex = 0;
+
+          runConversation();
+
+        }, SILENCE_WINDOW);
+
+        return;
+      }
+
+      /*
+       * ----------------------------------------------------
+       * 🌌 ENTRY
+       * ----------------------------------------------------
+       */
+
+      const entry =
+
+        sequence[
+          currentIndex
+        ];
+
+      const line =
+
+        entry?.fragment
+
+        || entry;
+
+      /*
+       * ----------------------------------------------------
+       * 🌊 LAYERED CONVERSATION
+       * ----------------------------------------------------
+       */
+
+setActiveLines((previous: any[]) => {
+
+  /*
+   * ----------------------------------------------------
+   * 🌌 SYNC GUIDE WITH VISIBLE LINE
+   * ----------------------------------------------------
+   */
+
+  if (
+    line?.guide &&
+    line.guide !==
+      currentGuideRef.current
+  ) {
+
+    currentGuideRef.current =
+      line.guide;
+
+    onForegroundGuideChange?.(
+      line.guide
+    );
+  }
+
+  return [
+
+    line,
+  ];
+});
+
+      /*
+       * ----------------------------------------------------
+       * 🌫️ REMOVE
+       * ----------------------------------------------------
+       */
+
+      const wordCount =
+
+        line?.text
+          ?.split?.(" ")
+          ?.length || 0;
+
+      const lineDuration =
+
+        12000 +
+
+        (
+          wordCount * 220
+        );
+
+      /*
+       * ----------------------------------------------------
+       * 🌌 NEXT
+       * ----------------------------------------------------
+       */
+
+      currentIndex++;
+
+      /*
+       * ----------------------------------------------------
+       * 🌊 CONVERSATIONAL BREATH
+       * ----------------------------------------------------
+       */
+
+      const nextDelay =
+
+        9200
+
+        +
+
+        (
+          wordCount * 260
+        );
+
+      setTimeout(
+
+        runConversation,
+
+        nextDelay
+      );
+    };
+
+    /*
+     * --------------------------------------------------------
+     * 🌌 START
+     * --------------------------------------------------------
+     */
+
+    runConversation();
+
+    return () => {
+
+      mounted = false;
+    };
+
+  }, []);
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 RENDER
    * --------------------------------------------------------
    */
 
   return (
 
     <View
+      pointerEvents="none"
       style={{
+
+        position: "absolute",
+
+        top: "30%",
 
         width: "100%",
 
-        height: "100%",
+        alignItems: "center",
 
-        position: "relative",
-
-        paddingHorizontal: 24,
+        paddingHorizontal: 38,
       }}
     >
 
       <Animated.View
         style={{
 
-          width: "62%",
+          width: "100%",
 
-          position: "absolute",
-
-          top:
-            activePosition.top,
-
-          left:
-            activePosition.left,
-
-          right:
-            activePosition.right,
-
-          opacity,
-
-          transform: [
-
-            { translateY },
-
-            { scale },
-          ],
+          alignItems: "center",
         }}
       >
 
-        {/* ------------------------------------------------ */}
-        {/* ✨ LIVE FRAGMENT */}
-        {/* ------------------------------------------------ */}
+{activeLines.map(
 
-        <Text
-          style={{
+  (
+    line,
+    index
+  ) => (
 
-            color:
-              config.fontColor,
+    <ConversationLine
+      key={`${line.text}-${index}`}
 
-            fontFamily:
+      line={line}
 
-              isCosmic
-                ? Fonts.regular
-                : Fonts.light,
+      index={index}
 
-            fontSize:
-
-              isCosmic
-                ? 14
-                : 12,
-
-            lineHeight:
-
-              isCosmic
-                ? 24
-                : 20,
-
-            textAlign: "center",
-
-            opacity:
-
-              isCosmic
-                ? 0.92
-                : Opacity.medium,
-
-            letterSpacing: 0.15,
-
-            textShadowColor:
-
-              isCosmic
-                ? config.fontColor
-                : "transparent",
-
-            textShadowOffset: {
-              width: 0,
-              height: 0,
-            },
-
-            textShadowRadius:
-
-              isCosmic
-                ? 6
-                : 0,
-          }}
-        >
-          {activeFragment?.text}
-        </Text>
+      isActive={
+        index ===
+        activeLines.length - 1
+      }
+    />
+  )
+)}
 
       </Animated.View>
 

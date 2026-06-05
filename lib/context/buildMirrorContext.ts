@@ -141,6 +141,8 @@ export type MirrorContext = {
 
   language: any;
 
+  manifestationLibrary?: any[];
+
   story: {
 
     primaryScene?: string | null;
@@ -257,6 +259,16 @@ export async function buildMirrorContext({
         "integrating",
       ]
     );
+
+  const {
+  data: manifestationLibrary,
+} = await supabase
+
+  .from(
+    "pattern_chakra_manifestations"
+  )
+
+  .select("*");  
 
   // --------------------------------------------------
   // 🌊 SIGNALS
@@ -1101,6 +1113,9 @@ const currentSignals =
     // 🌍 LANGUAGE
     language:
       languageContext || {},
+
+    manifestationLibrary:
+  manifestationLibrary || [],  
 
     // 🧭 STORY
     story: {

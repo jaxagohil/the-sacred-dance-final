@@ -1,9 +1,4 @@
 // /lib/ai/ingestImage.ts
-
-import {
-  API_URL,
-} from "../config";
-
 import {
   extractReflectionData,
 } from "./extractReflectionData";
@@ -24,29 +19,27 @@ export async function ingestImage(
      * --------------------------------------------------
      */
 
-    const response =
-      await fetch(
+const response =
+  await fetch(
+    "https://ezhqfbedncqrajfhsqhp.supabase.co/functions/v1/vision",
+    {
+      method: "POST",
 
-        `${API_URL}/api/vision`,
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
 
-        {
+      body: JSON.stringify({
+        imageUrl,
+      }),
+    }
+  );
 
-          method: "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json",
-          },
-
-          body:
-            JSON.stringify({
-
-              imageUrl,
-            }),
-        }
-      );
-
+  console.log(
+  "👁 VISION STATUS",
+  response.status
+);
     /*
      * --------------------------------------------------
      * 📦 RAW RESPONSE

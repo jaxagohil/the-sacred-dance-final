@@ -2,14 +2,14 @@
 
 import React, {
   useEffect,
-  useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
 
 import {
   Animated,
   Dimensions,
+  Easing,
   StyleSheet,
   Text,
   View,
@@ -18,13 +18,11 @@ import {
 import {
   Colors,
   Fonts,
-  Opacity,
   Radius,
 } from "../../constants/theme";
 
 import {
   GUIDE_TYPES,
-  getGuideConfig,
 } from "./guideConfig";
 
 const { width } =
@@ -37,10 +35,132 @@ const { width } =
  */
 
 const ROTATION_INTERVAL =
-  5200;
+  12600;
 
 const SILENCE_DURATION =
-  1400;
+  2600;
+
+/*
+ * --------------------------------------------------------
+ * 🌌 HELPERS
+ * --------------------------------------------------------
+ */
+
+function weightedShuffle(
+  items: any[]
+) {
+
+  return [...items]
+
+    .sort(() => {
+
+      const a =
+        Math.random();
+
+      const b =
+        Math.random();
+
+      return a - b;
+    });
+}
+
+function randomBetween(
+  min: number,
+  max: number
+) {
+
+  return (
+
+    Math.random()
+    * (max - min)
+
+  ) + min;
+}
+
+/*
+ * --------------------------------------------------------
+ * 🌌 POSITION SYSTEM
+ * --------------------------------------------------------
+ */
+
+const cosmicPositions = [
+
+  {
+    top: 12,
+    left: 18,
+  },
+
+  {
+    top: 42,
+    right: 20,
+  },
+
+  {
+    top: 92,
+    left: 84,
+  },
+
+  {
+    top: 138,
+    right: 72,
+  },
+];
+
+const heartPositions = [
+
+  {
+    top: 24,
+    left: 36,
+  },
+
+  {
+    top: 84,
+    right: 28,
+  },
+
+  {
+    top: 132,
+    left: 52,
+  },
+];
+
+const structurePositions = [
+
+  {
+    top: 18,
+    left: 48,
+  },
+
+  {
+    top: 76,
+    right: 42,
+  },
+
+  {
+    top: 138,
+    left: 42,
+  },
+];
+
+function resolvePositions(
+  guide: string
+) {
+
+  switch (guide) {
+
+    case GUIDE_TYPES.HEART:
+
+      return heartPositions;
+
+    case GUIDE_TYPES.STRUCTURE:
+
+      return structurePositions;
+
+    default:
+
+      return cosmicPositions;
+  }
+}
 
 /*
  * --------------------------------------------------------
@@ -53,6 +173,12 @@ export default function FloatingWhispers({
   whispers = [],
 
   intensity = 0.5,
+
+  guide =
+    GUIDE_TYPES.COSMIC,
+
+  nervousSystem =
+    "regulated",
 
 }: any) {
 
@@ -69,11 +195,12 @@ export default function FloatingWhispers({
 
   /*
    * --------------------------------------------------------
-   * 🌊 ACTIVE WINDOW
+   * 🌊 ACTIVE FIELD
    * --------------------------------------------------------
    */
 
   const [
+
     visibleWhispers,
 
     setVisibleWhispers,
@@ -81,13 +208,7 @@ export default function FloatingWhispers({
   ] = useState<any[]>([]);
 
   const [
-    cycle,
 
-    setCycle,
-
-  ] = useState(0);
-
-  const [
     inSilence,
 
     setInSilence,
@@ -96,56 +217,105 @@ export default function FloatingWhispers({
 
   /*
    * --------------------------------------------------------
-   * 🌌 ROTATING SET
+   * 🌌 WHISPER COUNT
    * --------------------------------------------------------
    */
 
-  const rotatingWhispers =
-    useMemo(() => {
+  const whisperCount =
 
-      if (!whispers.length) {
+    nervousSystem ===
+    "overwhelmed"
 
-        return [];
-      }
+      ? 1
 
-      const startIndex =
+      : nervousSystem ===
+        "contracted"
 
-        cycle % whispers.length;
+          ? 2
 
-      return [
-
-        whispers[startIndex],
-
-        whispers[
-          (startIndex + 1)
-          % whispers.length
-        ],
-
-        whispers[
-          (startIndex + 2)
-          % whispers.length
-        ],
-
-      ].filter(Boolean);
-
-    }, [
-
-      whispers,
-
-      cycle,
-    ]);
+          : 3;
 
   /*
    * --------------------------------------------------------
-   * 🌊 ORCHESTRATION LOOP
+   * 🌊 FIELD LOOP
    * --------------------------------------------------------
    */
 
   useEffect(() => {
 
+    /*
+     * --------------------------------------------------------
+     * 🌌 WEIGHTED FIELD
+     * --------------------------------------------------------
+     */
+const shuffled =
+
+  weightedShuffle(
+    whispers
+  );
+
+    /*
+     * --------------------------------------------------------
+     * 🌫️ PARTIAL EMERGENCE
+     * --------------------------------------------------------
+     */
+
+    const enriched =
+
+      shuffled
+
+        .slice(
+          0,
+          whisperCount
+        )
+
+        .map((whisper) => {
+
+          const depth =
+
+            Math.random() > 0.68
+
+              ? "background"
+              : Math.random() > 0.45
+
+                ? "midground"
+                : "foreground";
+
+          const partial =
+
+            Math.random() > 0.78;
+
+return {
+
+  ...(typeof whisper === "string"
+
+    ? {
+        text: whisper,
+      }
+
+    : whisper),
+
+  depth,
+
+  partial,
+};
+        });
+
+    /*
+     * --------------------------------------------------------
+     * 🌌 ACTIVE
+     * --------------------------------------------------------
+     */
+
     setVisibleWhispers(
-      rotatingWhispers
+      enriched
     );
+
+    /*
+     * --------------------------------------------------------
+     * 🌫️ SILENCE LOOP
+     * --------------------------------------------------------
+     */
 
     const timer =
       setTimeout(() => {
@@ -153,10 +323,6 @@ export default function FloatingWhispers({
         setInSilence(true);
 
         setTimeout(() => {
-
-          setCycle(
-            (prev) => prev + 1
-          );
 
           setInSilence(false);
 
@@ -166,21 +332,17 @@ export default function FloatingWhispers({
 
     return () => {
 
-      clearTimeout(timer);
+      clearTimeout(
+        timer
+      );
     };
 
-  }, [rotatingWhispers]);
+  }, [
 
-  /*
-   * --------------------------------------------------------
-   * 🌫️ SILENCE
-   * --------------------------------------------------------
-   */
+    whispers,
 
-  if (inSilence) {
-
-    return null;
-  }
+    whisperCount,
+  ]);
 
   /*
    * --------------------------------------------------------
@@ -193,22 +355,26 @@ export default function FloatingWhispers({
     <View style={styles.container}>
 
       {visibleWhispers.map(
+
         (
           whisper: any,
           index: number
         ) => (
 
           <FloatingWhisperItem
-            key={
-              whisper.id
-                || index
-            }
+            key={`${
+  typeof whisper === "string"
+    ? whisper
+    : whisper?.text
+}-${index}`}
 
             whisper={whisper}
 
-            index={index}
-
             intensity={intensity}
+
+            guide={guide}
+
+            index={index}
           />
         )
       )}
@@ -229,34 +395,15 @@ function FloatingWhisperItem({
 
   intensity,
 
+  guide,
+
   index,
 
 }: any) {
 
   /*
    * --------------------------------------------------------
-   * 🌸 GUIDE CONFIG
-   * --------------------------------------------------------
-   */
-
-  const guideType =
-
-    whisper.guide
-      || GUIDE_TYPES.COSMIC;
-
-  const config =
-    getGuideConfig(
-      guideType
-    );
-
-  const isCosmic =
-
-    guideType ===
-    GUIDE_TYPES.COSMIC;
-
-  /*
-   * --------------------------------------------------------
-   * 🌊 ANIMATION VALUES
+   * 🌊 VALUES
    * --------------------------------------------------------
    */
 
@@ -270,7 +417,12 @@ function FloatingWhisperItem({
   const translateY =
     useRef(
 
-      new Animated.Value(10)
+      new Animated.Value(
+        randomBetween(
+          6,
+          14
+        )
+      )
 
     ).current;
 
@@ -283,14 +435,116 @@ function FloatingWhisperItem({
 
   /*
    * --------------------------------------------------------
-   * ✨ START ANIMATION
+   * 🌌 POSITION
+   * --------------------------------------------------------
+   */
+
+  const positions =
+    resolvePositions(
+      guide
+    );
+
+  const basePosition =
+
+    positions[
+      index
+      % positions.length
+    ];
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 ORGANIC DRIFT
+   * --------------------------------------------------------
+   */
+
+  const driftX =
+    randomBetween(
+      -14,
+      14
+    );
+
+  const driftY =
+    randomBetween(
+      -10,
+      10
+    );
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 DEPTH
+   * --------------------------------------------------------
+   */
+
+  const depth =
+
+    whisper?.depth
+      || "foreground";
+
+  /*
+   * --------------------------------------------------------
+   * 🌫️ TARGET OPACITY
+   * --------------------------------------------------------
+   */
+
+  let targetOpacity =
+
+    whisper?.opacity
+      || 0.55;
+
+  /*
+   * 🌌 DEPTH
+   */
+
+  if (
+    depth ===
+    "background"
+  ) {
+
+    targetOpacity *= 0.52;
+  }
+
+  if (
+    depth ===
+    "midground"
+  ) {
+
+    targetOpacity *= 0.72;
+  }
+
+  /*
+   * 🌫️ PARTIAL
+   */
+
+  if (
+    whisper?.partial
+  ) {
+
+    targetOpacity *= 1;
+  }
+
+  /*
+   * 🌊 INTENSITY
+   */
+
+  targetOpacity *= (
+
+    0.65 +
+
+    (
+      intensity * 0.35
+    )
+  );
+
+  /*
+   * --------------------------------------------------------
+   * ✨ START
    * --------------------------------------------------------
    */
 
   useEffect(() => {
 
     /*
-     * 🌌 FADE IN
+     * 🌌 EMERGENCE
      */
 
     Animated.parallel([
@@ -298,13 +552,22 @@ function FloatingWhisperItem({
       Animated.timing(opacity, {
 
         toValue:
-
-          isCosmic
-            ? 0.92 * intensity
-            : 0.58 * intensity,
+          Math.min(
+            targetOpacity,
+            0.92
+          ),
 
         duration:
-          2400,
+
+          randomBetween(
+            2400,
+            4200
+          ),
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
 
         useNativeDriver: true,
       }),
@@ -314,7 +577,16 @@ function FloatingWhisperItem({
         toValue: 0,
 
         duration:
-          2400,
+
+          randomBetween(
+            2400,
+            4200
+          ),
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
 
         useNativeDriver: true,
       }),
@@ -322,7 +594,9 @@ function FloatingWhisperItem({
     ]).start();
 
     /*
-     * 🌊 FLOATING LOOP
+     * --------------------------------------------------------
+     * 🌊 FLOATING
+     * --------------------------------------------------------
      */
 
     Animated.loop(
@@ -334,8 +608,16 @@ function FloatingWhisperItem({
           toValue: 1,
 
           duration:
-            3200 +
-            index * 200,
+
+            randomBetween(
+              3800,
+              6200
+            ),
+
+          easing:
+            Easing.inOut(
+              Easing.sin
+            ),
 
           useNativeDriver: true,
         }),
@@ -345,14 +627,73 @@ function FloatingWhisperItem({
           toValue: 0,
 
           duration:
-            3200 +
-            index * 180,
+
+            randomBetween(
+              3800,
+              6200
+            ),
+
+          easing:
+            Easing.inOut(
+              Easing.sin
+            ),
 
           useNativeDriver: true,
         }),
       ])
 
     ).start();
+
+    /*
+     * --------------------------------------------------------
+     * 🌫️ DISSOLVE
+     * --------------------------------------------------------
+     */
+
+const dissolveTime =
+
+  whisper?.recurrence
+
+    ? randomBetween(
+        14000,
+        24000
+      )
+
+: randomBetween(
+    18000,
+    32000
+  );
+
+const dissolve =
+  setTimeout(() => {
+
+    Animated.timing(opacity, {
+
+      toValue: 0.08,
+
+      duration:
+
+        randomBetween(
+          2200,
+          4200
+        ),
+
+      easing:
+        Easing.inOut(
+          Easing.sin
+        ),
+
+      useNativeDriver: true,
+    }).start();
+
+  }, dissolveTime);
+
+return () => {
+
+  clearTimeout(
+    dissolve
+  );
+};
 
   }, []);
 
@@ -368,18 +709,8 @@ function FloatingWhisperItem({
 
       inputRange: [0, 1],
 
-      outputRange: [-6, 6],
+      outputRange: [-5, 5],
     });
-
-  /*
-   * --------------------------------------------------------
-   * 🌌 POSITIONING
-   * --------------------------------------------------------
-   */
-
-  const top =
-    whisper.top
-    ?? (50 + index * 54);
 
   /*
    * --------------------------------------------------------
@@ -396,13 +727,25 @@ function FloatingWhisperItem({
 
         {
 
-          top,
+          top:
+            basePosition.top
+            + driftY,
 
-          left:
-            whisper.left,
+          ...(basePosition.left !== undefined
+            ? {
+                left:
+                  basePosition.left
+                  + driftX,
+              }
+            : {}),
 
-          right:
-            whisper.right,
+          ...(basePosition.right !== undefined
+            ? {
+                right:
+                  basePosition.right
+                  + driftX,
+              }
+            : {}),
 
           opacity,
 
@@ -410,6 +753,7 @@ function FloatingWhisperItem({
 
             {
               translateY:
+
                 Animated.add(
                   translateY,
                   floatingY
@@ -427,26 +771,16 @@ function FloatingWhisperItem({
 
           {
 
-            color:
-              config.fontColor,
-
             opacity:
 
-              isCosmic
-                ? 0.95
-                : Opacity.medium,
+              depth ===
+              "background"
 
-            fontFamily:
-
-              isCosmic
-                ? Fonts.regular
-                : Fonts.light,
+                ? 0.42
+                : 1,
 
             textShadowColor:
-
-              isCosmic
-                ? config.fontColor
-                : "transparent",
+              Colors.gold,
 
             textShadowOffset: {
               width: 0,
@@ -455,13 +789,21 @@ function FloatingWhisperItem({
 
             textShadowRadius:
 
-              isCosmic
-                ? 10
-                : 0,
+              depth ===
+              "foreground"
+
+                ? 18
+                : 10,
           },
         ]}
       >
-        {whisper.text}
+        {
+  typeof whisper === "string"
+
+    ? whisper
+
+    : whisper?.text || ""
+}
       </Text>
 
     </Animated.View>
@@ -487,39 +829,33 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
 
-    justifyContent: "center",
-    alignItems: "center",
+    pointerEvents: "none",
   },
 
   whisper: {
 
     position: "absolute",
 
-    paddingHorizontal: 14,
+    paddingHorizontal: 8,
 
-    paddingVertical: 8,
+    paddingVertical: 4,
 
     borderRadius:
       Radius.pill,
-
-    backgroundColor:
-      Colors.whisperBackground,
-
-    borderWidth: 1,
-
-    borderColor:
-      Colors.whisperBorder,
   },
 
   text: {
 
-    fontSize: 11,
+    color:
+  "#F7D774",
+
+    fontSize: 18,
 
     fontFamily:
       Fonts.light,
 
     textAlign: "center",
 
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
 });

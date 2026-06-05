@@ -2,7 +2,7 @@
 // 🔁 PROCESS REPEATS FIELD
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -96,41 +96,62 @@ or embodiment.
     // 🚀 PROCESS
     // --------------------------------------------------
 
-    await processReflection({
+   const { data, error } =
 
-      userId,
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
-      language,
+        userId,
 
-      source,
+        language,
 
-      baselineType:
-        "repeats",
+        source,
 
-      signalDepth:
-        1.5,
+        baselineType:
+          "repeats",
 
-      text:
-        reflectionText,
+        signalDepth:
+          1.5,
 
-      metadata: {
+        text:
+          reflectionText,
 
-        repeats,
+        metadata: {
 
-        batch_id:
-          batchId,
+          repeats,
 
-        processing_layer:
-          "you.repeats",
+          batch_id:
+            batchId,
 
-        generated_from:
-          "repeats_field",
+          processing_layer:
+            "you.repeats",
 
-        generated_at:
-          new Date().toISOString(),
+          generated_from:
+            "repeats_field",
+
+          generated_at:
+            new Date().toISOString(),
+        },
       },
-    });
+    }
+  );
 
+if (error) {
+
+  console.error(
+    "❌ Repeats processing error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Repeats processed",
+    data
+  );
+}
     // --------------------------------------------------
     // ✅ DONE
     // --------------------------------------------------

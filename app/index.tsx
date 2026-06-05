@@ -16,6 +16,10 @@ import {
   View,
 } from "react-native";
 
+import {
+  useMirrorStore,
+} from "../stores/mirrorStore";
+
 import { getOrCreateProfile } from "../db/getProfile";
 import { processLandingReflection } from "../db/processLandingReflection";
 import { getDailyPrompt } from "../db/prompts";
@@ -38,8 +42,36 @@ import {
 
 import { setLanguage, t } from "../lib/i18n/t";
 
+import {
+  getDailyField,
+} from "../lib/cosmic/getDailyField";
+
+import {
+  getDailyCosmicMessage,
+} from "../lib/cosmic/getDailyCosmicMessage";
+
+import {
+  supabase,
+} from "../services/supabase";
+
 export default function LandingScreen() {
   const router = useRouter();
+
+  const {
+
+  setDailyField,
+
+  setCosmic,
+
+  setLanguage:
+
+    setGlobalLanguage,
+
+  setLanguageContext,
+
+  setReady,
+
+} = useMirrorStore();
 
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -95,6 +127,87 @@ export default function LandingScreen() {
 );
       console.log("LANGUAGE:", p?.language);
 
+      /*
+ * --------------------------------------------------
+ * 🌍 LANGUAGE CONTEXT
+ * --------------------------------------------------
+ */
+
+const currentLanguage =
+
+  p?.language || "en";
+
+setGlobalLanguage(
+  currentLanguage
+);
+
+const {
+  data:
+    languageData,
+} = await supabase
+
+  .from("languages")
+
+  .select("*")
+
+  .eq(
+    "code",
+    currentLanguage
+  )
+
+  .maybeSingle();
+
+setLanguageContext(
+  languageData || {}
+);
+
+/*
+ * --------------------------------------------------
+ * 🌌 DAILY FIELD
+ * --------------------------------------------------
+ */
+
+const field =
+
+  await getDailyField(
+    userId
+  );
+
+setDailyField(
+  field
+);
+
+/*
+ * --------------------------------------------------
+ * 🌙 COSMIC
+ * --------------------------------------------------
+ */
+
+const cosmicMessage =
+
+  await getDailyCosmicMessage({
+
+    dailyField:
+      field,
+
+    language:
+      currentLanguage,
+
+    languageContext:
+      languageData || {},
+  });
+
+setCosmic({
+
+  ...cosmicMessage,
+
+  cosmic:
+    field.cosmic,
+
+  dailyField:
+    field,
+});
+
 const pr =
   await getDailyPrompt(
     userId
@@ -102,6 +215,7 @@ const pr =
 
 setPrompt(pr);
 
+      setReady(true);
       setLoading(false);
     };
 
@@ -442,11 +556,11 @@ setAudioUri(null);
       "center",
 
     fontFamily:
-      Fonts.light,
+      Fonts.orchestration,
 
-    fontSize: 15,
+    fontSize: 18,
 
-    lineHeight: 28,
+    lineHeight: 32,
 
     paddingHorizontal:
       Spacing.lg,
@@ -636,7 +750,7 @@ setAudioUri(null);
     handleTyping
   }
 
-placeholder={t("landing.write_freely")}
+placeholder={t("landing.placeholder")}
 
   placeholderTextColor={
     Colors.subtleText

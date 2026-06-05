@@ -2,7 +2,7 @@
 // 🌊 PROCESS JOURNAL REFLECTION
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -275,70 +275,89 @@ ${nervousSystem || "unknown"}
       hasNarrativeReflection
     ) {
 
-      await processReflection({
+      const {
+  data: narrativeData,
+  error: narrativeError,
+} = await supabase.functions.invoke(
+  "process-reflection",
+  {
+    body: {
 
-        userId,
+      userId,
 
-        language,
+      language,
 
-        source:
-          "journal",
+      source:
+        "journal",
 
-        baselineType:
-          "journal_narrative",
+      baselineType:
+        "journal",
 
-        signalDepth:
-          narrativeDepth,
+      signalDepth:
+        narrativeDepth,
 
-        text:
-          narrativeReflection,
+      text:
+        narrativeReflection,
 
-        emotions,
+      emotions,
 
-        metadata: {
+      metadata: {
 
-          batch_id:
-            batchId,
+        batch_id:
+          batchId,
 
-          processing_layer:
-            "journal.narrative",
+        processing_layer:
+          "journal.narrative",
 
-          generated_from:
-            "journal_screen",
+        generated_from:
+          "journal_screen",
 
-          generated_at:
-            new Date().toISOString(),
+        generated_at:
+          new Date().toISOString(),
 
-          modalities,
+        modalities,
 
-          modality_count:
-            modalityCount,
+        modality_count:
+          modalityCount,
 
-          observable_scenes:
-            observableScenes,
+        observable_scenes:
+          observableScenes,
 
-          body_responses:
-            bodyResponses,
+        body_responses:
+          bodyResponses,
 
-          coping_strategies:
-            copingStrategies,
+        coping_strategies:
+          copingStrategies,
 
-          manifestations,
+        manifestations,
 
-          nervous_system:
-            nervousSystem,
+        nervous_system:
+          nervousSystem,
 
-          image_present:
-            Boolean(
-              imageBase64
-            ),
+        image_present:
+          Boolean(imageBase64),
 
-          voice_present:
-            Boolean(
-              audioUri
-            ),
-        },
-      });
+        voice_present:
+          Boolean(audioUri),
+      },
+    },
+  }
+);
+
+if (narrativeError) {
+
+  console.error(
+    "❌ Journal narrative error",
+    narrativeError
+  );
+
+} else {
+
+  console.log(
+    "✅ Journal narrative processed",
+    narrativeData
+  );
+}
     }
 
     // --------------------------------------------------
@@ -349,53 +368,76 @@ ${nervousSystem || "unknown"}
       hasEmotionReflection
     ) {
 
-      await processReflection({
+ const {
+  data: emotionalData,
+  error: emotionalError,
+} = await supabase.functions.invoke(
+  "process-reflection",
+  {
+    body: {
 
-        userId,
+      userId,
 
-        language,
+      language,
 
-        source:
-          "journal",
+      source:
+        "journal",
 
-        baselineType:
-          "journal_emotional_field",
+      baselineType:
+        "journal",
 
-        signalDepth:
+      signalDepth:
+        emotionalFieldDepth,
+
+      text:
+        emotionalFieldReflection,
+
+      emotions,
+
+      metadata: {
+
+        batch_id:
+          batchId,
+
+        processing_layer:
+          "journal.emotional_field",
+
+        generated_from:
+          "journal_screen",
+
+        generated_at:
+          new Date().toISOString(),
+
+        emotional_field:
+          true,
+
+        selected_emotions:
+          emotions,
+
+        emotional_field_depth:
           emotionalFieldDepth,
 
-        text:
-          emotionalFieldReflection,
+        nervous_system:
+          nervousSystem,
+      },
+    },
+  }
+);
 
-        emotions,
+if (emotionalError) {
 
-        metadata: {
+  console.error(
+    "❌ Journal emotional field error",
+    emotionalError
+  );
 
-          batch_id:
-            batchId,
+} else {
 
-          processing_layer:
-            "journal.emotional_field",
-
-          generated_from:
-            "journal_screen",
-
-          generated_at:
-            new Date().toISOString(),
-
-          emotional_field:
-            true,
-
-          selected_emotions:
-            emotions,
-
-          emotional_field_depth:
-            emotionalFieldDepth,
-
-          nervous_system:
-            nervousSystem,
-        },
-      });
+  console.log(
+    "✅ Journal emotional field processed",
+    emotionalData
+  );
+}
     }
 
     // --------------------------------------------------

@@ -2,7 +2,7 @@
 // 🪞 PROCESS CORE BELIEF FIELD
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -107,41 +107,63 @@ are interpreted or anticipated.
     // 🚀 PROCESS
     // --------------------------------------------------
 
-    await processReflection({
+    const { data, error } =
 
-      userId,
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
-      language,
+        userId,
 
-      source,
+        language,
 
-      baselineType:
-        "core_belief",
+        source,
 
-      signalDepth:
-        2,
+        baselineType:
+          "core_belief",
 
-      text:
-        reflectionText,
+        signalDepth:
+          2,
 
-      metadata: {
+        text:
+          reflectionText,
 
-        core_belief:
-          coreBelief,
+        metadata: {
 
-        batch_id:
-          batchId,
+          core_belief:
+            coreBelief,
 
-        processing_layer:
-          "you.core_belief",
+          batch_id:
+            batchId,
 
-        generated_from:
-          "core_belief_field",
+          processing_layer:
+            "you.core_belief",
 
-        generated_at:
-          new Date().toISOString(),
+          generated_from:
+            "core_belief_field",
+
+          generated_at:
+            new Date().toISOString(),
+        },
       },
-    });
+    }
+  );
+
+if (error) {
+
+  console.error(
+    "❌ Core belief processing error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Core belief processed",
+    data
+  );
+}
 
     // --------------------------------------------------
     // ✅ DONE

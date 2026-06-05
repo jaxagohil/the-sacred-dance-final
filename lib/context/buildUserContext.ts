@@ -324,21 +324,26 @@ buildUserContext({
    * ------------------------------------------------
    */
 
-  const {
-    data: behaviourRows,
-  } = await supabase
+const {
+  data: behaviourRows,
+} = await supabase
 
-    .from("behaviours")
+  .from("behaviours")
 
-    .select("*")
+  .select("*")
 
-    .in(
-      "id",
+  .in(
+    "id",
 
-      behaviourIds.length
-        ? behaviourIds
-        : ["___empty___"]
-    );
+    behaviourIds.length
+      ? behaviourIds
+      : ["___empty___"]
+  )
+
+  .eq(
+    "language",
+    language
+  );
 
   /*
    * ------------------------------------------------

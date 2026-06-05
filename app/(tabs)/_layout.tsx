@@ -93,7 +93,7 @@ export default function TabLayout() {
 
       <Tabs.Screen
 
-        name="guidanceDivineOrchestration"
+        name="guidance"
 
         options={{
 
@@ -145,7 +145,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 📖 JOURNAL */}
+      {/* 📖 REFLECTIONS */}
 
       <Tabs.Screen
 
@@ -153,7 +153,7 @@ export default function TabLayout() {
 
         options={{
 
-          title: "Journal",
+          title: "Reflections",
 
           tabBarIcon: ({
             color,

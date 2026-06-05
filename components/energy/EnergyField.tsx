@@ -412,6 +412,22 @@ r:
       }
     );
 
+
+    console.log(
+  "🌑 DISTORTIONS:",
+  distortions
+);
+
+console.log(
+  "🌈 CHAKRA MANIFESTATIONS:",
+  userContext?.chakraManifestations
+);
+
+console.log(
+  "⚡ DOT POSITIONS:",
+  dotPositions
+);
+
   // --------------------------------------------------
   // 🧩 CLICK HANDLERS
   // --------------------------------------------------

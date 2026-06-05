@@ -1,55 +1,191 @@
 // guidance/GuideTransmission.tsx
 
-import React from "react";
+import React, {
+  useEffect,
+  useRef,
+} from "react";
 
 import {
-  ScrollView,
+  Animated,
+  Easing,
   Text,
   View,
 } from "react-native";
 
 import {
   Fonts,
-  Opacity,
 } from "../../constants/theme";
 
-import {
-  GUIDE_TYPES,
-  getGuideConfig,
-} from "./guideConfig";
+/*
+ * --------------------------------------------------------
+ * 🌌 COMPONENT
+ * --------------------------------------------------------
+ */
 
 export default function GuideTransmission({
 
-  guide,
+  role = "guide",
 
-  text,
+guide = "cosmic",
+
+guideName = "Guide",
+
+  text = "",
+
+  isThinking = false,
 
 }: any) {
 
-  const config =
-    getGuideConfig(
-      guide
-    );
+  /*
+   * --------------------------------------------------------
+   * 🌊 ANIMATION
+   * --------------------------------------------------------
+   */
 
-  const isCosmic =
+  const opacity =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
-    guide ===
-    GUIDE_TYPES.COSMIC;
+  const translateY =
+    useRef(
+      new Animated.Value(10)
+    ).current;
 
-  return (
+  const breathing =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
-    <ScrollView
-      showsVerticalScrollIndicator={false}
+  const atmosphere = {
 
-      contentContainerStyle={{
+    width: "82%",
 
-        alignItems: "center",
+    fontSize: 11,
 
-        justifyContent: "center",
+    lineHeight: 24,
 
-        paddingBottom: 24,
-      }}
-    >
+    glow: 2,
+
+    opacity: 0.9,
+
+    breathing: 7600,
+  };
+
+  /*
+   * --------------------------------------------------------
+   * 🌫️ ARRIVAL
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    Animated.parallel([
+
+      Animated.timing(opacity, {
+
+        toValue: 1,
+
+        duration: 2200,
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
+
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(translateY, {
+
+        toValue: 0,
+
+        duration: 2200,
+
+        easing:
+          Easing.inOut(
+            Easing.sin
+          ),
+
+        useNativeDriver: true,
+      }),
+
+    ]).start();
+
+  }, [text]);
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 BREATHING
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    const loop =
+
+      Animated.loop(
+
+        Animated.sequence([
+
+          Animated.timing(
+            breathing,
+
+            {
+
+              toValue: 1,
+
+              duration:
+                atmosphere.breathing,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: true,
+            }
+          ),
+
+          Animated.timing(
+            breathing,
+
+            {
+
+              toValue: 0,
+
+              duration:
+                atmosphere.breathing,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: true,
+            }
+          ),
+        ])
+      );
+
+    loop.start();
+
+    return () => {
+
+      loop.stop();
+    };
+
+  }, []);
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 THINKING
+   * --------------------------------------------------------
+   */
+
+  if (isThinking) {
+
+    return (
 
       <View
         style={{
@@ -57,77 +193,266 @@ export default function GuideTransmission({
           width: "100%",
 
           alignItems: "center",
+
           justifyContent: "center",
 
-          marginBottom: 22,
+          paddingTop: 18,
 
-          paddingHorizontal: 18,
+          paddingBottom: 10,
+        }}
+      >
+
+        <Animated.Text
+          style={{
+
+            color:
+              "rgba(255,255,255,0.42)",
+
+            fontFamily:
+              Fonts.light,
+
+            fontSize: 11,
+
+            opacity:
+
+              breathing.interpolate({
+
+                inputRange: [0, 1],
+
+                outputRange:
+                  [0.22, 0.58],
+              }),
+
+            letterSpacing: 0.6,
+
+            textAlign: "center",
+          }}
+        >
+          ...
+        </Animated.Text>
+
+      </View>
+    );
+  }
+
+  /*
+   * --------------------------------------------------------
+   * 🌫️ EMPTY
+   * --------------------------------------------------------
+   */
+
+  if (!text?.trim()) {
+
+    return null;
+  }
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 RENDER
+   * --------------------------------------------------------
+   */
+
+  return (
+
+    <View
+      style={{
+
+        width: "100%",
+
+        alignItems: "center",
+
+        justifyContent: "center",
+
+        paddingTop: 10,
+      }}
+    >
+
+      <Animated.View
+        style={{
+
+          width: "100%",
+
+          alignItems: "center",
+
+          justifyContent: "center",
+
+          marginBottom: 14,
+
+          paddingHorizontal: 20,
+
+          opacity,
+
+          transform: [
+
+            {
+              translateY,
+            },
+
+            {
+
+              scale:
+
+                breathing.interpolate({
+
+                  inputRange: [0, 1],
+
+                  outputRange:
+                    [0.998, 1.004],
+                }),
+            },
+          ],
         }}
       >
 
         {/* ------------------------------------------------ */}
-        {/* 🌿 TRANSMISSION */}
+        {/* 🌊 USER REFLECTION                              */}
         {/* ------------------------------------------------ */}
 
-        <Text
-          style={{
+        {
+          role === "user"
 
-            width: "74%",
+          &&
 
-            color:
-              config.fontColor,
+          (
 
-            fontFamily:
+            <Text
+              style={{
 
-              isCosmic
-                ? Fonts.regular
-                : Fonts.light,
+                width: "82%",
 
-            fontSize:
+                color:
+                  "rgba(255,255,255,0.42)",
 
-              isCosmic
-                ? 13
-                : 12,
+                fontFamily:
+                  Fonts.light,
 
-            lineHeight:
+                fontSize: 10,
 
-              isCosmic
-                ? 24
-                : 20,
+                lineHeight: 20,
 
-            textAlign: "center",
+                textAlign: "center",
 
-            letterSpacing: 0.15,
+                alignSelf: "center",
 
-            opacity:
+                letterSpacing: 0.4,
 
-              isCosmic
-                ? 0.92
-                : Opacity.medium,
+                marginBottom: 24,
+              }}
+            >
+              {text}
+            </Text>
+          )
+        }
 
-            textShadowColor:
+        {/* ------------------------------------------------ */}
+        {/* 🌌 GUIDE TRANSMISSION                           */}
+        {/* ------------------------------------------------ */}
 
-              isCosmic
-                ? config.fontColor
-                : "transparent",
+        {
+          role === "guide"
 
-            textShadowOffset: {
-              width: 0,
-              height: 0,
-            },
+          &&
 
-            textShadowRadius:
+          (
 
-              isCosmic
-                ? 5
-                : 0,
-          }}
-        >
-          {text}
-        </Text>
+            <>
 
-      </View>
+              <View
+                style={{
 
-    </ScrollView>
+                  width: "100%",
+
+                  alignItems: "center",
+
+                  justifyContent: "center",
+
+                  marginBottom: 18,
+                }}
+              >
+
+                <View
+                  style={{
+
+                    width: 80,
+
+                    height: 1,
+
+                    backgroundColor:
+                      "rgba(255,255,255,0.08)",
+
+                    marginBottom: 10,
+                  }}
+                />
+
+                <Text
+                  style={{
+
+                    color:
+                      "rgba(255,255,255,0.32)",
+
+                    fontFamily:
+                      Fonts.light,
+
+                    fontSize: 10,
+
+                    letterSpacing: 1.4,
+
+                    textTransform:
+                      "uppercase",
+                  }}
+                >
+                  {guideName}
+                </Text>
+
+              </View>
+
+              <Text
+                style={{
+
+                  width:
+                    atmosphere.width,
+
+                  color:
+                    "rgba(255,255,255,0.92)",
+
+                  fontFamily:
+                    Fonts.light,
+
+                  fontSize:
+                    atmosphere.fontSize,
+
+                  lineHeight:
+                    atmosphere.lineHeight,
+
+                  textAlign: "center",
+
+                  alignSelf: "center",
+
+                  letterSpacing: 0.12,
+
+                  opacity:
+                    atmosphere.opacity,
+
+                  textShadowColor:
+                    "rgba(255,255,255,0.18)",
+
+                  textShadowOffset: {
+                    width: 0,
+                    height: 0,
+                  },
+
+                  textShadowRadius: 2,
+                }}
+              >
+                {text}
+              </Text>
+
+            </>
+          )
+        }
+
+      </Animated.View>
+
+    </View>
   );
 }

@@ -26,16 +26,13 @@ export async function getDailyField(
     data: profile,
   } = await supabase
 
-    .from("profiles")
-
-    .select("timezone")
-
-    .eq(
-      "user_id",
-      userId
-    )
-
-    .maybeSingle();
+.from("profiles")
+.select("timezone")
+.eq(
+  "user_id",
+  userId
+)
+.maybeSingle();
 
   const timezone =
     profile?.timezone ||
@@ -105,8 +102,10 @@ export async function getDailyField(
     "🌙 Building new daily field"
   );
 
-  const field =
-    await buildDailyField();
+const field =
+  await buildDailyField(
+    today
+  );
 
   /*
    * -------------------------------------------------------
@@ -162,13 +161,54 @@ export async function getDailyField(
 
     .insert(payload);
 
-  if (insertError) {
+if (insertError) {
+
+  /*
+   * ---------------------------------------------------
+   * 🌌 FIELD ALREADY EXISTS
+   * ---------------------------------------------------
+   */
+
+  if (
+    insertError.code === "23505"
+  ) {
+
+    console.log(
+      "🌌 Daily field already exists:",
+      today
+    );
+
+  } else {
 
     console.error(
       "❌ DAILY FIELD INSERT ERROR:",
       insertError
     );
   }
+
+  /*
+   * ---------------------------------------------------
+   * 🌌 FETCH EXISTING
+   * ---------------------------------------------------
+   */
+
+  const {
+    data: existingField,
+  } = await supabase
+
+    .from("daily_reads")
+
+    .select("*")
+
+    .eq("date", today)
+
+    .maybeSingle();
+
+  if (existingField?.field) {
+
+    return existingField.field;
+  }
+}
 
   /*
    * -------------------------------------------------------

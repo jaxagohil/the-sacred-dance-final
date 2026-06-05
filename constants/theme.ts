@@ -11,7 +11,7 @@ export const Colors = {
   //
 
   background:
-    "#020304",
+    "black",
 
   card:
     "rgba(255,255,255,0.015)",
@@ -143,6 +143,9 @@ export const Fonts = {
 
   medium:
     "Inter_500Medium",
+
+    orchestration:
+  "CormorantGaramond_300Light_Italic",
 };
 
 export const Spacing = {

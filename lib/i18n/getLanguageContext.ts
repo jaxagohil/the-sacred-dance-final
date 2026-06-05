@@ -18,6 +18,11 @@ export async function getLanguageContext(
    * -------------------------------------------------------
    */
 
+  console.log(
+  "🌍 LANGUAGE LOOKUP:",
+  code
+);
+
   const {
     data,
     error,

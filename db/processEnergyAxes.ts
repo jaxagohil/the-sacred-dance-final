@@ -2,7 +2,7 @@
 // ⚡ PROCESS ENERGY AXES
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -376,7 +376,12 @@ or periods of expansion.
       // 🚀 PROCESS
       // --------------------------------------------------
 
-      await processReflection({
+      const { data, error } =
+
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
         userId,
 
@@ -430,7 +435,24 @@ or periods of expansion.
           generated_at:
             new Date().toISOString(),
         },
-      });
+      },
+    }
+  );
+
+if (error) {
+
+  console.error(
+    "❌ Energy axis processing error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Energy axis processed",
+    data
+  );
+}
     }
 
     // --------------------------------------------------

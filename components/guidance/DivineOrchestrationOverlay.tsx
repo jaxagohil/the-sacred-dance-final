@@ -2,7 +2,8 @@
 
 import React, {
   useEffect,
-  useRef
+  useMemo,
+  useRef,
 } from "react";
 
 import {
@@ -19,6 +20,10 @@ import FloatingWhispers from "./FloatingWhispers";
 
 import OrchestrationFragments from "./OrchestrationFragments";
 
+import {
+  GUIDE_TYPES,
+} from "./guideConfig";
+
 /*
  * --------------------------------------------------------
  * 🌌 STAR POSITIONS
@@ -27,15 +32,19 @@ import OrchestrationFragments from "./OrchestrationFragments";
 
 const stars = [
 
+  /*
+   * ✨ FOREGROUND
+   */
+
   {
     id: "1",
 
     top: 34,
     left: 80,
 
-    size: 2,
+    size: 3.5,
 
-    depth: 0.7,
+    depth: 0.9,
   },
 
   {
@@ -44,7 +53,7 @@ const stars = [
     top: 62,
     right: 52,
 
-    size: 3,
+    size: 4,
 
     depth: 1,
   },
@@ -55,10 +64,14 @@ const stars = [
     top: 120,
     left: 34,
 
-    size: 2,
+    size: 5,
 
-    depth: 0.5,
+    depth: 0.75,
   },
+
+  /*
+   * 🌌 MID DEPTH
+   */
 
   {
     id: "4",
@@ -66,9 +79,9 @@ const stars = [
     top: 180,
     right: 90,
 
-    size: 2,
+    size: 3.5,
 
-    depth: 0.85,
+    depth: 0.82,
   },
 
   {
@@ -77,15 +90,170 @@ const stars = [
     top: 210,
     left: 120,
 
-    size: 1.5,
+    size: 3,
 
-    depth: 0.45,
+    depth: 0.62,
+  },
+
+  /*
+   * 🌫️ DISTANT FIELD
+   */
+
+  {
+    id: "6",
+
+    top: 18,
+    right: 18,
+
+    size: 2,
+
+    depth: 0.35,
+  },
+
+  {
+    id: "7",
+
+    top: 260,
+    left: 28,
+
+    size: 2,
+
+    depth: 0.32,
+  },
+
+  {
+    id: "8",
+
+    top: 142,
+    right: 14,
+
+    size: 1.6,
+
+    depth: 0.28,
+  },
+
+  /*
+   * ✨ ANCIENT DISTANT STARS
+   */
+
+  {
+    id: "9",
+
+    top: 88,
+    left: 180,
+
+    size: 6,
+
+    depth: 0.12,
+  },
+
+  {
+    id: "10",
+
+    top: 220,
+    right: 160,
+
+    size: 7,
+
+    depth: 0.08,
   },
 ];
+
+/*
+ * --------------------------------------------------------
+ * 🌌 HELPERS
+ * --------------------------------------------------------
+ */
+
+function resolveBreathingDuration(
+  nervousSystem: string
+) {
+
+  switch (nervousSystem) {
+
+    case "overwhelmed":
+
+      return 8200;
+
+    case "contracted":
+
+      return 6800;
+
+    case "expanded":
+
+      return 4600;
+
+    default:
+
+      return 5600;
+  }
+}
+
+function resolveGuideAtmosphere(
+  guide: string
+) {
+
+  switch (guide) {
+
+    case GUIDE_TYPES.HEART:
+
+      return {
+
+        shimmerBoost:
+          0.12,
+
+        glowMax:
+          0.08,
+
+        drift:
+          1.4,
+      };
+
+    case GUIDE_TYPES.STRUCTURE:
+
+      return {
+
+        shimmerBoost:
+          0.06,
+
+        glowMax:
+          0.05,
+
+        drift:
+          0.8,
+      };
+
+    default:
+
+      return {
+
+        shimmerBoost:
+          0.22,
+
+        glowMax:
+          0.14,
+
+        drift:
+          2,
+      };
+  }
+}
+
+/*
+ * --------------------------------------------------------
+ * 🌌 COMPONENT
+ * --------------------------------------------------------
+ */
 
 export default function DivineOrchestrationOverlay({
 
   field,
+
+  initialWhispers = [],
+
+  isTyping = false,
+
+  onForegroundGuideChange,
 
 }: any) {
 
@@ -95,35 +263,74 @@ export default function DivineOrchestrationOverlay({
    * --------------------------------------------------------
    */
 
-  const showWhispers =
+const activeWhispers =
 
-    field?.whispers?.length > 0;
+  field?.atmosphericWhispers
+    ?.length > 0
+
+    ? field?.atmosphericWhispers
+
+    : initialWhispers;
+
+const showWhispers =
+  activeWhispers?.length > 0;
 
   const showFragments =
 
-    field?.fragments?.length > 0;
+    field?.fragmentSequence
+      ?.length > 0;
 
   /*
    * --------------------------------------------------------
-   * 🌊 FIELD INTENSITY
+   * 🌊 FIELD
    * --------------------------------------------------------
    */
 
   const fieldIntensity =
 
-    field?.fieldIntensity
+    field?.orchestrationIntensity
       || 0.5;
-
-  /*
-   * --------------------------------------------------------
-   * 🌫️ FIELD ATMOSPHERE
-   * --------------------------------------------------------
-   */
 
   const atmosphere =
 
-    field?.fieldAtmosphere
+    field?.emotionalField
       || "quiet";
+
+  const foregroundGuide =
+
+    field?.foregroundGuide
+      || GUIDE_TYPES.COSMIC;
+
+  const nervousSystem =
+
+    field?.nervousSystem
+      || "regulated";
+
+  /*
+   * --------------------------------------------------------
+   * 🌿 ATMOSPHERE PROFILE
+   * --------------------------------------------------------
+   */
+
+  const profile =
+    useMemo(() => {
+
+      return resolveGuideAtmosphere(
+        foregroundGuide
+      );
+
+    }, [foregroundGuide]);
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 BREATHING SPEED
+   * --------------------------------------------------------
+   */
+
+  const breathingDuration =
+    resolveBreathingDuration(
+      nervousSystem
+    );
 
   /*
    * --------------------------------------------------------
@@ -133,13 +340,18 @@ export default function DivineOrchestrationOverlay({
 
   const starOpacity =
 
-    0.24 + (
-      fieldIntensity * 0.6
+    (
+      0.32 +
+
+      (
+        fieldIntensity * 0.38
+      )
+
     );
 
   /*
    * --------------------------------------------------------
-   * 🌊 COSMIC BREATHING
+   * 🌫️ FIELD BREATHING
    * --------------------------------------------------------
    */
 
@@ -152,60 +364,342 @@ export default function DivineOrchestrationOverlay({
 
   /*
    * --------------------------------------------------------
-   * ✨ START FIELD BREATHING
+   * ✨ STAR SHIMMERS
+   * --------------------------------------------------------
+   */
+
+  const starShimmers =
+    useRef(
+
+      stars.map(
+        () => new Animated.Value(0)
+      )
+
+    ).current;
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 STAR DRIFTS
+   * --------------------------------------------------------
+   */
+
+  const starDrifts =
+    useRef(
+
+      stars.map(
+        () => ({
+          x:
+            new Animated.Value(0),
+
+          y:
+            new Animated.Value(0),
+        })
+      )
+
+    ).current;
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 START BREATHING
    * --------------------------------------------------------
    */
 
   useEffect(() => {
 
-    Animated.loop(
+    const loop =
 
-      Animated.sequence([
+      Animated.loop(
 
-        Animated.timing(
-          breathing,
+        Animated.sequence([
 
-          {
+          Animated.timing(
+            breathing,
 
-            toValue: 1,
+            {
 
-            duration: 5200,
+              toValue: 1,
 
-            easing:
-              Easing.inOut(
-                Easing.sin
+              duration:
+                breathingDuration,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: true,
+            }
+          ),
+
+          Animated.timing(
+            breathing,
+
+            {
+
+              toValue: 0,
+
+              duration:
+                breathingDuration,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: true,
+            }
+          ),
+        ])
+      );
+
+    loop.start();
+
+    return () => {
+
+      loop.stop();
+    };
+
+  }, [
+
+    breathingDuration,
+  ]);
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 STAR SHIMMERING
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    const animations =
+
+      starShimmers.map(
+        (
+          shimmer,
+          index
+        ) =>
+
+          Animated.loop(
+
+            Animated.sequence([
+
+              Animated.delay(
+
+                1200 * index +
+
+                (
+                  Math.random()
+                  * 1200
+                )
               ),
 
-            useNativeDriver: true,
-          }
-        ),
+              Animated.timing(
+                shimmer,
 
-        Animated.timing(
-          breathing,
+                {
 
-          {
+                  toValue: 1,
 
-            toValue: 0,
+                  duration:
 
-            duration: 5200,
+                    1200 +
 
-            easing:
-              Easing.inOut(
-                Easing.sin
+                    (
+                      index * 240
+                    ),
+
+                  easing:
+                    Easing.inOut(
+                      Easing.sin
+                    ),
+
+                  useNativeDriver: true,
+                }
               ),
 
-            useNativeDriver: true,
-          }
-        ),
-      ])
+              Animated.timing(
+                shimmer,
 
-    ).start();
+                {
+
+                  toValue: 0,
+
+                  duration:
+
+                    1800 +
+
+                    (
+                      index * 340
+                    ),
+
+                  easing:
+                    Easing.inOut(
+                      Easing.sin
+                    ),
+
+                  useNativeDriver: true,
+                }
+              ),
+            ])
+          )
+      );
+
+    const shimmerField =
+
+      Animated.parallel(
+        animations
+      );
+
+    shimmerField.start();
+
+    return () => {
+
+      shimmerField.stop();
+    };
 
   }, []);
 
   /*
    * --------------------------------------------------------
-   * 🌌 FIELD GLOW
+   * 🌌 STAR DRIFT FIELD
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    const loops =
+
+      starDrifts.map(
+
+        (
+          drift,
+          index
+        ) => {
+
+          const distance =
+
+            22 +
+
+            (
+              index * 4
+            );
+
+const duration =
+
+  18000 +
+
+  (
+    index * 2400
+  );
+
+          return Animated.loop(
+
+            Animated.sequence([
+
+              Animated.parallel([
+
+                Animated.timing(
+                  drift.x,
+
+                  {
+
+                    toValue:
+                      distance,
+
+                    duration,
+
+                    easing:
+                      Easing.inOut(
+                        Easing.sin
+                      ),
+
+                    useNativeDriver: true,
+                  }
+                ),
+
+                Animated.timing(
+                  drift.y,
+
+                  {
+
+                    toValue:
+                      -distance,
+
+                    duration,
+
+                    easing:
+                      Easing.inOut(
+                        Easing.sin
+                      ),
+
+                    useNativeDriver: true,
+                  }
+                ),
+              ]),
+
+              Animated.parallel([
+
+                Animated.timing(
+                  drift.x,
+
+                  {
+
+                    toValue:
+                      -distance,
+
+                    duration,
+
+                    easing:
+                      Easing.inOut(
+                        Easing.sin
+                      ),
+
+                    useNativeDriver: true,
+                  }
+                ),
+
+                Animated.timing(
+                  drift.y,
+
+                  {
+
+                    toValue:
+                      distance,
+
+                    duration,
+
+                    easing:
+                      Easing.inOut(
+                        Easing.sin
+                      ),
+
+                    useNativeDriver: true,
+                  }
+                ),
+              ]),
+            ])
+          );
+        }
+      );
+
+    const field =
+      Animated.parallel(
+        loops
+      );
+
+    field.start();
+
+    return () => {
+
+      field.stop();
+    };
+
+  }, []);
+
+  /*
+   * --------------------------------------------------------
+   * 🌫️ FIELD GLOW
    * --------------------------------------------------------
    */
 
@@ -215,14 +709,23 @@ export default function DivineOrchestrationOverlay({
 
       inputRange: [0, 1],
 
-      outputRange:
+      outputRange: [
 
         atmosphere ===
-        "symbolic"
+        "quiet"
 
-          ? [0.04, 0.12]
+          ? 0
 
-          : [0.02, 0.07],
+          : 0.02,
+
+        profile.glowMax
+        * fieldIntensity
+        * (
+          isTyping
+            ? 0.6
+            : 1
+        ),
+      ],
     });
 
   /*
@@ -237,7 +740,12 @@ export default function DivineOrchestrationOverlay({
 
       inputRange: [0, 1],
 
-      outputRange: [-2, 2],
+      outputRange: [
+
+        -profile.drift,
+
+        profile.drift,
+      ],
     });
 
   /*
@@ -251,19 +759,14 @@ export default function DivineOrchestrationOverlay({
     <View
       style={{
 
-        height: 280,
+        height: 270,
 
         position: "relative",
 
         overflow: "hidden",
 
-        borderBottomWidth: 1,
-
-        borderBottomColor:
-          Colors.border,
-
         backgroundColor:
-          Colors.background,
+          "black",
       }}
     >
 
@@ -276,21 +779,22 @@ export default function DivineOrchestrationOverlay({
 
           position: "absolute",
 
-          top: -80,
-          left: -40,
+          top: -120,
+          left: -20,
 
-          width: 360,
-          height: 360,
+          width: 460,
+          height: 460,
 
           borderRadius: 999,
 
           backgroundColor:
-            Colors.fieldGlow,
+            "black",
 
           opacity:
             glowOpacity,
 
           transform: [
+
             {
               scale:
 
@@ -299,7 +803,7 @@ export default function DivineOrchestrationOverlay({
                   inputRange: [0, 1],
 
                   outputRange:
-                    [0.96, 1.06],
+                    [0.94, 1.08],
                 }),
             },
           ],
@@ -310,7 +814,10 @@ export default function DivineOrchestrationOverlay({
       {/* ✨ STAR FIELD */}
       {/* ------------------------------------------------ */}
 
-      {stars.map((star) => (
+      {stars.map((
+        star,
+        index
+      ) => (
 
         <Animated.View
           key={star.id}
@@ -331,23 +838,106 @@ export default function DivineOrchestrationOverlay({
             borderRadius: 999,
 
             backgroundColor:
+              Colors.starBright,
 
-              `rgba(255,255,255,${
-                starOpacity
-                * star.depth
-              })`,
+            opacity:
+
+              starShimmers[
+                index
+              ].interpolate({
+
+                inputRange: [0, 1],
+
+                outputRange: [
+
+                  (
+                    starOpacity
+                    * star.depth
+                  ),
+
+                  (
+                    (
+                      starOpacity
+                      * star.depth
+                    )
+
+                    +
+
+                    profile.shimmerBoost
+                  ),
+                ],
+              }),
 
             transform: [
 
               {
-                translateY:
+                translateX:
 
                   Animated.multiply(
 
-                    starDrift,
+                    starDrifts[
+                      index
+                    ].x,
 
-                    star.depth
+                    Math.max(
+                      star.depth,
+                      0.35
+                    )
                   ),
+              },
+
+              {
+                translateY:
+
+                  Animated.add(
+
+                    Animated.multiply(
+
+                      starDrifts[
+                        index
+                      ].y,
+
+                      Math.max(
+                        star.depth,
+                        0.35
+                      )
+                    ),
+
+                    Animated.multiply(
+
+                      starDrift,
+
+                      star.depth
+                    )
+                  ),
+              },
+
+              {
+  rotate: starShimmers[
+    index
+  ].interpolate({
+
+    inputRange: [0, 1],
+
+    outputRange: [
+      "0deg",
+      "8deg",
+    ],
+  }),
+},
+
+              {
+                scale:
+
+                  starShimmers[
+                    index
+                  ].interpolate({
+
+                    inputRange: [0, 1],
+
+                    outputRange:
+                      [1, 1.45],
+                  }),
               },
             ],
           }}
@@ -356,13 +946,14 @@ export default function DivineOrchestrationOverlay({
       ))}
 
       {/* ------------------------------------------------ */}
-      {/* 🌊 FLOATING FIELD */}
+      {/* 🌊 FLOATING WHISPERS */}
       {/* ------------------------------------------------ */}
 
       {showWhispers && (
 
         <View
           style={{
+
             position: "absolute",
 
             width: "100%",
@@ -371,16 +962,21 @@ export default function DivineOrchestrationOverlay({
         >
 
           <FloatingWhispers
-            whispers={
-              field.whispers
-            }
+
+whispers={
+  activeWhispers
+}
 
             intensity={
               fieldIntensity
             }
 
-            atmosphere={
-              atmosphere
+            guide={
+              foregroundGuide
+            }
+
+            nervousSystem={
+              nervousSystem
             }
           />
 
@@ -396,29 +992,41 @@ export default function DivineOrchestrationOverlay({
         <View
           style={{
 
-            flex: 1,
+            position: "absolute",
 
-            justifyContent: "center",
-
-            alignItems: "center",
-
-            paddingTop: 18,
+            width: "100%",
+            height: "100%",
 
             zIndex: 20,
+
+            pointerEvents: "none",
           }}
         >
 
           <OrchestrationFragments
-            fragments={
-              field.fragments
+
+            sequence={
+
+              field
+                ?.fragmentSequence
             }
 
-            atmosphere={
-              atmosphere
-            }
+            onForegroundGuideChange={
+  onForegroundGuideChange
+}
 
             intensity={
               fieldIntensity
+            }
+
+            pacing={
+              field?.pacing
+            }
+
+            silenceWindow={
+
+              field
+                ?.silenceWindow
             }
           />
 

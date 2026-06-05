@@ -58,6 +58,10 @@ import {
   useMirrorStore,
 } from "../../stores/mirrorStore";
 
+import {
+  buildGuidanceWhispers,
+} from "../../lib/guidance/orchestration/buildGuidanceWhispers";
+
 // --------------------------------------------------
 // 🪞 MIRROR
 // --------------------------------------------------
@@ -71,6 +75,18 @@ export default function Mirror() {
    */
 
   const {
+
+    dailyField:
+  globalDailyField,
+
+cosmic:
+  globalCosmic,
+
+language:
+  globalLanguage,
+
+languageContext:
+  globalLanguageContext,
 
     setUserContext:
       setGlobalUserContext,
@@ -95,6 +111,8 @@ export default function Mirror() {
 
     setReady:
       setGlobalReady,
+
+      setPreloadedWhispers,
 
   } = useMirrorStore();
 
@@ -138,6 +156,61 @@ export default function Mirror() {
     chakraContent,
     setChakraContent,
   ] = useState<any>({});
+
+  /*
+ * --------------------------------------------------
+ * 🌌 HYDRATE FROM PRELOAD
+ * --------------------------------------------------
+ */
+
+useEffect(() => {
+
+  if (
+    globalDailyField
+  ) {
+
+    setDailyField(
+      globalDailyField
+    );
+  }
+
+  if (
+    globalCosmic
+  ) {
+
+    setCosmic(
+      globalCosmic
+    );
+  }
+
+  if (
+    globalLanguage
+  ) {
+
+    setLanguage(
+      globalLanguage
+    );
+  }
+
+  if (
+    globalLanguageContext
+  ) {
+
+    setLanguageContext(
+      globalLanguageContext
+    );
+  }
+
+}, [
+
+  globalDailyField,
+
+  globalCosmic,
+
+  globalLanguage,
+
+  globalLanguageContext,
+]);
 
   // --------------------------------------------------
   // 🌍 LANGUAGE
@@ -485,6 +558,49 @@ distortions:
 
     setGlobalMirrorContext(
   context
+);
+
+/* -------------------------------------------------- */
+/* 🌌 PRELOAD WHISPERS                               */
+/* -------------------------------------------------- */
+
+const whispers =
+
+  buildGuidanceWhispers({
+
+    mirrorContext:
+      context,
+
+    cosmicContext:
+      cosmic,
+
+    activePatterns:
+
+      userContext
+        ?.enrichedPatterns || [],
+
+    activeChakras:
+
+      userContext
+        ?.energy
+        ?.activeChakras || [],
+
+    manifestations:
+
+      userContext
+        ?.manifestations || [],
+
+    emergenceMemory:
+      userContext
+        ?.emergenceMemory || {},
+
+    resolvedContent: {
+      whispers: [],
+    },
+  });
+
+setPreloadedWhispers(
+  whispers
 );
 
 setGlobalReady(

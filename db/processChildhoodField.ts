@@ -2,7 +2,7 @@
 // 🧒 PROCESS CHILDHOOD FIELD
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -219,7 +219,12 @@ ${
       // 🚀 PROCESS REFLECTION
       // --------------------------------------------------
 
-      await processReflection({
+const { data, error } =
+
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
         userId,
 
@@ -236,8 +241,8 @@ ${
           reflectionText,
 
         childhoodSignals: {
-  [key]: 1,
-},
+          [key]: 1,
+        },
 
         metadata: {
 
@@ -247,8 +252,8 @@ ${
           processing_layer:
             "you.childhood",
 
-            batch_id:
-    batchId,  
+          batch_id:
+            batchId,
 
           generated_from:
             "childhood_field",
@@ -256,7 +261,24 @@ ${
           generated_at:
             new Date().toISOString(),
         },
-      });
+      },
+    }
+  );
+
+if (error) {
+
+  console.error(
+    "❌ Childhood processing error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Childhood processed",
+    data
+  );
+}
     }
 
     // --------------------------------------------------

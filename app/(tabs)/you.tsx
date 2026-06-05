@@ -916,46 +916,6 @@ backgroundColor:
       }}
     >
 
-{/* ✦ SAVE */}
-<TouchableOpacity
-  onPress={handleSave}
-disabled={
-  !hasChanges || saving
-}
-  style={{
-    position: "absolute",
-    top: 60,
-    right: 24,
-    zIndex: 10,
-
-    opacity:
-  saving
-    ? 0.35
-    : 1,
-  }}
->
-
-  <Text
-    style={{
-color:
-
-  saving
-
-    ? Colors.subtleText
-
-    : hasChanges
-
-      ? Colors.white
-
-      : Colors.subtleText,
-      fontSize: 18,
-    }}
-  >
-    ✦
-  </Text>
-
-</TouchableOpacity>
-
       <TouchableOpacity
         activeOpacity={1}
         onPress={
@@ -1088,13 +1048,60 @@ color:
 
           </TouchableOpacity>
 
+          {/* ✦ SAVE */}
+
+<TouchableOpacity
+  onPress={handleSave}
+
+  disabled={
+    !hasChanges || saving
+  }
+
+  style={{
+
+    marginTop: 12,
+
+    opacity:
+
+      saving
+        ? 0.35
+        : 1,
+  }}
+>
+
+  <Text
+    style={{
+
+      color:
+
+        saving
+
+          ? Colors.subtleText
+
+          : hasChanges
+
+            ? Colors.white
+
+            : Colors.subtleText,
+
+      fontSize: 24,
+
+      textAlign:
+        "center",
+    }}
+  >
+    ✦
+  </Text>
+
+</TouchableOpacity>
+
         </View>
 
         {/* TEXT */}
         <View
           style={{
             paddingHorizontal: 20,
-            marginBottom: 10,
+            marginBottom: 2,
           }}
         >
 
@@ -1110,7 +1117,7 @@ placeholderTextColor={
             textAlignVertical="top"
             style={{
 color:
-  Colors.white,
+  Colors.softText,
               minHeight: 70,
               textAlign: "center",
               lineHeight: 22,
@@ -1138,7 +1145,7 @@ placeholderTextColor={
             textAlignVertical="top"
             style={{
 color:
-  Colors.white,
+  Colors.softText,
               textAlign: "center",
               lineHeight: 22,
               backgroundColor:
@@ -1160,8 +1167,9 @@ paddingVertical: 10,
             flexDirection: "row",
             justifyContent: "center",
             gap: 20,
-            marginTop: 15,
+            marginTop: 10,
             marginBottom: 20,
+            opacity: 0.82,
           }}
         >
           {(Object.keys(guideNames) as (keyof typeof guideNames)[]).map((key) => (
@@ -1190,7 +1198,7 @@ style={{
   borderRadius: 12,
 
   backgroundColor:
-    "rgba(255,255,255,0.008)",
+"rgba(255,255,255,0.02)",
 }}
             />
           ))}
@@ -1286,7 +1294,7 @@ color:
                       step={0.01}
                       minimumTrackTintColor="rgba(255,255,255,0.25)"
                       maximumTrackTintColor="rgba(255,255,255,0.12)"
-                      thumbTintColor="white"
+                      thumbTintColor="rgba(255,255,255,0.82)"
                     />
 
                   </View>
@@ -1360,10 +1368,10 @@ style={{
       : Colors.mutedText,
 
   opacity:
-    active ? 1 : 0.55,
+  active ? 0.82 : 0.42,
 
   fontWeight:
-    active ? "500" : "300",
+    active ? "400" : "300",
 
   margin: 6,
 }}
@@ -1482,7 +1490,7 @@ onPress={() => {
 
           color:
             active
-              ? Colors.white
+              ? Colors.softText
               : Colors.mutedText,
 
           opacity:
@@ -1543,7 +1551,7 @@ onPress={() => {
 
           color:
             active
-              ? Colors.white
+              ? Colors.softText
               : Colors.mutedText,
 
           opacity:

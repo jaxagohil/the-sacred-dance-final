@@ -25,6 +25,7 @@ import {
 
 import {
   Colors,
+  Fonts,
 } from "../../constants/theme";
 
 import {
@@ -1160,36 +1161,37 @@ const styles =
 
       marginTop: 20,
 
-      paddingHorizontal: 40,
+      paddingHorizontal: 20,
 
       paddingVertical: 10,
 
       paddingBottom: 20,
 
-      maxWidth: 280,
+      maxWidth: 320,
 
       textAlign:
         "center",
 
       color:
-        "rgba(255,255,255,0.84)",
+        "rgba(255, 230, 180, 0.88)",
 
-      lineHeight: 20,
+fontFamily:
+  Fonts.orchestration,
 
-      fontSize: 15,
+lineHeight: 38,
 
-      fontWeight: "300",
+fontSize: 20,
 
-      letterSpacing: 0.1,
+letterSpacing: 0,
 
-      backgroundColor:
-        "rgba(255,255,255,0.02)",
+backgroundColor:
+  "rgba(255,255,255,0.012)",
 
       borderRadius: 28,
 
       borderWidth: 1,
 
-      borderColor:
-        "rgba(255,255,255,0.04)",
+borderColor:
+  "rgba(255,255,255,0.02)",
     },
   });

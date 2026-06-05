@@ -16,8 +16,8 @@ import {
 } from "expo-router";
 
 import {
-  addLanguage,
-} from "../lib/i18n/addLanguage";
+  supabase,
+} from "../services/supabase";
 
 // --------------------------------------------------
 // 🌌 CREATOR SCREEN
@@ -361,14 +361,37 @@ export default function CreatorScreen() {
                   `🌍 Generating ${code}`
                 );
 
-                await addLanguage({
+try {
 
-                  language: code,
-                });
+const {
+  data,
+  error,
+} = await supabase.functions.invoke(
+  "add-language",
+  {
+    body: {
+      language: code,
+    },
+  }
+);
 
-                console.log(
-                  `✅ ${code} generated`
-                );
+  console.log(
+    "DATA:",
+    data
+  );
+
+  console.log(
+    "ERROR:",
+    error
+  );
+
+} catch (err) {
+
+  console.log(
+    "FUNCTION CRASH:",
+    err
+  );
+}
               }}
             >
 

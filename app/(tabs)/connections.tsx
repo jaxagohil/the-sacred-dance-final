@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     color:
       Colors.diamond,
 
-fontSize: 22,
+fontSize: 24,
 opacity: 0.82
   },
 

@@ -8,6 +8,15 @@ import {
 
 /*
  * ---------------------------------------------------------
+ * 🔒 GENERATION LOCK
+ * ---------------------------------------------------------
+ */
+
+let generatingPromise:
+  Promise<any> | null = null;
+
+/*
+ * ---------------------------------------------------------
  * 🌌 GET DAILY COSMIC MESSAGE
  * ---------------------------------------------------------
  */
@@ -105,21 +114,53 @@ export async function getDailyCosmicMessage({
    * -------------------------------------------------------
    */
 
+/*
+ * -------------------------------------------------------
+ * 🔒 PREVENT DUPLICATE GENERATION
+ * -------------------------------------------------------
+ */
+
+if (generatingPromise) {
+
   console.log(
-    "🌙 Generating cosmic message:",
-    currentLanguage
+    "🌌 Waiting for existing cosmic generation"
   );
 
-  const cosmicMessage =
-    await getCosmicMessage({
+  return generatingPromise;
+}
 
-      dailyField,
+console.log(
+  "🌙 Generating cosmic message:",
+  currentLanguage
+);
 
-      language:
-        currentLanguage,
+/*
+ * -------------------------------------------------------
+ * 🌙 GENERATE
+ * -------------------------------------------------------
+ */
 
-      languageContext,
-    });
+generatingPromise =
+  getCosmicMessage({
+
+    dailyField,
+
+    language:
+      currentLanguage,
+
+    languageContext,
+  });
+
+const cosmicMessage =
+  await generatingPromise;
+
+/*
+ * -------------------------------------------------------
+ * 🔓 CLEAR LOCK
+ * -------------------------------------------------------
+ */
+
+generatingPromise = null;
 
   /*
    * -------------------------------------------------------

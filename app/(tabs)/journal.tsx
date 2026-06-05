@@ -443,59 +443,6 @@ setAudioUri(
       behavior={undefined}
     >
 
-      {/* ✦ SAVE */}
-
-      <TouchableOpacity
-
-        onPress={handleRelease}
-
-        disabled={!hasContent}
-
-        style={{
-          position: "absolute",
-
-          top: 60,
-
-          right: 24,
-
-          zIndex: 10,
-        }}
-      >
-
-        <Text
-          style={{
-
-            color:
-
-              saving
-
-                ? Colors.mutedText
-
-                : hasContent
-
-                  ? Colors.white
-
-                  : Colors.subtleText,
-
-            fontFamily:
-              Fonts.light,
-
-            fontSize: 24,
-
-            opacity:
-
-              hasContent
-
-                ? 0.92
-
-                : 0.28,
-          }}
-        >
-          ✦
-        </Text>
-
-      </TouchableOpacity>
-
       {/* 🌊 MAIN */}
 
       <Pressable
@@ -510,71 +457,7 @@ setAudioUri(
         }}
       >
 
-        {/* 📷 🎤 */}
-
-        <View
-          style={{
-            position: "absolute",
-
-            top: 80,
-
-            left: 30,
-
-            flexDirection:
-              "row",
-
-            gap: 18,
-
-            opacity:
-              Opacity.medium,
-          }}
-        >
-
-<TouchableOpacity
-  onPress={
-    handleImage
-  }
->
-
-            <Text
-              style={{
-                color:
-                  Colors.mutedText,
-
-                fontSize: 18,
-              }}
-            >
-              📷
-            </Text>
-
-          </TouchableOpacity>
-
-<TouchableOpacity
-  onPress={
-    handleVoice
-  }
->
-
-            <Text
-              style={{
-                color:
-                  Colors.mutedText,
-
-                fontSize: 18,
-              }}
-            >
-{
-  recording
-    ? "⏺"
-    : "🎤"
-}
-            </Text>
-
-          </TouchableOpacity>
-
-        </View>
-
-        {/* ✍️ WRITING */}
+ {/* ✍️ WRITING */}
 
 <View
   style={{
@@ -582,60 +465,206 @@ setAudioUri(
 
     top: 120,
 
-    left: 30,
+    width: "100%",
 
-    right: 30,
+    paddingHorizontal: 32,
 
     maxHeight:
-      height * 0.35,
+      height * 0.25,
+
+    alignItems:
+      "center",
   }}
 >
 
-          <TextInput
+  <TextInput
 
-            value={text}
+    value={text}
 
-            onChangeText={
-              handleTyping
-            }
+    onChangeText={
+      handleTyping
+    }
 
-            placeholder={t("journal.placeholder")}
+    placeholder={t("journal.placeholder")}
 
-            placeholderTextColor={
-              Colors.subtleText
-            }
+    placeholderTextColor={
+      Colors.subtleText
+    }
 
-            multiline
+    multiline
 
-            autoFocus={false}
+    autoFocus={false}
 
-            returnKeyType="done"
+    returnKeyType="done"
 
-            onSubmitEditing={() =>
-              Keyboard.dismiss()
-            }
+    onSubmitEditing={() =>
+      Keyboard.dismiss()
+    }
 
-style={{
+    style={{
 
-  color:
-    Colors.softText,
+      color:
+        Colors.softText,
 
-  fontFamily:
-    Fonts.light,
+      fontFamily:
+        Fonts.light,
 
-  fontSize: 16,
+      fontSize: 16,
 
-  lineHeight: 20,
+      lineHeight: 28,
 
-  paddingHorizontal:
-    Spacing.sm,
+      paddingHorizontal:
+        Spacing.sm,
 
-  textAlignVertical:
-    "top",
-}}
-          />
+      textAlignVertical:
+        "top",
 
-        </View>
+      textAlign:
+        "center",
+
+      maxWidth: 340,
+
+      width: "100%",
+
+      maxHeight:
+        height * 0.32,
+    }}
+  />
+
+</View>
+
+        {/* 🌌 CENTER ACTIONS */}
+
+<View
+  style={{
+
+    position: "absolute",
+
+    top: 340,
+
+    left: 0,
+    right: 0,
+
+    alignItems:
+      "center",
+  }}
+>
+
+  {/* 📷 🎤 */}
+
+  <View
+    style={{
+
+      flexDirection: "row",
+
+      alignItems: "center",
+
+      gap: 24,
+
+      marginBottom: 18,
+
+      opacity: 0.72,
+    }}
+  >
+
+    <TouchableOpacity
+      onPress={
+        handleImage
+      }
+    >
+
+      <Text
+        style={{
+
+          color:
+            Colors.mutedText,
+
+          fontSize: 20,
+        }}
+      >
+        📷
+      </Text>
+
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      onPress={
+        handleVoice
+      }
+    >
+
+      <Text
+        style={{
+
+          color:
+
+            recording
+
+              ? Colors.white
+
+              : Colors.mutedText,
+
+          fontSize: 20,
+        }}
+      >
+        {
+
+          recording
+            ? "⏺"
+            : "🎤"
+        }
+      </Text>
+
+    </TouchableOpacity>
+
+  </View>
+
+  {/* ✦ */}
+
+  <TouchableOpacity
+
+    onPress={
+      handleRelease
+    }
+
+    disabled={
+      !hasContent
+    }
+  >
+
+    <Text
+      style={{
+
+        color:
+
+          saving
+
+            ? Colors.mutedText
+
+            : hasContent
+
+              ? Colors.white
+
+              : Colors.subtleText,
+
+        fontFamily:
+          Fonts.light,
+
+        fontSize: 24,
+
+        opacity:
+
+          hasContent
+            ? 0.92
+            : 0.24,
+      }}
+    >
+      ✦
+    </Text>
+
+  </TouchableOpacity>
+
+</View>
 
         {/* 🌿 EMOTION CLOUD */}
 
@@ -694,7 +723,7 @@ style={{
               fontFamily:
                 Fonts.light,
 
-              fontSize: 12,
+              fontSize: 10,
             }}
           >
             held

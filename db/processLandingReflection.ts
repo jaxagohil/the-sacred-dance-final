@@ -2,7 +2,7 @@
 // 🌊 PROCESS LANDING REFLECTION
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -192,70 +192,91 @@ ${nervousSystem || "unknown"}
     // 🚀 PROCESS
     // --------------------------------------------------
 
-    await processReflection({
+    const { data, error } =
 
-      userId,
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
-      language,
+        userId,
 
-      source:
-        "landing",
+        language,
 
-      baselineType:
-        "reflection",
+        source:
+          "landing",
 
-      signalDepth,
+        baselineType:
+          "reflection",
 
-      text:
-        reflectionText,
+        signalDepth,
 
-      emotions,
+        text:
+          reflectionText,
 
-      metadata: {
+        emotions,
 
-        batch_id:
-          batchId,
+        metadata: {
 
-        processing_layer:
-          "landing.reflection",
+          batch_id:
+            batchId,
 
-        generated_from:
-          "landing_screen",
+          processing_layer:
+            "landing.reflection",
 
-        generated_at:
-          new Date().toISOString(),
+          generated_from:
+            "landing_screen",
 
-        modalities,
+          generated_at:
+            new Date().toISOString(),
 
-        modality_count:
-          modalityCount,
+          modalities,
 
-        observable_scenes:
-          observableScenes,
+          modality_count:
+            modalityCount,
 
-        body_responses:
-          bodyResponses,
+          observable_scenes:
+            observableScenes,
 
-        coping_strategies:
-          copingStrategies,
+          body_responses:
+            bodyResponses,
 
-        manifestations,
+          coping_strategies:
+            copingStrategies,
 
-        nervous_system:
-          nervousSystem,
+          manifestations,
 
-        image_present:
-          Boolean(
-            imageBase64
-          ),
+          nervous_system:
+            nervousSystem,
 
-        voice_present:
-          Boolean(
-            audioUri
-          ),
+          image_present:
+            Boolean(
+              imageBase64
+            ),
+
+          voice_present:
+            Boolean(
+              audioUri
+            ),
+        },
       },
-    });
+    }
+  );
 
+if (error) {
+
+  console.error(
+    "❌ Landing reflection error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Landing reflection processed",
+    data
+  );
+}
     // --------------------------------------------------
     // ✅ DONE
     // --------------------------------------------------

@@ -155,6 +155,30 @@ Humans may move between:
 - expansion and contraction
 - certainty and uncertainty
 
+Repeated lived experience
+may gradually shape
+the energetic field.
+
+Some mirrors may reflect:
+- increased receptivity
+- emotional openness
+- protection
+- inward movement
+- outward force
+- emotional saturation
+- softening
+- guardedness
+- nervous system expansion
+- contraction around connection or expression
+
+The mirror should notice:
+how people,
+places,
+or things
+may be reflecting
+the user's current energetic movement
+back to them through lived experience.
+
 The mirror notices:
 movement between poles,
 not permanent identity.
@@ -320,6 +344,7 @@ The mirror should notice:
 when awareness appears to be evolving,
 softening,
 or becoming more conscious.
+
 
 --------------------------------------------------
 FIELD ATMOSPHERE

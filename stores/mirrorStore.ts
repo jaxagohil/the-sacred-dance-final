@@ -22,24 +22,38 @@ import { create } from "zustand";
 interface MirrorStore {
 
   /*
-   * --------------------------------------------------------
-   * 🌊 CORE FIELD
-   * --------------------------------------------------------
-   */
+ * --------------------------------------------------------
+ * 🌍 FOUNDATIONAL FIELD
+ * --------------------------------------------------------
+ */
+
+dailyField: any;
+
+cosmic: any;
+
+language: string | null;
+
+languageContext: any;
+
+/*
+ * --------------------------------------------------------
+ * 🌊 LIVING FIELD
+ * --------------------------------------------------------
+ */
 
   userContext: any;
 
   mirrorContext: any;
 
-  cosmic: any;
-
-  dailyField: any;
-
-  language: string | null;
-
-  languageContext: any;
-
   activeLens: string | null;
+
+  contextVersion: number;
+
+lastSignalTimestamp:
+  number | null;
+
+  preloadedWhispers:
+  any[];
 
   /*
    * --------------------------------------------------------
@@ -76,8 +90,21 @@ interface MirrorStore {
   setActiveLens:
     (lens: string) => void;
 
+  setContextVersion:
+  (version: number) => void;
+
+setLastSignalTimestamp:
+  (timestamp: number) => void;
+
+  setPreloadedWhispers:
+  (whispers: any[]) => void;
+
+markFieldUpdated:
+  () => void;  
+
   setReady:
     (ready: boolean) => void;
+    
 
   /*
    * --------------------------------------------------------
@@ -120,6 +147,14 @@ export const useMirrorStore =
       languageContext: null,
 
       activeLens: null,
+
+      contextVersion: 1,
+
+lastSignalTimestamp:
+  null,
+
+  preloadedWhispers:
+  [],
 
       ready: false,
 
@@ -195,6 +230,50 @@ export const useMirrorStore =
               lens,
           }),
 
+          setContextVersion:
+
+  (version) =>
+
+    set({
+
+      contextVersion:
+        version,
+    }),
+
+setLastSignalTimestamp:
+
+  (timestamp) =>
+
+    set({
+
+      lastSignalTimestamp:
+        timestamp,
+    }),
+
+setPreloadedWhispers:
+
+  (whispers) =>
+
+    set({
+
+      preloadedWhispers:
+        whispers,
+    }),
+
+markFieldUpdated:
+
+  () =>
+
+    set((state) => ({
+
+      contextVersion:
+
+        state.contextVersion + 1,
+
+      lastSignalTimestamp:
+        Date.now(),
+    })),
+
       setReady:
 
         (ready) =>
@@ -226,6 +305,14 @@ export const useMirrorStore =
           languageContext: null,
 
           activeLens: null,
+
+          contextVersion: 1,
+
+lastSignalTimestamp:
+  null,
+
+  preloadedWhispers:
+  [],
 
           ready: false,
         }),

@@ -143,6 +143,9 @@ export async function getCosmicMessage({
         symbolicThemes:
           dailyField?.symbolicThemes,
 
+        fieldEssence:
+  dailyField?.fieldEssence,  
+
         /*
          * ---------------------------------------------------
          * 🃏 ORACLE
@@ -166,6 +169,11 @@ export async function getCosmicMessage({
       },
     });
 
+
+    console.log(
+  "🌌 AI PAYLOAD:",
+  aiPayload
+);
   /*
    * ---------------------------------------------------------
    * 🌌 RETURN
@@ -205,6 +213,58 @@ export async function getCosmicMessage({
       aiPayload?.energyLine ||
 
       interpretation.energyLine,
+
+    moon: {
+
+  sign:
+    cosmic?.moon_sign,
+
+  phase:
+    cosmic?.moon_phase,
+
+  line:
+
+    aiPayload?.moonLine ||
+
+    interpretation.moonLine,
+},
+
+phase: {
+
+  type:
+    interpretation.phaseType,
+
+  line:
+
+    aiPayload?.phaseLine ||
+
+    interpretation.phaseLine,
+},
+
+sun: {
+
+  sign:
+    cosmic?.sun_sign,
+
+  line:
+
+    aiPayload?.sunLine ||
+
+    interpretation.sunLine,
+},
+
+energy: {
+
+  dominant:
+    dailyField
+      ?.dominantEnergy,
+
+  line:
+
+    aiPayload?.energyLine ||
+
+    interpretation.energyLine,
+},  
 
     /*
      * -------------------------------------------------------

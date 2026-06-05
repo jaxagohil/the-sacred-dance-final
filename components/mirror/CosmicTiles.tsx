@@ -145,8 +145,12 @@ export default function CosmicTiles({
   // 🌌 COSMIC DATA
   //
 
-  const cosmicData =
-    cosmic.cosmic;
+const cosmicData =
+
+  cosmic?.dailyField
+    ?.cosmic || {};
+
+  console.log(cosmic);  
 
   //
   // ✨ TILES
@@ -160,8 +164,9 @@ export default function CosmicTiles({
       value:
         cosmicData?.moon_sign || "",
 
-      line:
-        cosmic.moonLine,
+line:
+  cosmic?.moon?.line ||
+  cosmic?.moonLine,
 
       icon: "🌙",
     },
@@ -172,8 +177,9 @@ export default function CosmicTiles({
       value:
         cosmicData?.moon_phase || "",
 
-      line:
-        cosmic.phaseLine,
+line:
+  cosmic?.phase?.line ||
+  cosmic?.phaseLine,
 
       icon:
         getPhaseIcon(
@@ -184,42 +190,43 @@ export default function CosmicTiles({
 {
   key: "energy",
 
-value:
-  (
+  value:
     (
-      cosmic?.dailyField
-        ?.dominantEnergy ||
+      (
+        cosmic?.dailyField
+          ?.dominantEnergy ||
 
-      "Energy"
+        "Energy"
+      )
+
+      .split(" ")[0]
     )
 
-    .split(" ")[0]
-  )
+      .charAt(0)
 
-    .charAt(0)
+      .toUpperCase()
 
-    .toUpperCase()
+    +
 
-  +
-
-  (
     (
-      cosmic?.dailyField
-        ?.dominantEnergy ||
+      (
+        cosmic?.dailyField
+          ?.dominantEnergy ||
 
-      "Energy"
+        "Energy"
+      )
+
+      .split(" ")[0]
     )
 
-    .split(" ")[0]
-  )
+      .slice(1),
 
-    .slice(1),
+  line:
+    cosmic?.energy?.line ||
+    cosmic?.energyLine,
 
-      line:
-        cosmic.energyLine,
-
-      icon: "✨",
-    },
+  icon: "✨",
+},
 
     {
       key: "sun",
@@ -227,8 +234,9 @@ value:
       value:
         cosmicData?.sun_sign || "",
 
-      line:
-        cosmic.sunLine,
+line:
+  cosmic?.sun?.line ||
+  cosmic?.sunLine,
 
       icon: "☀️",
     },
@@ -260,9 +268,17 @@ value:
 
 <View style={styles.valueWrapper}>
 
-  <Text style={styles.value}>
-    {t.value}
-  </Text>
+<Text
+
+  style={styles.value}
+
+  numberOfLines={2}
+
+>
+
+  {t.value}
+
+</Text>
 
 </View>
 
@@ -286,11 +302,13 @@ const styles =
 
  valueWrapper: {
 
-  height: 20,
+  minHeight: 28,
 
   justifyContent: "center",
 
   alignItems: "center",
+
+  paddingHorizontal: 4,
 },   
 
   wrapper: {

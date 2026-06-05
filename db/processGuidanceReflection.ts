@@ -2,7 +2,7 @@
 // 🌊 PROCESS GUIDANCE REFLECTION
 // --------------------------------------------------
 
-import { processReflection } from "./flow";
+import { supabase } from "../services/supabase";
 
 // --------------------------------------------------
 // TYPES
@@ -222,66 +222,88 @@ The reflection should avoid:
     // 🚀 PROCESS
     // --------------------------------------------------
 
-    await processReflection({
+    const { data, error } =
 
-      userId,
+  await supabase.functions.invoke(
+    "process-reflection",
+    {
+      body: {
 
-      language,
+        userId,
 
-      source:
-        "guidance",
+        language,
 
-      baselineType:
-        "guidance_relational",
+        source:
+          "guidance",
 
-      signalDepth,
+        baselineType:
+          "guidance_relational",
 
-      text:
-        reflectionText,
+        signalDepth,
 
-      metadata: {
+        text:
+          reflectionText,
 
-        batch_id:
-          batchId,
+        metadata: {
 
-        processing_layer:
-          "guidance.relational",
+          batch_id:
+            batchId,
 
-        generated_from:
-          "guidance_screen",
+          processing_layer:
+            "guidance.relational",
 
-        generated_at:
-          new Date().toISOString(),
+          generated_from:
+            "guidance_screen",
 
-        guide,
+          generated_at:
+            new Date().toISOString(),
 
-        active_guide_name:
-          activeGuideName,
+          guide,
 
-        conversation_length:
-          conversationLength,
+          active_guide_name:
+            activeGuideName,
 
-        dominant_patterns:
-          dominantPatterns,
+          conversation_length:
+            conversationLength,
 
-        nervous_system:
+          dominant_patterns:
+            dominantPatterns,
 
-          fieldContext
-            ?.realityLayers
-            ?.physical
-            ?.nervousSystemState ||
+          nervous_system:
 
-          null,
+            fieldContext
+              ?.realityLayers
+              ?.physical
+              ?.nervousSystemState ||
 
-        dominant_chakra:
+            null,
 
-          fieldContext
-            ?.energy
-            ?.dominantChakra ||
+          dominant_chakra:
 
-          null,
+            fieldContext
+              ?.energy
+              ?.dominantChakra ||
+
+            null,
+        },
       },
-    });
+    }
+  );
+
+if (error) {
+
+  console.error(
+    "❌ Guidance processing error",
+    error
+  );
+
+} else {
+
+  console.log(
+    "✅ Guidance processed",
+    data
+  );
+}
 
     // --------------------------------------------------
     // ✅ DONE

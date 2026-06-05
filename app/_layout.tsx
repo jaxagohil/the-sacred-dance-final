@@ -37,6 +37,11 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 
+import {
+  CormorantGaramond_300Light_Italic,
+} from "@expo-google-fonts/cormorant-garamond";
+
+
 export default function RootLayout() {
 
   const colorScheme =
@@ -56,6 +61,7 @@ export default function RootLayout() {
     Inter_300Light,
     Inter_400Regular,
     Inter_500Medium,
+    CormorantGaramond_300Light_Italic,
   });
 
 if (!fontsLoaded) {

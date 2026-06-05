@@ -1,8 +1,13 @@
 // guidance/GuideSelector.tsx
 
-import React from "react";
+import React, {
+  useEffect,
+  useRef
+} from "react";
 
 import {
+  Animated,
+  Easing,
   Text,
   TouchableOpacity,
   View,
@@ -10,7 +15,6 @@ import {
 
 import {
   Fonts,
-  Opacity,
   Radius,
 } from "../../constants/theme";
 
@@ -49,7 +53,24 @@ const guides = [
   },
 ];
 
-export default function GuideSelector() {
+/*
+ * --------------------------------------------------------
+ * 🌌 COMPONENT
+ * --------------------------------------------------------
+ */
+
+export default function GuideSelector({
+
+  activeGuide = null,
+
+  activeFieldGuide =
+    "cosmic",
+
+  onSelectGuide,
+
+  guideProfiles = {},
+
+}: any) {
 
   return (
 
@@ -59,99 +80,442 @@ export default function GuideSelector() {
         flexDirection: "row",
 
         justifyContent: "center",
+
         alignItems: "center",
 
         gap: 10,
 
-        marginTop: 2,
+        marginTop: 5,
+
+        marginBottom: 5,
       }}
     >
 
-      {guides.map((guide) => {
+      {guides.map((guide) => (
 
-        const config =
-          getGuideConfig(
+        <GuidePill
+          key={guide.id}
+
+          guideType={
             guide.type
-          );
+          }
 
-        const isCosmic =
+          guideProfile={
+            guideProfiles[
+              guide.type
+            ]
+          }
 
-          guide.type ===
-          GUIDE_TYPES.COSMIC;
+          activeGuide={
+            activeGuide
+          }
 
-        return (
+          activeFieldGuide={
+            activeFieldGuide
+          }
 
-          <TouchableOpacity
-            key={guide.id}
+          onPress={() => {
 
-            activeOpacity={0.8}
+            onSelectGuide?.(
+              guide.type
+            );
+          }}
+        />
 
-            style={{
+      ))}
 
-              paddingHorizontal: 8,
+    </View>
+  );
+}
 
-              paddingVertical: 4,
+/*
+ * --------------------------------------------------------
+ * 🌌 GUIDE PILL
+ * --------------------------------------------------------
+ */
 
-              borderRadius:
-                Radius.pill,
+function GuidePill({
 
-              backgroundColor:
-                "rgba(255,255,255,0.008)",
-            }}
-          >
+  guideType,
 
-            <Text
+  guideProfile,
+
+  activeGuide,
+
+  activeFieldGuide,
+
+  onPress,
+
+}: any) {
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 CONFIG
+   * --------------------------------------------------------
+   */
+
+  const config =
+    getGuideConfig(
+      guideType
+    );
+
+  const guideName =
+
+    guideProfile?.name
+
+    || config?.label
+
+    || guideType;
+
+  const isCosmic =
+
+    guideType ===
+    GUIDE_TYPES.COSMIC;
+
+  const isActive =
+
+    activeGuide ===
+    guideType;
+
+  const isFieldActive =
+
+    activeFieldGuide ===
+    guideType;
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 VALUES
+   * --------------------------------------------------------
+   */
+
+  const glow =
+    useRef(
+
+      new Animated.Value(
+        isActive
+          ? 1
+          : 0
+      )
+
+    ).current;
+
+  const breathing =
+    useRef(
+
+      new Animated.Value(0)
+
+    ).current;
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 ATMOSPHERE
+   * --------------------------------------------------------
+   */
+
+ const atmosphere = {
+
+  activeOpacity: 1,
+
+  inactiveOpacity: 0.44,
+
+  glow: 10,
+
+  duration: 12000,
+};
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 ACTIVE TRANSITION
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    Animated.timing(glow, {
+
+      toValue:
+        isActive
+          ? 1
+          : 0,
+
+      duration: 1600,
+
+      easing:
+        Easing.inOut(
+          Easing.sin
+        ),
+
+      useNativeDriver: false,
+    }).start();
+
+  }, [isActive]);
+
+  /*
+   * --------------------------------------------------------
+   * 🌊 BREATHING
+   * --------------------------------------------------------
+   */
+
+  useEffect(() => {
+
+    const loop =
+
+      Animated.loop(
+
+        Animated.sequence([
+
+          Animated.timing(
+            breathing,
+
+            {
+
+              toValue: 1,
+
+              duration:
+                atmosphere.duration,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: false,
+            }
+          ),
+
+          Animated.timing(
+            breathing,
+
+            {
+
+              toValue: 0,
+
+              duration:
+                atmosphere.duration,
+
+              easing:
+                Easing.inOut(
+                  Easing.sin
+                ),
+
+              useNativeDriver: false,
+            }
+          ),
+        ])
+      );
+
+    loop.start();
+
+    return () => {
+
+      loop.stop();
+    };
+
+  }, []);
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 OPACITY
+   * --------------------------------------------------------
+   */
+
+const opacity =
+
+  isFieldActive
+    ? 1
+    : 0.62;
+
+  /*
+   * --------------------------------------------------------
+   * 🌫️ SCALE
+   * --------------------------------------------------------
+   */
+
+  const scale =
+
+    breathing.interpolate({
+
+      inputRange: [0, 1],
+
+      outputRange:
+
+isFieldActive
+
+  ? [1, 1.05]
+
+  : [1, 1],
+  
+    });
+
+  /*
+   * --------------------------------------------------------
+   * 🌌 RENDER
+   * --------------------------------------------------------
+   */
+
+  return (
+
+    <TouchableOpacity
+      activeOpacity={0.86}
+
+      onPress={onPress}
+    >
+
+      <Animated.View
+        style={{
+
+          paddingHorizontal: 12,
+
+          paddingVertical: 6,
+
+          borderRadius:
+            Radius.pill,
+
+          overflow: "hidden",
+
+          backgroundColor:
+
+isFieldActive
+
+  ? "rgba(255,255,255,0.05)"
+
+  : "rgba(255,255,255,0.008)",
+
+borderWidth:
+
+  isFieldActive
+    ? 1
+    : isActive
+      ? 0.8
+      : 0.5,
+
+          borderColor:
+
+isFieldActive
+
+  ? `${config.fontColor}52`
+
+  : isActive
+
+    ? "rgba(255,255,255,0.18)"
+
+    : "rgba(255,255,255,0.04)",
+
+          opacity:
+            opacity,
+
+          transform: [
+            {
+              scale,
+            },
+          ],
+        }}
+      >
+
+        {/* -------------------------------------------- */}
+        {/* 🌌 FIELD RESONANCE */}
+        {/* -------------------------------------------- */}
+
+        {
+
+          isFieldActive && (
+
+            <Animated.View
               style={{
 
-                color:
-                  config.fontColor,
+                position: "absolute",
 
-                fontFamily:
+                width: "170%",
+                height: "240%",
 
-                  isCosmic
-                    ? Fonts.regular
-                    : Fonts.light,
+                borderRadius: 999,
 
-                fontSize: 9,
+                alignSelf: "center",
 
-                textAlign: "center",
-
-                letterSpacing: 0.4,
+                backgroundColor:
+                  `${config.fontColor}08`,
 
                 opacity:
 
-                  isCosmic
-                    ? 0.92
-                    : Opacity.medium,
+                  breathing.interpolate({
 
-                textTransform:
-                  "lowercase",
+                    inputRange: [0, 1],
 
-                textShadowColor:
+                    outputRange:
+                       [0.16, 0.32],
+                  }),
 
-                  isCosmic
-                    ? config.fontColor
-                    : "transparent",
+                transform: [
 
-                textShadowOffset: {
-                  width: 0,
-                  height: 0,
-                },
+                  {
 
-                textShadowRadius:
+                    scale:
 
-                  isCosmic
-                    ? 5
-                    : 0,
+                      breathing.interpolate({
+
+                        inputRange: [0, 1],
+
+                        outputRange:
+                          [0.94, 1.08],
+                      }),
+                  },
+                ],
               }}
-            >
-              {guide.type}
-            </Text>
+            />
 
-          </TouchableOpacity>
-        );
-      })}
+          )
+        }
 
-    </View>
+        {/* -------------------------------------------- */}
+        {/* 🌊 TEXT */}
+        {/* -------------------------------------------- */}
+
+        <Text
+          style={{
+
+            color:
+              config.fontColor,
+
+            opacity:
+
+              isFieldActive
+                ? 1
+                : 0.58,
+
+fontFamily:
+  Fonts.light,
+
+            fontSize: 10,
+
+            textAlign: "center",
+
+            letterSpacing: 0.5,
+
+            textTransform:
+              "lowercase",
+
+            textShadowColor:
+              config.fontColor,
+
+            textShadowOffset: {
+              width: 0,
+              height: 0,
+            },
+
+textShadowRadius:
+
+  isFieldActive
+
+    ? 12
+
+    : 1,
+          }}
+        >
+          {guideName}
+        </Text>
+
+      </Animated.View>
+
+    </TouchableOpacity>
   );
 }

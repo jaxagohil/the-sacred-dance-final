@@ -86,6 +86,11 @@ buildDailyField(
    * ---------------------------------------------------------
    */
 
+  console.log(
+  "🌌 TODAY:",
+  today
+);
+
   const {
     data: cosmic,
   } = await supabase
@@ -273,6 +278,28 @@ buildDailyField(
    */
 
   const fieldEssence = {
+
+  emotionalWeather:
+
+  oracleCard
+    ?.emotional_frequency ||
+
+  "soft reflection",
+
+collectiveDirection:
+
+  fields?.[0]
+    ?.collective_theme ||
+
+  "gentle recalibration",
+
+integrationTheme:
+
+  (
+    symbolicThemes || []
+  )[0] ||
+
+  "presence",  
 
     atmosphere:
 
