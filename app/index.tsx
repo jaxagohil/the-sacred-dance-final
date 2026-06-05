@@ -28,7 +28,10 @@ import { getUserId, initUser } from "../lib/user";
 import {
   Audio,
 } from "expo-av";
-import * as ImagePicker from "expo-image-picker";
+
+import {
+  pickImageForVision,
+} from "../lib/pickImageForVision";
 
  import {
   buildReflectionPacket,
@@ -291,20 +294,16 @@ router.push("/creator");
   };
 
   // IMAGE
-  const handleImage = async () => {
-    const permission =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+const handleImage =
+  async () => {
 
-    if (!permission.granted) return;
+    const image =
 
-    const res = await ImagePicker.launchImageLibraryAsync({
-      base64: true,
-      quality: 0.5,
-    });
+      await pickImageForVision();
 
-    if (!res.canceled) {
-      setImageBase64(res.assets[0].base64 || null);
-    }
+    setImageBase64(
+      image
+    );
   };
 
 const handleVoice =

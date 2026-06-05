@@ -111,40 +111,63 @@ if (!res.ok) {
     rawError
   );
 
-  return {
+return {
 
-    emotions: [],
+  emotions: [],
 
-    behaviours: [],
+  behaviours: [],
 
-    polarity: null,
+  people: [],
 
-    intensity: 1,
+  places: [],
 
-    ai_confidence: null,
+  things: [],
 
-    reflection_summary: null,
+  people_entities: [],
 
-    lens: {
-      people: [],
-      places: [],
-      things: [],
-    },
+  places_entities: [],
 
-    levels: {
-      physical: 0.5,
-      emotional: 0.5,
-      energetic: 0.5,
-    },
+  things_entities: [],
 
-    consciousness_movement: {
-      reactivity: 0.5,
-      awareness: 0.5,
-      responsibility: 0.5,
-      embodiment: 0.5,
-      integration: 0.5,
-    },
-  };
+  polarity: null,
+
+  intensity: 1,
+
+  ai_confidence: null,
+
+  reflection_summary: null,
+
+  lens: {
+
+    people: [],
+
+    places: [],
+
+    things: [],
+  },
+
+  levels: {
+
+    physical: 0.5,
+
+    emotional: 0.5,
+
+    energetic: 0.5,
+  },
+
+  consciousness_movement: {
+
+    reactivity: 0.5,
+
+    awareness: 0.5,
+
+    responsibility: 0.5,
+
+    embodiment: 0.5,
+
+    integration: 0.5,
+  },
+};
 }
 
     // ----------------------------------
@@ -306,91 +329,100 @@ const aiBehaviours =
     // 🧠 FINAL CLEAN OBJECT
     // ----------------------------------
 
-    const cleaned = {
+const cleaned = {
 
-      emotions:
-        finalEmotions,
+  emotions:
+    finalEmotions,
 
-      behaviours:
-        aiBehaviours,
-
-      polarity:
-        data?.polarity ?? null,
-
-      intensity:
-        data?.intensity ?? 1,
-
-      ai_confidence:
-        data?.ai_confidence ?? null,
-
-      reflection_summary:
-        data?.reflection_summary
-        || null,
-
-lens: {
+  behaviours:
+    aiBehaviours,
 
   people:
-    data?.lens?.people || [],
+    normalize(data?.people),
 
   places:
-    data?.lens?.places || [],
+    normalize(data?.places),
 
   things:
-    data?.lens?.things || [],
-},
+    normalize(data?.things),
 
-people_entities:
+  people_entities:
+    normalize(data?.people),
 
-  data?.people_entities ||
+  places_entities:
+    normalize(data?.places),
 
-  data?.lens?.people ||
+  things_entities:
+    normalize(data?.things),
 
-  [],
+  polarity:
+    data?.polarity ?? null,
 
-places_entities:
+  intensity:
+    data?.intensity ?? 1,
 
-  data?.places_entities ||
+  ai_confidence:
+    data?.ai_confidence ?? null,
 
-  data?.lens?.places ||
+  reflection_summary:
+    data?.reflection_summary || null,
 
-  [],
+  lens: {
 
-things_entities:
+    people:
+      normalize(data?.people),
 
-  data?.things_entities ||
+    places:
+      normalize(data?.places),
 
-  data?.lens?.things ||
+    things:
+      normalize(data?.things),
+  },
 
-  [],
+  levels:
+    data?.levels || {
 
-      // 🌍 levels
-      levels:
-        data?.levels || {
-          physical: 0.5,
-          emotional: 0.5,
-          energetic: 0.5,
-        },
+      physical: 0.5,
 
-      // ✨ consciousness
-      consciousness_movement:
-        data?.consciousness_movement || {
+      emotional: 0.5,
 
-          reactivity: 0.5,
+      energetic: 0.5,
+    },
 
-          awareness: 0.5,
+  consciousness_movement:
+    data?.consciousness_movement || {
 
-          responsibility: 0.5,
+      reactivity: 0.5,
 
-          embodiment: 0.5,
+      awareness: 0.5,
 
-          integration: 0.5,
-        },
-    };
+      responsibility: 0.5,
+
+      embodiment: 0.5,
+
+      integration: 0.5,
+    },
+};
 
     console.log(
       "🧠 CLEANED AI:",
       cleaned
     );
+
+console.log(
+  "👥 PEOPLE:",
+  cleaned.people
+);
+
+console.log(
+  "📍 PLACES:",
+  cleaned.places
+);
+
+console.log(
+  "📦 THINGS:",
+  cleaned.things
+);
 
     return cleaned;
 
@@ -401,41 +433,62 @@ things_entities:
       e
     );
 
-    return {
+ return {
 
-      emotions: [],
+  emotions: [],
 
-      behaviours: [],
+  behaviours: [],
 
-      polarity: null,
+  people: [],
 
-      intensity: 1,
+  places: [],
 
-      ai_confidence: null,
+  things: [],
 
-      reflection_summary: null,
+  people_entities: [],
 
-      lens: {
-        people: [],
-        places: [],
-        things: [],
-      },
+  places_entities: [],
 
-      // 🌍 levels
-      levels: {
-        physical: 0.5,
-        emotional: 0.5,
-        energetic: 0.5,
-      },
+  things_entities: [],
 
-      // ✨ consciousness
-      consciousness_movement: {
-        reactivity: 0.5,
-        awareness: 0.5,
-        responsibility: 0.5,
-        embodiment: 0.5,
-        integration: 0.5,
-      },
-    };
+  polarity: null,
+
+  intensity: 1,
+
+  ai_confidence: null,
+
+  reflection_summary: null,
+
+  lens: {
+
+    people: [],
+
+    places: [],
+
+    things: [],
+  },
+
+  levels: {
+
+    physical: 0.5,
+
+    emotional: 0.5,
+
+    energetic: 0.5,
+  },
+
+  consciousness_movement: {
+
+    reactivity: 0.5,
+
+    awareness: 0.5,
+
+    responsibility: 0.5,
+
+    embodiment: 0.5,
+
+    integration: 0.5,
+  },
+};
   }
 }

@@ -68,6 +68,11 @@ export async function buildReflectionPacket({
 
   if (imageBase64) {
 
+    console.log(
+  "IMAGE PREFIX",
+  imageBase64?.substring(0, 20)
+);
+
     const imageData =
 
       await ingestImage(

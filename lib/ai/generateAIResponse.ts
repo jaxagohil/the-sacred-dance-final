@@ -1,6 +1,4 @@
-// /lib/ai/generateAIResponse.ts
-
-import { API_URL } from "../config";
+import { supabase } from "../../services/supabase";
 
 import { buildPrompt } from "./buildPrompt";
 
@@ -49,116 +47,46 @@ const prompt =
 
     /*
      * -----------------------------------------------------
-     * ⏱ TIMEOUT
-     * -----------------------------------------------------
-     */
-
-    const controller =
-      new AbortController();
-
-    const timeout =
-      setTimeout(
-        () =>
-          controller.abort(),
-        60000
-      );
-
-    /*
-     * -----------------------------------------------------
      * 🌐 REQUEST
      * -----------------------------------------------------
      */
 
-    const response =
-      await fetch(
-
-        `${API_URL}/api/ai`,
-
-        {
-
-          method: "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json",
-          },
-
-          body:
-            JSON.stringify({
-
-              prompt,
-
-              language:
-                data?.language || "en",
-            }),
-
-          signal:
-            controller.signal,
-        }
-      );
-
-    clearTimeout(
-      timeout
-    );
-
-    /*
-     * -----------------------------------------------------
-     * 📦 RAW RESPONSE
-     * -----------------------------------------------------
-     */
-
-    const text =
-      await response.text();
-
-    let result: any =
-      null;
-
-    try {
-
-      result =
-        JSON.parse(text);
-
-    } catch (e) {
-
-      console.error(
-        "❌ RAW AI RESPONSE:",
-        text
-      );
-
-      return (
-
-        data?.base ||
-
-        "..."
-      );
+const {
+  data: result,
+  error,
+} = await supabase
+  .functions
+  .invoke(
+    "generate-ai-response",
+    {
+      body: {
+        prompt,
+        language:
+          data?.language || "en",
+      },
     }
+  );
 
-    console.log(
-      "📦 BACKEND RESULT:",
-      result
-    );
 
-    /*
-     * -----------------------------------------------------
-     * ❌ API ERROR
-     * -----------------------------------------------------
-     */
+if (error) {
 
-    if (!response.ok) {
+  console.error(
+    "❌ AI ERROR:",
+    error
+  );
 
-      console.error(
-        "❌ AI ERROR:",
-        result
-      );
+  return (
 
-      return (
+    data?.base ||
 
-        data?.base ||
+    "Something didn’t come through."
+  );
+}
 
-        "Something didn’t come through."
-      );
-    }
+console.log(
+  "📦 BACKEND RESULT:",
+  result
+);
 
     /*
      * -----------------------------------------------------
@@ -175,12 +103,6 @@ const prompt =
       result?.message ||
 
       result;
-
-    /*
-     * -----------------------------------------------------
-     * 📝 STRING
-     * -----------------------------------------------------
-     */
 
 /*
  * -----------------------------------------------------
@@ -263,22 +185,6 @@ if (
       "❌ AI FETCH ERROR:",
       err?.message || err
     );
-
-    /*
-     * -----------------------------------------------------
-     * ⏱ TIMEOUT
-     * -----------------------------------------------------
-     */
-
-    if (
-      err?.name ===
-      "AbortError"
-    ) {
-
-      return (
-        "Taking a little longer…"
-      );
-    }
 
     /*
      * -----------------------------------------------------

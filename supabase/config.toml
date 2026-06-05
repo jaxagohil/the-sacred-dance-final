@@ -86,3 +86,25 @@ entrypoint = "./functions/transcribe/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/transcribe/*.html" ]
+
+[functions.generate-ai-response]
+enabled = true
+verify_jwt = false
+import_map = "./functions/generate-ai-response/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/generate-ai-response/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/generate-ai-response/*.html" ]
+
+[functions.translate-emotionally]
+enabled = true
+verify_jwt = false
+import_map = "./functions/translate-emotionally/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/translate-emotionally/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/translate-emotionally/*.html" ]

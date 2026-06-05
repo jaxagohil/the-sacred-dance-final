@@ -29,18 +29,43 @@ Deno.serve(async (req) => {
               {
                 type: "text",
 
-                text: `
-Observe the image.
+text: `
+Observe the image carefully.
 
-Identify:
+Your role is to identify present-moment signals that may help a reflection system understand the emotional and behavioural atmosphere of this moment.
+
+Focus on:
+
 - emotional atmosphere
-- body tension
-- nervous system cues
-- behavioural cues
-- relational energy
-- observable scene details
+- behavioural movement
+- nervous system cues (if reasonably observable)
+- relational energy (if people are visible)
+- signs of transition, change, organisation, accumulation, release, completion, creation, rest, connection, separation, openness, engagement, protection, withdrawal, grounding, responsibility, receptivity, or expression
+- observable scene details that support these observations
 
-Do not interpret spiritually.
+Important:
+
+- Reflect only what is reasonably supported by the image.
+- Focus on the present moment.
+- Describe emotional and behavioural signals suggested by the environment, activity, posture, facial expression, relationships, and visible context.
+- Prioritise what appears to be happening over describing individual objects.
+
+Do not:
+
+- diagnose
+- infer trauma
+- infer personality
+- infer childhood experiences
+- assign patterns
+- assign chakras
+- provide spiritual interpretation
+- provide advice
+
+The goal is not to catalogue objects.
+
+The goal is to reflect the emotional and behavioural signals that may be present in this moment.
+
+Return observations in clear natural language.
 `,
               },
 
@@ -69,20 +94,21 @@ Do not interpret spiritually.
 
   } catch (error) {
 
-    console.error(
-      error
-    );
+  console.error(
+    "VISION ERROR",
+    error
+  );
 
-    return Response.json(
-
-      {
-        error:
-          "Vision failed",
-      },
-
-      {
-        status: 500,
-      }
-    );
-  }
+  return Response.json(
+    {
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    },
+    {
+      status: 500,
+    }
+  );
+}
 });

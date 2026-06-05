@@ -1,6 +1,6 @@
 // /lib/connections/translateEmotionally.ts
 
-import { API_URL } from "../config";
+import { supabase } from "../../services/supabase";
 
 type TranslateEmotionallyParams = {
 
@@ -29,7 +29,7 @@ export async function translateEmotionally({
 
     /*
      * ---------------------------------------------------------
-     * 🌍 SKIP SAME LANGUAGE
+     * 🌍 SKIP EMPTY
      * ---------------------------------------------------------
      */
 
@@ -39,6 +39,12 @@ export async function translateEmotionally({
 
       return text;
     }
+
+    /*
+     * ---------------------------------------------------------
+     * 🌍 SKIP SAME LANGUAGE
+     * ---------------------------------------------------------
+     */
 
     if (
       sourceLanguage ===
@@ -50,87 +56,54 @@ export async function translateEmotionally({
 
     /*
      * ---------------------------------------------------------
-     * 🧠 PROMPT
+     * 🌐 TRANSLATE
      * ---------------------------------------------------------
      */
 
-    const prompt = `
+    const {
+      data: result,
+      error,
+    } = await supabase
 
-You are translating
-a Sacred Dance connection message.
+      .functions
 
-Translate naturally into ${targetLanguage}.
-
-Preserve:
-- emotional tone
-- softness
-- subtle symbolism
-- conversational cadence
-- nervous-system pacing
-- relational warmth
-
-Do not translate literally.
-
-The message should feel
-as if originally written
-by a native speaker.
-
-Keep the emotional frequency intact.
-
-${emotionalContext
-  ? `
-Emotional Context:
-${emotionalContext}
-`
-  : ""}
-
-Message:
-"${text}"
-
-Return ONLY the translation.
-
-`;
-
-    /*
-     * ---------------------------------------------------------
-     * 🌐 REQUEST
-     * ---------------------------------------------------------
-     */
-
-    const response =
-      await fetch(
-
-        `${API_URL}/api/ai`,
-
+      .invoke(
+        "translate-emotionally",
         {
+          body: {
 
-          method: "POST",
+            text,
 
-          headers: {
+            sourceLanguage,
 
-            "Content-Type":
-              "application/json",
+            targetLanguage,
+
+            emotionalContext,
           },
-
-          body:
-            JSON.stringify({
-
-              prompt,
-
-              language:
-                targetLanguage,
-            }),
         }
       );
 
     /*
      * ---------------------------------------------------------
-     * 📦 RESULT
+     * ❌ ERROR
      * ---------------------------------------------------------
      */
 
-    const result =
-      await response.json();
+    if (error) {
+
+      console.error(
+        "❌ translateEmotionally ERROR",
+        error
+      );
+
+      return text;
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * ✅ RESULT
+     * ---------------------------------------------------------
+     */
 
     return (
 
