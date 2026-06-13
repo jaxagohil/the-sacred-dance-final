@@ -487,6 +487,8 @@ embodied
           },
         });
 
+        //console.log( "🃏 RAW TAROT RESULT:", tarotResult);
+
       //
       // 🌌 DIVINE READING
       //
@@ -765,18 +767,46 @@ dominantChakra:
             ""
       );
 
-      setTarotWhisper(
+let whisper = tarotResult;
 
-        typeof tarotResult ===
-        "object"
+if (
+  typeof whisper === "string"
+) {
 
-          ? tarotResult
-              ?.tarotWhisper ||
+  try {
 
-            ""
+const cleaned =
+  whisper
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
-          : tarotResult || ""
-      );
+//console.log( "🃏 CLEANED TAROT:", cleaned);    
+
+    if (
+      cleaned.startsWith("{")
+    ) {
+
+      whisper =
+        JSON.parse(
+          cleaned
+        );
+    }
+
+  } catch (err) {
+
+    console.log(  "🃏 TAROT PARSE FAILED",  err);
+  }
+}
+
+setTarotWhisper(
+
+  typeof whisper === "object"
+
+    ? whisper?.tarotWhisper || ""
+
+    : ""
+);
 
       setLoadingReading(
         false
@@ -784,9 +814,7 @@ dominantChakra:
 
     } catch (err) {
 
-      console.log(
-        "AI fallback"
-      );
+      //console.log(  "AI fallback" );
 
       setTyped(
 

@@ -225,10 +225,7 @@ useEffect(() => {
         const currentLanguage =
           getLanguage();
 
-        console.log(
-          "🌍 MIRROR LANGUAGE:",
-          currentLanguage
-        );
+        //console.log( "🌍 MIRROR LANGUAGE:",  currentLanguage);
 
         setLanguage(
           currentLanguage
@@ -360,10 +357,7 @@ const field =
       if (!languageContext)
         return;
 
-      console.log(
-        "🌍 VERIFIED LANGUAGE:",
-        language
-      );
+      //console.log(  "🌍 VERIFIED LANGUAGE:",  language);
 
       const cosmicMessage =
 

@@ -23,11 +23,18 @@ This presence prioritizes:
 - clarity
 - conscious movement
 
-This presence gently helps people:
+This presence naturally notices:
 - recognize patterns
 - reconnect behaviour with truth
 - move from awareness into embodiment
 - create grounded change
+- recurring loops
+- behavioural repetition
+- protection strategies
+- nervous system adaptations
+- contradictions becoming visible
+- embodiment gaps
+- coherence shifts
 
 The presence may:
 - interrupt loops softly

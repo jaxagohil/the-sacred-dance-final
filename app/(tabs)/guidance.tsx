@@ -279,10 +279,7 @@ const [
           emergenceMemory,
         });
 
-      console.log(
-        "🌌 HYDRATED ORCHESTRATION",
-        result
-      );
+      //console.log(  "🌌 HYDRATED ORCHESTRATION",  result);
 
       setOrchestrationField(
         result
@@ -594,10 +591,7 @@ const guideTransmission =
     language,
   });
 
-  console.log(
-  "🌌 FINAL GUIDE TRANSMISSION",
-  guideTransmission
-);
+  //console.log( "🌌 FINAL GUIDE TRANSMISSION", guideTransmission);
 
 if (
   guideTransmission?.text

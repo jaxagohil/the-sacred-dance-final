@@ -75,12 +75,16 @@ if (error) {
     error
   );
 
-  return (
-
-    data?.base ||
-
-    "Something didn’t come through."
+  console.error(
+    "❌ AI ERROR DETAILS:",
+    JSON.stringify(
+      error,
+      null,
+      2
+    )
   );
+
+  throw error;
 }
 
 console.log(

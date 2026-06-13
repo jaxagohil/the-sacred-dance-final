@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Animated,
@@ -12,7 +12,11 @@ import {
 import { router } from "expo-router";
 
 import {
-  initUser,
+  supabase
+} from "../../services/supabase";
+
+import {
+  getUserId,
 } from "../../lib/user";
 
 import {
@@ -34,6 +38,11 @@ export default function ConnectionsPortal() {
   // 🌍 earth rotation
   const rotation =
     useRef(new Animated.Value(0)).current;
+
+  const [
+  connectionsEnabled,
+  setConnectionsEnabled
+] = useState(false);  
 
   useEffect(() => {
 
@@ -89,6 +98,55 @@ export default function ConnectionsPortal() {
 
   }, []);
 
+useEffect(() => {
+
+  async function loadAccess() {
+
+    try {
+
+      const userId =
+        await getUserId();
+
+        //console.log( "👤 CURRENT USER:", userId);
+
+      const { data } =
+        await supabase
+
+          .from("profiles")
+
+          .select(
+            "connections_enabled"
+          )
+
+          .eq(
+            "user_id",
+            userId
+          )
+
+          .single();
+
+          //console.log("📦 PROFILE:", data);
+
+      setConnectionsEnabled(
+        data?.connections_enabled
+          === "Y"
+      );
+
+      //console.log( "🌍 CONNECTIONS ENABLED:",  data?.connections_enabled);
+
+    } catch (error) {
+
+      console.log(
+        "❌ CONNECTION ACCESS ERROR",
+        error
+      );
+    }
+  }
+
+  loadAccess();
+
+}, []);  
+
   const rotateInterpolate =
     rotation.interpolate({
       inputRange: [0, 1],
@@ -99,21 +157,16 @@ const handleEnter = async () => {
 
   try {
 
-    console.log(
-      "🌍 ENTER CONNECTIONS"
-    );
+    //console.log(  "🌍 ENTER CONNECTIONS" );
 
     //
     // 👤 ENSURE USER EXISTS
     //
 
     const userId =
-      await initUser();
+      await getUserId();
 
-    console.log(
-      "👤 ACTIVE USER:",
-      userId
-    );
+    //console.log(  "👤 ACTIVE USER:",  userId);
 
     //
     // 🌌 ENTER FIELD
@@ -202,11 +255,26 @@ const handleEnter = async () => {
         />
 
         {/* ✦ DIAMOND */}
-        <Pressable
-          style={styles.diamondWrap}
-          onPress={handleEnter}
-        >
-          <Text style={styles.diamond}>
+<Pressable
+  style={styles.diamondWrap}
+
+  disabled={
+    !connectionsEnabled
+  }
+
+  onPress={handleEnter}
+>
+          <Text
+  style={[
+    styles.diamond,
+    {
+      opacity:
+        connectionsEnabled
+          ? 0.82
+          : 0.15,
+    },
+  ]}
+>
             ✦
           </Text>
         </Pressable>

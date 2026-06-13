@@ -11,39 +11,40 @@ Deno.serve(async (req) => {
 
   try {
 
-    const {
-      prompt,
-    } = await req.json();
+const {
+  prompt,
+} = await req.json();
 
-    const completion =
-      await openai.chat.completions.create({
+const completion =
+  await openai.chat.completions.create({
 
-        model:
-          "gpt-4.1-mini",
+    model:
+      "gpt-4.1-mini",
 
-        temperature:
-          0.7,
+    temperature:
+      0.7,
 
-        messages: [
+    messages: [
+      {
+        role:
+          "user",
+        content:
+          prompt,
+      },
+    ],
+  });
 
-          {
-            role:
-              "user",
+const raw =
+  completion
+    .choices?.[0]
+    ?.message
+    ?.content || "";
 
-            content:
-              prompt,
-          },
-        ],
-      });
+return Response.json({
 
-    return Response.json({
+  text: raw,
 
-      text:
-        completion
-          .choices?.[0]
-          ?.message
-          ?.content || "",
-    });
+});
 
   } catch (error) {
 

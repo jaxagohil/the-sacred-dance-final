@@ -36,6 +36,8 @@ type CreateSignalInput = {
 
   ai_lens?: any;
 
+  entity_lenses?: any[];
+
   primary_pattern?: string;
 
   pattern_score?: number;
@@ -239,6 +241,8 @@ createSignal({
     things: [],
   },
 
+  entity_lenses = [],
+
   primary_pattern = "",
 
   pattern_score = 0,
@@ -398,6 +402,12 @@ chakra_activation = {},
 
 }: CreateSignalInput) {
 
+
+  console.log(
+  "🚨 CREATE SIGNAL ENTITY LENSES",
+  entity_lenses
+);
+
   try {
 
     // --------------------------------------------------
@@ -433,6 +443,8 @@ chakra_activation = {},
       ai_patterns,
 
       ai_lens,
+
+      entity_lenses,
 
       primary_pattern,
 

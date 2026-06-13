@@ -68,12 +68,7 @@ export default function EnergyField({
   const energy =
     userContext?.energy;
 
-  console.log(
-  "👁 AWARENESS CHAKRA:",
-  userContext
-    ?.energy
-    ?.awareness_chakra
-);  
+  //console.log( "👁 AWARENESS CHAKRA:", userContext ?.energy ?.awareness_chakra);  
 
   const awarenessChakra =
 
@@ -291,10 +286,7 @@ return {
 // 🌈 CHAKRA INTELLIGENCE
 // --------------------------------------------------
 
-console.log(
-  "🌈 CHAKRA MANIFESTATIONS:",
-  userContext?.chakraManifestations
-);
+//console.log( "🌈 CHAKRA MANIFESTATIONS:",  userContext?.chakraManifestations);
 
 const chakraManifestations =
 
@@ -413,20 +405,11 @@ r:
     );
 
 
-    console.log(
-  "🌑 DISTORTIONS:",
-  distortions
-);
+    //console.log( "🌑 DISTORTIONS:", distortions);
 
-console.log(
-  "🌈 CHAKRA MANIFESTATIONS:",
-  userContext?.chakraManifestations
-);
+//console.log( "🌈 CHAKRA MANIFESTATIONS:", userContext?.chakraManifestations);
 
-console.log(
-  "⚡ DOT POSITIONS:",
-  dotPositions
-);
+//console.log("⚡ DOT POSITIONS:",dotPositions);
 
   // --------------------------------------------------
   // 🧩 CLICK HANDLERS

@@ -583,6 +583,43 @@ const emotionalThemes =
   );  
 
   // --------------------------------------------------
+// 🪞 ENTITY LENS EVIDENCE
+// --------------------------------------------------
+
+const entityLensEvidence =
+
+  entries
+
+    .filter(
+      (e:any) =>
+        e?.entity
+    )
+
+    .map(
+      (e:any) => ({
+
+        entity:
+          e?.entity,
+
+        symbolic_meaning:
+          e?.symbolic_meaning,
+
+        emotional_meaning:
+          e?.emotional_meaning,
+
+        score:
+          e?.score || 0,
+      })
+    )
+
+    .sort(
+      (a,b) =>
+        b.score - a.score
+    )
+
+    .slice(0,10);
+
+  // --------------------------------------------------
   // 🪞 EVIDENCE SUMMARIES
   // --------------------------------------------------
 
@@ -1076,6 +1113,8 @@ recurringPatterns,
 semanticKeywords,
 symbolicThemes,
 emotionalThemes,
+
+entityLensEvidence,
 
 spiralReflection,
   };

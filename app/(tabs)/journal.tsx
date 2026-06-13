@@ -23,8 +23,7 @@ import { supabase } from "../../services/supabase";
 import {
   Colors,
   Fonts,
-  Opacity,
-  Spacing,
+  Spacing
 } from "../../constants/theme";
 
 import EmotionCloudSkia from "../../components/signals/EmotionCloudSkia";
@@ -33,11 +32,16 @@ import { getLanguage, t } from "../../lib/i18n/t";
 import {
   Audio,
 } from "expo-av";
-import * as ImagePicker from "expo-image-picker";
 
  import {
   buildReflectionPacket,
 } from "../../lib/buildReflectionsPacket";
+
+// Journal
+
+import {
+  pickImageForVision,
+} from "../../lib/pickImageForVision";
 
 const { height } =
   Dimensions.get("window");
@@ -61,6 +65,9 @@ const [selected, setSelected] =
 
   const [ack, setAck] =
     useState(false);
+
+    const [resetKey, setResetKey] =
+  useState(0);
 
   const [saving, setSaving] =
     useState(false);
@@ -118,10 +125,7 @@ const language =
   language
 );
 
-  console.log(
-  "🌍 JOURNAL LANGUAGE:",
-  language
-);
+  //console.log( "🌍 JOURNAL LANGUAGE:", language);
 
 const { data } =
 
@@ -195,20 +199,16 @@ const { data } =
  */
 
   // IMAGE
-  const handleImage = async () => {
-    const permission =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+const handleImage =
+  async () => {
 
-    if (!permission.granted) return;
+    const image =
 
-    const res = await ImagePicker.launchImageLibraryAsync({
-      base64: true,
-      quality: 0.5,
-    });
+      await pickImageForVision();
 
-    if (!res.canceled) {
-      setImageBase64(res.assets[0].base64 || null);
-    }
+    setImageBase64(
+      image
+    );
   };
   /*
  * --------------------------------------------------
@@ -257,9 +257,7 @@ const handleVoice =
           recording
         );
 
-        console.log(
-          "🎙 Recording started"
-        );
+        //console.log(  "🎙 Recording started" );
 
         return;
       }
@@ -284,17 +282,11 @@ const handleVoice =
         null
       );
 
-      console.log(
-        "🎙 Saved:",
-        uri
-      );
+      //console.log(  "🎙 Saved:",  uri);
 
     } catch (err) {
 
-      console.log(
-        "🎤 AUDIO ERROR",
-        err
-      );
+      //console.log(  "🎤 AUDIO ERROR",  err);
     }
   };
   
@@ -390,6 +382,8 @@ Keyboard.dismiss();
 
 setText("");
 
+//console.log(  "🧹 RESETTING FORM");
+
 setSelected([]);
 
 setImageBase64(
@@ -400,8 +394,8 @@ setAudioUri(
   null
 );
 
-setAudioUri(
-  null
+setResetKey(
+  prev => prev + 1
 );
 
       setAck(true);
@@ -479,6 +473,8 @@ setAudioUri(
 
   <TextInput
 
+    key={resetKey}
+    
     value={text}
 
     onChangeText={
@@ -682,7 +678,7 @@ setAudioUri(
               "center",
 
             opacity:
-              Opacity.medium,
+              0.85,
           }}
         >
 

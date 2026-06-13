@@ -16,6 +16,9 @@ import {
   View,
 } from "react-native";
 
+
+import WelcomeOverlay from "../components/WelcomeOverlay";
+
 import {
   useMirrorStore,
 } from "../stores/mirrorStore";
@@ -24,6 +27,8 @@ import { getOrCreateProfile } from "../db/getProfile";
 import { processLandingReflection } from "../db/processLandingReflection";
 import { getDailyPrompt } from "../db/prompts";
 import { getUserId, initUser } from "../lib/user";
+
+import * as SecureStore from "expo-secure-store";
 
 import {
   Audio,
@@ -83,6 +88,16 @@ export default function LandingScreen() {
 
   const [prompt, setPrompt] = useState("...");
   const [loading, setLoading] = useState(true);
+
+  const [
+  showWelcome,
+  setShowWelcome,
+] = useState(false);
+
+const [
+  hasSeenWelcome,
+  setHasSeenWelcome,
+] = useState(false);
 
   const [saving,
   setSaving] =
@@ -218,8 +233,18 @@ const pr =
 
 setPrompt(pr);
 
-      setReady(true);
-      setLoading(false);
+const seen =
+
+  await SecureStore.getItemAsync(
+    "sacred_dance_welcome_seen"
+  );
+
+setHasSeenWelcome(
+  seen === "Y"
+);
+
+setReady(true);
+setLoading(false);
     };
 
     init();
@@ -347,9 +372,7 @@ const handleVoice =
           recording
         );
 
-        console.log(
-          "🎙 Recording started"
-        );
+        //console.log("🎙 Recording started");
 
         return;
       }
@@ -374,25 +397,25 @@ const handleVoice =
         null
       );
 
-      console.log(
-        "🎙 Saved:",
-        uri
-      );
+      //console.log( "🎙 Saved:",  uri);
 
     } catch (err) {
 
-      console.log(
-        "🎤 AUDIO ERROR",
-        err
-      );
+      //console.log(  "🎤 AUDIO ERROR",  err);
     }
   };
+
+const handleDiamondPress =
+  async () => {
+
+    handleSubmit();
+  };  
 
   // SUBMIT (UNCHANGED)
 const handleSubmit =
   async () => {
 
-    console.log("✦ SUBMIT");
+    //console.log("✦ SUBMIT");
     if (saving)
       return;
 
@@ -516,13 +539,21 @@ setAudioUri(null);
       style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Pressable
-        style={{ flex: 1, paddingHorizontal: 20 }}
-        onPress={() => {
-          setShowActions(true);
-          Keyboard.dismiss();
-        }}
-      >
+<Pressable
+  style={{ flex: 1, paddingHorizontal: 20 }}
+
+onPress={() => {
+
+  setShowActions(true);
+
+  if (!hasSeenWelcome) {
+
+    setShowWelcome(true);
+  }
+
+  Keyboard.dismiss();
+}}
+>
         {/* TOP */}
         <View style={{ alignItems: "center", marginTop: 140 }}>
 <TouchableOpacity
@@ -614,11 +645,11 @@ setAudioUri(null);
 
     {/* ✦ ENTER */}
 
-    <TouchableOpacity
+<TouchableOpacity
 
-    disabled={saving}
+  disabled={saving}
 
-      onPress={handleSubmit}
+  onPress={handleDiamondPress}
 
       style={{
         marginBottom: 26,
@@ -788,8 +819,25 @@ placeholder={t("landing.placeholder")}
   
 
 )}
-      </Pressable>
-    </KeyboardAvoidingView>
+</Pressable>
+
+<WelcomeOverlay
+  visible={showWelcome}
+
+onClose={async () => {
+
+  await SecureStore.setItemAsync(
+    "sacred_dance_welcome_seen",
+    "Y"
+  );
+
+  setHasSeenWelcome(true);
+
+  setShowWelcome(false);
+}}
+/>
+
+</KeyboardAvoidingView>
   );
 
 }

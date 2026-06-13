@@ -357,9 +357,7 @@ export default function CreatorScreen() {
                   return;
                 }
 
-                console.log(
-                  `🌍 Generating ${code}`
-                );
+                //console.log(  `🌍 Generating ${code}`);
 
 try {
 
@@ -375,15 +373,9 @@ const {
   }
 );
 
-  console.log(
-    "DATA:",
-    data
-  );
+  //console.log(  "DATA:",  data );
 
-  console.log(
-    "ERROR:",
-    error
-  );
+  //console.log(  "ERROR:",  error);
 
 } catch (err) {
 

@@ -1,5 +1,10 @@
 import { supabase } from "./supabase.ts";
 
+const OPENAI_API_KEY =
+  Deno.env.get(
+    "OPENAI_API_KEY"
+  )!;
+
 console.log("🪞 PATTERN FUNCTION LOADED");
 
 type BehaviourInput = {
@@ -15,6 +20,8 @@ type PatternScore = {
 export async function derivePatternsFromBehaviours(
 
   behaviours: BehaviourInput[],
+
+  reflectionText: string = "",
 
   source: string = "reflection",
 
@@ -212,10 +219,206 @@ if (
           b.score - a.score
       );
 
-  console.log(
-    "🧠 DERIVED PATTERNS:",
-    sorted
+console.log(
+  "🧠 DERIVED PATTERNS:",
+  sorted
+);
+
+// -----------------------------------
+// 🎯 TOP 3 CANDIDATES
+// -----------------------------------
+
+const candidatePatterns =
+  sorted.slice(0, 3);
+
+console.log(
+  "🎯 CANDIDATE PATTERNS:",
+  candidatePatterns
+);
+
+// -----------------------------------
+// 🧠 LOAD PATTERN SEMANTICS
+// -----------------------------------
+
+const patternIds =
+  candidatePatterns.map(
+    (p) => p.id
   );
 
-  return sorted;
+const {
+  data: patternRows,
+  error: patternError,
+} = await supabase
+  .from("patterns")
+  .select(`
+    id,
+    mirror_theme,
+    fear,
+    gift,
+    integration,
+    higher_perspective,
+    energetic_axis,
+    center_expression
+  `)
+  .in("id", patternIds);
+
+if (
+  patternError ||
+  !patternRows?.length
+) {
+
+  console.log(
+    "⚠️ PATTERN SEMANTIC LOAD FAILED"
+  );
+
+  return candidatePatterns.slice(0, 2);
+}
+
+console.log(
+  "🧠 PATTERN SEMANTICS:",
+  patternRows
+);
+
+console.log(
+  "🧠 PATTERN REFLECTION TEXT:",
+  reflectionText
+);
+
+console.log(
+  "🧠 PATTERN SOURCE:",
+  source
+);
+
+console.log(
+  "🧠 PATTERN SIGNAL DEPTH:",
+  signalDepth
+);
+
+// -----------------------------------
+// 🤖 AI PATTERN SELECTION
+// -----------------------------------
+
+const semanticPrompt = `
+Behaviours:
+${behaviours
+  .map((b) => b.id)
+  .join(", ")}
+
+Reflection:
+${reflectionText}
+
+Candidate patterns:
+
+${JSON.stringify(
+  patternRows,
+  null,
+  2
+)}
+
+Choose the 1 or 2 patterns that best
+represent the reflection.
+
+Use meaning, context and lived reality.
+
+Do not choose patterns simply because
+they scored highest.
+
+A simple observation should not create
+deep psychological patterns unless the
+reflection genuinely supports them.
+
+If the reflection is simple,
+neutral or observational,
+prefer selecting only one pattern.
+
+Only return two patterns when
+multiple themes are clearly present.
+
+Return JSON only:
+
+{
+  "patterns": [
+    "pattern_id"
+  ]
+}
+`;
+
+const aiRes = await fetch(
+  "https://api.openai.com/v1/chat/completions",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type":
+        "application/json",
+      Authorization:
+        `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      response_format: {
+        type: "json_object",
+      },
+      messages: [
+        {
+          role: "user",
+          content: semanticPrompt,
+        },
+      ],
+    }),
+  }
+);
+
+if (!aiRes.ok) {
+
+  console.log(
+    "⚠️ AI PATTERN SELECTION FAILED"
+  );
+
+  return candidatePatterns.slice(0, 2);
+}
+
+const aiData =
+  await aiRes.json();
+
+const raw =
+  aiData?.choices?.[0]
+    ?.message?.content;
+
+console.log(
+  "🤖 PATTERN AI RAW:",
+  raw
+);
+
+let selectedPatternIds: string[] = [];
+
+try {
+
+  const parsed =
+    JSON.parse(raw);
+
+  selectedPatternIds =
+    parsed.patterns || [];
+
+} catch {
+
+  console.log(
+    "⚠️ PATTERN AI PARSE FAILED"
+  );
+
+  return candidatePatterns.slice(0, 2);
+}
+
+console.log(
+  "🎯 AI SELECTED PATTERNS:",
+  selectedPatternIds
+);
+
+return candidatePatterns.filter(
+  (p) =>
+    selectedPatternIds.includes(
+      p.id
+    )
+);
+
 }

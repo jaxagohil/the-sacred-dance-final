@@ -1,7 +1,6 @@
 export const TABLE_CONFIGS = [
 
  
-   
   /*
    * ------------------------------------------------
    * 🌌 GUIDANCE ORCHESTRATION CONTENT
@@ -99,4 +98,6 @@ export const TABLE_CONFIGS = [
     onConflict:
       "screen,key,language",
   },
+   
+
 ];

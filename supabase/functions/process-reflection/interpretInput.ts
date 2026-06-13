@@ -77,6 +77,12 @@ export async function interpretInput(
   const behaviourMap =
     await loadBehaviourSynonyms();
 
+    console.log(
+  "🧪 SELF_REFLECTION MAP:",
+  behaviourMap["self_reflection"]
+);
+
+
   try {
 
     // ----------------------------------
@@ -181,6 +187,18 @@ return {
       data
     );
 
+    console.log(
+  "🧩 RAW ENTITIES",
+  {
+    people: data?.people,
+    places: data?.places,
+    things: data?.things,
+    people_entities: data?.people_entities,
+    places_entities: data?.places_entities,
+    things_entities: data?.things_entities,
+  }
+);
+
     // ----------------------------------
     // 😊 RAW AI EMOTIONS
     // ----------------------------------
@@ -200,7 +218,7 @@ const normalizedEmotions =
 
     .map((e) =>
       emotionMap[e] || e
-    );
+    );    
 
 // ----------------------------------
 // 🚨 UNKNOWN EMOTIONS
@@ -262,6 +280,11 @@ const normalizedBehaviours =
     .map((b) =>
       behaviourMap[b] || b
     );
+
+console.log(
+  "🧪 NORMALIZED BEHAVIOURS:",
+  normalizedBehaviours
+);    
 
 const unknownBehaviours =
 
@@ -408,6 +431,15 @@ const cleaned = {
       "🧠 CLEANED AI:",
       cleaned
     );
+
+console.log(
+  "🧩 CLEANED ENTITIES",
+  {
+    people: cleaned.people,
+    places: cleaned.places,
+    things: cleaned.things,
+  }
+);    
 
 console.log(
   "👥 PEOPLE:",

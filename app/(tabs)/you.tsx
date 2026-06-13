@@ -548,9 +548,7 @@ const batchId =
       )
     ) {
 
-      console.log(
-        "☁️ Uploading avatar..."
-      );
+      //console.log(  "☁️ Uploading avatar...");
 
       const response =
         await fetch(
@@ -615,10 +613,7 @@ const batchId =
       safeAvatar =
         publicUrlData.publicUrl;
 
-      console.log(
-        "🌍 FINAL AVATAR:",
-        safeAvatar
-      );
+      //console.log(  "🌍 FINAL AVATAR:",  safeAvatar);
     }
 
     //
@@ -695,10 +690,7 @@ hemisphere,
       return;
     }
 
-    console.log(
-      "✅ PROFILE SAVED:",
-      data
-    );
+    //console.log(  "✅ PROFILE SAVED:",  data);
 
      //
     // ✨ PROCESS REFLECTIONS 
@@ -733,9 +725,7 @@ await processRepeatsField({
   repeats,
 });
 
-  console.log(
-    "✨ Pattern reflection created"
-  );
+  //console.log(  "✨ Pattern reflection created");
 }
 }
 
@@ -754,9 +744,7 @@ if (
 
 if (!line.trim()) {
 
-  console.log(
-    "🧹 Core belief cleared"
-  );
+  console.log(  "🧹 Core belief cleared");
 
 } else { 
 await processCoreBeliefField({
@@ -772,9 +760,7 @@ await processCoreBeliefField({
   coreBelief: line,
 });
 
-  console.log(
-    "✨ Line reflection created"
-  );
+  //console.log(  "✨ Line reflection created");
 }
 }
 
@@ -823,9 +809,7 @@ await processEnergyAxes({
   },
 });
 
-  console.log(
-    "✨ Energy reflection created"
-  );
+  //console.log(  "✨ Energy reflection created");
 }
 
 if (
@@ -856,9 +840,7 @@ const hasSignals =
 
 if (!hasSignals) {
 
-  console.log(
-    "🧹 Childhood layer cleared"
-  );
+  console.log( "🧹 Childhood layer cleared");
 
 } else {
 
@@ -871,9 +853,7 @@ if (!hasSignals) {
   repeats,
 });
 
-  console.log(
-    "✨ Childhood reflection created"
-  );
+  //console.log(  "✨ Childhood reflection created");
 }
 }
     //
@@ -1368,7 +1348,7 @@ style={{
       : Colors.mutedText,
 
   opacity:
-  active ? 0.82 : 0.42,
+  active ? 0.82 : 0.62,
 
   fontWeight:
     active ? "400" : "300",

@@ -188,6 +188,11 @@ export async function buildReflectionPacket({
           voiceData.nervousSystem;
       }
     }
+
+    console.log(
+  "🎤 VOICE TEXT",
+  voiceData?.reflection
+);
   }
 
   /*
@@ -235,6 +240,11 @@ export async function buildReflectionPacket({
    * 🌌 RETURN
    * --------------------------------------------------
    */
+
+  console.log(
+  "📦 FINAL PACKET TEXT",
+  packet.text
+);
 
   return packet;
 }

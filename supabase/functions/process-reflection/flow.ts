@@ -161,10 +161,13 @@ export async function processReflection(
       source,
     });
 
-  console.log(
-    "🧠 INTERPRETATION:",
-    interpretation
-  );
+console.log(
+  "✅ INTERPRET COMPLETE"
+);
+
+console.log(
+  interpretation
+);
 
   // --------------------------------------------------
   // 😊 RAW EMOTIONS
@@ -247,66 +250,6 @@ export async function processReflection(
     string[] =
 
     interpretation.behaviours || [];
-
-  /*
- * --------------------------------------------------
- * 🌌 GUIDANCE TEXT FALLBACK
- * --------------------------------------------------
- */
-
-const lowerText =
-
-  String(text || "")
-    .toLowerCase();
-
-if (
-  rawBehaviours.length === 0
-) {
-
-  if (
-    lowerText.includes(
-      "potential"
-    )
-  ) {
-
-    rawBehaviours.push(
-      "future_projection"
-    );
-  }
-
-  if (
-    lowerText.includes(
-      "dream"
-    )
-  ) {
-
-    rawBehaviours.push(
-      "idealizing"
-    );
-  }
-
-  if (
-    lowerText.includes(
-      "not grounding"
-    )
-  ) {
-
-    rawBehaviours.push(
-      "ungrounded"
-    );
-  }
-
-  if (
-    lowerText.includes(
-      "pattern"
-    )
-  ) {
-
-    rawBehaviours.push(
-      "self_reflection"
-    );
-  }
-}  
 
   if (
     rawBehaviours.length === 0
@@ -446,9 +389,16 @@ await derivePatternsFromBehaviours(
 
   behaviours,
 
+  text,
+
   source,
 
   signalDepth,
+);
+
+console.log(
+  "🔥 DERIVED PATTERNS:",
+  derivedPatterns
 );
 
   const rawPatterns =
@@ -741,8 +691,16 @@ const signals = [];
 for (const currentPattern of groupedPatterns.values()) {
 
   console.log(
-    `⚡ PROCESSING DISTINCT PATTERN SIGNAL: ${currentPattern.id}`
-  );
+  "⚡ ABOUT TO CREATE SIGNAL",
+  currentPattern.id
+);
+
+  console.log(
+  "✅ GROUPED PATTERNS",
+  Array.from(
+    groupedPatterns.values()
+  )
+);
 
   const signalResult =
     await createSignalFromInterpretation({
@@ -779,6 +737,11 @@ for (const currentPattern of groupedPatterns.values()) {
     signals.push(
       signalResult.signal
     );
+
+    console.log(
+  "⚡ SIGNAL RESULT",
+  signalResult
+);
   }
 }
 

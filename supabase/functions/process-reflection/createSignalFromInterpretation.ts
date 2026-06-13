@@ -8,6 +8,8 @@ import { createSignal } from "./signals.ts";
 
 import { enrichSpiralState } from "./enrichSpiralState.ts";
 
+import { deriveLensesFromEntities } from "./deriveLensesFromEntities.ts";
+
 // --------------------------------------------------
 // HELPERS
 // --------------------------------------------------
@@ -685,6 +687,52 @@ const spiralData =
   };
 
   // --------------------------------------------------
+// 🪞 ENTITY LENSES
+// --------------------------------------------------
+
+console.log(
+  "🧪 ABOUT TO DERIVE LENSES",
+  {
+    people:
+      interpretation?.people,
+
+    places:
+      interpretation?.places,
+
+    things:
+      interpretation?.things,
+  }
+);
+
+const {
+
+  lensScores: entityLensScores,
+
+  entityLenses,
+
+} = await deriveLensesFromEntities(
+
+  interpretation?.people || [],
+
+  interpretation?.places || [],
+
+  interpretation?.things || [],
+);
+
+console.log(
+  "🧪 DERIVE RESULT",
+  {
+    entityLensScores,
+    entityLenses,
+  }
+);
+
+console.log(
+  "🪞 ENTITY LENSES:",
+  entityLenses
+);
+
+  // --------------------------------------------------
   // ⚡ CREATE SIGNAL
   // --------------------------------------------------
 
@@ -722,6 +770,9 @@ ai_behaviours:
 ai_lens:
   aiLens,
 
+entity_lenses:
+  entityLenses,  
+
 people_entities:
   interpretation?.people_entities || [],
 
@@ -746,8 +797,21 @@ things_entities:
       chakra_scores:
         normalizedChakras,
 
-      lens_scores:
-        lensScores,
+lens_scores: {
+
+  ...lensScores,
+
+  ...Object.fromEntries(
+    entityLensScores.map(
+      (l) => [
+        l.lens,
+        (
+          lensScores[l.lens] || 0
+        ) + l.score
+      ]
+    )
+  ),
+},
 
       ai_confidence:
 

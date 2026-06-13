@@ -241,6 +241,44 @@ ${reflectionEvidence
 
   ?.join("\n") || "none"}
 
+  //--------------------------------------------------
+// 🪞 ENTITY MIRRORS
+//--------------------------------------------------
+
+Recognised symbolic entities:
+
+${lensContext?.entityLensEvidence
+
+  ?.slice(0,10)
+
+  ?.map(
+    (e:any) =>
+
+`- ${e.entity}
+
+  Emotional:
+  ${e.emotional_meaning || "none"}
+
+  Symbolic:
+  ${e.symbolic_meaning || "none"}`
+  )
+
+  ?.join("\n\n") || "none"}
+
+These entities are not conclusions.
+
+They are recurring symbolic mirrors
+that appeared directly in the user's
+lived experience.
+
+When multiple entities point toward
+similar emotional or symbolic themes,
+those themes may deserve greater
+recognitional attention.
+
+Prioritise repeated entity themes
+over abstract interpretation.
+
 --------------------------------------------------
 RECURRING MIRRORS
 --------------------------------------------------
@@ -398,6 +436,22 @@ The reflection should prioritize:
 specific recurring relational dynamics
 over generalized emotional summaries.
 
+If entity evidence exists:
+
+Treat entity evidence as higher-confidence
+than inferred interpretations.
+
+Prioritise the symbolic and emotional
+themes attached to recurring people
+before creating broader relational
+interpretations.
+
+Stay close to what the person
+appears to reflect.
+
+Do not invent additional meaning
+beyond the observed entity evidence.
+
 Focus on:
 - repeated interactions
 - emotional reciprocity
@@ -461,6 +515,18 @@ Places are nervous system mirrors.
 The reflection should prioritize:
 specific recurring environments
 and what they appear to awaken internally.
+
+If entity evidence exists:
+
+Treat entity evidence as higher-confidence
+than inferred interpretations.
+
+Prioritise the emotional and symbolic
+qualities attached to recurring places.
+
+Notice what repeatedly feels
+safe, overwhelming, expansive,
+containing, familiar, or activating.
 
 The reflection should remain centered
 on environments,
@@ -577,6 +643,19 @@ media,
 routines,
 symbols,
 or repeated behaviours.
+
+If entity evidence exists:
+
+Treat entity evidence as higher-confidence
+than inferred interpretations.
+
+Prioritise the emotional and symbolic
+themes attached to recurring objects,
+possessions, media, routines,
+or material focus.
+
+Remain grounded in the specific
+symbolic evidence provided.
 
 Focus on:
 - recurring attention

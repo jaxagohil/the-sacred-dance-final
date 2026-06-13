@@ -57,7 +57,7 @@ export default function CosmicTiles({
 
   const shimmerAnim =
     useRef(
-      new Animated.Value(0.18)
+      new Animated.Value(0.28)
     ).current;
 
   //
@@ -373,7 +373,7 @@ const styles =
 
     fontSize: 14,
 
-    opacity: 0.38,
+    opacity: 0.48,
 
     marginBottom: 6,
   },
@@ -389,7 +389,7 @@ const styles =
 
     marginTop: 1,
 
-    opacity: 0.9,
+    opacity: 1,
 
     fontWeight: "300",
   },
@@ -409,6 +409,6 @@ const styles =
 
     lineHeight: 14,
 
-    opacity: 0.85,
+    opacity: 0.95,
   },
 });

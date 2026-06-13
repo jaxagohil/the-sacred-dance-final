@@ -351,6 +351,8 @@ if (narrativeError) {
     narrativeError
   );
 
+  throw narrativeError;
+
 } else {
 
   console.log(
@@ -430,6 +432,8 @@ if (emotionalError) {
     "❌ Journal emotional field error",
     emotionalError
   );
+
+  throw emotionalError;
 
 } else {
 
