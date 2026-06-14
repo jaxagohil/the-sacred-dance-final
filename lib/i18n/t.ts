@@ -73,10 +73,7 @@ export const loadTranslations =
 
       translations = mapped;
 
-      console.log(
-        "✅ TRANSLATIONS LOADED",
-        translations
-      );
+      //console.log( "✅ TRANSLATIONS LOADED",  translations);
 
     } catch (err) {
 

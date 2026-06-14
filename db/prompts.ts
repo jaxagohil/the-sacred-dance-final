@@ -109,7 +109,7 @@ const today =
       ) + 1;
 
     if (
-      diffDays <= 30
+      diffDays > 1 && diffDays <= 31
     ) {
 
       const onboarding =

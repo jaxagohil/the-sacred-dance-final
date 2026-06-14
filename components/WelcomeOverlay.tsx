@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 
 import {
-    Modal,
-    Pressable,
-    Text,
-    View,
+  Modal,
+  Pressable,
+  Text,
+  View,
 } from "react-native";
 
 import {
-    Colors,
-    Fonts,
+  Colors,
+  Fonts,
 } from "../constants/theme";
 
 type Props = {
@@ -27,7 +27,7 @@ export default function WelcomeOverlay({
 
   const next = () => {
 
-    if (step < 4) {
+    if (step < 5) {
 
       setStep(step + 1);
 
@@ -50,17 +50,28 @@ export default function WelcomeOverlay({
 
       case 2:
         return {
-          title: "\n\n\nTap to Go Deeper.",
-          body:
-            "",
+          title: "\nTap to Go Deeper\n",
+    body:
+      "Everything is valid. The smallest reflection can reveal a deeper pattern.",
+
         };
 
       case 3:
         return {
-          title: "\n\n\nShare Your Reflections",
-          body:
-            "",
+          title: "\nShare Your Reflections\n",
+    body:
+      "Life is happening for you. What you share, you become aware of.",
+
         };
+
+case 4:
+  return {
+    title:
+      "\nA Reflection of You",
+
+    body:
+      "Location - Language - Preferences\n\nThe people, places and things that matter most. Over time, Sacred Dance remembers.",
+  };       
 
       default:
         return {
@@ -139,7 +150,7 @@ export default function WelcomeOverlay({
               color:
                 Colors.softText,
 
-              fontSize: 14,
+              fontSize: 10,
 
               lineHeight: 22,
 

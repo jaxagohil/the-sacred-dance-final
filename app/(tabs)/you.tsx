@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -1379,6 +1380,8 @@ style={{
       right: 0,
       bottom: 0,
 
+      maxHeight: "70%",
+
       paddingTop: 28,
       paddingBottom: 42,
 
@@ -1421,6 +1424,10 @@ style={{
 
     {/* 🌍 LOCATION/LANGAUGE */}
 
+<ScrollView
+  showsVerticalScrollIndicator={false}
+>
+  
  <Text
   style={{
     color:
@@ -1550,6 +1557,8 @@ onPress={() => {
     );
   })}
 </View>
+
+</ScrollView>
 
     {/* ✨ CLOSE */}
 

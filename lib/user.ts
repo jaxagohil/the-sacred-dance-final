@@ -1,28 +1,68 @@
-import * as SecureStore from "expo-secure-store";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "../services/supabase";
 
 let USER_ID: string | null = null;
 
-export async function initUser() {
-  let id = await SecureStore.getItemAsync("user_id");
+let INIT_PROMISE:
+  Promise<string> | null = null;
 
-  if (!id) {
-    id = uuidv4();
-    await SecureStore.setItemAsync("user_id", id);
-    console.log("🆕 New user created:", id);
-  } else {
-    console.log("👤 Existing user:", id);
+export async function initUser() {
+
+  if (INIT_PROMISE) {
+    return INIT_PROMISE;
   }
 
-  USER_ID = id;
-  return id;
+  INIT_PROMISE = (async () => {
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    console.log(
+      "👤 EXISTING AUTH USER:",
+      user?.id
+    );
+
+    if (user) {
+
+      USER_ID = user.id;
+
+      return USER_ID;
+    }
+
+    console.log(
+      "🆕 CREATING ANON USER"
+    );
+
+    const {
+      data,
+      error,
+    } =
+      await supabase.auth
+        .signInAnonymously();
+
+    if (error) {
+      throw error;
+    }
+
+    USER_ID = data.user.id;
+
+    console.log(
+      "✅ ANON USER CREATED:",
+      USER_ID
+    );
+
+    return USER_ID;
+
+  })();
+
+  return INIT_PROMISE;
 }
 
-// ✅ SAFE ACCESS
 export async function getUserId() {
+
   if (!USER_ID) {
-    console.log("⚠️ USER_ID not ready → init");
     return await initUser();
   }
+
   return USER_ID;
 }

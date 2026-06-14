@@ -63,10 +63,7 @@ export async function loadValidSignals() {
       "✅ SIGNAL REGISTRIES LOADED"
     );
 
-    console.log(
-      "😭 EMOTIONS:",
-      VALID_EMOTIONS
-    );
+    //console.log( "😭 EMOTIONS:",  VALID_EMOTIONS);
 
     console.log(
       "🧠 BEHAVIOURS:",

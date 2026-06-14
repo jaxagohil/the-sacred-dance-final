@@ -143,7 +143,7 @@ const [
       setAppLanguage(
   p?.language || "en"
 );
-      console.log("LANGUAGE:", p?.language);
+      //console.log("LANGUAGE:", p?.language);
 
       /*
  * --------------------------------------------------

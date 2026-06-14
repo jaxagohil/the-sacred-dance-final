@@ -68,10 +68,7 @@ export async function loadValidSignals() {
       VALID_EMOTIONS
     );
 
-    console.log(
-      "🧠 BEHAVIOURS:",
-      VALID_BEHAVIOURS
-    );
+    //console.log(  "🧠 BEHAVIOURS:",  VALID_BEHAVIOURS);
 
   })();
 
