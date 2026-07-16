@@ -42,6 +42,16 @@ const { data: behaviourRows } =
       embodiment
     `);
 
+const { data: lensRows } =
+  await supabase
+    .from("lens_keywords")
+    .select(`
+      normalized_keyword,
+      category,
+      emotional_meaning,
+      symbolic_meaning
+    `);    
+
 const BEHAVIOUR_CONTEXT =
   (behaviourRows || [])
 
@@ -72,7 +82,26 @@ Embodiment:
 ${b.embodiment || ""}
 
 `)
-.join("\n");    
+.join("\n");  
+
+const LENS_CONTEXT =
+  (lensRows || [])
+    .map((l) => `
+
+Concept:
+${l.normalized_keyword}
+
+Category:
+${l.category}
+
+Emotional Meaning:
+${l.emotional_meaning || ""}
+
+Symbolic Meaning:
+${l.symbolic_meaning || ""}
+
+`)
+.join("\n");
 
 const EMOTIONS =
   (emotionRows || [])
@@ -215,82 +244,33 @@ emotionally or behaviourally
 relevant to the reflection.
 
 Things:
-objects,
-possessions,
-symbols,
-thoughts,
-beliefs,
-dreams,
-memories,
-emotions,
-fears,
-hopes,
-longings,
-desires,
-illnesses,
-guidance,
-intuition,
-synchronicities,
-responsibilities,
-projects,
-commitments,
-or meaningful experiences
+
+Things are meaningful concepts,
+symbols, values, intentions,
+beliefs, emotions, memories,
+dreams or experiences
 receiving attention.
 
-A Thing does not need to be physical.
+A Thing does not need
+to be physical.
 
-Emotions, thoughts, beliefs,
-dreams, memories, fears,
-hopes, longings, illnesses,
-guidance, intuition and
-synchronicities may also be
-returned as Things when they
-are receiving meaningful
-attention in the reflection.
+Use the Concept Registry
+to identify the closest concepts.
 
-Emotion → Thing Mapping
+If an emotion, belief,
+memory, intention,
+experience or symbol
+represents the focus
+of attention,
+it may also be returned
+as a Thing.
 
-If an emotion is present,
-also return the underlying concept
-as a Thing when relevant.
-
-Examples:
-
-hopeful -> hope
-fearful -> fear
-grateful -> gratitude
-lonely -> loneliness
-loved -> love
-confused -> uncertainty
-anxious -> worry
-peaceful -> peace
-joyful -> joy
-sad -> sadness
-
-Examples:
-
-"I feel hopeful"
-→ things: ["hope"]
-
-"I keep thinking about the future"
-→ things: ["thought","future"]
-
-"I had a dream"
-→ things: ["dream"]
-
-"I am afraid"
-→ things: ["fear"]
-
-"I keep seeing signs"
-→ things: ["sign","synchronicity"]
-
-"I feel called to trust"
-→ things: ["trust","guidance"]
-
-"My childhood felt unsafe"
-→ things: ["safety","protection"]
+Prefer concepts from the
+Concept Registry rather
+than inventing new concepts.
 
 If a reflection contains only emotions,
+thoughts or inner experiences,
 the corresponding Things should still
 be returned.
 
@@ -305,7 +285,8 @@ to the present moment.
 When analysing childhood signals,
 return symbolic concepts as Things.
 
-Examples:
+Common symbolic childhood concepts:
+
 safety
 protection
 belonging
@@ -422,89 +403,49 @@ emotionally or behaviourally
 relevant to the reflection.
 
 Things:
-objects,
-possessions,
-symbols,
-thoughts,
-beliefs,
-dreams,
-memories,
-emotions,
-fears,
-hopes,
-longings,
-desires,
-illnesses,
-guidance,
-intuition,
-synchronicities,
-responsibilities,
-projects,
-commitments,
-or meaningful experiences
+
+Things are meaningful concepts,
+symbols, values, intentions,
+beliefs, emotions, memories,
+dreams or experiences
 receiving attention.
 
-A Thing does not need to be physical.
+A Thing does not need
+to be physical.
 
-Emotions, thoughts, beliefs,
-dreams, memories, fears,
-hopes, longings, illnesses,
-guidance, intuition and
-synchronicities may also be
-returned as Things when they
-are receiving meaningful
-attention in the reflection.
+Use the Concept Registry
+to identify the closest concepts.
 
-Emotion → Thing Mapping
+If an emotion, belief,
+memory, intention,
+experience or symbol
+represents the focus
+of attention,
+it may also be returned
+as a Thing.
 
-If an emotion is present,
-also return the underlying concept
-as a Thing when relevant.
-
-Examples:
-
-hopeful -> hope
-fearful -> fear
-grateful -> gratitude
-lonely -> loneliness
-loved -> love
-confused -> uncertainty
-anxious -> worry
-peaceful -> peace
-joyful -> joy
-sad -> sadness
-
-Examples:
-
-"I feel hopeful"
-→ things: ["hope"]
-
-"I keep thinking about the future"
-→ things: ["thought","future"]
-
-"I had a dream"
-→ things: ["dream"]
-
-"I am afraid"
-→ things: ["fear"]
-
-"I keep seeing signs"
-→ things: ["sign","synchronicity"]
-
-"I feel called to trust"
-→ things: ["trust","guidance"]
-
-"My childhood felt unsafe"
-→ things: ["safety","protection"]
+Prefer concepts from the
+Concept Registry rather
+than inventing new concepts.
 
 If a reflection contains only emotions,
+thoughts or inner experiences,
 the corresponding Things should still
 be returned.
+
+Do not list every object.
+
+Return only people, places
+and things that appear
+emotionally, behaviourally
+or symbolically relevant
+to the present moment.
 
 When analysing childhood signals,
 return symbolic concepts as Things.
 
-Examples:
+Common symbolic childhood concepts:
+
 safety
 protection
 belonging
@@ -622,85 +563,49 @@ emotionally or behaviourally
 relevant to the reflection.
 
 Things:
-objects,
-possessions,
-symbols,
-thoughts,
-beliefs,
-dreams,
-memories,
-emotions,
-fears,
-hopes,
-longings,
-desires,
-illnesses,
-guidance,
-intuition,
-synchronicities,
-responsibilities,
-projects,
-commitments,
-or meaningful experiences
+
+Things are meaningful concepts,
+symbols, values, intentions,
+beliefs, emotions, memories,
+dreams or experiences
 receiving attention.
 
-A Thing does not need to be physical.
+A Thing does not need
+to be physical.
 
-Emotions, thoughts, beliefs,
-dreams, memories, fears,
-hopes, longings, illnesses,
-guidance, intuition and
-synchronicities may also be
-returned as Things when they
-are receiving meaningful
-attention in the reflection.
+Use the Concept Registry
+to identify the closest concepts.
 
-Emotion → Thing Mapping
+If an emotion, belief,
+memory, intention,
+experience or symbol
+represents the focus
+of attention,
+it may also be returned
+as a Thing.
 
-If an emotion is present,
-also return the underlying concept
-as a Thing when relevant.
+Prefer concepts from the
+Concept Registry rather
+than inventing new concepts.
 
-Examples:
+If a reflection contains only emotions,
+thoughts or inner experiences,
+the corresponding Things should still
+be returned.
 
-hopeful -> hope
-fearful -> fear
-grateful -> gratitude
-lonely -> loneliness
-loved -> love
-confused -> uncertainty
-anxious -> worry
-peaceful -> peace
-joyful -> joy
-sad -> sadness
+Do not list every object.
 
-Examples:
-
-"I feel hopeful"
-→ things: ["hope"]
-
-"I keep thinking about the future"
-→ things: ["thought","future"]
-
-"I had a dream"
-→ things: ["dream"]
-
-"I am afraid"
-→ things: ["fear"]
-
-"I keep seeing signs"
-→ things: ["sign","synchronicity"]
-
-"I feel called to trust"
-→ things: ["trust","guidance"]
-
-"My childhood felt unsafe"
-→ things: ["safety","protection"]
+Return only people, places
+and things that appear
+emotionally, behaviourally
+or symbolically relevant
+to the present moment.
 
 When analysing childhood signals,
 return symbolic concepts as Things.
 
-Examples:
+Common symbolic childhood concepts:
+
 safety
 protection
 belonging
@@ -711,10 +616,6 @@ love
 acceptance
 criticism
 rejection
-
-If a reflection contains only emotions,
-the corresponding Things should still
-be returned.
 
 Text:
 
@@ -800,9 +701,40 @@ Behaviours are mandatory.
 
 Do not return an empty behaviours array.
 
-These emotions may also be returned
-as Things when they represent the
-main focus of attention.
+Concept Registry:
+
+${LENS_CONTEXT}
+
+Things represent what the reflection
+is giving attention to.
+
+A Thing is usually a concept,
+value, belief, need, intention,
+emotion, memory, symbol,
+relationship dynamic,
+or experience.
+
+Things are NOT limited to
+physical objects.
+
+Every reflection usually contains
+at least one Thing.
+
+If no people or places are present,
+identify the concepts receiving
+the person's attention.
+
+Return those concepts as Things.
+
+Use the Concept Registry to choose
+the closest matching concepts.
+
+Prefer registry concepts rather than
+inventing new ones.
+
+Only return an empty Things array
+when no meaningful concept can
+reasonably be identified.
 
 User-selected emotions:
 ${emotions?.join(", ") || "none"}
@@ -921,16 +853,31 @@ try {
   parsed = {};
 }
 
-    const normalize = (
-      arr?: string[]
-    ) =>
+const normalize = (
+  arr?: any[]
+) =>
 
-      (arr || []).map(
-        (x) =>
-          x
-            ?.toLowerCase()
-            .trim()
-      );
+  (arr || [])
+
+    .map((x) => {
+
+      if (typeof x === "string") {
+
+        return x;
+      }
+
+      return x?.id;
+    })
+
+    .filter(Boolean)
+
+    .map((x) =>
+
+      x
+        .toLowerCase()
+        .trim()
+
+    );
 
     const validEmotionList =
 

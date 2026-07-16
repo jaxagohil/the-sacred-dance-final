@@ -499,7 +499,7 @@ const realityLayers = {
 };
 
 // --------------------------------------------------
-// 🌀 SPIRAL ENRICHMENT
+// 🌀 ALIGNMENT ENRICHMENT
 // --------------------------------------------------
 
 const spiralData =
@@ -834,6 +834,9 @@ lens_scores: {
 reality_layers:
   realityLayers,
 
+expression_profile:
+  spiralData.expression_profile,  
+
       consciousness_movement:
         consciousnessMovement,
 
@@ -858,8 +861,8 @@ reality_layers:
 spiral_state:
   spiralData.spiral_state,
 
-spiral_direction:
-  spiralData.spiral_direction,
+spiral_scores:
+  spiralData.spiral_scores,
 
 dominant_pole:
   spiralData.dominant_pole,
@@ -893,6 +896,9 @@ chakra_activation:
     distortions,
 
     realityLayers,
+
+    expressionProfile:
+  spiralData.expression_profile,
 
     spiralData,
 

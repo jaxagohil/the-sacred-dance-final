@@ -117,7 +117,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 🌌 CONNECTIONS */}
+      {/* 🌌 CONNECTIONS .. NOW ALIGNMENT */}
 
       <Tabs.Screen
 
@@ -125,7 +125,7 @@ export default function TabLayout() {
 
         options={{
 
-          title: "Connections",
+          title: "Alignment",
 
           tabBarIcon: ({
             color,

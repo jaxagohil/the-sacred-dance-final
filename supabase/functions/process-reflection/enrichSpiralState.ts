@@ -11,6 +11,11 @@ type Behaviour = {
   energetic_weight?: number;
 
   consciousness_weight?: number;
+
+    feel_weight?: number;
+  think_weight?: number;
+  say_weight?: number;
+  do_weight?: number;
 };
 
 type Pattern = {
@@ -238,6 +243,42 @@ export function enrichSpiralState({
       chakraActivation
     );
 
+ /*
+ * --------------------------------------------------
+ * 🪞 EXPRESSION PROFILE
+ * --------------------------------------------------
+ */
+
+const expression_profile = {
+
+  feel: 0,
+
+  think: 0,
+
+  say: 0,
+
+  do: 0,
+};
+
+behaviours.forEach((behaviour) => {
+
+  expression_profile.feel +=
+    behaviour.feel_weight || 0;
+
+  expression_profile.think +=
+    behaviour.think_weight || 0;
+
+  expression_profile.say +=
+    behaviour.say_weight || 0;
+
+  expression_profile.do +=
+    behaviour.do_weight || 0;
+});
+
+const normalizedExpression = normalizeMap(
+  expression_profile
+);
+
   /*
    * --------------------------------------------------
    * 🧘 INTEGRATION SCORE
@@ -268,121 +309,153 @@ export function enrichSpiralState({
       )
     );
 
-  /*
-   * --------------------------------------------------
-   * 🌊 SPIRAL DIRECTION
-   * --------------------------------------------------
-   */
+/*
+ * --------------------------------------------------
+ * 🌊 SPIRAL ENGINE
+ * --------------------------------------------------
+ */
 
-  let spiral_direction =
-    "processing";
+const spiral_scores = {
 
-  /*
-   * ----------------------------------------------
-   * 🌑 CONTRACTING
-   * ----------------------------------------------
-   */
+  awareness: 0,
 
-  if (
+  observation: 0,
 
-    reality_layers.emotional >
-      0.8
+  reflection: 0,
 
-    &&
+  choice: 0,
 
-    reality_layers.consciousness <
-      0.4
+  integration: 0,
 
-  ) {
+  embodiment: 0,
+};
 
-    spiral_direction =
-      "contracting";
-  }
+ /*
+ * --------------------------------------------------
+ * 🌍 REALITY LAYERS
+ * --------------------------------------------------
+ */
 
-  /*
-   * ----------------------------------------------
-   * 🌕 EXPANDING
-   * ----------------------------------------------
-   */
+spiral_scores.awareness +=
+  reality_layers.physical;
 
-  if (
+spiral_scores.observation +=
+  reality_layers.emotional;
 
-    reality_layers.energetic >
-      0.7
+spiral_scores.reflection +=
+  reality_layers.consciousness;
+  
+/*
+ * --------------------------------------------------
+ * 🪞 EXPRESSION PROFILE
+ * --------------------------------------------------
+ */
 
-    &&
+spiral_scores.observation +=
+  normalizedExpression.feel;
 
-    reality_layers.consciousness >
-      0.6
+spiral_scores.reflection +=
+  normalizedExpression.think;
 
-  ) {
+spiral_scores.choice +=
+  normalizedExpression.say;
 
-    spiral_direction =
-      "expanding";
-  }
+spiral_scores.embodiment +=
+  normalizedExpression.do;
+  
+/*
+ * --------------------------------------------------
+ * 🧘 INTEGRATION
+ * --------------------------------------------------
+ */
 
-  /*
-   * ----------------------------------------------
-   * ☯ INTEGRATING
-   * ----------------------------------------------
-   */
+spiral_scores.integration +=
+  integrationScore;
 
-  if (
-    integrationScore >
-    0.7
-  ) {
+spiral_scores.embodiment +=
+  integrationScore * 0.5;
+  
+  
+/*
+ * --------------------------------------------------
+ * 🌈 CHAKRA EVIDENCE
+ * --------------------------------------------------
+ */
 
-    spiral_direction =
-      "integrating";
-  }
+spiral_scores.awareness +=
+  normalizedChakras.root;
 
-  /*
-   * ----------------------------------------------
-   * 🌀 OSCILLATING
-   * ----------------------------------------------
-   */
+spiral_scores.observation +=
+  normalizedChakras.sacral;
 
-  if (
+spiral_scores.reflection +=
+  normalizedChakras.heart;
 
-    leftPoleScore > 1
+spiral_scores.choice +=
+  normalizedChakras.throat;
 
-    &&
+spiral_scores.integration +=
+  normalizedChakras.third_eye;
 
-    rightPoleScore > 1
+spiral_scores.embodiment +=
+  normalizedChakras.crown;
+  
+/*
+ * --------------------------------------------------
+ * 🌊 TOTAL SPIRAL SCORES
+ * --------------------------------------------------
+ */
 
-  ) {
+const totalSpiralScore =
 
-    spiral_direction =
-      "oscillating";
-  }
+  Object.values(
+    spiral_scores
+  ).reduce(
+    (sum, value) => sum + value,
+    0
+  );
 
-  /*
-   * ----------------------------------------------
-   * 💤 STAGNATING
-   * ----------------------------------------------
-   */
+const normalizedSpiralScores =
 
-  if (
+  Object.fromEntries(
 
-    reality_layers.physical >
-      0.7
+    Object.entries(
+      spiral_scores
+    ).map(
+      ([key, value]) => [
 
-    &&
+        key,
 
-    reality_layers.emotional <
-      0.3
+        totalSpiralScore > 0
+          ? clamp(
+              value /
+              totalSpiralScore
+            )
+          : 0,
+      ]
+    )
 
-    &&
+  );
+  
+/*
+ * --------------------------------------------------
+ * 🌊 DOMINANT SPIRAL STAGE
+ * --------------------------------------------------
+ */
 
-    reality_layers.energetic <
-      0.3
+const sortedStages =
 
-  ) {
+  Object.entries(
+    normalizedSpiralScores
+  )
 
-    spiral_direction =
-      "stagnating";
-  }
+    .sort(
+      (a, b) => b[1] - a[1]
+    );
 
+const spiral_state =
+  sortedStages[0][0];
+  
   /*
    * --------------------------------------------------
    * 🌟 DOMINANT POLE
@@ -435,10 +508,10 @@ export function enrichSpiralState({
 
   return {
 
-    spiral_state:
-      spiral_direction,
+    spiral_state,
 
-    spiral_direction,
+    spiral_scores:
+  normalizedSpiralScores,
 
     dominant_pole,
 
@@ -462,5 +535,8 @@ export function enrichSpiralState({
       dominantPattern?.id ||
 
       null,
+
+      expression_profile:
+  normalizedExpression,
   };
 }

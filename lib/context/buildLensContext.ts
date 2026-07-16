@@ -431,6 +431,11 @@ if (totalSignals >= 45) {
   // 🔥 STRONGEST ENTRIES
   // --------------------------------------------------
 
+  console.log(
+  "🪞 Lens Entry Example",
+  entries[0]
+);
+
   const strongestEntries =
 
     [...entries]

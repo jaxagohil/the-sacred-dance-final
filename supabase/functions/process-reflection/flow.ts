@@ -74,6 +74,7 @@ emotional_weight?: number;
 energetic_weight?: number;
 
 consciousness_weight?: number;  
+
 };
 
 type Emotion = {
@@ -371,6 +372,18 @@ energetic_weight:
 
 consciousness_weight:
   row?.consciousness_weight || 0,  
+
+  feel_weight:
+  row?.feel_weight || 0,
+
+think_weight:
+  row?.think_weight || 0,
+
+say_weight:
+  row?.say_weight || 0,
+
+do_weight:
+  row?.do_weight || 0,
         };
       }
     );

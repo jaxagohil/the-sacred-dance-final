@@ -145,7 +145,7 @@ export const Fonts = {
     "Inter_500Medium",
 
     orchestration:
-  "CormorantGaramond_300Light_Italic",
+  "CormorantGaramond_400Regular",
 };
 
 export const Spacing = {

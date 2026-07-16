@@ -129,6 +129,18 @@ reality_layers?: {
 
   consciousness?: number;
 };
+
+expression_profile?: {
+
+  feel?: number;
+
+  think?: number;
+
+  say?: number;
+
+  do?: number;
+};
+
   // --------------------------------------------------
   // ✨ CONSCIOUSNESS
   // --------------------------------------------------
@@ -180,7 +192,8 @@ reality_layers?: {
 
 spiral_state?: string;
 
-spiral_direction?: string;
+spiral_scores?:
+  Record<string, number>;
 
 dominant_pole?: string;
 
@@ -333,6 +346,17 @@ createSignal({
   consciousness: 0,
 },
 
+expression_profile = {
+
+  feel: 0,
+
+  think: 0,
+
+  say: 0,
+
+  do: 0,
+},
+
   // --------------------------------------------------
   // ✨ CONSCIOUSNESS
   // --------------------------------------------------
@@ -381,10 +405,9 @@ createSignal({
   // 🌀 SPIRAL
 
 spiral_state =
-  "processing",
+  "awareness",
 
-spiral_direction =
-  "processing",
+spiral_scores = {},  
 
 dominant_pole =
   "center",
@@ -495,6 +518,8 @@ chakra_activation = {},
 
       reality_layers,
 
+      expression_profile,
+
       // ------------------------------------------------
       // ✨ CONSCIOUSNESS
       // ------------------------------------------------
@@ -529,7 +554,7 @@ chakra_activation = {},
 
 spiral_state,
 
-spiral_direction,
+spiral_scores,
 
 dominant_pole,
 
@@ -626,9 +651,6 @@ chakra_activation,
 
             spiral_state:
   data?.spiral_state,
-
-spiral_direction:
-  data?.spiral_direction,
 
 dominant_pole:
   data?.dominant_pole,

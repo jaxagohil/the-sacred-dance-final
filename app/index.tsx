@@ -28,8 +28,6 @@ import { processLandingReflection } from "../db/processLandingReflection";
 import { getDailyPrompt } from "../db/prompts";
 import { getUserId, initUser } from "../lib/user";
 
-import * as SecureStore from "expo-secure-store";
-
 import {
   Audio,
 } from "expo-av";
@@ -61,6 +59,10 @@ import {
 import {
   supabase,
 } from "../services/supabase";
+
+import {
+  loadAlignmentModules,
+} from "../lib/alignment/loadAlignmentModules";
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -95,13 +97,18 @@ export default function LandingScreen() {
 ] = useState(false);
 
 const [
-  hasSeenWelcome,
-  setHasSeenWelcome,
+  aiConsent,
+  setAiConsent,
 ] = useState(false);
 
   const [saving,
   setSaving] =
     useState(false);
+
+const [
+  profileId,
+  setProfileId,
+] = useState<string | null>(null);    
 
   const [language, setAppLanguage] = useState("en");
 
@@ -135,6 +142,7 @@ const [
       const userId = await getUserId();
 
       const p = await getOrCreateProfile(userId);
+      setProfileId(p.id);
 
       await setLanguage(
         p?.language || "en"
@@ -181,15 +189,28 @@ setLanguageContext(
 
 /*
  * --------------------------------------------------
- * 🌌 DAILY FIELD
+ * 🌿 ALIGNMENT OS + DAILY FIELD
  * --------------------------------------------------
  */
 
-const field =
 
-  await getDailyField(
-    userId
-  );
+//console.log("➡️ About to load Alignment Modules");
+
+const [
+
+  _,
+
+  field,
+
+] = await Promise.all([
+
+loadAlignmentModules(),
+
+  getDailyField(userId),
+
+]);
+
+//console.log("✅ Finished loading Alignment Modules");
 
 setDailyField(
   field
@@ -233,14 +254,8 @@ const pr =
 
 setPrompt(pr);
 
-const seen =
-
-  await SecureStore.getItemAsync(
-    "sacred_dance_welcome_seen"
-  );
-
-setHasSeenWelcome(
-  seen === "Y"
+setAiConsent(
+  p?.ai_consent ?? false
 );
 
 setReady(true);
@@ -546,10 +561,10 @@ onPress={() => {
 
   setShowActions(true);
 
-  if (!hasSeenWelcome) {
+if (!aiConsent) {
 
-    setShowWelcome(true);
-  }
+  setShowWelcome(true);
+}
 
   Keyboard.dismiss();
 }}
@@ -588,7 +603,7 @@ onPress={() => {
     fontFamily:
       Fonts.orchestration,
 
-    fontSize: 18,
+    fontSize: 16,
 
     lineHeight: 32,
 
@@ -823,18 +838,37 @@ placeholder={t("landing.placeholder")}
 
 <WelcomeOverlay
   visible={showWelcome}
+  onClose={async () => {
 
-onClose={async () => {
+    if (!profileId) return;
 
-  await SecureStore.setItemAsync(
-    "sacred_dance_welcome_seen",
-    "Y"
-  );
+    const { error } = await supabase
 
-  setHasSeenWelcome(true);
+      .from("profiles")
 
-  setShowWelcome(false);
-}}
+      .update({
+
+        ai_consent: true,
+
+        ai_consent_at: new Date().toISOString(),
+
+      })
+
+      .eq("id", profileId);
+
+    if (error) {
+
+      console.error(error);
+
+      return;
+
+    }
+
+    setAiConsent(true);
+
+    setShowWelcome(false);
+
+  }}
 />
 
 </KeyboardAvoidingView>

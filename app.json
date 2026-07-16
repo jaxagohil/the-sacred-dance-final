@@ -12,7 +12,13 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sacreddance.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+
+ "NSMicrophoneUsageDescription": "Sacred Dance uses the microphone to allow users to record voice reflections and journal entries.",
+
+"NSPhotoLibraryUsageDescription": "Sacred Dance uses photos selected by the user to support reflections, journaling, and AI-generated insights.",
+
+"NSPhotoLibraryAddUsageDescription": "Sacred Dance may save user-generated content and reflections to the photo library when requested by the user."
       }
     },
     "android": {
@@ -26,10 +32,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "output": "server",
-      "favicon": "./assets/images/favicon.png"
-    },
+    "web": {},
     "plugins": [
       "expo-router",
       [

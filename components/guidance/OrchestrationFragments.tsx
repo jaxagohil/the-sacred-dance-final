@@ -352,7 +352,7 @@ opacity,
   fontFamily:
   Fonts.orchestration,
 
-          fontSize: 18,
+          fontSize: 16,
 
           lineHeight: 28,
 

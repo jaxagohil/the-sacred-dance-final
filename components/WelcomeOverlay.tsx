@@ -4,6 +4,7 @@ import {
   Modal,
   Pressable,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -25,61 +26,74 @@ export default function WelcomeOverlay({
   const [step, setStep] =
     useState(1);
 
-  const next = () => {
+const next = () => {
 
-    if (step < 5) {
+  if (step < 5) {
 
-      setStep(step + 1);
+    setStep(step + 1);
 
-      return;
-    }
+  }
 
-    onClose?.();
-  };
+};
 
   const cardText = () => {
 
-    switch (step) {
+switch (step) {
 
-      case 1:
-        return {
-          title: "✨\n\nWelcome\n\nSacred Dance is for You, by You.",
-          body:
-            "",
-        };
+  case 1:
+    return {
+      title:
+        "✨\n\nWelcome\n",
 
-      case 2:
-        return {
-          title: "\nTap to Go Deeper\n",
-    body:
-      "Everything is valid. The smallest reflection can reveal a deeper pattern.",
+      body:
+        "Sacred Dance helps you recognise patterns in your thoughts, emotions, behaviours and relationships through reflection.\n\nEverything begins with your own lived experience.\n\nNothing is predicted. Nothing is assigned. Everything starts with what you choose to share.",
+    };
 
-        };
+  case 2:
+    return {
+      title:
+        "\nTap to Go Deeper\n",
 
-      case 3:
-        return {
-          title: "\nShare Your Reflections\n",
-    body:
-      "Life is happening for you. What you share, you become aware of.",
+      body:
+        "Everything is valid.\n\nEven the smallest reflection can reveal a deeper pattern over time.",
+    };
 
-        };
+  case 3:
+    return {
+      title:
+        "\nShare Your Reflections\n",
 
-case 4:
+      body:
+        "Write, speak or share an image.\n\nWhat you choose to share becomes the starting point for recognising patterns and discovering greater self-awareness.",
+    };
+
+  case 4:
+    return {
+      title:
+        "\nA Reflection of You\n",
+
+      body:
+        "Language, location, preferences and the people, places and things that matter to you help Sacred Dance build a deeper understanding of your unique reflection journey over time.",
+    };
+
+case 5:
   return {
     title:
-      "\nA Reflection of You",
+      "\nAI-Assisted Reflections\n",
 
     body:
-      "Location - Language - Preferences\n\nThe people, places and things that matter most. Over time, Sacred Dance remembers.",
-  };       
+      "Sacred Dance uses AI to create personalised reflections from the journal entries, voice recordings and images you choose to share.\n\nYour information may be securely processed by OpenAI for this purpose.\n\nSacred Dance supports self-reflection. It does not make predictions or decisions about you.\n\nSelect 'Agree & Continue' to enable AI-assisted reflections.",
+  };
 
-      default:
-        return {
-          title: "\n\n\nExplore.. All that Awaits.",
-          body:
-            "",
-        };
-    }
+  default:
+    return {
+      title:
+        "\n\n\nExplore All That Awaits.",
+
+      body:
+        "",
+    };
+}
   };
 
   const current =
@@ -99,7 +113,7 @@ case 4:
           backgroundColor:
              "transparent",
         }}
-        onPress={next}
+        onPress={step < 5 ? next : undefined}
       >
 
         <View
@@ -111,7 +125,7 @@ case 4:
             left: 70,
             right: 70,
 
-            height: 200,
+            height: 415,
 
             backgroundColor:
               "rgba(12,12,12,0.88)",
@@ -161,6 +175,49 @@ case 4:
             {current.body}
           </Text>
 
+          {step === 5 && (
+
+  <TouchableOpacity
+
+    onPress={() => {
+
+      onClose();
+
+    }}
+
+    style={{
+
+      marginTop: 25,
+
+      backgroundColor: "rgba(255,255,255,0.12)",
+
+      borderRadius: 24,
+
+      paddingVertical: 10,
+
+      paddingHorizontal: 22,
+
+    }}
+  >
+
+    <Text
+      style={{
+
+        color: Colors.softText,
+
+        fontSize: 13,
+
+        fontFamily: Fonts.light,
+
+      }}
+    >
+      Agree & Continue
+    </Text>
+
+  </TouchableOpacity>
+
+)}
+
 </View>
 
 {step === 2 && (
@@ -169,7 +226,7 @@ case 4:
     style={{
       position: "absolute",
 
-      top: "55%",
+      top: "60%",
 
       alignSelf: "center",
 

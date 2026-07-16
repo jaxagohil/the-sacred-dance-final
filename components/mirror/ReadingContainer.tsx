@@ -1208,7 +1208,7 @@ fontFamily:
 
 lineHeight: 38,
 
-fontSize: 20,
+fontSize: 18,
 
 letterSpacing: 0,
 

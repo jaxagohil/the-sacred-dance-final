@@ -180,9 +180,9 @@ const [
 
       : safeType ===
         "compassion"
-      ? "C O M P A S S I O N"
+      ? "P E A C E"
 
-      : "U N I T Y\nC O N S C I O U S N E S S";
+      : "J O Y";
 
   //
   // 🌌 REFRESH FIELD
