@@ -57,19 +57,16 @@ import {
  * --------------------------------------------------------
  */
 
+import {
+  AlignmentOSContext,
+} from "../../alignment/buildAlignmentOSContext";
+
 interface ResolveForegroundFieldProps {
 
-  mirrorContext?: any;
-
-  userContext?: any;
-
-  activeLens?: string | null;
-
-  cosmic?: any;
-
-  signals?: any[];
+  alignmentContext: AlignmentOSContext;
 
   residue?: TransmissionResidue | null;
+
 }
 
 /*
@@ -80,19 +77,31 @@ interface ResolveForegroundFieldProps {
 
 export function resolveForegroundField({
 
-  mirrorContext,
-
-  userContext,
-
-  activeLens = null,
-
-  cosmic,
-
-  signals = [],
+  alignmentContext,
 
   residue = null,
 
 }: ResolveForegroundFieldProps): ForegroundField {
+
+const {
+
+  mirrorContext,
+
+  userContext,
+
+  entityLenses,
+
+  expressionProfile,
+
+  spiralScores,
+
+  activeLens,
+
+  cosmic,
+
+} = alignmentContext;
+
+const signals: any[] = [];
 
   /*
    * --------------------------------------------------------

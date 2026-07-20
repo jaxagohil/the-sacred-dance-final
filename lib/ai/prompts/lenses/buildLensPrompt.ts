@@ -19,6 +19,18 @@ export function buildLensPrompt({
   const lensContext =
     data?.lensContext || {};
 
+  const expressionProfile =
+  data?.expressionProfile || {};
+
+const spiralScores =
+  data?.spiralScores || {};
+
+const entityLenses =
+  data?.entityLenses || {};  
+
+    const alignmentState =
+  lensContext?.alignmentState || {};
+
   const reflectionEvidence =
     lensContext?.reflectionEvidence || [];
 
@@ -138,39 +150,89 @@ ACTIVE LENS
 ${lens}
 
 --------------------------------------------------
-ACTIVE PATTERNS
+ALIGNMENT OS
 --------------------------------------------------
 
-Active patterns:
+Expression profile:
 
-${patternNarratives
+${Object.entries(expressionProfile)
 
-  ?.slice(0, 5)
-
-  ?.map(
-    (p: any) =>
-
-`- ${p?.name}
-
-  ${p?.leftPole || "contracted"}
-  ↔
-  ${p?.rightPole || "expanded"}
-
-  Current movement:
-  ${p?.polarity || "emerging"}
-
-  Mirror:
-  ${p?.mirrorTheme || "none"}`
+  .map(
+    ([key, value]) =>
+      `- ${key}: ${value}`
   )
 
-  ?.join("\n\n") || "none"}
+  .join("\n") || "none"}
+
+Spiral scores:
+
+${Object.entries(spiralScores)
+
+  .map(
+    ([key, value]) =>
+      `- ${key}: ${value}`
+  )
+
+  .join("\n") || "none"}
+
+Active entity lenses:
+
+${JSON.stringify(
+  entityLenses?.[lens] || {},
+  null,
+  2
+)}
+
+Use this information to:
+
+- understand how the user naturally processes and integrates experience
+- understand the current stage of their spiral of awareness
+- understand the symbolic entities active within the selected lens
+
+These provide context for the reflection.
+
+Do not simply repeat them back to the user.
+
+The reflection should emerge from the lived evidence below.
+
+--------------------------------------------------
+LENS FOCUS
+--------------------------------------------------
+
+The active lens determines
+what is foreground
+and what remains background.
+
+Only one lens
+should lead
+the reflection.
+
+The other two lenses
+may provide context,
+
+but should never become
+the primary focus.
+
+The user's life
+is interconnected.
+
+People,
+places,
+and things
+naturally influence
+one another.
+
+The purpose of the lens
+is not to isolate them,
+
+but to change
+the centre of gravity
+of the reflection.
 
 --------------------------------------------------
 CURRENT EVIDENCE 
 --------------------------------------------------
 
-Evidence Density:
-${evidenceDensity}
 
 Recent lived reflections:
 
@@ -192,6 +254,9 @@ ${reflectionEvidence
   )
 
   ?.join("\n") || "none"}
+
+Evidence Density:
+${evidenceDensity}  
 
   //--------------------------------------------------
 // 🪞 ENTITY MIRRORS
@@ -282,20 +347,48 @@ ${lensContext?.integratedExpressions
   ?.join("\n") || "none"}
 
 --------------------------------------------------
+ACTIVE PATTERNS
+--------------------------------------------------
+
+Active patterns:
+
+${patternNarratives
+
+  ?.slice(0, 5)
+
+  ?.map(
+    (p: any) =>
+
+`- ${p?.name}
+
+  ${p?.leftPole || "contracted"}
+  ↔
+  ${p?.rightPole || "expanded"}
+
+  Current movement:
+  ${p?.polarity || "emerging"}
+
+  Mirror:
+  ${p?.mirrorTheme || "none"}`
+  )
+
+  ?.join("\n\n") || "none"}  
+
+--------------------------------------------------
 SPIRAL MOVEMENT
 --------------------------------------------------
 
 Current spiral movement:
-${lensContext?.spiralMovement || "processing"}
+${alignmentState?.spiralMovement || "processing"}
 
 Dominant pole:
-${lensContext?.dominantPole || "center"}
+${alignmentState?.dominantPole || "center"}
 
 Dominant layer:
-${lensContext?.dominantLayer || "emotional"}
+${alignmentState?.dominantLayer || "emotional"}
 
 Integration score:
-${lensContext?.integrationScore || 0}
+${alignmentState?.integrationScore || 0}
 
 Recurring themes:
 

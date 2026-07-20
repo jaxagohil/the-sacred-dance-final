@@ -45,6 +45,12 @@ languageContext: any;
 
   mirrorContext: any;
 
+    entityLenses: any[];
+
+  expressionProfile: any;
+
+  spiralScores: any;
+
   activeLens: string | null;
 
   contextVersion: number;
@@ -74,6 +80,15 @@ lastSignalTimestamp:
 
   setMirrorContext:
     (context: any) => void;
+
+  setEntityLenses:
+    (lenses: any[]) => void;
+
+  setExpressionProfile:
+    (profile: any) => void;
+
+  setSpiralScores:
+    (scores: any) => void;
 
   setCosmic:
     (cosmic: any) => void;
@@ -138,6 +153,12 @@ export const useMirrorStore =
 
       mirrorContext: null,
 
+      entityLenses: [],
+
+      expressionProfile: null,
+
+      spiralScores: null,
+
       cosmic: null,
 
       dailyField: null,
@@ -183,6 +204,36 @@ lastSignalTimestamp:
             mirrorContext:
               context,
           }),
+
+            setEntityLenses:
+
+        (lenses) =>
+
+          set({
+
+            entityLenses:
+              lenses,
+          }),
+
+      setExpressionProfile:
+
+        (profile) =>
+
+          set({
+
+            expressionProfile:
+              profile,
+          }),
+
+      setSpiralScores:
+
+        (scores) =>
+
+          set({
+
+            spiralScores:
+              scores,
+          }),    
 
       setCosmic:
 
@@ -295,6 +346,12 @@ markFieldUpdated:
           userContext: null,
 
           mirrorContext: null,
+
+          entityLenses: [],
+
+          expressionProfile: null,
+
+          spiralScores: null,
 
           cosmic: null,
 

@@ -33,7 +33,7 @@ import {
 
 export const orchestrateGuidance = async ({
 
-  mirrorContext = {},
+  alignmentContext,
 
   selectedGuide =
     GUIDE_TYPES.COSMIC,
@@ -49,6 +49,24 @@ export const orchestrateGuidance = async ({
    * 🌌 CURRENT FIELD
    * ------------------------------------------------
    */
+
+const {
+
+  mirrorContext,
+
+  entityLenses,
+
+  expressionProfile,
+
+  spiralScores,
+
+  activeLens,
+
+  cosmic,
+
+  language,
+
+} = alignmentContext;
 
   const current =
 
@@ -357,7 +375,7 @@ const candidateFragments =
 
   await generateOrchestrationConversation({
 
-      mirrorContext,
+      alignmentContext,
 
       activePatterns,
 
@@ -382,10 +400,8 @@ selectedGuide:
         resolvedContent
           ?.pressures || [],
 
-          language:
-  mirrorContext
-    ?.language
-    || "en",
+language:
+  language || "en",
     });
 
   /*

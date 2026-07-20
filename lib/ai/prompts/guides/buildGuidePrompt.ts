@@ -1,12 +1,6 @@
 // /lib/ai/prompts/guides/buildGuidePrompt.ts
 
-import { GUIDANCE_CONSTITUTION } from "../../../guidance/guidanceConstitution";
-
-import { heartGuide } from "../../../guidance/guides/heartGuide";
-
-import { structureGuide } from "../../../guidance/guides/structureGuide";
-
-import { cosmicGuide } from "../../../guidance/guides/cosmicGuide";
+import { getAlignmentContent } from "../../../alignment/getAlignmentContent";
 
 import { formatUserContext } from "../../context/formatUserContext";
 
@@ -83,6 +77,18 @@ export function buildGuidePrompt({
     fieldContext?.dailyField || {};
 
   /*
+ * ---------------------------------------------------------
+ * 🌿 GUIDE CONSTITUTION
+ * ---------------------------------------------------------
+ */
+
+const guideConstitution =
+  getAlignmentContent(["guide_constitution"]);  
+
+ const guideRoles =
+  getAlignmentContent(["guide_roles"]); 
+
+  /*
    * ---------------------------------------------------------
    * 🌿 FORMAT CONTEXT
    * ---------------------------------------------------------
@@ -109,36 +115,34 @@ export function buildGuidePrompt({
    * ---------------------------------------------------------
    */
 
-  let foregroundGuide = heartGuide;
+let foregroundGuide =
+  getAlignmentContent(["heart_guide"]);
 
-  switch (
-    orchestration
-      ?.foregroundGuide
-  ) {
+  switch (orchestration?.foregroundGuide) {
 
-    case "structure":
+  case "structure":
 
-      foregroundGuide =
-        structureGuide;
+    foregroundGuide =
+      getAlignmentContent(["structure_guide"]);
 
-      break;
+    break;
 
-    case "cosmic":
+  case "cosmic":
 
-      foregroundGuide =
-        cosmicGuide;
+    foregroundGuide =
+      getAlignmentContent(["cosmic_guide"]);
 
-      break;
+    break;
 
-    case "heart":
+  case "heart":
 
-    default:
+  default:
 
-      foregroundGuide =
-        heartGuide;
+    foregroundGuide =
+      getAlignmentContent(["heart_guide"]);
 
-      break;
-  }
+    break;
+}
 
   /*
    * ---------------------------------------------------------
@@ -217,11 +221,8 @@ export function buildGuidePrompt({
 SACRED DANCE FIELD
 --------------------------------------------------
 
-${JSON.stringify(
-  GUIDANCE_CONSTITUTION,
-  null,
-  2
-)}
+${guideConstitution}
+${guideRoles}
 
 Love,
 peace,

@@ -4,6 +4,10 @@ import {
   GUIDE_TYPES,
 } from "../../../components/guidance/guideConfig";
 
+import {
+  AlignmentOSContext,
+} from "../../alignment/buildAlignmentOSContext";
+
 /*
  * --------------------------------------------------------
  * 🌌 BUILD GUIDANCE FIELD
@@ -80,13 +84,25 @@ export function buildGuidanceField({
    * 🌌 CONTEXT
    */
 
-  mirrorContext = {},
-
-  activeLens = null,
-
-  language = "en",
+  alignmentContext,
 
 }: any) {
+
+const {
+
+  mirrorContext,
+
+  entityLenses,
+
+  expressionProfile,
+
+  spiralScores,
+
+  activeLens,
+
+  language,
+
+}: AlignmentOSContext = alignmentContext;
 
   /*
    * --------------------------------------------------------
@@ -193,19 +209,21 @@ const fragmentSequence =
    * --------------------------------------------------------
    */
 
-  return {
+return {
 
-    /*
-     * 🌊 RAW
-     */
+  mirrorContext,
 
-    mirrorContext,
+  entityLenses,
 
-    activeLens,
+  expressionProfile,
 
-    emergenceMemory,
+  spiralScores,
 
-    language,
+  activeLens,
+
+  emergenceMemory,
+
+  language,
 
     /*
      * 🌿 RESOLVED

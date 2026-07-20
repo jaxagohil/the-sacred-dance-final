@@ -33,7 +33,7 @@ export async function deriveLensFromBehaviours(
   behaviours: Behaviour[]
 ): Promise<LensResult> {
 
-  console.log("🔥 INPUT BEHAVIOURS:", behaviours);
+  //console.log("🔥 INPUT BEHAVIOURS:", behaviours);
 
   if (!behaviours?.length) {
     return {
@@ -54,7 +54,7 @@ export async function deriveLensFromBehaviours(
 
   const ids = normalizedBehaviours.map((b) => b.id);
 
-  console.log("🔥 NORMALIZED IDS:", ids);
+  //console.log("🔥 NORMALIZED IDS:", ids);
 
   // ---------------------------
   // 🧠 FETCH DB ROWS
@@ -73,9 +73,7 @@ export async function deriveLensFromBehaviours(
     };
   }
 
-  console.log(
-    "🔥 DB IDS:",
-    (allRows || []).map((r: DBRow) => `[${r.behaviour_id}]`)
+  //console.log(  "🔥 DB IDS:", (allRows || []).map((r: DBRow) => `[${r.behaviour_id}]`)
   );
 
   // ---------------------------
@@ -87,7 +85,7 @@ export async function deriveLensFromBehaviours(
     lookup.has(clean(row.behaviour_id))
   );
 
-  console.log("🔥 FILTERED ROWS:", rows);
+  //console.log("🔥 FILTERED ROWS:", rows);
 
   if (rows.length === 0) {
     console.warn("⚠️ No lens weights found AFTER FILTER:", ids);
@@ -120,7 +118,7 @@ export async function deriveLensFromBehaviours(
     map[key][row.lens] = row.weight;
   });
 
-  console.log("🔥 LENS MAP:", map);
+ // console.log("🔥 LENS MAP:", map);
 
   // ---------------------------
   // 🧠 BUILD RESULT
@@ -175,7 +173,7 @@ export async function deriveLensFromBehaviours(
   result.places.sort((a, b) => b.score - a.score);
   result.things.sort((a, b) => b.score - a.score);
 
-  console.log("🔥 FINAL LENS RESULT:", result);
+  //console.log("🔥 FINAL LENS RESULT:", result);
 
   return result;
 }

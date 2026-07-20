@@ -1204,6 +1204,16 @@ awarenessMap[
       ]
     );
 
+    console.log(
+  "🪞 ALL LENS ENTRIES",
+  allLensEntries
+);
+
+console.log(
+  "🪞 FIRST SIGNAL ENTITY LENSES",
+  signals?.[0]?.entity_lenses
+);
+
   /*
    * ------------------------------------------------
    * 👁 OBSERVABLE SCENES
@@ -1576,6 +1586,22 @@ const spiral =
      */
 
     signals,
+
+    /*
+     * 🌀 ALIGNMENT OS
+     */
+
+    entityLenses:
+
+      signals?.[0]?.entity_lenses || [],
+
+    expressionProfile:
+
+      signals?.[0]?.expression_profile || null,
+
+    spiralScores:
+
+      signals?.[0]?.spiral_scores || null,
 
     /*
      * ⚡ ENERGY

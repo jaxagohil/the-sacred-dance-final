@@ -14,6 +14,9 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import {
+  buildAlignmentOSContext,
+} from "../../lib/alignment/buildAlignmentOSContext";
 
 import GuideSelector from "../../components/guidance/GuideSelector";
 
@@ -111,6 +114,10 @@ const {
   preloadedWhispers,
 
 } = useMirrorStore();
+
+const alignmentContext =
+
+  buildAlignmentOSContext();
 
   const [
     transmissions,
@@ -262,22 +269,22 @@ const [
         return;
       }
 
-      const result =
+const result =
 
-        await orchestrateGuidance({
+  await orchestrateGuidance({
 
-          mirrorContext,
+    alignmentContext,
 
-          selectedGuide:
-            activeGuide
-  || activeFieldGuide
-  || "cosmic",
+    selectedGuide:
+      activeGuide
+      || activeFieldGuide
+      || "cosmic",
 
-          resolvedContent:
-            field || {},
+    resolvedContent:
+      field || {},
 
-          emergenceMemory,
-        });
+    emergenceMemory,
+  });
 
       //console.log(  "🌌 HYDRATED ORCHESTRATION",  result);
 
@@ -319,19 +326,15 @@ const [
         return;
       }
 
-      const foregroundField =
+const foregroundField =
 
-        resolveForegroundField({
+  resolveForegroundField({
 
-          mirrorContext,
+    alignmentContext,
 
-          userContext,
-
-          activeLens,
-
-          residue:
-            emergenceMemory,
-        });
+    residue:
+      emergenceMemory,
+  });
 
       const pacing =
 
@@ -339,29 +342,24 @@ const [
           foregroundField
         );
 
-      const finalField =
+const finalField =
 
-        buildGuidanceField({
+  buildGuidanceField({
 
-          foregroundField,
+    alignmentContext,
 
-          pacing,
+    foregroundField,
 
-          mirrorContext,
+    pacing,
 
-          activeGuide,
+    activeGuide,
 
-          activeLens,
+    transmissions,
 
-          transmissions,
+    emergenceMemory,
 
-          emergenceMemory,
-
-          orchestrationField,
-
-          language:
-            language || "en",
-        });
+    orchestrationField,
+  });
 
       setField(
         finalField

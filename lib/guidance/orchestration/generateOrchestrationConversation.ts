@@ -40,7 +40,7 @@ import {
 
 export const generateOrchestrationConversation = async ({
 
-  mirrorContext = {},
+  alignmentContext = {},
 
   activePatterns = [],
 
@@ -62,6 +62,22 @@ export const generateOrchestrationConversation = async ({
   language = "en",
 
 }: any) => {
+
+  const {
+
+  mirrorContext,
+
+  entityLenses,
+
+  expressionProfile,
+
+  spiralScores,
+
+  activeLens,
+
+  cosmic,
+
+} = alignmentContext;
 
   /*
    * --------------------------------------------------------

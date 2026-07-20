@@ -91,14 +91,35 @@ export async function buildPrompt({
      * -------------------------------------------------------
      */
 
-    case "lens":
+case "lens":
 
-      return buildLensPrompt({
+  console.log(
+    "🪞 LENS DEBUG",
+    JSON.stringify(
+      {
+        lens: enrichedData.lens,
 
-        context,
+        reflectionEvidence:
+          enrichedData.lensContext?.reflectionEvidence,
 
-        data: enrichedData,
-      });
+        entityLensEvidence:
+          enrichedData.lensContext?.entityLensEvidence,
+
+        patternNarratives:
+          enrichedData.lensContext?.patternNarratives,
+
+        recurringPatterns:
+          enrichedData.lensContext?.recurringPatterns,
+      },
+      null,
+      2
+    )
+  );
+
+  return buildLensPrompt({
+    context,
+    data: enrichedData,
+  });
 
     /*
      * -------------------------------------------------------

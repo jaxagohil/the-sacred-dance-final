@@ -128,6 +128,8 @@ export async function buildLensContext({
         e?.lens === lens
     );
 
+    
+
   // --------------------------------------------------
 // 🧠 LOAD LENS KEYWORDS
 // --------------------------------------------------
@@ -593,36 +595,19 @@ const emotionalThemes =
 
 const entityLensEvidence =
 
-  entries
+  buildThreads(
 
-    .filter(
-      (e:any) =>
-        e?.entity
+    entries.flatMap(
+      (e: any) =>
+        e?.entities || []
     )
 
-    .map(
-      (e:any) => ({
+  ).slice(0, 10);
 
-        entity:
-          e?.entity,
-
-        symbolic_meaning:
-          e?.symbolic_meaning,
-
-        emotional_meaning:
-          e?.emotional_meaning,
-
-        score:
-          e?.score || 0,
-      })
-    )
-
-    .sort(
-      (a,b) =>
-        b.score - a.score
-    )
-
-    .slice(0,10);
+  console.log(
+  "🪞 ENTITY LENS EVIDENCE",
+  entityLensEvidence
+);
 
   // --------------------------------------------------
   // 🪞 EVIDENCE SUMMARIES
@@ -851,6 +836,37 @@ if (
     : null;
 
 
+    // --------------------------------------------------
+// 🧭 ALIGNMENT STATE
+// --------------------------------------------------
+
+const alignmentState = {
+
+  spiralMovement,
+
+  dominantPole,
+
+  dominantLayer,
+
+  integrationScore,
+
+  contraction:
+    energy?.contraction || 0,
+
+  expansion:
+    energy?.expansion || 0,
+
+  dominantChakra:
+    energy?.dominant_chakra || null,
+
+  awarenessChakra:
+    energy?.awareness_chakra ||
+    energy?.dominant_chakra ||
+    null,
+
+  nervousSystemState,
+
+};
   // --------------------------------------------------
   // 🪞 MIRROR THREADS
   // --------------------------------------------------
@@ -1114,6 +1130,8 @@ dominantPole,
 integrationScore,
 dominantLayer,
 recurringPatterns,
+
+alignmentState,
 
 semanticKeywords,
 symbolicThemes,

@@ -94,6 +94,15 @@ languageContext:
     setMirrorContext:
       setGlobalMirrorContext,
 
+    setEntityLenses:
+  setGlobalEntityLenses,
+
+setExpressionProfile:
+  setGlobalExpressionProfile,
+
+setSpiralScores:
+  setGlobalSpiralScores,  
+
     setCosmic:
       setGlobalCosmic,
 
@@ -552,6 +561,18 @@ distortions:
 
     setGlobalMirrorContext(
   context
+);
+
+setGlobalEntityLenses(
+  userContext?.entityLenses || []
+);
+
+setGlobalExpressionProfile(
+  userContext?.expressionProfile || null
+);
+
+setGlobalSpiralScores(
+  userContext?.spiralScores || null
 );
 
 /* -------------------------------------------------- */

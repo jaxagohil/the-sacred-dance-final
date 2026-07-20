@@ -23,6 +23,10 @@ import {
   t,
 } from "../../lib/i18n/t";
 
+import {
+  useMirrorStore,
+} from "../../stores/mirrorStore";
+
 // --------------------------------------------------
 // 🧠 TYPES
 // --------------------------------------------------
@@ -82,6 +86,22 @@ export default function Lenses({
     loading,
     setLoading,
   ] = useState(false);
+
+  /*
+ * --------------------------------------------------
+ * 🌌 ALIGNMENT OS
+ * --------------------------------------------------
+ */
+
+const {
+
+  entityLenses,
+
+  expressionProfile,
+
+  spiralScores,
+
+} = useMirrorStore();
 
   // --------------------------------------------------
   // 🌌 DAILY FIELD
@@ -201,6 +221,12 @@ const hasThings = true;
               context,
 
             lensContext,
+
+expressionProfile,
+
+spiralScores,
+
+entityLenses,
 
             dailyField,
 

@@ -606,9 +606,18 @@ const spiralData =
   // 🪞 LENS MEMORY
   // --------------------------------------------------
 
-  const shapeLensEntries = (
-    lens: string
-  ) =>
+  const entitiesByLens = {
+
+  people: interpretation?.people || [],
+
+  places: interpretation?.places || [],
+
+  things: interpretation?.things || [],
+};
+
+const shapeLensEntries = (
+  lens: "people" | "places" | "things"
+) =>
 
     lensMappings
 
@@ -620,6 +629,10 @@ const spiralData =
       .map((m: any) => ({
 
         lens,
+
+        entities:
+
+  entitiesByLens[lens] || [],
 
         pattern_key:
           m.pattern_key,
@@ -730,6 +743,21 @@ console.log(
 console.log(
   "🪞 ENTITY LENSES:",
   entityLenses
+);
+
+console.log(
+  "🪞 AI LENS PEOPLE:",
+  aiLens.people
+);
+
+console.log(
+  "🪞 AI LENS PLACES:",
+  aiLens.places
+);
+
+console.log(
+  "🪞 AI LENS THINGS:",
+  aiLens.things
 );
 
   // --------------------------------------------------
