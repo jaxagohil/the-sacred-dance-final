@@ -1,7 +1,4 @@
 // /lib/ai/ingestImage.ts
-import {
-  extractReflectionData,
-} from "./extractReflectionData";
 
 // --------------------------------------------------
 // 👁 INGEST IMAGE
@@ -109,10 +106,15 @@ const response =
      * --------------------------------------------------
      */
 
-    const extraction =
-      await extractReflectionData(
-        observations
-      );
+const extraction = {
+  emotions: [],
+  behaviours: [],
+  bodyResponses: [],
+  observableScenes: [],
+  copingStrategies: [],
+  manifestations: [],
+  nervousSystem: null,
+};
 
     /*
      * --------------------------------------------------

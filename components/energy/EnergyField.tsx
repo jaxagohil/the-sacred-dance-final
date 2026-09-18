@@ -3,11 +3,10 @@
 import React from "react";
 
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
 import ChakraSystem from "./ChakraSystemRN.web";
@@ -668,16 +667,11 @@ else {
   // --------------------------------------------------
 
 return (
-  <View
-    style={[
-      styles.container,
-      Platform.OS === "web" && {
-        backgroundColor: "red",
-        width: 70,
-height: 430,
-      },
-    ]}
-  >
+<View
+  style={[
+    styles.container,
+  ]}
+>
 
       {/* 🌌 ENERGY FIELD */}
 
@@ -726,16 +720,11 @@ height: 430,
 
           </View>
 
-          console.log("🌈 CHAKRA SECTION RENDERING");
-
           {/* 🟣 CHAKRAS */}
 
 <View
   style={[
     styles.chakras,
-    Platform.OS === "web" && {
-      backgroundColor: "red",
-    },
   ]}
   pointerEvents="box-none"
 >

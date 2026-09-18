@@ -1,9 +1,6 @@
 // /lib/ai/ingestVoice.ts
 
-
-import {
-  extractReflectionData,
-} from "./extractReflectionData";
+import { Platform } from "react-native";
 
 // --------------------------------------------------
 // 🎙 INGEST VOICE
@@ -24,18 +21,40 @@ export async function ingestVoice(
     const formData =
       new FormData();
 
-    formData.append(
-      "file",
-      {
-        uri: audioUri,
+if (Platform.OS === "web") {
 
-        name:
-          "reflection.m4a",
+  const audioBlob =
+    await fetch(audioUri)
+      .then(response => response.blob());
 
-        type:
-          "audio/m4a",
-      } as any
-    );
+      console.log(
+  "🎙 WEB AUDIO DEBUG",
+  audioBlob.type,
+  audioBlob.size
+);
+
+  formData.append(
+    "file",
+    audioBlob,
+    "reflection.webm"
+  );
+
+} else {
+
+  formData.append(
+    "file",
+    {
+      uri: audioUri,
+
+      name:
+        "reflection.m4a",
+
+      type:
+        "audio/m4a",
+    } as any
+  );
+
+}
 
     /*
      * --------------------------------------------------
@@ -121,10 +140,15 @@ console.log(
      * --------------------------------------------------
      */
 
-    const extraction =
-      await extractReflectionData(
-        text
-      );
+const extraction = {
+  emotions: [],
+  behaviours: [],
+  bodyResponses: [],
+  observableScenes: [],
+  copingStrategies: [],
+  manifestations: [],
+  nervousSystem: null,
+};
 
     /*
      * --------------------------------------------------

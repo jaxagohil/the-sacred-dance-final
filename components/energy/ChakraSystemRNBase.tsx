@@ -467,8 +467,7 @@ container: {
 
   ...(Platform.OS === "web"
     ? {
-        top: 75,
-        left: "46.2%",
+        top: 5,
         zIndex: 100,
       }
     : {}),

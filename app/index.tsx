@@ -554,21 +554,32 @@ setAudioUri(null);
       style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-<Pressable
-  style={{ flex: 1, paddingHorizontal: 20 }}
+<View style={{ flex: 1, paddingHorizontal: 20 }}>
 
-onPress={() => {
+  <Pressable
+    style={{
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+    }}
+    onPress={() => {
+      setShowActions(true);
 
-  setShowActions(true);
+      if (!aiConsent) {
+        setShowWelcome(true);
+      }
 
-if (!aiConsent) {
+      Keyboard.dismiss();
+    }}
+  />
 
-  setShowWelcome(true);
-}
-
-  Keyboard.dismiss();
-}}
+<View
+  pointerEvents="box-none"
+  style={{ flex: 1, zIndex: 1 }}
 >
+
         {/* TOP */}
         <View style={{ alignItems: "center", marginTop: 140 }}>
 <TouchableOpacity
@@ -626,6 +637,7 @@ if (!aiConsent) {
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "center",
+                zIndex: 10,
             }}
           >
             {emoji_emotions.map((e) => (
@@ -824,6 +836,8 @@ placeholder={t("landing.placeholder")}
 
     paddingHorizontal:
       Spacing.md,
+
+    outlineStyle: "none",  
   }}
 />
 
@@ -834,7 +848,8 @@ placeholder={t("landing.placeholder")}
   
 
 )}
-</Pressable>
+</View>
+</View>
 
 <WelcomeOverlay
   visible={showWelcome}

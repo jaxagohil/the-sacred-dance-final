@@ -6,7 +6,21 @@ const openai = new OpenAI({
   )!,
 });
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+  "Access-Control-Allow-Methods":
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: corsHeaders,
+    });
+  }
 
   try {
 
@@ -18,6 +32,7 @@ Deno.serve(async (req) => {
         "file"
       ) as File;
 
+
     if (!file) {
 
       return Response.json(
@@ -27,6 +42,7 @@ Deno.serve(async (req) => {
         },
         {
           status: 400,
+          headers: corsHeaders,
         }
       );
     }
@@ -41,11 +57,15 @@ Deno.serve(async (req) => {
             "gpt-4o-mini-transcribe",
         });
 
-    return Response.json({
-
-      text:
-        transcription.text || "",
-    });
+return Response.json(
+  {
+    text:
+      transcription.text || "",
+  },
+  {
+    headers: corsHeaders,
+  }
+);
 
   } catch (error) {
 
@@ -60,6 +80,7 @@ Deno.serve(async (req) => {
       },
       {
         status: 500,
+         headers: corsHeaders,
       }
     );
   }
