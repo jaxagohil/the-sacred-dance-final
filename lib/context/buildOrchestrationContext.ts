@@ -60,6 +60,14 @@ type BuildOrchestrationContextProps = {
   people?: string[];
 
   places?: string[];
+
+  things?: string[];
+
+  lensContexts?: {
+    people?: any;
+    places?: any;
+    things?: any;
+  };
 };
 
 const formatList = (
@@ -107,6 +115,10 @@ export const buildOrchestrationContext = ({
 
   places = [],
 
+  things = [],
+
+  lensContexts = {},
+
 }: BuildOrchestrationContextProps) => {
 
   /*
@@ -115,19 +127,13 @@ export const buildOrchestrationContext = ({
    * ----------------------------------------
    */
 
-  const dominantRows = manifestations
-
-    .sort(
-      (
-        a,
-        b
-      ) => (
-        (b?.weight || 0)
-        - (a?.weight || 0)
-      )
-    )
-
-    .slice(0, 3);
+const dominantRows = [...manifestations]
+  .sort(
+    (a, b) =>
+      (b?.weight || 0) -
+      (a?.weight || 0)
+  )
+  .slice(0, 3);
 
   /*
    * ----------------------------------------
@@ -224,6 +230,211 @@ const fieldMovementSummary =
 
     .join("\n");    
 
+    /*
+ * ----------------------------------------
+ * 🌍 MY WORLD
+ * ----------------------------------------
+ *
+ * Uses the already-resolved People,
+ * Places and Things lens contexts.
+ *
+ * Keep this compact.
+ * Orchestration needs lived evidence,
+ * not the entire lens architecture.
+ * ----------------------------------------
+ */
+
+const buildWorldLens = (
+  label: string,
+  lens: any
+) => {
+
+  if (!lens) {
+    return "";
+  }
+
+    /*
+   * ----------------------------------------
+   * 🌍 LIVED MOMENTS
+   * ----------------------------------------
+   *
+   * Preserve concrete reality:
+   * who / what + what the user actually said.
+   * ----------------------------------------
+   */
+
+  const livedMoments = (
+    lens?.strongestEntries || []
+  )
+    .map((entry: any) => {
+
+      const reflection =
+        entry?.source_reflection
+        || entry?.sourceReflection
+        || entry?.reflection
+        || entry?.text
+        || "";
+
+      const entities = (
+        entry?.entities || []
+      )
+        .filter(Boolean)
+        .join(", ");
+
+      if (!reflection) {
+        return null;
+      }
+
+      return entities
+        ? `${entities} — "${reflection}"`
+        : `"${reflection}"`;
+    })
+    .filter(Boolean)
+    .slice(0, 5);
+
+  const evidence = (
+    lens?.evidenceSummaries || []
+  )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const relational = (
+    lens?.relationalMirrors || []
+  )
+    .map(
+      (item: any) =>
+        typeof item === "string"
+          ? item
+          : item?.text
+    )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const scenes = (
+    lens?.observableSceneThreads || []
+  )
+    .map(
+      (item: any) =>
+        typeof item === "string"
+          ? item
+          : item?.text
+    )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const manifestations = (
+    lens?.manifestationThreads || []
+  )
+    .map(
+      (item: any) =>
+        typeof item === "string"
+          ? item
+          : item?.text
+    )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const emotionalThemes = (
+    lens?.emotionalThemes || []
+  )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const symbolicThemes = (
+    lens?.symbolicThemes || []
+  )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const hasContent =
+    livedMoments.length ||
+    evidence.length ||
+    relational.length ||
+    scenes.length ||
+    manifestations.length ||
+    emotionalThemes.length ||
+    symbolicThemes.length;
+
+  if (!hasContent) {
+    return "";
+  }
+
+  return `
+
+${label}
+
+${formatList(
+  "Lived Moments:",
+  livedMoments
+)}
+
+${formatList(
+  "Lived Evidence:",
+  evidence
+)}
+
+${formatList(
+  "Relational Mirrors:",
+  relational
+)}
+
+${formatList(
+  "Observable Movement:",
+  scenes
+)}
+
+${formatList(
+  "Manifestations:",
+  manifestations
+)}
+
+${formatList(
+  "Emotional Themes:",
+  emotionalThemes
+)}
+
+${formatList(
+  "Symbolic Themes:",
+  symbolicThemes
+)}
+`;
+};
+
+const myWorldContext = `
+
+--------------------------------------------------
+MY WORLD
+--------------------------------------------------
+
+These are lived contexts already observed
+through the user's People, Places and Things lenses.
+
+They are context, not conclusions.
+
+Use them only when relevant to the current movement.
+
+Do not force a person, place or thing
+into the conversation merely because it appears here.
+
+When relevant, prefer concrete lived context
+over abstract interpretation.
+
+${buildWorldLens(
+  "PEOPLE",
+  lensContexts?.people
+)}
+
+${buildWorldLens(
+  "PLACES",
+  lensContexts?.places
+)}
+
+${buildWorldLens(
+  "THINGS",
+  lensContexts?.things
+)}
+`;
+
   /*
    * ----------------------------------------
    * BUILD CONTEXT
@@ -273,6 +484,12 @@ ${formatList(
   places
 )}
 
+${formatList(
+  "Things:",
+  things
+)}
+
+${myWorldContext}
 
 FIELD MOVEMENT SUMMARY
 

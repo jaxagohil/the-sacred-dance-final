@@ -433,10 +433,7 @@ if (totalSignals >= 45) {
   // 🔥 STRONGEST ENTRIES
   // --------------------------------------------------
 
-  console.log(
-  "🪞 Lens Entry Example",
-  entries[0]
-);
+  //console.log( "🪞 Lens Entry Example", entries[0]);
 
   const strongestEntries =
 
@@ -604,10 +601,7 @@ const entityLensEvidence =
 
   ).slice(0, 10);
 
-  console.log(
-  "🪞 ENTITY LENS EVIDENCE",
-  entityLensEvidence
-);
+  //console.log( "🪞 ENTITY LENS EVIDENCE", entityLensEvidence);
 
   // --------------------------------------------------
   // 🪞 EVIDENCE SUMMARIES
@@ -1032,19 +1026,13 @@ const chakraManifestationThreads =
 
       dominantLensPatterns,
 
-    dominantPattern:
+dominantPattern:
 
-      dominantLensPatterns?.[0]
-        ?.pattern?.id ||
+  patternNarratives?.[0]?.id ||
 
-      dominantLensPatterns?.[0]
-        ?.pattern?.name ||
+  patternNarratives?.[0]?.name ||
 
-      patterns?.[0]?.id ||
-
-      patterns?.[0]?.name ||
-
-      null,
+  null,
 
     // 🪞 themes
     mirrorThreads,

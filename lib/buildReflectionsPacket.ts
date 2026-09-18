@@ -241,9 +241,7 @@ export async function buildReflectionPacket({
    * --------------------------------------------------
    */
 
-  console.log(
-  "📦 FINAL PACKET TEXT",
-  packet.text
+  console.log( "📦 FINAL PACKET TEXT", packet.text
 );
 
   return packet;

@@ -260,7 +260,11 @@ export async function buildMirrorContext({
       ]
     );
 
-  const {
+const activeLanguage =
+  languageContext?.code ||
+  "en";
+
+const {
   data: manifestationLibrary,
 } = await supabase
 
@@ -268,7 +272,12 @@ export async function buildMirrorContext({
     "pattern_chakra_manifestations"
   )
 
-  .select("*");  
+  .select("*")
+
+  .eq(
+    "language",
+    activeLanguage
+  );
 
   // --------------------------------------------------
   // 🌊 SIGNALS
@@ -385,25 +394,27 @@ const currentSignals =
   // 🌊 DOMINANT PATTERN
   // --------------------------------------------------
 
-  const dominantPatternObject =
+const latestSignal = currentSignals[0];
 
-    activePatternField?.[0];
+const dominantPattern =
 
-  const dominantPattern =
+  latestSignal?.dominant_pattern ||
 
-    dominantPatternObject
-      ?.pattern?.id ||
+  latestSignal?.primary_pattern ||
 
-    dominantPatternObject
-      ?.pattern?.name ||
+  activePatternField?.[0]
+    ?.pattern?.id ||
 
-    currentPatterns?.[0]
-      ?.id ||
+  activePatternField?.[0]
+    ?.pattern?.name ||
 
-    currentPatterns?.[0]
-      ?.name ||
+  currentPatterns?.[0]
+    ?.id ||
 
-    null;
+  currentPatterns?.[0]
+    ?.name ||
+
+  null;
 
   // --------------------------------------------------
   // 🌊 ACTIVE POLARITIES
@@ -927,21 +938,23 @@ const currentSignals =
 
       patternField,
 
-      activatedPatterns:
+activatedPatterns:
 
-        activePatternField
+  latestSignal?.activated_patterns ||
 
-          .map(
-            (p: any) =>
+  activePatternField
 
-              p?.pattern?.id ||
+    .map(
+      (p: any) =>
 
-              p?.pattern?.name
-          )
+        p?.pattern?.id ||
 
-          .filter(Boolean)
+        p?.pattern?.name
+    )
 
-          .slice(0, 5),
+    .filter(Boolean)
+
+    .slice(0, 5),
 
       contraction:
         energy?.contraction,
@@ -949,23 +962,14 @@ const currentSignals =
       expansion:
         energy?.expansion,
 
-      dominantChakra:
-        energy?.dominant_chakra,
+dominantChakra:
+  energy?.dominant_chakra ?? null,
 
-      awarenessChakra:
+awarenessChakra:
+  energy?.awareness_chakra ?? null,
 
-        energy
-          ?.awareness_chakra ||
-
-        null,
-
-      nervousSystemState:
-
-        realityLayers
-          ?.physical
-          ?.nervousSystemState ||
-
-        "open",
+nervousSystemState:
+  realityLayers?.physical?.nervousSystemState || "open",
     },
 
     // 📈 EVOLUTION
@@ -1051,15 +1055,11 @@ const currentSignals =
       expansion:
         energy?.expansion,
 
-      dominantChakra:
-        energy?.dominant_chakra,
+dominantChakra:
+  energy?.dominant_chakra ?? null,
 
-      awarenessChakra:
-
-        energy
-          ?.awareness_chakra ||
-
-        null,
+awarenessChakra:
+  energy?.awareness_chakra ?? null,
 
       chakras:
         energy?.chakras ||
@@ -1134,13 +1134,8 @@ const currentSignals =
 
       dominantPolarity,
 
-      nervousSystemState:
-
-        realityLayers
-          ?.physical
-          ?.nervousSystemState ||
-
-        "open",
+nervousSystemState:
+  realityLayers?.physical?.nervousSystemState || "open",
     },
   };
 }

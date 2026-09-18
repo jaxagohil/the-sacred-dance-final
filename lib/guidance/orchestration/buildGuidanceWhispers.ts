@@ -675,10 +675,7 @@ if (
    * ------------------------------------------------
    */
 
-  console.log(
-    "🌌 RAW WHISPERS",
-    unique
-  );
+  //console.log(  "🌌 RAW WHISPERS",  unique);
 
   return weightedShuffle(
     unique

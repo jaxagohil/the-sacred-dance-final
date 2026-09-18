@@ -28,7 +28,7 @@ export default function WelcomeOverlay({
 
 const next = () => {
 
-  if (step < 5) {
+  if (step < 7) {
 
     setStep(step + 1);
 
@@ -79,6 +79,24 @@ switch (step) {
 case 5:
   return {
     title:
+      "\nYour Voice\n",
+
+    body:
+      "You can speak your reflection instead of typing it.\n\nSacred Dance uses your voice recording to process what you choose to share and create your reflection.\n\nYour voice recording is not permanently stored.",
+  };
+
+case 6:
+  return {
+    title:
+      "\nYour Images\n",
+
+    body:
+      "You can add a photo or capture an image as part of your reflection.\n\nSacred Dance uses the image you choose to process your reflection and help you explore what is present.\n\nYour image is not permanently stored.",
+  };
+
+case 7:
+  return {
+    title:
       "\nAI-Assisted Reflections\n",
 
     body:
@@ -113,7 +131,7 @@ case 5:
           backgroundColor:
              "transparent",
         }}
-        onPress={step < 5 ? next : undefined}
+        onPress={step < 7 ? next : undefined}
       >
 
         <View
@@ -175,7 +193,7 @@ case 5:
             {current.body}
           </Text>
 
-          {step === 5 && (
+          {step === 7 && (
 
   <TouchableOpacity
 

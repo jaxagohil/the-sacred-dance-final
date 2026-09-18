@@ -42,9 +42,6 @@ import {
   getUserId,
 } from "../../lib/user";
 
-import {
-  useMirrorStore,
-} from "../../stores/mirrorStore";
 
 import {
   resolveForegroundField,
@@ -99,21 +96,6 @@ export default function GuidanceScreen() {
    * --------------------------------------------------------
    */
 
-const {
-
-  userContext,
-
-  mirrorContext,
-
-  activeLens,
-
-  language,
-
-  ready,
-
-  preloadedWhispers,
-
-} = useMirrorStore();
 
 const alignmentContext =
 
@@ -171,7 +153,7 @@ const [
 
       name:
 
-        userContext
+       alignmentContext.userContext
           ?.profile
           ?.guide_1_name
 
@@ -182,7 +164,7 @@ const [
 
       name:
 
-        userContext
+        alignmentContext.userContext
           ?.profile
           ?.guide_2_name
 
@@ -193,7 +175,7 @@ const [
 
       name:
 
-        userContext
+        alignmentContext.userContext
           ?.profile
           ?.guide_3_name
 
@@ -264,7 +246,7 @@ const [
     try {
 
       if (
-        !mirrorContext
+        !alignmentContext.mirrorContext
       ) {
         return;
       }
@@ -305,7 +287,7 @@ const result =
 
 }, [
 
-  mirrorContext,
+  alignmentContext.mirrorContext,
 
   emergenceMemory,
 
@@ -320,7 +302,7 @@ const result =
     try {
 
       if (
-        !mirrorContext
+        !alignmentContext.mirrorContext
       ) {
 
         return;
@@ -378,17 +360,17 @@ const finalField =
 
 }, [
 
-  mirrorContext,
+  alignmentContext.mirrorContext,
 
   activeGuide,
 
-  activeLens,
+  alignmentContext.activeLens,
 
   transmissions,
 
   emergenceMemory,
 
-  language,
+  alignmentContext.language,
 ]);
 
 
@@ -484,7 +466,7 @@ async function handleReflection({
         text,
 
       language:
-        language || "en",
+        alignmentContext.language || "en",
 
       userField:
         field,
@@ -518,7 +500,7 @@ await processGuidanceReflection({
       : "guide_cosmic",
 
       language:
-        language || "en",
+        alignmentContext.language || "en",
 
       fieldContext:
         field,
@@ -530,31 +512,25 @@ await processGuidanceReflection({
      * ----------------------------------------------------
      */
 
-    const result =
+const result =
 
-      await enterTransmission({
+await enterTransmission({
 
-        userId,
+  userId,
 
-        guide,
+  guide,
 
-        reflection:
-          text,
+  reflection: text,
 
-        field:
-          field || {},
+  field: field || {},
 
-        mirrorContext,
+  alignmentContext,
 
-        userContext,
-
-        existingMessages: [
-
-          ...transmissions,
-
-          userMessage,
-        ],
-      });
+  existingMessages: [
+    ...transmissions,
+    userMessage,
+  ],
+});
 
     /*
      * ----------------------------------------------------
@@ -568,26 +544,24 @@ await processGuidanceReflection({
 
 const guideTransmission =
 
-  await generateGuideTransmission({
+await generateGuideTransmission({
 
-    guide,
+  guide,
 
-    reflection:
-      text,
+  reflection: text,
 
-    userContext,
+  alignmentContext,
 
-    mirrorContext,
+  field,
 
-    field,
+  orchestrationField,
 
-    orchestrationField,
+  emergenceMemory:
+    result?.residue,
 
-    emergenceMemory:
-      result?.residue,
-
-    language,
-  });
+  language:
+    alignmentContext.language || "en",
+});
 
   //console.log( "🌌 FINAL GUIDE TRANSMISSION", guideTransmission);
 
@@ -635,7 +609,7 @@ if (
       guideTransmission?.text,
 
     language:
-      language || "en",
+      alignmentContext.language || "en",
 
     userField:
       field,
@@ -683,7 +657,7 @@ if (
   }
 
   initialWhispers={
-    preloadedWhispers
+    alignmentContext.preloadedWhispers
   }
 
   activeFieldGuide={

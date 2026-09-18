@@ -84,6 +84,31 @@ if (error) {
     )
   );
 
+  if (error.context) {
+
+    try {
+
+      const errorBody =
+        await error.context.json();
+
+      console.error(
+        "❌ EDGE FUNCTION BODY:",
+        JSON.stringify(
+          errorBody,
+          null,
+          2
+        )
+      );
+
+    } catch (bodyError) {
+
+      console.error(
+        "❌ COULD NOT READ EDGE ERROR BODY:",
+        bodyError
+      );
+    }
+  }
+
   throw error;
 }
 

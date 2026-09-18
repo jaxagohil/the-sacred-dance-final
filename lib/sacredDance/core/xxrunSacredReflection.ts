@@ -104,10 +104,7 @@ export async function runSacredReflection({
           rawInput,
       });
 
-    console.log(
-      "✨ INTERPRETED:",
-      interpreted
-    );
+   // console.log(  "✨ INTERPRETED:", interpreted );
 
     /*
      * ---------------------------------------------------------
@@ -229,8 +226,7 @@ export async function runSacredReflection({
         requestContext,
     };
 
-    console.log(
-      "🌌 COMPLETE GUIDE CONTEXT:",
+    console.log(  "🌌 COMPLETE GUIDE CONTEXT:",
       completeGuideContext
     );
 

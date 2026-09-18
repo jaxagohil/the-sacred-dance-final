@@ -3,15 +3,16 @@
 import React from "react";
 
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
-import ChakraSystem from "./ChakraSystemRN";
+import ChakraSystem from "./ChakraSystemRN.web";
 
-import EnergyBallSkia from "./energyBallSkia";
+import EnergyBallSkia from "./EnergyBall";
 
 import EnergyBody from "./energyBody";
 
@@ -67,6 +68,8 @@ export default function EnergyField({
 
   const energy =
     userContext?.energy;
+
+  console.log("⚡ ENERGY FIELD ENERGY:", energy);  
 
   //console.log( "👁 AWARENESS CHAKRA:", userContext ?.energy ?.awareness_chakra);  
 
@@ -172,6 +175,13 @@ export default function EnergyField({
               <EnergyBody />
 
             </View>
+
+            <ChakraSystem
+  awareness={null}
+  chakraManifestations={
+    userContext?.chakraManifestations || {}
+  }
+/>
 
           </View>
 
@@ -651,13 +661,23 @@ else {
   }
 }
 
+        console.log("🌈 ENERGY FIELD — ABOUT TO RENDER CHAKRAS");
+        
   // --------------------------------------------------
   // 🌌 RENDER
   // --------------------------------------------------
 
-  return (
-
-    <View style={styles.container}>
+return (
+  <View
+    style={[
+      styles.container,
+      Platform.OS === "web" && {
+        backgroundColor: "red",
+        width: 70,
+height: 430,
+      },
+    ]}
+  >
 
       {/* 🌌 ENERGY FIELD */}
 
@@ -706,11 +726,17 @@ else {
 
           </View>
 
+          console.log("🌈 CHAKRA SECTION RENDERING");
+
           {/* 🟣 CHAKRAS */}
 
-          <View
-
-  style={styles.chakras}
+<View
+  style={[
+    styles.chakras,
+    Platform.OS === "web" && {
+      backgroundColor: "red",
+    },
+  ]}
   pointerEvents="box-none"
 >
 

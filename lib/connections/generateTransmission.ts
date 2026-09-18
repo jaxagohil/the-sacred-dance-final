@@ -116,10 +116,7 @@ generateTransmission({
    * ---------------------------------------------------------
    */
 
-  console.log(
-    "✨ TRANSMISSION:",
-    transmission
-  );
+  //console.log(  "✨ TRANSMISSION:",  transmission);
 
   /*
    * ---------------------------------------------------------

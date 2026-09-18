@@ -96,9 +96,6 @@ export async function loadAlignmentModules() {
 
   setModules((data || []) as AlignmentModule[]);
 
-console.log(
-  "✅ Store keys:",
-  Object.keys(useAlignmentStore.getState().modules)
-);
+//console.log( "✅ Store keys:",  Object.keys(useAlignmentStore.getState().modules));
 
 }

@@ -513,89 +513,34 @@ const {
         field.signals || [];
 
 field.feminine =
-  weightedAverage(
-
-    fieldSignals.flatMap(
+  average(
+    fieldSignals.map(
       (s: any) =>
-
-        (s?.ai_behaviours || [])
-          .map((b: any) => ({
-
-            value:
-
-              Number(
-                s?.energy
-                  ?.feminine || 0
-              ),
-
-            weight:
-              b?.occurrences || 1,
-          }))
+        Number(s?.energy?.feminine ?? 0)
     )
   );
 
 field.masculine =
-  weightedAverage(
-
-    fieldSignals.flatMap(
+  average(
+    fieldSignals.map(
       (s: any) =>
-
-        (s?.ai_behaviours || [])
-          .map((b: any) => ({
-
-            value:
-
-              Number(
-                s?.energy
-                  ?.masculine || 0
-              ),
-
-            weight:
-              b?.occurrences || 1,
-          }))
+        Number(s?.energy?.masculine ?? 0)
     )
   );
 
 field.contraction =
-  weightedAverage(
-
-    fieldSignals.flatMap(
+  average(
+    fieldSignals.map(
       (s: any) =>
-
-        (s?.ai_behaviours || [])
-          .map((b: any) => ({
-
-            value:
-
-              Number(
-                s?.energy
-                  ?.contraction || 0
-              ),
-
-            weight:
-              b?.occurrences || 1,
-          }))
+        Number(s?.energy?.contraction ?? 0)
     )
   );
+
 field.expansion =
-  weightedAverage(
-
-    fieldSignals.flatMap(
+  average(
+    fieldSignals.map(
       (s: any) =>
-
-        (s?.ai_behaviours || [])
-          .map((b: any) => ({
-
-            value:
-
-              Number(
-                s?.energy
-                  ?.expansion || 0
-              ),
-
-            weight:
-              b?.occurrences || 1,
-          }))
+        Number(s?.energy?.expansion ?? 0)
     )
   );
 
@@ -631,32 +576,12 @@ field.expansion =
           )
         );
 
-      field.lenses =
-        unique(
-
-          fieldSignals.flatMap(
-            (s: any) => [
-
-              ...(
-                s?.ai_lens
-                  ?.people ||
-                []
-              ),
-
-              ...(
-                s?.ai_lens
-                  ?.places ||
-                []
-              ),
-
-              ...(
-                s?.ai_lens
-                  ?.things ||
-                []
-              ),
-            ]
-          )
-        );
+field.lenses =
+  unique(
+    fieldSignals.flatMap(
+      (s: any) => s?.entity_lenses || []
+    )
+  );
     }
   );
 
@@ -806,79 +731,9 @@ const dominantChakra =
     chakraPolarityMap
   );
 
-  /*
-   * ------------------------------------------------
-   * 🌈 ATTACH DOMINANT CHAKRA
-   * ------------------------------------------------
-   */
-
-  Object.keys(
-    patternField
-  ).forEach(
-    (patternId) => {
-
-      const relatedRows =
-
-        (
-          chakraRows || []
-        ).filter(
-          (r: any) =>
-
-            r?.pattern_key ===
-            patternId
-        );
-
-      const chakraTotals:
-        Record<
-          string,
-          number
-        > = {};
-
-      relatedRows.forEach(
-        (row: any) => {
-
-          chakraTotals[
-            row?.chakra_key
-          ] =
-
-            (
-              chakraTotals[
-                row
-                  ?.chakra_key
-              ] || 0
-            ) +
-
-            Number(
-              row?.weight ||
-                0
-            );
-        }
-      );
-
-      const dominant =
-        Object.entries(
-          chakraTotals
-        )
-
-          .sort(
-            (a, b) =>
-
-              Number(
-                b[1]
-              ) -
-
-              Number(
-                a[1]
-              )
-          )[0]?.[0] ||
-        null;
-
-      patternField[
-        patternId
-      ].dominantChakra =
-        dominant;
-    }
-  );
+Object.values(patternField).forEach((field: any) => {
+  field.dominantChakra = dominantChakra;
+});
 
   /*
    * ------------------------------------------------
@@ -886,47 +741,32 @@ const dominantChakra =
    * ------------------------------------------------
    */
 
-  const feminineValues:
-    number[] = [];
+  
+const latestSignal = signals[0];
 
-  const masculineValues:
-    number[] = [];
+// use up to the latest 10 signals
+const recentSignals = signals.slice(0, 10);
 
-  const contractionValues:
-    number[] = [];
+const feminineValues = recentSignals.map((signal, index) => ({
+  value: Number(signal?.energy?.feminine ?? 0),
+  weight: 10 - index,
+}));
 
-  const expansionValues:
-    number[] = [];
+const masculineValues = recentSignals.map((signal, index) => ({
+  value: Number(signal?.energy?.masculine ?? 0),
+  weight: 10 - index,
+}));
 
-  enrichedBehaviours.forEach(
-    (b: any) => {
+const contractionValues = recentSignals.map((signal, index) => ({
+  value: Number(signal?.energy?.contraction ?? 0),
+  weight: 10 - index,
+}));
 
-      feminineValues.push(
-        Number(
-          b?.feminine || 0
-        )
-      );
-
-      masculineValues.push(
-        Number(
-          b?.masculine || 0
-        )
-      );
-
-      contractionValues.push(
-        Number(
-          b?.contraction || 0
-        )
-      );
-
-      expansionValues.push(
-        Number(
-          b?.expansion || 0
-        )
-      );
-    }
-  );
-
+const expansionValues = recentSignals.map((signal, index) => ({
+  value: Number(signal?.energy?.expansion ?? 0),
+  weight: 10 - index,
+}));
+  
   /*
    * ------------------------------------------------
    * 🌑 DISTORTED
@@ -1111,38 +951,29 @@ awarenessMap[
    * ------------------------------------------------
    */
 
-  const energy:
-    EnergyTotals = {
+const energy: EnergyTotals = {
 
-    feminine:
-      average(
-        feminineValues
-      ),
+feminine:
+  weightedAverage(feminineValues),
 
-    masculine:
-      average(
-        masculineValues
-      ),
+masculine:
+  weightedAverage(masculineValues),
 
-    contraction:
-      average(
-        contractionValues
-      ),
+contraction:
+  weightedAverage(contractionValues),
 
-    expansion:
-      average(
-        expansionValues
-      ),
+expansion:
+  weightedAverage(expansionValues),
 
-    chakras:
-      chakraPolarityMap,
+chakras:
+  chakraPolarityMap,
 
-    dominant_chakra:
-      dominantChakra,
+dominant_chakra:
+  dominantChakra,
 
-    awareness_chakra:
-      awarenessChakra,
-  };
+awareness_chakra:
+  awarenessChakra,
+};
 
   /*
    * ------------------------------------------------
@@ -1204,15 +1035,9 @@ awarenessMap[
       ]
     );
 
-    console.log(
-  "🪞 ALL LENS ENTRIES",
-  allLensEntries
-);
+    //console.log("🪞 ALL LENS ENTRIES", allLensEntries);
 
-console.log(
-  "🪞 FIRST SIGNAL ENTITY LENSES",
-  signals?.[0]?.entity_lenses
-);
+//console.log( "🪞 FIRST SIGNAL ENTITY LENSES",  signals?.[0]?.entity_lenses);
 
   /*
    * ------------------------------------------------

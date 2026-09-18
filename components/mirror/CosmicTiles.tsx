@@ -150,7 +150,7 @@ const cosmicData =
   cosmic?.dailyField
     ?.cosmic || {};
 
-  console.log(cosmic);  
+  //console.log(cosmic);  
 
   //
   // ✨ TILES

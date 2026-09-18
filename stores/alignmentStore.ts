@@ -73,14 +73,14 @@ interface AlignmentStore {
   setModules:
     (modules: AlignmentModule[]) => void;
 
-  getModule:
-    (key: string) => AlignmentModule | null;
+getModule:
+  (key: string) => AlignmentModule | null;
 
-  markLoaded:
-    () => void;
+getModulesByType:
+  (type: string) => AlignmentModule[];
 
-  reset:
-    () => void;
+markLoaded:
+  () => void;
 }
 
 /*
@@ -143,6 +143,29 @@ create<AlignmentStore>((set, get) => ({
     (key) =>
 
       get().modules[key] || null,
+
+      /*
+ * --------------------------------------------------------
+ * 🌿 GET MODULES BY TYPE
+ * --------------------------------------------------------
+ */
+
+getModulesByType:
+
+  (type) =>
+
+    Object.values(get().modules)
+
+      .filter(
+        (module) =>
+          module.active &&
+          module.type === type
+      )
+
+      .sort(
+        (a, b) =>
+          a.sort_order - b.sort_order
+      ),
 
   /*
    * --------------------------------------------------------

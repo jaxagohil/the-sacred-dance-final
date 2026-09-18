@@ -220,16 +220,6 @@ for (const row of data || []) {
           b.score - a.score
       );
 
-console.log(
-  "🪞 DERIVED LENSES:",
-  results
-);
-
-console.log(
-  "🪞 ENTITY LENSES:",
-  entityLenses
-);
-
 return {
 
   lensScores:

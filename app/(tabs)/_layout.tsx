@@ -125,7 +125,7 @@ export default function TabLayout() {
 
         options={{
 
-          title: "Alignment",
+          title: "Circles",
 
           tabBarIcon: ({
             color,

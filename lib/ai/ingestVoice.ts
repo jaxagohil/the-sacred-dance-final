@@ -66,10 +66,7 @@ console.log(
     const raw =
       await response.text();
 
-    console.log(
-      "🎙 RAW TRANSCRIBE RESPONSE",
-      raw
-    );
+    //console.log(  "🎙 RAW TRANSCRIBE RESPONSE",  raw);
 
     /*
      * --------------------------------------------------

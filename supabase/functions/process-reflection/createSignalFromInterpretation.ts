@@ -703,20 +703,6 @@ const shapeLensEntries = (
 // 🪞 ENTITY LENSES
 // --------------------------------------------------
 
-console.log(
-  "🧪 ABOUT TO DERIVE LENSES",
-  {
-    people:
-      interpretation?.people,
-
-    places:
-      interpretation?.places,
-
-    things:
-      interpretation?.things,
-  }
-);
-
 const {
 
   lensScores: entityLensScores,
@@ -732,33 +718,6 @@ const {
   interpretation?.things || [],
 );
 
-console.log(
-  "🧪 DERIVE RESULT",
-  {
-    entityLensScores,
-    entityLenses,
-  }
-);
-
-console.log(
-  "🪞 ENTITY LENSES:",
-  entityLenses
-);
-
-console.log(
-  "🪞 AI LENS PEOPLE:",
-  aiLens.people
-);
-
-console.log(
-  "🪞 AI LENS PLACES:",
-  aiLens.places
-);
-
-console.log(
-  "🪞 AI LENS THINGS:",
-  aiLens.things
-);
 
   // --------------------------------------------------
   // ⚡ CREATE SIGNAL
@@ -813,6 +772,9 @@ things_entities:
       primary_pattern:
         patternKey,
 
+        dominant_pattern:
+  spiralData.dominant_pattern,
+
       pattern_score:
         patternScore,
 
@@ -823,7 +785,7 @@ things_entities:
         primaryChakra,
 
       chakra_scores:
-        normalizedChakras,
+        normalizedChakras,  
 
 lens_scores: {
 

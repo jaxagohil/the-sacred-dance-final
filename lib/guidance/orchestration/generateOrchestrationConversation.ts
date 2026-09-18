@@ -17,20 +17,20 @@ import {
 } from "./buildFieldNarrative";
 
 import {
-  cosmicGuide,
-} from "../../guidance/guides/cosmicGuide";
-
-import {
-  heartGuide,
-} from "../../guidance/guides/heartGuide";
-
-import {
-  structureGuide,
-} from "../../guidance/guides/structureGuide";
-
-import {
   getLanguageContext,
 } from "../../i18n/getLanguageContext";
+
+import {
+  buildOrchestrationContext,
+} from "../../context/buildOrchestrationContext";
+
+import {
+  buildGuidePrompt,
+} from "../../ai/prompts/guides/buildGuidePrompt";
+
+import {
+  buildGuidanceMirrorWorld,
+} from "../context/buildGuidanceMirrorWorld";
 
 /*
  * --------------------------------------------------------
@@ -181,15 +181,19 @@ const languageContext =
 
       || 0.5,
 
-    people:
-      mirrorContext
-        ?.people || [],
+people:
+  mirrorContext
+    ?.people || [],
 
-    places:
-      mirrorContext
-        ?.places || [],
+places:
+  mirrorContext
+    ?.places || [],
 
-    manifestations,
+things:
+  mirrorContext
+    ?.things || [],
+
+manifestations,
 
     activeChakras,
 
@@ -251,8 +255,57 @@ const languageContext =
         orchestrationField.places,
     });
 
-  const orchestrationContext =
-    fieldNarrative;
+
+
+/*
+ * --------------------------------------------------------
+ * 🌌 ORCHESTRATION CONTEXT
+ * --------------------------------------------------------
+ */
+
+//console.log( "🪞 RAW PEOPLE LENS:", JSON.stringify(   mirrorContext?.lensContexts?.people,   null,   2));
+
+//console.log( "🪞 RAW PLACES LENS:",  JSON.stringify(  mirrorContext?.lensContexts?.places,  null, 2 ));
+
+//console.log(  "🪞 RAW THINGS LENS:",  JSON.stringify( mirrorContext?.lensContexts?.things,  null,  2  ));
+
+const orchestrationContext =
+
+  buildOrchestrationContext({
+
+    manifestations,
+
+    emotionalField:
+      orchestrationField.emotionalField,
+
+    spiralPhase:
+      orchestrationField.spiralPhase,
+
+    nervousSystemState:
+      orchestrationField.nervousSystemState,
+
+    sacredPrinciples,
+
+    mirrors:
+      mirrorContext?.mirrors || [],
+
+    signs:
+      mirrorContext?.signs || [],
+
+    people:
+      orchestrationField.people,
+
+    places:
+      orchestrationField.places,
+
+    things:
+      orchestrationField.things,
+
+    lensContexts:
+      mirrorContext?.lensContexts || {},
+  });
+
+  //console.log( "🌍 MY WORLD CONTEXT:",orchestrationContext);
 
   /*
    * --------------------------------------------------------
@@ -260,268 +313,120 @@ const languageContext =
    * --------------------------------------------------------
    */
 
+const mirrorWorld =
+
+  buildGuidanceMirrorWorld({
+    ...alignmentContext.mirrorContext,
+    orchestrationContext,
+  });
+
+  //console.log( "🌍 MIRROR WORLD",JSON.stringify( mirrorWorld,  null, 2 ));
+
+  const guidePrompt =
+
+  buildGuidePrompt({
+
+    fieldContext: {
+
+      user:
+        alignmentContext.userContext,
+
+      sacred: {
+
+        emergenceMemory,
+
+        selectedGuide,
+      },
+
+      mirrorContext:
+        mirrorWorld,
+
+      expressionProfile:
+        alignmentContext.expressionProfile,
+
+      spiralScores:
+        alignmentContext.spiralScores,
+
+      activeLens:
+        alignmentContext.activeLens,
+
+      entityLenses:
+        alignmentContext.entityLenses,
+
+      dailyField:
+        alignmentContext.dailyField,
+    },
+
+    orchestration:
+      orchestrationField,
+
+    recentMessages: [],
+
+    guidanceSignals: {},
+
+    reflectionResult: {},
+
+    language,
+
+    message: "",
+
+     workflow: "orchestration",
+  });
+
   const prompt = `
 
 ${orchestrationWrapper}
 
---------------------------------------------------------
-🌊 LIVE FIELD
---------------------------------------------------------
-
-${orchestrationContext}
-
-${JSON.stringify({
-
-  pattern:
-    orchestrationField.pattern,
-
-  emotionalField:
-    orchestrationField.emotionalField,
-
-  nervousSystemState:
-    orchestrationField.nervousSystemState,
-
-  spiralPhase:
-    orchestrationField.spiralPhase,
-
-  selectedGuide:
-    orchestrationField.selectedGuide,
-
-}, null, 2)}
+${guidePrompt}
 
 `;
 
   /*
    * --------------------------------------------------------
-   * 🌌 SEQUENTIAL ORCHESTRATION
+   * 🌌 LIVING ORCHESTRATION
    * --------------------------------------------------------
    */
 
   try {
 
-    const fragments: any[] = [];
-
-    const fragmentCount = 3;
-
-    let previousGuide = null;
-
-    /*
-     * ----------------------------------------------------
-     * 🌊 GENERATE SEQUENTIALLY
-     * ----------------------------------------------------
-     */
-
-    for (
-
-      let index = 0;
-
-      index < fragmentCount;
-
-      index++
-
-    ) {
-
-      /*
-       * --------------------------------------------------
-       * 🌌 DYNAMIC GUIDE SELECTION
-       * --------------------------------------------------
-       */
-
-      const possibleGuides = [
-
-        GUIDE_TYPES.COSMIC,
-
-        GUIDE_TYPES.HEART,
-
-        GUIDE_TYPES.STRUCTURE,
-      ];
-
-      /*
-       * --------------------------------------------------
-       * 🌊 AVOID SAME GUIDE REPEATING
-       * --------------------------------------------------
-       */
-
-      const filteredGuides =
-
-        possibleGuides.filter(
-          item =>
-            item !== previousGuide
-        );
-
-      /*
-       * --------------------------------------------------
-       * 🌿 RANDOM NEXT GUIDE
-       * --------------------------------------------------
-       */
-
-      const guide =
-
-        filteredGuides[
-          Math.floor(
-            Math.random()
-            * filteredGuides.length
-          )
-        ];
-
-      previousGuide =
-        guide;
-
-      /*
-       * --------------------------------------------------
-       * 🌌 GUIDE PROFILE
-       * --------------------------------------------------
-       */
-
-      let guideProfile =
-        cosmicGuide;
-
-      switch (guide) {
-
-        case GUIDE_TYPES.HEART:
-
-          guideProfile =
-            heartGuide;
-
-          break;
-
-        case GUIDE_TYPES.STRUCTURE:
-
-          guideProfile =
-            structureGuide;
-
-          break;
-
-        case GUIDE_TYPES.COSMIC:
-
-        default:
-
-          guideProfile =
-            cosmicGuide;
-
-          break;
-      }
-
-      /*
-       * --------------------------------------------------
-       * 🌊 PREVIOUS MOVEMENT
-       * --------------------------------------------------
-       */
-
-      const previousMovement =
-
-        fragments
-
-          .slice(-3)
-
-          .map(
-            (
-              fragment: any
-            ) => `
-
-${fragment.guide}:
-${fragment.text}
-
-`
-          )
-
-          .join("\n");
-
-      /*
-       * --------------------------------------------------
-       * 🌌 CONTINUATION PROMPT
-       * --------------------------------------------------
-       */
-
-      const continuationPrompt = `
+    const conversationPrompt = `
 
 ${prompt}
 
 --------------------------------------------------------
-🌌 CURRENT GUIDE CONSCIOUSNESS
+🌌 LIVING ORCHESTRATION
 --------------------------------------------------------
 
-${guideProfile}
+Generate one living conversation
+between the Sacred Dance intelligences.
 
---------------------------------------------------------
-🌊 CONTINUING FIELD MOVEMENT
---------------------------------------------------------
+The conversation should emerge
+from the whole Mirror World
+and the current Alignment OS field.
 
-Previous movement:
+Do not generate separate standalone reflections.
 
-${previousMovement || "none yet"}
+The intelligences are witnessing
+the same living moment together.
 
-Current intelligence:
-${guide}
+Allow the movement itself to determine:
+- who speaks
+- who responds
+- who interrupts
+- who softens
+- who challenges
+- who widens
+- when humour naturally appears
+- when something is better left unresolved
 
-IMPORTANT:
+The selected guide is:
 
-Each fragment should be SHORT.
+${selectedGuide}
 
-Maximum:
-1–3 sentences.
-
-Prefer:
-brief emotionally alive recognitions
-over complete explanations.
-
-Avoid:
-- long poetic paragraphs
-- spiritual monologues
-- abstract mystical language
-- excessive metaphor
-- polished “wisdom quote” energy
-
-The field should feel:
-alive,
-interruptive,
-unfinished,
-human,
-and emotionally real.
-
---------------------------------------------------------
-🌌 ORCHESTRATION MOVEMENT
---------------------------------------------------------
-
-The intelligences are participating
-inside one living field.
-
-They may:
-- interrupt each other
-- deepen previous movement
-- expose tension
-- redirect the field
-- soften or challenge previous perception
-
-Not every line should agree.
-
-Not every line should resolve.
-
-The movement should feel:
-relational,
-alive,
-emotionally dynamic,
-and grounded.
-
-Avoid:
-- standalone reflections
-- motivational language
-- spiritual affirmations
-- therapy-speak
-- emotional over-explaining
-
-Stay grounded in:
-- lived behaviour
-- intimacy dynamics
-- nervous system movement
-- relational pacing
-- emotional protection
-- truth vs protection
-- love
-- peace
-- joy
-- reciprocity
-- honesty
+This guide may have greater presence
+in the field,
+but does not need to dominate
+the conversation.
 
 --------------------------------------------------------
 🌍 LANGUAGE RULES
@@ -533,7 +438,7 @@ ${languageContext.native_name}
 
 Never mix languages.
 
-The response must feel:
+The conversation must feel:
 naturally written,
 emotionally native,
 and culturally natural
@@ -556,139 +461,161 @@ ${languageContext.warmth_style}
 Mystical Tolerance:
 ${languageContext.mystical_tolerance}
 
-Return ONLY valid JSON:
+--------------------------------------------------------
+OUTPUT
+--------------------------------------------------------
+
+Return ONLY valid JSON.
+
+Return a JSON array.
+
+Each item must contain:
 
 {
-  "guide": "${guide}",
-  "role": "recognition",
-  "text": "..."
+  "guide": "heart | structure | cosmic",
+  "role": "short movement label",
+  "text": "short conversational fragment"
 }
+
+Do not include markdown.
 
 `;
 
-      /*
-       * --------------------------------------------------
-       * 🌊 GENERATE
-       * --------------------------------------------------
-       */
+    /*
+     * --------------------------------------------------------
+     * 🌊 GENERATE COMPLETE CONVERSATION
+     * --------------------------------------------------------
+     */
 
-      const response =
+    console.log("🌌 ORCHESTRATION PROMPT LENGTH:", conversationPrompt.length);
 
-        await generateAIResponse({
+    const response =
 
-          type:
-            "orchestration",
+      await generateAIResponse({
 
-          context: {
+        type:
+          "orchestration",
 
-            directPrompt:
-              continuationPrompt,
-          },
+        context: {
 
-          data: {
+          directPrompt:
+            conversationPrompt,
+        },
 
-            language,
-          },
-        });
+        data: {
 
-      let parsed = response;
+          language,
+        },
+      });
 
-      /*
-       * --------------------------------------------------
-       * 🌌 CLEAN
-       * --------------------------------------------------
-       */
+    let parsed = response;
 
-      if (
-        typeof parsed ===
-        "string"
-      ) {
-
-        parsed =
-
-          parsed
-
-            .replace(
-              /```json/gi,
-              ""
-            )
-
-            .replace(
-              /```/gi,
-              ""
-            )
-
-            .trim();
-
-        try {
-
-          parsed =
-            JSON.parse(parsed);
-
-        } catch {
-
-          continue;
-        }
-      }
-
-      /*
-       * --------------------------------------------------
-       * 🌿 STORE
-       * --------------------------------------------------
-       */
-
-const parsedFragments =
-
-  Array.isArray(parsed)
-
-    ? parsed
-
-    : [parsed];
-
-parsedFragments.forEach(
-
-  (
-    item: any,
-    itemIndex: number
-  ) => {
+    /*
+     * --------------------------------------------------------
+     * 🌌 CLEAN
+     * --------------------------------------------------------
+     */
 
     if (
-      item?.text
+      typeof parsed ===
+      "string"
     ) {
 
-      fragments.push({
+      parsed =
 
-        id:
+        parsed
 
-          `orchestration_${index}_${itemIndex}`,
+          .replace(
+            /```json/gi,
+            ""
+          )
 
-        guide:
+          .replace(
+            /```/gi,
+            ""
+          )
 
-          item?.guide
-          || guide,
+          .trim();
 
-        role:
+      try {
 
-          item?.role
-          || "awareness",
+        parsed =
+          JSON.parse(parsed);
 
-        text:
+      } catch {
 
-          item?.text
-            ?.trim?.(),
-
-        cinematic:
-          true,
-      });
-    }
-  }
-);
+        return [];
+      }
     }
 
     /*
-     * ----------------------------------------------------
+     * --------------------------------------------------------
+     * 🌿 NORMALISE
+     * --------------------------------------------------------
+     */
+
+    const parsedFragments =
+
+      Array.isArray(parsed)
+
+        ? parsed
+
+        : [parsed];
+
+    const validGuides = [
+
+      GUIDE_TYPES.HEART,
+
+      GUIDE_TYPES.STRUCTURE,
+
+      GUIDE_TYPES.COSMIC,
+    ];
+
+    const fragments =
+
+      parsedFragments
+
+        .filter(
+          (item: any) =>
+            item?.text
+        )
+
+        .map(
+          (
+            item: any,
+            index: number
+          ) => ({
+
+            id:
+              `orchestration_${index}`,
+
+            guide:
+
+              validGuides.includes(
+                item?.guide
+              )
+
+                ? item.guide
+
+                : selectedGuide,
+
+            role:
+              item?.role
+              || "awareness",
+
+            text:
+              item?.text
+                ?.trim?.(),
+
+            cinematic:
+              true,
+          })
+        );
+
+    /*
+     * --------------------------------------------------------
      * 🌌 RETURN
-     * ----------------------------------------------------
+     * --------------------------------------------------------
      */
 
     return fragments;

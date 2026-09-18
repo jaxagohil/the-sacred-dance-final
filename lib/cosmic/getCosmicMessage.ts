@@ -44,7 +44,7 @@ export async function getCosmicMessage({
    */
 
   const cosmic =
-    dailyField?.cosmic || {};
+  dailyField?.cosmic || {};
 
   /*
    * ---------------------------------------------------------
@@ -170,113 +170,63 @@ export async function getCosmicMessage({
     });
 
 
-    console.log(
-  "🌌 AI PAYLOAD:",
-  aiPayload
-);
+  //  console.log("🌌 AI PAYLOAD:",aiPayload);
+  
   /*
    * ---------------------------------------------------------
    * 🌌 RETURN
    * ---------------------------------------------------------
    */
 
-  return {
+return {
 
-    ...interpretation,
+  ...interpretation,
 
-    /*
-     * -------------------------------------------------------
-     * 🤖 AI WHISPERS
-     * -------------------------------------------------------
-     */
-
-    moonLine:
-
-      aiPayload?.moonLine ||
-
-      interpretation.moonLine,
-
-    phaseLine:
-
-      aiPayload?.phaseLine ||
-
-      interpretation.phaseLine,
-
-    sunLine:
-
-      aiPayload?.sunLine ||
-
-      interpretation.sunLine,
-
-    energyLine:
-
-      aiPayload?.energyLine ||
-
-      interpretation.energyLine,
-
-    moon: {
-
-  sign:
-    cosmic?.moon_sign,
-
-  phase:
-    cosmic?.moon_phase,
-
-  line:
-
+  moonLine:
     aiPayload?.moonLine ||
-
     interpretation.moonLine,
-},
 
-phase: {
-
-  type:
-    interpretation.phaseType,
-
-  line:
-
+  phaseLine:
     aiPayload?.phaseLine ||
-
     interpretation.phaseLine,
-},
 
-sun: {
-
-  sign:
-    cosmic?.sun_sign,
-
-  line:
-
+  sunLine:
     aiPayload?.sunLine ||
-
     interpretation.sunLine,
-},
 
-energy: {
-
-  dominant:
-    dailyField
-      ?.dominantEnergy,
-
-  line:
-
+  energyLine:
     aiPayload?.energyLine ||
-
     interpretation.energyLine,
-},  
 
-    /*
-     * -------------------------------------------------------
-     * 🌌 RAW AI
-     * -------------------------------------------------------
-     */
+  moon: {
+    sign: cosmic?.moon_sign,
+    phase: cosmic?.moon_phase,
+    line:
+      aiPayload?.moonLine ||
+      interpretation.moonLine,
+  },
 
-    aiMessage:
-      aiPayload,
+  phase: {
+    type: interpretation.phaseType,
+    line:
+      aiPayload?.phaseLine ||
+      interpretation.phaseLine,
+  },
 
-    cosmic,
+  sun: {
+    sign: cosmic?.sun_sign,
+    line:
+      aiPayload?.sunLine ||
+      interpretation.sunLine,
+  },
 
-    dailyField,
-  };
+  energy: {
+    dominant: dailyField?.dominantEnergy,
+    line:
+      aiPayload?.energyLine ||
+      interpretation.energyLine,
+  },
+
+  cosmic,
+};
 }

@@ -72,49 +72,11 @@ export async function buildPrompt({
 
     /*
      * -------------------------------------------------------
-     * GUIDE
-     * -------------------------------------------------------
-     */
-
-    case "guide":
-
-      return buildGuidePrompt({
-
-        context,
-
-        data: enrichedData,
-      });
-
-    /*
-     * -------------------------------------------------------
      * LENS
      * -------------------------------------------------------
      */
 
 case "lens":
-
-  console.log(
-    "🪞 LENS DEBUG",
-    JSON.stringify(
-      {
-        lens: enrichedData.lens,
-
-        reflectionEvidence:
-          enrichedData.lensContext?.reflectionEvidence,
-
-        entityLensEvidence:
-          enrichedData.lensContext?.entityLensEvidence,
-
-        patternNarratives:
-          enrichedData.lensContext?.patternNarratives,
-
-        recurringPatterns:
-          enrichedData.lensContext?.recurringPatterns,
-      },
-      null,
-      2
-    )
-  );
 
   return buildLensPrompt({
     context,
@@ -138,17 +100,72 @@ case "lens":
 
     /*
      * -------------------------------------------------------
-     * CONNECTIONS
+     * GUIDANCE - Orchestration & Transmission
      * -------------------------------------------------------
      */
+
+case "orchestration":
+
+  return buildGuidePrompt({
+
+    fieldContext:
+      context?.fieldContext || {},
+
+    reflectionResult:
+      context?.reflectionResult || {},
+
+    guidanceSignals:
+      context?.guidanceSignals || {},
+
+    orchestration:
+      context?.orchestration || {},
+
+    recentMessages:
+      context?.recentMessages || [],
+
+    language:
+      context?.language || enrichedData.language,
+
+    message:
+      context?.message || "",
+
+    workflow:
+      "orchestration",
+
+    data:
+      enrichedData,
+  });
 
 case "transmission":
 
   return buildGuidePrompt({
 
-    ...context,
+    fieldContext:
+      context?.fieldContext || {},
 
-    data: enrichedData,
+    reflectionResult:
+      context?.reflectionResult || {},
+
+    guidanceSignals:
+      context?.guidanceSignals || {},
+
+    orchestration:
+      context?.orchestration || {},
+
+    recentMessages:
+      context?.recentMessages || [],
+
+    language:
+      context?.language || enrichedData.language,
+
+    message:
+      context?.message || "",
+
+    workflow:
+      "transmission",
+
+    data:
+      enrichedData,
   });
 
     /*
@@ -172,13 +189,10 @@ case "transmission":
      * -------------------------------------------------------
      */
 
-    default:
+default:
 
-      return buildGuidePrompt({
-
-    ...context,
-
-        data: enrichedData,
-      });
+  throw new Error(
+    `Unknown prompt type: ${type}`
+  );
   }
 }

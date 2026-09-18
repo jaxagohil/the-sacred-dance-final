@@ -36,6 +36,10 @@
  */
 
 import {
+  AlignmentOSContext,
+} from "../alignment/buildAlignmentOSContext";
+
+import {
   ForegroundField,
   GuidanceSignal,
   Transmission,
@@ -75,11 +79,7 @@ interface EnterTransmissionProps {
   field:
     ForegroundField;
 
-  mirrorContext?: any;
-
-  userContext?: any;
-
-  cosmic?: any;
+  alignmentContext: AlignmentOSContext;
 
   signals?: any[];
 
@@ -220,11 +220,7 @@ export async function enterTransmission({
 
   field,
 
-  mirrorContext,
-
-  userContext,
-
-  cosmic,
+  alignmentContext,
 
   signals = [],
 
@@ -314,26 +310,14 @@ export async function enterTransmission({
    * --------------------------------------------------------
    */
 
-  const updatedField =
+const updatedField =
 
-    resolveForegroundField({
+  resolveForegroundField({
 
-      mirrorContext,
+    alignmentContext,
 
-      userContext,
-
-      activeLens:
-        field?.activeLens,
-
-      cosmic,
-
-      residue,
-
-      signals: [
-        signal,
-        ...signals,
-      ],
-    });
+    residue,
+  });
 
   /*
    * --------------------------------------------------------

@@ -383,11 +383,9 @@ ${JSON.stringify(
         const parsed =
           JSON.parse(text);
 
-          console.log(
-  "RAW RESPONSE:"
-);
+          //console.log("RAW RESPONSE:");
 
-console.log(text);
+//console.log(text);
 
         /*
          * --------------------------------------

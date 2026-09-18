@@ -6,6 +6,22 @@ import {
   generateAIResponse,
 } from "../ai/generateAIResponse";
 
+import {
+  AlignmentOSContext,
+} from "../alignment/buildAlignmentOSContext";
+
+import {
+  buildGuidanceMirrorWorld,
+} from "./context/buildGuidanceMirrorWorld";
+
+import {
+  buildGuidePrompt,
+} from "../ai/prompts/guides/buildGuidePrompt";
+
+import {
+  transmissionWrapper,
+} from "../ai/prompts/guides/transmissionWrapper";
+
 /* ======================================================== */
 /* 🌊 TYPES */
 /* ======================================================== */
@@ -16,9 +32,7 @@ type GenerateGuideTransmissionInput = {
 
   reflection?: string;
 
-  userContext?: any;
-
-  mirrorContext?: any;
+  alignmentContext: AlignmentOSContext;
 
   field?: any;
 
@@ -39,9 +53,7 @@ export async function generateGuideTransmission({
 
   reflection = "",
 
-  userContext,
-
-  mirrorContext,
+alignmentContext,
 
   field,
 
@@ -73,50 +85,94 @@ export async function generateGuideTransmission({
   language
 );
 
+
+const mirrorWorld =
+  buildGuidanceMirrorWorld(
+    alignmentContext.mirrorContext
+  );
+
+const guidePrompt =
+
+  buildGuidePrompt({
+
+    fieldContext: {
+
+      user:
+        alignmentContext.userContext,
+
+      sacred: {
+
+        emergenceMemory,
+
+        selectedGuide:
+          guide,
+      },
+
+      mirrorContext:
+        mirrorWorld,
+
+      expressionProfile:
+        alignmentContext.expressionProfile,
+
+      spiralScores:
+        alignmentContext.spiralScores,
+
+      activeLens:
+        alignmentContext.activeLens,
+
+      entityLenses:
+        alignmentContext.entityLenses,
+
+      dailyField:
+        alignmentContext.dailyField,
+    },
+
+    orchestration:
+      orchestrationField,
+
+    recentMessages: [],
+
+    guidanceSignals:
+      field?.guidanceSignals || {},
+
+    reflectionResult:
+      field?.reflectionResult || {},
+
+    language,
+
+    message:
+      reflection,
+
+    workflow: "transmission",  
+  });
+  
+  const finalPrompt = `
+
+${transmissionWrapper}
+
+${guidePrompt}
+
+`;
+
+
     const result =
 
-      await generateAIResponse({
+await generateAIResponse({
 
-        type:
-          "transmission",
+  type:
+    "transmission",
 
-        context: {
+  context: {
 
-          fieldContext: {
+    directPrompt:
+      finalPrompt,
+  },
 
-            user:
-              userContext,
+  data: {
 
-            sacred: {
-
-              emergenceMemory,
-
-              selectedGuide:
-                guide,
-            },
-
-            dailyField:
-              orchestrationField,
-          },
-
-          orchestration:
-            orchestrationField,
-
-          recentMessages:
-            [],
-
-          guidanceSignals:
-            field?.guidanceSignals || {},
-
-          reflectionResult:
-            field?.reflectionResult || {},
-
-          language,
-
-          message:
-            reflection,
-        },
-      });
+    language,
+  },
+});
 
     console.log(
       "🌌 GUIDE TRANSMISSION RESULT",

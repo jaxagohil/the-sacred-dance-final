@@ -438,8 +438,7 @@ if (emotionalError) {
 } else {
 
   console.log(
-    "✅ Journal emotional field processed",
-    emotionalData
+    "✅ Journal emotional field processed"
   );
 }
     }

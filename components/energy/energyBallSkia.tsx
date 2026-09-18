@@ -26,7 +26,7 @@ import {
 const { width } =
   Dimensions.get("window");
 
-const SIZE = width * 0.84;
+const SIZE = Math.min(width * 0.84, 520);
 
 const CANVAS_SIZE =
   SIZE + 80;

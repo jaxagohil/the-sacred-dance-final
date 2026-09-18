@@ -281,10 +281,7 @@ export async function retrieveSymbolicField({
       ...new Set(themes),
     ];
 
-    console.log(
-      "🌌 SYMBOLIC THEMES:",
-      uniqueThemes
-    );
+    //console.log(  "🌌 SYMBOLIC THEMES:",  uniqueThemes);
 
     /*
      * ---------------------------------------------------------
