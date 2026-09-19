@@ -10,7 +10,6 @@ import React, {
 import {
   Animated,
   Easing,
-  Keyboard,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -277,9 +276,9 @@ const placeholders = [
 
   return (
 
-    <TouchableWithoutFeedback
-      onPress={Keyboard.dismiss}
-    >
+<TouchableWithoutFeedback
+  onPress={() => {}}
+>
 
       <View
         style={{
@@ -350,15 +349,16 @@ outputRange:
 
             width: "78%",
 
+            height: 75,
+
             paddingHorizontal: 22,
 
-            paddingVertical: 18,
+            paddingVertical: 5,
 
             borderRadius:
               Radius.lg,
 
-backgroundColor:
-  "rgba(255,255,255,0.015)",
+backgroundColor: "#EEECE6",
 
             borderWidth: 1,
 
@@ -415,6 +415,15 @@ outputRange: [
   }}
 />
 
+<View
+  style={{
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+  }}
+></View>
+
+
           <TextInput
             value={text}
 
@@ -426,9 +435,7 @@ outputRange: [
               placeholder
             }
 
-            placeholderTextColor={
-              Colors.mutedText
-            }
+            placeholderTextColor="#6B6964"
 
             multiline
 
@@ -442,12 +449,18 @@ outputRange: [
               handleSubmit
             }
 
+          onKeyPress={(event) => {
+  if (event.nativeEvent.key === "Enter") {
+    event.preventDefault?.();
+    handleSubmit();
+  }
+}}  
+
             style={{
 
               width: "88%",
 
-              color:
-                Colors.white,
+color: "#2A2927",
 
               fontFamily:
                 Fonts.light,
@@ -456,7 +469,7 @@ outputRange: [
 
               lineHeight: 24,
 
-              minHeight: 62,
+              minHeight: 44,
 
               textAlignVertical:
                 "center",
@@ -466,6 +479,8 @@ outputRange: [
                 hasText
                   ? 0.94
                   : Opacity.medium,
+
+              outlineStyle: "none",    
             }}
           />
 
@@ -511,20 +526,20 @@ outputRange: [
               handleSubmit
             }
 
-            style={{
+style={{
+  position: "absolute",
+  right: 18,
+  top: 20,
 
-              marginTop: 16,
-
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+  alignItems: "center",
+  justifyContent: "center",
+}}
           >
 
             <Animated.Text
               style={{
 
-                color:
-                  Colors.diamond,
+                  color: "#2A2927",
 
                 fontFamily:
                   Fonts.light,

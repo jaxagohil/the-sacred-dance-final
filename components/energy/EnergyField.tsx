@@ -3,6 +3,7 @@
 import React from "react";
 
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import {
 import ChakraSystem from "./ChakraSystemRN.web";
 
 import EnergyBallSkia from "./EnergyBall";
+import { ENERGY_BALL_CANVAS_SIZE } from "./energyBallSkia";
 
 import EnergyBody from "./energyBody";
 
@@ -670,7 +672,15 @@ return (
 <View
   style={[
     styles.container,
+    Platform.OS === "web" && {
+      pointerEvents: "auto",
+    },
   ]}
+  onPointerDown={
+    Platform.OS === "web"
+      ? () => console.log("🌐 ENERGY FIELD POINTER")
+      : undefined
+  }
 >
 
       {/* 🌌 ENERGY FIELD */}
@@ -726,7 +736,11 @@ return (
   style={[
     styles.chakras,
   ]}
-  pointerEvents="box-none"
+  pointerEvents={
+  Platform.OS === "web"
+    ? "auto"
+    : "box-none"
+}
 >
 
             <View
@@ -737,7 +751,7 @@ return (
 
                 height: 430,
               }}
-            >
+            >             
 
 <ChakraSystem
 
@@ -788,59 +802,78 @@ scores={
 
           {/* 🌌 OVERLAY */}
 
-          <View
+{/* 🌌 OVERLAY */}
 
-            pointerEvents="box-none"
-
-            style={
-              styles.overlay
-            }
-          >
+<View
+  pointerEvents="box-none"
+  style={[
+    styles.overlay,
+    Platform.OS === "web" && {
+      zIndex: 210,
+    },
+  ]}
+>
 
             {/* 🌑 DISTORTION TOUCHES */}
 
-            {dotPositions.map(
-              (dot: any, i: number) => (
-
-                <Pressable
-
-                  key={i}
-
-                  onPress={() => {
-
-                    setSelectedChakra(null);
-
-                    setSelectedDistortion(
-
-                      selectedDistortion === i
-
-                        ? null
-
-                        : i
-                    );
-                  }}
-
-style={{
-
-  position:
-    "absolute",
-
-width: 60,
-height: 60,
-
+<View
+  pointerEvents="box-none"
+style={[
+  styles.energyBall,
+Platform.OS === "web" && {
+  width: ENERGY_BALL_CANVAS_SIZE,
+  height: ENERGY_BALL_CANVAS_SIZE,
+  zIndex: 220,
+  left: "50%",
+  top: "50%",
+marginLeft: -ENERGY_BALL_CANVAS_SIZE / 2 + 45,
+marginTop: -ENERGY_BALL_CANVAS_SIZE / 2 + 34,
+},
+]}
+>
+  {dotPositions.map((dot: any, i: number) => (
+    <View
+      key={i}
+      style={{
+  position: "absolute",
+  width: 20,
+  height: 20,
 left:
-  dot.x - 30,
-
-top:
-  dot.y - 30,
-
-borderRadius: 30,
-
-  zIndex: 90,
-}}
-                />
-              )
-            )}
+  dot.side === "right"
+    ? dot.x - 60
+    : dot.x - 10,
+top: dot.y - 10,
+  borderRadius: 10,
+  zIndex: 220,
+      }}
+      pointerEvents="auto"
+      onPointerDown={
+        Platform.OS === "web"
+          ? () => {
+              setSelectedChakra(null);
+              setSelectedDistortion(
+                selectedDistortion === i ? null : i
+              );
+            }
+          : undefined
+      }
+    >
+      <Pressable
+        onPress={() => {
+          setSelectedChakra(null);
+          setSelectedDistortion(
+            selectedDistortion === i ? null : i
+          );
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: 30,
+        }}
+      />
+    </View>
+  ))}
+</View>
 
             {/* ✨ CHAKRA LABEL */}           
 
@@ -919,23 +952,13 @@ elevation: 999,
 
     position: "absolute",
 
-    left:
-      dotPositions[
-        selectedDistortion
-      ].side === "left"
+left:
+  dotPositions[selectedDistortion].side === "left"
+    ? dotPositions[selectedDistortion].x + 120
+    : dotPositions[selectedDistortion].x + 5,
 
-        ? dotPositions[
-            selectedDistortion
-          ].x - 150
-
-        : dotPositions[
-            selectedDistortion
-          ].x + 20,
-
-    top:
-      dotPositions[
-        selectedDistortion
-      ].y - 12,
+top:
+  dotPositions[selectedDistortion].y - 35,
 
     width: 130,
 
@@ -1117,7 +1140,7 @@ chakras: {
 
   paddingTop: 135,
 
-  zIndex: 50,
+  zIndex: 70,
 },
 
     overlay: {

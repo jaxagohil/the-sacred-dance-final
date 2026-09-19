@@ -28,8 +28,11 @@ const { width } =
 
 const SIZE = Math.min(width * 0.84, 520);
 
-const CANVAS_SIZE =
+export const ENERGY_BALL_CANVAS_SIZE =
   SIZE + 80;
+
+const CANVAS_SIZE =
+  ENERGY_BALL_CANVAS_SIZE;
 
 const CENTER =
   CANVAS_SIZE / 2;

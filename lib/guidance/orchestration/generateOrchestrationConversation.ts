@@ -1,6 +1,10 @@
 // /lib/guidance/orchestration/generateOrchestrationConversation.ts
 
 import {
+  orchestrationAgent,
+} from "../../ai/agents/orchestrationAgent";
+
+import {
   GUIDE_TYPES,
 } from "../../../components/guidance/guideConfig";
 
@@ -388,6 +392,35 @@ ${guidePrompt}
    */
 
   try {
+
+  const agentDecision =
+  await orchestrationAgent({
+
+    alignmentContext,
+
+    orchestrationField,
+
+    emergenceMemory,
+
+    activePatterns,
+
+    activeChakras,
+
+    manifestations,
+
+    sacredPrinciples,
+
+    sacredPressures,
+
+    selectedGuide,
+
+    language,
+  });
+
+console.log(
+  "🌌 ORCHESTRATION AGENT DECISION",
+  agentDecision
+);  
 
     const conversationPrompt = `
 

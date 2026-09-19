@@ -127,7 +127,10 @@ const getState = (
   // --------------------------------------------------
 
 return (
-  <View style={styles.container}>
+ <View
+  style={styles.container}
+  pointerEvents="auto"
+>
 
       {chakraOrder.map(
         (key) => {
@@ -240,19 +243,29 @@ if (hasMessage) {
 
           return (
 
-            <View
+<View
+  key={key}
+  style={[
+    styles.nodeWrapper,
+    {
+      top: y,
+      ...(Platform.OS === "web"
+        ? {
+            zIndex: 200,
+          }
+        : {}),
+    },
+  ]}
+  onPointerDown={
+    Platform.OS === "web"
+      ? () => {
 
-              key={key}
-
-              style={[
-
-                styles.nodeWrapper,
-
-                {
-                  top: y,
-                },
-              ]}
-            >
+          if (!hasMessage) return;
+          onChakraPress?.(key);
+        }
+      : undefined
+  }
+>
 
               {/* ✨ GLOW */}
 
@@ -328,18 +341,10 @@ shadowRadius:
               {/* 🔘 CHAKRA */}
 
 <Pressable
-
   onPress={() => {
-
-    if (!hasMessage) {
-      return;
-    }
-
-    onChakraPress?.(
-      key
-    );
+    if (!hasMessage) return;
+    onChakraPress?.(key);
   }}
-
   hitSlop={20}
 >
 

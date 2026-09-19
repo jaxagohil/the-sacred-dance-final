@@ -1,5 +1,13 @@
 import OpenAI from "openai";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage",
+  "Access-Control-Allow-Methods":
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+};
+
 const openai = new OpenAI({
   apiKey:
     Deno.env.get(
@@ -8,6 +16,12 @@ const openai = new OpenAI({
 });
 
 Deno.serve(async (req) => {
+
+    if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: corsHeaders,
+    });
+  }
 
   try {
 
@@ -40,11 +54,14 @@ const raw =
     ?.message
     ?.content || "";
 
-return Response.json({
-
-  text: raw,
-
-});
+return Response.json(
+  {
+    text: raw,
+  },
+  {
+    headers: corsHeaders,
+  }
+);
 
   } catch (error) {
 
@@ -57,6 +74,7 @@ return Response.json({
       },
       {
         status: 500,
+        headers: corsHeaders,
       }
     );
   }

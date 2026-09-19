@@ -445,10 +445,15 @@ setResetKey(
           flex: 1,
         }}
 
-        onPress={() => {
+onPress={(event) => {
 
-          Keyboard.dismiss();
-        }}
+  if (
+    event.target === event.currentTarget
+  ) {
+    Keyboard.dismiss();
+  }
+
+}}
       >
 
  {/* ✍️ WRITING */}
@@ -483,9 +488,7 @@ setResetKey(
 
     placeholder={t("journal.placeholder")}
 
-    placeholderTextColor={
-      Colors.subtleText
-    }
+   placeholderTextColor="#6B6964"
 
     multiline
 
@@ -499,8 +502,11 @@ setResetKey(
 
     style={{
 
-      color:
-        Colors.softText,
+      backgroundColor: "#EEECE6",
+      
+       color: "#2A2927",
+
+       outlineStyle: "none",
 
       fontFamily:
         Fonts.light,
@@ -511,6 +517,10 @@ setResetKey(
 
       paddingHorizontal:
         Spacing.sm,
+
+      borderRadius: 75,
+
+paddingVertical: 75,  
 
       textAlignVertical:
         "top",

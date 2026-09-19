@@ -57,20 +57,20 @@ guideName = "Guide",
       new Animated.Value(0)
     ).current;
 
-  const atmosphere = {
+const atmosphere = {
 
-    width: "82%",
+  width: "82%",
 
-    fontSize: 11,
+  fontSize: 13,
 
-    lineHeight: 24,
+  lineHeight: 28,
 
-    glow: 2,
+  glow: 2,
 
-    opacity: 0.9,
+  opacity: 0.9,
 
-    breathing: 7600,
-  };
+  breathing: 7600,
+};
 
   /*
    * --------------------------------------------------------
@@ -183,7 +183,7 @@ guideName = "Guide",
    * --------------------------------------------------------
    */
 
-  if (isThinking) {
+if (isThinking && role === "guide") {
 
     return (
 

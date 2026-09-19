@@ -32,6 +32,8 @@ type GenerateGuideTransmissionInput = {
 
   reflection?: string;
 
+  recentMessages?: any[];
+
   alignmentContext: AlignmentOSContext;
 
   field?: any;
@@ -52,6 +54,8 @@ export async function generateGuideTransmission({
   guide = "cosmic",
 
   reflection = "",
+
+  recentMessages = [],
 
 alignmentContext,
 
@@ -130,7 +134,7 @@ const guidePrompt =
     orchestration:
       orchestrationField,
 
-    recentMessages: [],
+    recentMessages,
 
     guidanceSignals:
       field?.guidanceSignals || {},

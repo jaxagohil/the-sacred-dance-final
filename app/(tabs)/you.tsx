@@ -899,9 +899,11 @@ backgroundColor:
 
       <TouchableOpacity
         activeOpacity={1}
-        onPress={
-          Keyboard.dismiss
-        }
+onPress={(event) => {
+  if (event.target === event.currentTarget) {
+    Keyboard.dismiss();
+  }
+}}
         style={{
           flex: 1,
         }}
@@ -987,13 +989,10 @@ color:
 
             placeholder="your name"
 
-placeholderTextColor={
-  Colors.mutedText
-}
+placeholderTextColor="#6B6964"
 
             style={{
-color:
-  Colors.white,
+color: "#2A2927",
 
               fontSize: 16,
 
@@ -1001,6 +1000,11 @@ color:
 
               textAlign:
                 "center",
+
+              backgroundColor: "#EEECE6",
+              borderRadius: 18,  
+
+              outlineStyle: "none",
             }}
           />
 
@@ -1090,27 +1094,25 @@ color:
             value={repeats}
             onChangeText={setRepeats}
             placeholder={t("you.whats_repeats_placeholder")}
-placeholderTextColor={
-  Colors.subtleText
-}
+placeholderTextColor="#6B6964"
             multiline
             numberOfLines={3}
             textAlignVertical="top"
             style={{
-color:
-  Colors.softText,
+color: "#2A2927",
               minHeight: 70,
               textAlign: "center",
               lineHeight: 22,
               marginBottom: 5,
-              backgroundColor:
-  "rgba(255,255,255,0.008)",
+backgroundColor: "#EEECE6",
 
-borderRadius: 16,
+borderRadius: 18,
 
 paddingHorizontal: 12,
 
 paddingVertical: 10,
+
+outlineStyle: "none",
             }}
           />
 
@@ -1118,25 +1120,22 @@ paddingVertical: 10,
             value={line}
             onChangeText={setLine}
             placeholder={t("you.line_that_feels_like_you_placeholder")}
-placeholderTextColor={
-  Colors.subtleText
-}
+placeholderTextColor="#6B6964"
             multiline
             numberOfLines={2}
             textAlignVertical="top"
             style={{
-color:
-  Colors.softText,
+color: "#2A2927",
               textAlign: "center",
               lineHeight: 22,
-              backgroundColor:
-  "rgba(255,255,255,0.008)",
+backgroundColor: "#EEECE6",
 
-borderRadius: 16,
+borderRadius: 18,
 
 paddingHorizontal: 12,
 
 paddingVertical: 10,
+outlineStyle: "none",
             }}
           />
 

@@ -18,6 +18,10 @@ import {
   buildAlignmentOSContext,
 } from "../../lib/alignment/buildAlignmentOSContext";
 
+import {
+  transmissionAgent,
+} from "../../lib/ai/agents/transmissionAgent";
+
 import GuideSelector from "../../components/guidance/GuideSelector";
 
 import ReflectionPortal from "../../components/guidance/ReflectionPortal";
@@ -542,82 +546,132 @@ await enterTransmission({
       result?.residue
     );
 
-const guideTransmission =
+const agentDecision =
+  await transmissionAgent({
 
-await generateGuideTransmission({
+    reflection: text,
 
-  guide,
+    recentMessages: [
+      ...transmissions,
+      userMessage,
+    ],
 
-  reflection: text,
+    alignmentContext,
 
-  alignmentContext,
+    field,
 
-  field,
+    orchestrationField,
 
-  orchestrationField,
+    emergenceMemory:
+      result?.residue,
 
-  emergenceMemory:
-    result?.residue,
-
-  language:
-    alignmentContext.language || "en",
-});
-
-  //console.log( "🌌 FINAL GUIDE TRANSMISSION", guideTransmission);
-
-if (
-  guideTransmission?.text
-) {
-
-  const guideMessage = {
-
-    id:
-      `guide_${Date.now()}`,
-
-    role:
-      "guide",
-
-    guide,
-
-    text:
-      guideTransmission?.text,
-
-    createdAt:
-      new Date()
-        .toISOString(),
-  };
-
-  setTransmissions(
-    (prev) => [
-
-      ...prev,
-
-      guideMessage,
-    ]
-  );
-
-  await saveGuideMessage({
-
-    userId,
-
-    guide,
-
-    role:
-      "guide",
-
-    content:
-      guideTransmission?.text,
+    selectedGuide:
+      guide,
 
     language:
       alignmentContext.language || "en",
+  });
 
-    userField:
+console.log(
+  "🌊 TRANSMISSION AGENT DECISION",
+  agentDecision
+);    
+
+const speakers =
+  agentDecision?.speakers || [];
+
+for (const speaker of speakers) {
+
+  const speakerGuide =
+    speaker?.guide;
+
+  if (
+    !["heart", "structure", "cosmic"]
+      .includes(speakerGuide)
+  ) {
+    continue;
+  }
+
+  const guideTransmission =
+    await generateGuideTransmission({
+
+      guide: speakerGuide,
+
+      reflection: text,
+
+      recentMessages: [
+        ...transmissions,
+        userMessage,
+      ],
+
+      alignmentContext,
+
       field,
 
-    orchestrationSnapshot:
       orchestrationField,
-  });
+
+      emergenceMemory:
+        result?.residue,
+
+      language:
+        alignmentContext.language || "en",
+    });
+
+  if (
+    guideTransmission?.text
+  ) {
+
+    const guideMessage = {
+
+      id:
+        `guide_${Date.now()}_${speakerGuide}`,
+
+      role:
+        "guide",
+
+      guide:
+        speakerGuide,
+
+      text:
+        guideTransmission.text,
+
+      createdAt:
+        new Date()
+          .toISOString(),
+    };
+
+    setTransmissions(
+      (prev) => [
+        ...prev,
+        guideMessage,
+      ]
+    );
+
+    await saveGuideMessage({
+
+      userId,
+
+      guide:
+        speakerGuide,
+
+      role:
+        "guide",
+
+      content:
+        guideTransmission.text,
+
+      language:
+        alignmentContext.language || "en",
+
+      userField:
+        field,
+
+      orchestrationSnapshot:
+        orchestrationField,
+    });
+  }
 }
+
 
 } catch (error) {
 
@@ -696,44 +750,19 @@ if (
     guideProfiles
   }
 />
-
-      {/* ------------------------------------------------ */}
-      {/* 🌌 PORTAL                                       */}
-      {/* ------------------------------------------------ */}
-
-      <View
-        style={{
-          paddingBottom: 20,
-          paddingTop: 10,
-        }}
-      >
-
-        <ReflectionPortal
-
-isTyping={
-  isTyping
-}
-
-setIsTyping={
-  setIsTyping
-}
-
-          onSubmitReflection={
-            handleReflection
-          }
-        />
-
-      </View>
       
       {/* ------------------------------------------------ */}
       {/* 🌊 TRANSMISSIONS                                */}
       {/* ------------------------------------------------ */}
 
-      <ScrollView
-
-        style={{
-          flex: 1,
-        }}
+<ScrollView
+  style={{
+    flex: 1,
+    width: "78%",
+    alignSelf: "center",
+    backgroundColor: "#181719",
+    borderRadius: 28,
+  }}
 
         contentContainerStyle={{
           paddingTop: 40,
@@ -800,7 +829,56 @@ guideName={
           )
         )}
 
+        {thinking && (
+          <GuideTransmission
+            role="guide"
+            guide={
+              activeGuide
+              || activeFieldGuide
+              || "cosmic"
+            }
+            guideName={
+              (activeGuide || activeFieldGuide) === "heart"
+                ? guideProfiles?.heart?.name
+                : (activeGuide || activeFieldGuide) === "structure"
+                ? guideProfiles?.structure?.name
+                : guideProfiles?.cosmic?.name
+            }
+            text=""
+            isThinking={true}
+          />
+        )}
+
       </ScrollView>
+
+            {/* ------------------------------------------------ */}
+      {/* 🌌 PORTAL                                       */}
+      {/* ------------------------------------------------ */}
+
+      <View
+        style={{
+          paddingBottom: 20,
+          paddingTop: 10,
+        }}
+      >
+
+        <ReflectionPortal
+
+isTyping={
+  isTyping
+}
+
+setIsTyping={
+  setIsTyping
+}
+
+          onSubmitReflection={
+            handleReflection
+          }
+        />
+
+      </View>
+
 
     </SafeAreaView>
   );
