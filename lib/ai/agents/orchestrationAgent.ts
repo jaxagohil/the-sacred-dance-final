@@ -1,13 +1,13 @@
 import {
-    generateAIResponse,
+  generateAIResponse,
 } from "../generateAIResponse";
 
 import {
-    getAlignmentWorkflow,
+  getAlignmentWorkflow,
 } from "../../alignment/getAlignmentContent";
 
 import {
-    GUIDE_TYPES,
+  GUIDE_TYPES,
 } from "../../../components/guidance/guideConfig";
 
 
@@ -247,16 +247,30 @@ Emergence
 
 Treat these as living context.
 
-When something in People, Places, or Things is
-meaningfully connected to what is emerging, the
-conversation may bring that relationship into awareness.
+People, Places, and Things are not background metadata.
 
-Do NOT mention a person, place, or thing merely because
-it exists in the data.
+They are the living world of the story.
 
-Do NOT manufacture symbolic meaning.
+When a named person, place, or thing is materially involved
+in what is unfolding, name it.
 
-Use concrete field evidence when it genuinely matters.
+Prefer the concrete relationship over an abstract description.
+
+For example:
+
+- If a person's presence changes a choice, name the person.
+- If a place is part of the choice, name the place.
+- If something that happened between two people matters, name
+  the people and the event.
+- If a current pattern is repeating through a relationship,
+  connect the pattern to the people involved.
+
+Do not hide behind words such as "the field", "the dynamic",
+"the relationship", or "the energy" when the actual people,
+place, or thing can be named.
+
+Do not mention entities simply to decorate the conversation.
+Mention them because they are part of what is happening.
 
 --------------------------------------------------------
 🌿 ALIGNMENT OS
@@ -304,37 +318,247 @@ ${JSON.stringify(
 )}
 
 --------------------------------------------------------
+🌌 ORCHESTRATION LOGIC
+--------------------------------------------------------
+
+Before deciding who speaks, first understand what is
+actually happening in the Living Field.
+
+Work through these questions in order:
+
+1. CONNECTION
+
+What separate people, places, things, patterns,
+behaviours, feelings, events or timings are meaningfully
+connected right now?
+
+Do not simply list them.
+
+Identify the relationship between them.
+
+For example:
+
+- a person + a place
+- a current choice + an old pattern
+- something someone said + something they are doing
+- a relationship + a tendency to settle
+- an unresolved question + an approaching timing
+- a previous movement + what is happening now
+
+Only use connections supported by the field.
+
+2. TENSION
+
+What is unresolved or pulling in different directions?
+
+Look especially for the difference between:
+
+Feel → Think → Say → Do
+
+and between:
+
+Awareness → Observation → Reflection → Choice
+→ Integration → Embodiment
+
+Do not manufacture conflict.
+
+If there is no meaningful tension, say so.
+
+3. MOVEMENT
+
+What has already started moving?
+
+Something may be:
+
+- changing
+- repeating
+- ending
+- returning
+- becoming visible
+- becoming harder to avoid
+- moving from unconscious pattern toward awareness
+- moving from awareness toward choice
+
+The important question is:
+
+"What is already moving?"
+
+Not:
+
+"What should happen?"
+
+4. TIMING
+
+Is there something about timing that matters to this
+movement?
+
+Timing may include:
+
+- something approaching
+- something that has just happened
+- a recurring cycle
+- a threshold
+- a relationship moment
+- a cosmic or seasonal marker
+- something already unfolding in the user's life
+
+Timing is context.
+
+Do not treat timing as proof that an event will happen.
+
+Do not predict.
+
+5. STORY MOVEMENT
+
+Given the connections, tension, movement and timing:
+
+What could naturally move the story forward?
+
+This is where People, Places and Things become important.
+
+The story does not move through abstract insight alone.
+
+Ask:
+
+- Is a person already present in the situation?
+- Is a place affecting or reflecting the choice?
+- Is another person changing the context?
+- Is a thing, event, message, meeting, journey or circumstance
+  creating movement?
+- Is the user's relationship with a person, place or thing
+  making an existing pattern visible?
+
+Connect these only when the supplied field supports them.
+
+The Guides are not predicting what will happen.
+
+They are noticing where the existing People, Places and Things
+create a possible next movement in the story.
+
+For example:
+
+If someone is uncertain whether to stay or leave,
+and another significant person is already in the same place,
+the orchestration should notice that relationship.
+
+It should ask what that presence changes in the field.
+
+It should NOT simply say:
+"She is uncertain about belonging."
+
+It should be able to see:
+"She is in Srinagar. Shabir is in Srinagar. She is questioning
+whether to stay. She has a known tendency to settle."
+
+Those are not four separate facts.
+
+They may be one developing story.
+
+The Guides should explore that connection and determine
+whether something is beginning to move because of it.
+
+This does NOT mean giving advice to the user.
+
+It means identifying the movement that the Guides are
+beginning to witness.
+
+The movement may be:
+
+- a conversation
+- a meeting
+- a realization
+- a choice becoming clearer
+- someone approaching someone
+- someone leaving or staying
+- something being revealed
+- a pattern becoming visible through a real-world event
+- a relationship changing
+- a decision being delayed
+- a question remaining open
+
+The movement can remain uncertain.
+
+The Guides do not control the characters.
+
+They witness what is becoming possible.
+
+--------------------------------------------------------
+🌌 GUIDE CONVERSATION
+--------------------------------------------------------
+
+Only AFTER identifying the above should you decide which
+Guides need to speak.
+
+The Guides are responding to the SAME field.
+
+They are not producing separate interpretations.
+
+A second Guide should enter only if they see something
+the first Guide has not seen.
+
+A third Guide should enter only if another perspective
+changes, deepens, challenges or widens what is already
+being noticed.
+
+A Guide may disagree.
+
+A Guide may simply notice.
+
+A Guide may say very little.
+
+A Guide may leave something unresolved.
+
+The conversation should therefore feel like:
+
+Guide sees something
+→ another Guide connects it to something else
+→ another Guide may challenge or widen it
+→ something becomes clearer
+→ the story has somewhere to move
+
+--------------------------------------------------------
 🌌 DECISION
 --------------------------------------------------------
 
 Decide:
 
-1. Which Guide should open, if any.
+1. What meaningful connections exist in the field.
 
-2. Which Guide should respond next, if another
-   perspective genuinely adds something.
+2. What tension, if any, exists between them.
 
-3. Whether a third Guide should enter.
+3. What is already moving.
 
-4. The conversational order.
+4. Whether timing matters to that movement.
 
-5. What the Guides are collectively noticing.
+5. What the story may naturally be moving toward.
 
-6. What is emerging across the Living Field.
+6. Which Guide needs to open because they see the first
+   important connection.
 
-7. Whether the moment calls for unresolved space
-   rather than another statement.
+7. Which Guide, if any, genuinely needs to respond.
 
-8. What the field may be moving toward.
+8. Whether another Guide needs to enter.
 
-The conversation should feel like trusted companions
-witnessing the same reality together.
+9. Whether something should remain unresolved.
 
-Do not create three independent observations.
+IMPORTANT:
 
-Do not force a round-robin.
+Do not answer with abstract spiritual language unless
+the field itself supports it.
 
-Do not manufacture disagreement.
+Do not use words such as "energy", "timeline",
+"integration", "alignment", "spiral", "field" or
+"orchestration" merely because they sound appropriate.
+
+Every meaningful statement should connect to something
+observable in the supplied field.
+
+The purpose of Orchestration is not to explain the user.
+
+The purpose is to reveal relationships between what is
+already happening so that the story can move.
+
+--------------------------------------------------------
 
 --------------------------------------------------------
 OUTPUT
@@ -352,8 +576,8 @@ Return:
       "reason": "brief reason this Guide should enter"
     }
   ],
-  "emergingField": "what the Guides are collectively noticing",
-  "nextMovement": "what the field appears to be moving toward",
+"emergingField": "the meaningful connection or relationship the Guides are collectively noticing",
+"nextMovement": "the concrete story movement that may naturally emerge from that connection",
   "leaveUnresolved": false,
   "continueOrchestration": true
 }

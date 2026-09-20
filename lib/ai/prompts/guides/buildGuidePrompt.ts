@@ -53,6 +53,8 @@ export function buildGuidePrompt({
 
   orchestration,
 
+  transmissionDecision,
+
   recentMessages,
 
   language,
@@ -332,6 +334,41 @@ ${JSON.stringify(
   null,
   2
 )}
+
+--------------------------------------------------
+TRANSMISSION DECISION
+--------------------------------------------------
+
+${JSON.stringify(
+  transmissionDecision || {},
+  null,
+  2
+)}
+
+The Transmission Agent has already determined the
+next conversational movement.
+
+Do not redo that decision.
+
+Render the Guide response in accordance with the
+Transmission Decision.
+
+If the Transmission Decision indicates that the
+movement is complete, do not manufacture another
+question simply to continue the conversation.
+
+A quiet acknowledgement, a brief observation, or
+simple presence may be the complete response.
+
+The user may choose to continue the conversation
+on their own.
+
+The Guide does not need to ask for another feeling,
+reflection, or answer unless the Transmission
+Decision genuinely calls for it.
+
+The Transmission Decision guides the response;
+the Guide supplies the relational voice.
 
 The field state has already been resolved.
 

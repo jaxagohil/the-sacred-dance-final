@@ -28,9 +28,6 @@ import {
   buildOrchestrationContext,
 } from "../../context/buildOrchestrationContext";
 
-import {
-  buildGuidePrompt,
-} from "../../ai/prompts/guides/buildGuidePrompt";
 
 import {
   buildGuidanceMirrorWorld,
@@ -80,6 +77,8 @@ export const generateOrchestrationConversation = async ({
   activeLens,
 
   cosmic,
+
+    user,
 
 } = alignmentContext;
 
@@ -326,62 +325,90 @@ const mirrorWorld =
 
   //console.log( "🌍 MIRROR WORLD",JSON.stringify( mirrorWorld,  null, 2 ));
 
-  const guidePrompt =
+  /*
+   * --------------------------------------------------------
+   * 🌌 COMPACT ORCHESTRATION PROMPT
+   * --------------------------------------------------------
+   *
+   * Orchestration does not need the full Guide prompt.
+   *
+   * The Agent has already examined the Living Field.
+   * The conversation generator needs the actual world,
+   * the orchestration context, and the Agent's decision.
+   *
+   * Keep this prompt deliberately small.
+   * --------------------------------------------------------
+   */
 
-  buildGuidePrompt({
+const userName =
+  alignmentContext?.userContext?.name ||
+  alignmentContext?.userContext?.full_name ||
+  alignmentContext?.userContext?.display_name ||
+  alignmentContext?.userContext?.profile?.name ||
+  "";
 
-    fieldContext: {
-
-      user:
-        alignmentContext.userContext,
-
-      sacred: {
-
-        emergenceMemory,
-
-        selectedGuide,
-      },
-
-      mirrorContext:
-        mirrorWorld,
-
-      expressionProfile:
-        alignmentContext.expressionProfile,
-
-      spiralScores:
-        alignmentContext.spiralScores,
-
-      activeLens:
-        alignmentContext.activeLens,
-
-      entityLenses:
-        alignmentContext.entityLenses,
-
-      dailyField:
-        alignmentContext.dailyField,
-    },
-
-    orchestration:
-      orchestrationField,
-
-    recentMessages: [],
-
-    guidanceSignals: {},
-
-    reflectionResult: {},
-
-    language,
-
-    message: "",
-
-     workflow: "orchestration",
-  });
-
-  const prompt = `
+  const orchestrationPrompt = `
 
 ${orchestrationWrapper}
 
-${guidePrompt}
+--------------------------------------------------------
+🌍 LIVING WORLD
+--------------------------------------------------------
+
+The person at the centre of this living story is:
+${userName || "the person"}
+
+When referring to this person, never call them "the user".
+Use their name naturally when appropriate.
+
+The following is the actual Living World available
+to the Guides.
+
+Do not invent people, places, things, events or
+relationships that are not present here.
+
+When a person, place or thing is materially involved
+in what is unfolding, name it.
+
+Prefer the concrete relationship over abstract language.
+
+Do not hide behind phrases such as:
+"the field"
+"the dynamic"
+"the relationship"
+"the energy"
+
+when the actual person, place or thing can be named.
+
+LIVING WORLD:
+
+${JSON.stringify(orchestrationContext, null, 2)}
+
+--------------------------------------------------------
+🌌 CURRENT ORCHESTRATION FIELD
+--------------------------------------------------------
+
+${JSON.stringify(orchestrationField, null, 2)}
+
+--------------------------------------------------------
+🌌 ORCHESTRATION
+--------------------------------------------------------
+
+The Orchestration Agent will determine the movement
+of the story.
+
+The Guides are not giving separate interpretations.
+
+They are witnessing the same moment together.
+
+They may notice different things, question one another,
+challenge one another, connect events, recognise a pattern,
+notice timing, or leave something unresolved.
+
+The purpose is not to explain everything.
+
+The purpose is to reveal what is connected,
+what is moving, and what may move the story forward.
 
 `;
 
@@ -396,7 +423,15 @@ ${guidePrompt}
   const agentDecision =
   await orchestrationAgent({
 
-    alignmentContext,
+alignmentContext: {
+  ...alignmentContext,
+
+  mirrorContext: {
+    ...alignmentContext.mirrorContext,
+
+    orchestrationContext,
+  },
+},
 
     orchestrationField,
 
@@ -422,9 +457,32 @@ console.log(
   agentDecision
 );  
 
-    const conversationPrompt = `
+const conversationPrompt = `
 
-${prompt}
+${orchestrationPrompt}
+
+--------------------------------------------------------
+🌌 ORCHESTRATION DECISION
+--------------------------------------------------------
+
+The Orchestration Agent has already witnessed the Living
+Field and determined the movement of the story.
+
+Use its decision as the internal direction for this
+conversation.
+
+${JSON.stringify(agentDecision, null, 2)}
+
+Do not repeat the decision mechanically.
+
+Let the Guides speak naturally from it.
+
+The conversation must remain grounded in the actual
+people, places, things, patterns and events contained
+in the Living Field.
+
+The Guides should reveal the connection and movement
+through their conversation.
 
 --------------------------------------------------------
 🌌 LIVING ORCHESTRATION

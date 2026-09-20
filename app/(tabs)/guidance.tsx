@@ -610,6 +610,9 @@ for (const speaker of speakers) {
 
       orchestrationField,
 
+      transmissionDecision:
+      agentDecision,
+
       emergenceMemory:
         result?.residue,
 

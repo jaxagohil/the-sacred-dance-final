@@ -40,6 +40,8 @@ type GenerateGuideTransmissionInput = {
 
   orchestrationField?: any;
 
+  transmissionDecision?: any;
+
   emergenceMemory?: any;
 
   language?: string;
@@ -62,6 +64,8 @@ alignmentContext,
   field,
 
   orchestrationField,
+
+  transmissionDecision,
 
   emergenceMemory,
 
@@ -133,6 +137,9 @@ const guidePrompt =
 
     orchestration:
       orchestrationField,
+
+    transmissionDecision:
+  transmissionDecision || {},  
 
     recentMessages,
 

@@ -516,33 +516,23 @@ if (
        * ----------------------------------------------------
        */
 
-setActiveLines((previous: any[]) => {
+setActiveLines([
+  line,
+]);
 
-  /*
-   * ----------------------------------------------------
-   * 🌌 SYNC GUIDE WITH VISIBLE LINE
-   * ----------------------------------------------------
-   */
+if (
+  line?.guide &&
+  line.guide !==
+    currentGuideRef.current
+) {
 
-  if (
-    line?.guide &&
-    line.guide !==
-      currentGuideRef.current
-  ) {
+  currentGuideRef.current =
+    line.guide;
 
-    currentGuideRef.current =
-      line.guide;
-
-    onForegroundGuideChange?.(
-      line.guide
-    );
-  }
-
-  return [
-
-    line,
-  ];
-});
+  onForegroundGuideChange?.(
+    line.guide
+  );
+}
 
       /*
        * ----------------------------------------------------
