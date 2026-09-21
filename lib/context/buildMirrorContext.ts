@@ -640,81 +640,65 @@ const dominantPattern =
       placesCount +
       thingsCount || 1;
 
-  // --------------------------------------------------
-  // 🪞 LENS CONTEXTS
-  // --------------------------------------------------
-
   const spiralState =
   realityLayers?.spiral || {};
 
-  const peopleLensContext =
-    await buildLensContext({
+// --------------------------------------------------
+// 🪞 LENS CONTEXTS
+// --------------------------------------------------
 
-      lens: "people",
+const [
+  peopleLensContext,
+  placesLensContext,
+  thingsLensContext,
+] = await Promise.all([
 
-      lensEntries,
+  buildLensContext({
+    lens: "people",
 
-      patterns:
-        currentPatterns,
+    lensEntries,
 
-      patternField,
+    patterns:
+      currentPatterns,
 
-      distortions,
+    distortions,
 
-      realityLayers,
+    realityLayers,
 
-      energy,
+    energy,
+  }),
 
-      spiralState,
+  buildLensContext({
+    lens: "places",
 
-      fieldAmplification,
-    });
+    lensEntries,
 
-  const placesLensContext =
-    await buildLensContext({
+    patterns:
+      currentPatterns,
 
-      lens: "places",
+    distortions,
 
-      lensEntries,
+    realityLayers,
 
-      patterns:
-        currentPatterns,
+    energy,
+  }),
 
-      patternField,
+  buildLensContext({
+    lens: "things",
 
-      distortions,
+    lensEntries,
 
-      realityLayers,
+    patterns:
+      currentPatterns,
 
-      energy,
+    distortions,
 
-      spiralState,
+    realityLayers,
 
-      fieldAmplification,
-    });
+    energy,
+  }),
 
-  const thingsLensContext =
-    await buildLensContext({
-
-      lens: "things",
-
-      lensEntries,
-
-      patterns:
-        currentPatterns,
-
-      patternField,
-
-      distortions,
-
-      realityLayers,
-
-      energy,
-
-      spiralState,
-
-      fieldAmplification,
-    });
+]);
 
   // --------------------------------------------------
   // 🌌 COSMIC FIELD

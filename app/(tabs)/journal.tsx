@@ -338,7 +338,7 @@ const handleVoice =
  * --------------------------------------------------
  */
 
-await processJournalReflection({
+void processJournalReflection({
 
   userId,
 

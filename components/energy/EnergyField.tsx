@@ -70,7 +70,7 @@ export default function EnergyField({
   const energy =
     userContext?.energy;
 
-  console.log("⚡ ENERGY FIELD ENERGY:", energy);  
+  //console.log("⚡ ENERGY FIELD ENERGY:", energy);  
 
   //console.log( "👁 AWARENESS CHAKRA:", userContext ?.energy ?.awareness_chakra);  
 
@@ -176,13 +176,6 @@ export default function EnergyField({
               <EnergyBody />
 
             </View>
-
-            <ChakraSystem
-  awareness={null}
-  chakraManifestations={
-    userContext?.chakraManifestations || {}
-  }
-/>
 
           </View>
 
@@ -642,7 +635,7 @@ else {
   }
 }
 
-        console.log("🌈 ENERGY FIELD — ABOUT TO RENDER CHAKRAS");
+      //  console.log("🌈 ENERGY FIELD — ABOUT TO RENDER CHAKRAS");
         
   // --------------------------------------------------
   // 🌌 RENDER
@@ -656,11 +649,6 @@ return (
       pointerEvents: "auto",
     },
   ]}
-  onPointerDown={
-    Platform.OS === "web"
-      ? () => console.log("🌐 ENERGY FIELD POINTER")
-      : undefined
-  }
 >
 
       {/* 🌌 ENERGY FIELD */}
@@ -733,48 +721,52 @@ return (
               }}
             >             
 
-<ChakraSystem
+{energy?.chakras &&
+  Object.keys(energy.chakras).length > 0 && (
 
-  awareness={
-    awarenessChakra
-  }
+  <ChakraSystem
 
-scores={
+    awareness={
+      awarenessChakra
+    }
 
-  Object.fromEntries(
+    scores={
 
-    Object.entries(
-      energy?.chakras || {}
-    ).map(
-      ([k, v]) => [
+      Object.fromEntries(
+        Object.entries(
+          energy.chakras
+        ).map(
+          ([k, v]) => [
+            k,
+            {
+              score:
+                Number(v),
+            },
+          ]
+        )
+      ) as Record<
+        string,
+        { score: number }
+      >
 
-        k,
+    }
 
-        {
-          score:
-            Number(v),
-        },
-      ]
-    )
-  ) as Record<
-    string,
-    { score: number }
-  >
-}
+    chakraManifestations={
+      userContext
+        ?.chakraManifestations || {}
+    }
 
-  chakraManifestations={
-    userContext
-      ?.chakraManifestations || {}
-  }
+    selectedChakra={
+      selectedChakra
+    }
 
-  selectedChakra={
-    selectedChakra
-  }
+    onChakraPress={
+      handleChakraPress
+    }
 
-  onChakraPress={
-    handleChakraPress
-  }
-/>
+  />
+
+)}
 
             </View>
 

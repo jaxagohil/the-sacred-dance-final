@@ -3,8 +3,12 @@
 import React, {
   useCallback,
   useEffect,
-  useState,
+  useState
 } from "react";
+
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
 
 import {
   ScrollView,
@@ -13,8 +17,12 @@ import {
 } from "react-native";
 
 import {
-  useFocusEffect,
-} from "@react-navigation/native";
+  getUserId,
+} from "../../lib/user";
+
+import {
+  supabase,
+} from "../../services/supabase";
 
 import CosmicLoadingField from "../../components/mirror/cosmicLoadingField";
 
@@ -27,32 +35,8 @@ import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
 
 import {
-  getUserId,
-} from "../../lib/user";
-
-import {
-  supabase,
-} from "../../services/supabase";
-
-import {
-  getDailyField,
-} from "../../lib/cosmic/getDailyField";
-
-import {
-  getDailyCosmicMessage,
-} from "../../lib/cosmic/getDailyCosmicMessage";
-
-import {
   buildUserContext,
 } from "../../lib/context/buildUserContext";
-
-import {
-  buildMirrorContext,
-} from "../../lib/context/buildMirrorContext";
-
-import {
-  getLanguage,
-} from "../../lib/i18n/t";
 
 import {
   useMirrorStore,
@@ -161,10 +145,10 @@ setSpiralScores:
     setLanguageContext,
   ] = useState<any>(null);
 
-  const [
-    chakraContent,
-    setChakraContent,
-  ] = useState<any>({});
+const [
+  chakraContent,
+  setChakraContent,
+] = useState<any>(null);
 
   /*
  * --------------------------------------------------
@@ -222,58 +206,6 @@ useEffect(() => {
 ]);
 
   // --------------------------------------------------
-  // 🌍 LANGUAGE
-  // --------------------------------------------------
-
-  useFocusEffect(
-
-    useCallback(() => {
-
-      async function loadLanguage() {
-
-        const currentLanguage =
-          getLanguage();
-
-        //console.log( "🌍 MIRROR LANGUAGE:",  currentLanguage);
-
-        setLanguage(
-          currentLanguage
-        );
-
-      setGlobalLanguage(
-  currentLanguage
-);  
-
-        const {
-          data,
-        } = await supabase
-
-          .from("languages")
-
-          .select("*")
-
-          .eq(
-            "code",
-            currentLanguage
-          )
-
-          .maybeSingle();
-
-        setLanguageContext(
-          data || {}
-        );
-
-        setGlobalLanguageContext(
-  data || {}
-);
-      }
-
-      loadLanguage();
-
-    }, [])
-  );
-
-  // --------------------------------------------------
   // 🧘 CHAKRA CONTENT
   // --------------------------------------------------
 
@@ -320,107 +252,15 @@ useEffect(() => {
 
   }, [language]);
 
-  // --------------------------------------------------
-  // 🌌 DAILY FIELD
-  // --------------------------------------------------
-
-  useEffect(() => {
-
-    async function loadDailyField() {
-
-const userId =
-  await getUserId();
-
-const field =
-  await getDailyField(
-    userId
-  );
-
-      setDailyField(
-        field
-      );
-
-      setGlobalDailyField(
-  field
-);
-    }
-
-    loadDailyField();
-
-  }, []);
-
-  // --------------------------------------------------
-  // 🌌 COSMIC FIELD
-  // --------------------------------------------------
-
-  useEffect(() => {
-
-    async function loadCosmic() {
-
-      if (!dailyField)
-        return;
-
-      if (!language)
-        return;
-
-      if (!languageContext)
-        return;
-
-      //console.log(  "🌍 VERIFIED LANGUAGE:",  language);
-
-      const cosmicMessage =
-
-        await getDailyCosmicMessage({
-
-          dailyField,
-
-          language,
-
-          languageContext,
-        });
-
-      setCosmic({
-
-        ...cosmicMessage,
-
-        cosmic:
-          dailyField.cosmic,
-
-        dailyField,
-      });
-
-    setGlobalCosmic({
-
-  ...cosmicMessage,
-
-  cosmic:
-    dailyField.cosmic,
-
-  dailyField,
-});  
-    }
-
-    loadCosmic();
-
-  }, [
-
-    dailyField,
-
-    language,
-
-    languageContext,
-  ]);
 
   // --------------------------------------------------
   // 🧠 USER CONTEXT
   // --------------------------------------------------
 
 useFocusEffect(
-
   useCallback(() => {
 
-    async function
-    loadUserContext() {
+    async function loadUserContext() {
 
       try {
 
@@ -429,42 +269,27 @@ useFocusEffect(
 
         // 🛡 SAFETY
         if (!userId) {
-
           return;
         }
 
         const context =
-
           await buildUserContext({
-
             userId,
-
-            source:
-              "mirror",
-
-            activeLens:
-              "general",
+            source: "mirror",
+            activeLens: "general",
           });
 
         setUserContext(
           context
         );
 
-      setGlobalUserContext(
-  context
-);  
+        setGlobalUserContext(
+          context
+        );
 
-setGlobalActiveLens(
-  "general"
-);
-
-        if (
-          !context ||
-          !context.ready
-        ) {
-
-          return;
-        }
+        setGlobalActiveLens(
+          "general"
+        );
 
       } catch (err) {
 
@@ -480,159 +305,100 @@ setGlobalActiveLens(
   }, [])
 );
 
-  // --------------------------------------------------
-  // 🪞 MIRROR CONTEXT
-  // --------------------------------------------------
+// --------------------------------------------------
+// 🪞 MIRROR CONTEXT
+// --------------------------------------------------
 
-  useEffect(() => {
+useEffect(() => {
 
-    async function loadMirrorContext() {
+  if (!userContext?.context)
+    return;
 
-      if (!userContext)
-        return;
+  if (!cosmic)
+    return;
 
-      if (!cosmic)
-        return;
+  if (!languageContext)
+    return;
 
-      if (!languageContext)
-        return;
+  const context =
+    userContext.context;
 
-      const context =
+  //console.log("🪞 MIRROR CONTEXT:",context);
 
-        await buildMirrorContext({
+//console.log( "👁 LENS CONTEXTS:",  context?.lensContexts);  
 
-          // ⚡ ENERGY
-          energy:
-            userContext?.energy,
+  setMirrorContext(
+    context
+  );
 
-          // 🌌 COSMIC
-          cosmic,
+  setGlobalMirrorContext(
+    context
+  );
 
-          // 🌍 LANGUAGE
-          languageContext,
+  setGlobalEntityLenses(
+    userContext?.entityLenses || []
+  );
 
-          // 🌊 SIGNALS
-          signals:
-            userContext?.signals || [],
+  setGlobalExpressionProfile(
+    userContext?.expressionProfile || null
+  );
 
-          // 🪞 ACTIVE LENS
-          activeLens:
-            "general",
+  setGlobalSpiralScores(
+    userContext?.spiralScores || null
+  );
 
-          // 🌍 REALITY LAYERS
-          realityLayers:
-            userContext
-              ?.realityLayers || {},
+  /* -------------------------------------------------- */
+  /* 🌌 PRELOAD WHISPERS                               */
+  /* -------------------------------------------------- */
 
-          // 🧠 BEHAVIOURS
-          enrichedBehaviours:
-            userContext
-              ?.enrichedBehaviours || [],
+  const whispers =
+    buildGuidanceWhispers({
 
-          // 🌊 PATTERNS
-          enrichedPatterns:
-            userContext
-              ?.enrichedPatterns || [],
+      mirrorContext:
+        context,
 
-              patternField:
-  userContext
-    ?.patternField || {},
+      cosmicContext:
+        cosmic,
 
-          // 🌈 DISTORTIONS
-distortions:
+      activePatterns:
+        userContext
+          ?.enrichedPatterns || [],
 
-  userContext
-    ?.distortions || {
+      activeChakras:
+        userContext
+          ?.energy
+          ?.activeChakras || [],
 
-      distorted: [],
+      manifestations:
+        userContext
+          ?.manifestations || [],
 
-      integrated: [],
-    },
+      emergenceMemory:
+        userContext
+          ?.emergenceMemory || {},
 
-          // 👁 LENS MEMORY
-          lensEntries:
-            userContext
-              ?.lensEntries || [],
-        });
+      resolvedContent: {
+        whispers: [],
+      },
+    });
 
-      setMirrorContext(
-        context
-      );
+  setPreloadedWhispers(
+    whispers
+  );
 
-    setGlobalMirrorContext(
-  context
-);
+  setGlobalReady(
+    true
+  );
 
-setGlobalEntityLenses(
-  userContext?.entityLenses || []
-);
+}, [
 
-setGlobalExpressionProfile(
-  userContext?.expressionProfile || null
-);
+  userContext,
 
-setGlobalSpiralScores(
-  userContext?.spiralScores || null
-);
+  cosmic,
 
-/* -------------------------------------------------- */
-/* 🌌 PRELOAD WHISPERS                               */
-/* -------------------------------------------------- */
+  languageContext,
 
-const whispers =
-
-  buildGuidanceWhispers({
-
-    mirrorContext:
-      context,
-
-    cosmicContext:
-      cosmic,
-
-    activePatterns:
-
-      userContext
-        ?.enrichedPatterns || [],
-
-    activeChakras:
-
-      userContext
-        ?.energy
-        ?.activeChakras || [],
-
-    manifestations:
-
-      userContext
-        ?.manifestations || [],
-
-    emergenceMemory:
-      userContext
-        ?.emergenceMemory || {},
-
-    resolvedContent: {
-      whispers: [],
-    },
-  });
-
-setPreloadedWhispers(
-  whispers
-);
-
-setGlobalReady(
-  true
-);  
-    }
-
-    loadMirrorContext();
-
-  }, [
-
-    userContext,
-
-    cosmic,
-
-    languageContext,
-  ]);
+]);
 
   // --------------------------------------------------
   // 🌌 LOADING
@@ -646,7 +412,9 @@ if (
 
   !cosmic ||
 
-  !userContext
+  !userContext ||
+
+    !chakraContent
 
 ) {
 
@@ -724,57 +492,51 @@ if (
 
         {/* 👁 LENSES */}
 
-        {mirrorContext && (
+<Lenses
 
-          <Lenses
+  userContext={
+    userContext
+  }
 
-            userContext={
-              userContext
-            }
+  context={
+    mirrorContext || {}
+  }
 
-            context={
-              mirrorContext
-            }
+  language={
+    language
+  }
 
-            language={
-              language
-            }
+  languageContext={
+    languageContext
+  }
 
-            languageContext={
-              languageContext
-            }
-          />
-
-        )}
+/>
 
         {/* 📖 READING */}
 
-        {mirrorContext && (
+<ReadingContainer
 
-          <ReadingContainer
+  userContext={
+    userContext
+  }
 
-            userContext={
-              userContext
-            }
+  context={
+    mirrorContext || {}
+  }
 
-            context={
-              mirrorContext
-            }
+  language={
+    language
+  }
 
-            language={
-              language
-            }
+  languageContext={
+    languageContext
+  }
 
-            languageContext={
-              languageContext
-            }
+  cosmic={
+    cosmic
+  }
 
-            cosmic={
-              cosmic
-            }
-          />
-
-        )}
+/>
 
       </ScrollView>
 

@@ -267,197 +267,219 @@ ${nervousSystem || "unknown"}
 
       emotions.length > 0;
 
-    // --------------------------------------------------
-    // 🪞 PROCESS NARRATIVE REFLECTION
-    // --------------------------------------------------
+   // --------------------------------------------------
+// 🪞 + 🌊 PROCESS REFLECTIONS IN PARALLEL
+// --------------------------------------------------
 
-    if (
-      hasNarrativeReflection
-    ) {
+const processingTasks: Promise<void>[] = [];
 
-      console.time("⏱️ JOURNAL NARRATIVE");
+// --------------------------------------------------
+// 🪞 NARRATIVE
+// --------------------------------------------------
+
+if (hasNarrativeReflection) {
+
+  processingTasks.push(
+    (async () => {
+
+      console.time(
+        "⏱️ JOURNAL NARRATIVE"
+      );
 
       const {
-  data: narrativeData,
-  error: narrativeError,
-} = await supabase.functions.invoke(
-  "process-reflection",
-  {
-    body: {
+        data: narrativeData,
+        error: narrativeError,
+      } =
+        await supabase.functions.invoke(
+          "process-reflection",
+          {
+            body: {
 
-      userId,
+              userId,
 
-      language,
+              language,
 
-      source:
-        "journal",
+              source:
+                "journal",
 
-      baselineType:
-        "journal",
+              baselineType:
+                "journal",
 
-      signalDepth:
-        narrativeDepth,
+              signalDepth:
+                narrativeDepth,
 
-      text:
-        narrativeReflection,
+              text:
+                narrativeReflection,
 
-      emotions,
+              emotions,
 
-      metadata: {
+              metadata: {
 
-        batch_id:
-          batchId,
+                batch_id:
+                  batchId,
 
-        processing_layer:
-          "journal.narrative",
+                processing_layer:
+                  "journal.narrative",
 
-        generated_from:
-          "journal_screen",
+                generated_from:
+                  "journal_screen",
 
-        generated_at:
-          new Date().toISOString(),
+                generated_at:
+                  new Date().toISOString(),
 
-        modalities,
+                modalities,
 
-        modality_count:
-          modalityCount,
+                modality_count:
+                  modalityCount,
 
-        observable_scenes:
-          observableScenes,
+                observable_scenes:
+                  observableScenes,
 
-        body_responses:
-          bodyResponses,
+                body_responses:
+                  bodyResponses,
 
-        coping_strategies:
-          copingStrategies,
+                coping_strategies:
+                  copingStrategies,
 
-        manifestations,
+                manifestations,
 
-        nervous_system:
-          nervousSystem,
+                nervous_system:
+                  nervousSystem,
 
-        image_present:
-          Boolean(imageBase64),
+                image_present:
+                  Boolean(imageBase64),
 
-        voice_present:
-          Boolean(audioUri),
-      },
-    },
-  }
-);
+                voice_present:
+                  Boolean(audioUri),
+              },
+            },
+          }
+        );
 
-console.timeEnd("⏱️ JOURNAL NARRATIVE");
+      console.timeEnd(
+        "⏱️ JOURNAL NARRATIVE"
+      );
 
-if (narrativeError) {
+      if (narrativeError) {
 
-  console.error(
-    "❌ Journal narrative error",
-    narrativeError
-  );
+        console.error(
+          "❌ Journal narrative error",
+          narrativeError
+        );
 
-  throw narrativeError;
+      } else {
 
-} else {
+        console.log(
+          "✅ Journal narrative processed",
+          narrativeData
+        );
+      }
 
-  console.log(
-    "✅ Journal narrative processed",
-    narrativeData
-  );
-}
-    }
-
-    // --------------------------------------------------
-    // 🌊 PROCESS EMOTIONAL FIELD
-    // --------------------------------------------------
-
-    if (
-      hasEmotionReflection
-    ) {
-
-      console.time("⏱️ JOURNAL EMOTIONAL");
-
- const {
-  data: emotionalData,
-  error: emotionalError,
-} = await supabase.functions.invoke(
-  "process-reflection",
-  {
-    body: {
-
-      userId,
-
-      language,
-
-      source:
-        "journal",
-
-      baselineType:
-        "journal",
-
-      signalDepth:
-        emotionalFieldDepth,
-
-      text:
-        emotionalFieldReflection,
-
-      emotions,
-
-      metadata: {
-
-        batch_id:
-          batchId,
-
-        processing_layer:
-          "journal.emotional_field",
-
-        generated_from:
-          "journal_screen",
-
-        generated_at:
-          new Date().toISOString(),
-
-        emotional_field:
-          true,
-
-        selected_emotions:
-          emotions,
-
-        emotional_field_depth:
-          emotionalFieldDepth,
-
-        nervous_system:
-          nervousSystem,
-      },
-    },
-  }
-);
-
-console.timeEnd("⏱️ JOURNAL EMOTIONAL");
-
-if (emotionalError) {
-
-  console.error(
-    "❌ Journal emotional field error",
-    emotionalError
-  );
-
-  throw emotionalError;
-
-} else {
-
-  console.log(
-    "✅ Journal emotional field processed"
+    })()
   );
 }
-    }
 
-    // --------------------------------------------------
-    // ✅ DONE
-    // --------------------------------------------------
 
-    console.log(
-      "🌊 Journal reflection processed"
-    );
+// --------------------------------------------------
+// 🌊 EMOTIONAL FIELD
+// --------------------------------------------------
+
+if (hasEmotionReflection) {
+
+  processingTasks.push(
+    (async () => {
+
+      console.time(
+        "⏱️ JOURNAL EMOTIONAL"
+      );
+
+      const {
+        data: emotionalData,
+        error: emotionalError,
+      } =
+        await supabase.functions.invoke(
+          "process-reflection",
+          {
+            body: {
+
+              userId,
+
+              language,
+
+              source:
+                "journal",
+
+              baselineType:
+                "journal",
+
+              signalDepth:
+                emotionalFieldDepth,
+
+              text:
+                emotionalFieldReflection,
+
+              emotions,
+
+              metadata: {
+
+                batch_id:
+                  batchId,
+
+                processing_layer:
+                  "journal.emotional_field",
+
+                generated_from:
+                  "journal_screen",
+
+                generated_at:
+                  new Date().toISOString(),
+
+                emotional_field:
+                  true,
+
+                selected_emotions:
+                  emotions,
+
+                emotional_field_depth:
+                  emotionalFieldDepth,
+
+                nervous_system:
+                  nervousSystem,
+              },
+            },
+          }
+        );
+
+      console.timeEnd(
+        "⏱️ JOURNAL EMOTIONAL"
+      );
+
+      if (emotionalError) {
+
+        console.error(
+          "❌ Journal emotional field error",
+          emotionalError
+        );
+
+      } else {
+
+        console.log(
+          "✅ Journal emotional field processed"
+        );
+      }
+
+    })()
+  );
+}
+
+
+// --------------------------------------------------
+// ⏳ WAIT FOR BOTH
+// --------------------------------------------------
+
+await Promise.all(
+  processingTasks
+);
 
   } catch (error) {
 

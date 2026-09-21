@@ -703,10 +703,7 @@ const signals = [];
 
 for (const currentPattern of groupedPatterns.values()) {
 
-  console.log(
-  "⚡ ABOUT TO CREATE SIGNAL",
-  currentPattern.id
-);
+  //console.log( "⚡ ABOUT TO CREATE SIGNAL", currentPattern.id);
 
   console.log(
   "✅ GROUPED PATTERNS",

@@ -494,7 +494,7 @@ async function handleReflection({
      * ----------------------------------------------------
      */
 
-await processGuidanceReflection({
+void processGuidanceReflection({
 
   userId,
 
@@ -526,53 +526,27 @@ await processGuidanceReflection({
      */
 
 const result =
+  await enterTransmission({
 
-await enterTransmission({
+    userId,
 
-  userId,
+    guide,
 
-  guide,
+    reflection: text,
 
-  reflection: text,
-
-  field: field || {},
-
-  alignmentContext,
-
-  existingMessages: [
-    ...transmissions,
-    userMessage,
-  ],
-});
-
-    /*
-     * ----------------------------------------------------
-     * 🌊 UPDATE MEMORY
-     * ----------------------------------------------------
-     */
-
-    setEmergenceMemory(
-      result?.residue
-    );
-
-const refreshedOrchestration =
-  await orchestrateGuidance({
+    field: field || {},
 
     alignmentContext,
 
-    selectedGuide:
-      guide,
-
-    resolvedContent:
-      field || {},
-
-    emergenceMemory:
-      result?.residue,
+    existingMessages: [
+      ...transmissions,
+      userMessage,
+    ],
   });
 
-setOrchestrationField(
-  refreshedOrchestration
-);    
+setEmergenceMemory(
+  result?.residue
+);   
 
 const agentDecision =
   await transmissionAgent({

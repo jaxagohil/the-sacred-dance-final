@@ -149,53 +149,40 @@ buildUserContext({
 
   /*
    * ------------------------------------------------
-   * 👤 PROFILE
+   * 👤 PROFILE + 🌊 SIGNALS
    * ------------------------------------------------
    */
 
-  const {
-    data: profile,
-  } = await supabase
+  const [
+    { data: profile },
+    { data: signals, error },
+  ] = await Promise.all([
 
-    .from("profiles")
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq(
+        "user_id",
+        userId
+      )
+      .maybeSingle(),
 
-    .select("*")
+    supabase
+      .from("signals")
+      .select("*")
+      .eq(
+        "user_id",
+        userId
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false,
+        }
+      )
+      .limit(30),
 
-    .eq(
-      "user_id",
-      userId
-    )
-
-    .maybeSingle();
-
-  /*
-   * ------------------------------------------------
-   * 🌊 SIGNALS
-   * ------------------------------------------------
-   */
-
-  const {
-    data: signals,
-    error,
-  } = await supabase
-
-    .from("signals")
-
-    .select("*")
-
-    .eq(
-      "user_id",
-      userId
-    )
-
-    .order(
-      "created_at",
-      {
-        ascending: false,
-      }
-    )
-
-    .limit(30);
+  ]);
 
   /*
    * ------------------------------------------------
@@ -318,54 +305,59 @@ buildUserContext({
       )
     );
 
-  /*
-   * ------------------------------------------------
-   * 🧠 LOAD BEHAVIOURS
-   * ------------------------------------------------
-   */
+/*
+ * ------------------------------------------------
+ * 🧠 LOAD BEHAVIOURS
+ * 🌊 LOAD PATTERNS
+ * 🌈 LOAD CHAKRA ROWS
+ * ------------------------------------------------
+ */
 
-const {
-  data: behaviourRows,
-} = await supabase
+const [
+  { data: behaviourRows },
+  { data: patternRows },
+  { data: chakraRows },
+] = await Promise.all([
 
-  .from("behaviours")
-
-  .select("*")
-
-  .in(
-    "id",
-
-    behaviourIds.length
-      ? behaviourIds
-      : ["___empty___"]
-  )
-
-  .eq(
-    "language",
-    language
-  );
-
-  /*
-   * ------------------------------------------------
-   * 🌊 LOAD PATTERNS
-   * ------------------------------------------------
-   */
-
-  const {
-    data: patternRows,
-  } = await supabase
-
-    .from("patterns")
-
+  supabase
+    .from("behaviours")
     .select("*")
-
     .in(
       "id",
+      behaviourIds.length
+        ? behaviourIds
+        : ["___empty___"]
+    )
+    .eq(
+      "language",
+      language
+    ),
 
+  supabase
+    .from("patterns")
+    .select("*")
+    .in(
+      "id",
       patternIds.length
         ? patternIds
         : ["___empty___"]
-    );
+    ),
+
+  supabase
+    .from("pattern_chakra_manifestations")
+    .select("*")
+    .in(
+      "pattern_key",
+      patternIds.length
+        ? patternIds
+        : ["___empty___"]
+    )
+    .eq(
+      "language",
+      language
+    ),
+
+]);
 
   /*
    * ------------------------------------------------
@@ -584,35 +576,6 @@ field.lenses =
   );
     }
   );
-
-  /*
-   * ------------------------------------------------
-   * 🌈 LOAD CHAKRA ROWS
-   * ------------------------------------------------
-   */
-
-  const {
-    data: chakraRows,
-  } = await supabase
-
-    .from(
-      "pattern_chakra_manifestations"
-    )
-
-    .select("*")
-
-    .in(
-      "pattern_key",
-
-      patternIds.length
-        ? patternIds
-        : ["___empty___"]
-    )
-
-    .eq(
-      "language",
-      language
-    );
 
 /*
  * ------------------------------------------------

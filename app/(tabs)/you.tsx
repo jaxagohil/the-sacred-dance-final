@@ -693,42 +693,60 @@ hemisphere,
 
     //console.log(  "✅ PROFILE SAVED:",  data);
 
-     //
-    // ✨ PROCESS REFLECTIONS 
-    //
-    if (
+ // --------------------------------------------------
+// ✨ PROCESS REFLECTIONS IN PARALLEL
+// --------------------------------------------------
+
+const processingTasks: Promise<void>[] = [];
+
+// --------------------------------------------------
+// 🔁 REPEATS
+// --------------------------------------------------
+
+if (
   repeats !==
   (originalProfile?.what_repeats || "")
 ) {
 
-  await clearBaselineLayer(
-  userId,
-  "repeats"
-);
+  processingTasks.push(
+    (async () => {
 
-if (!repeats.trim()) {
+      await clearBaselineLayer(
+        userId,
+        "repeats"
+      );
 
-  console.log(
-    "🧹 Repeats layer cleared"
+      if (!repeats.trim()) {
+
+        console.log(
+          "🧹 Repeats layer cleared"
+        );
+
+      } else {
+
+        await processRepeatsField({
+
+          userId,
+
+          language,
+
+          source: "baseline",
+
+          batchId,
+
+          repeats,
+        });
+
+      }
+
+    })()
   );
-
-} else {
-await processRepeatsField({
-
-  userId,
-
-  language,
-
-  source: "baseline",
-
-  batchId,
-
-  repeats,
-});
-
-  //console.log(  "✨ Pattern reflection created");
 }
-}
+
+
+// --------------------------------------------------
+// 🧠 CORE BELIEF
+// --------------------------------------------------
 
 if (
   line !==
@@ -738,32 +756,45 @@ if (
   )
 ) {
 
-   await clearBaselineLayer(
-  userId,
-  "core_belief"
-); 
+  processingTasks.push(
+    (async () => {
 
-if (!line.trim()) {
+      await clearBaselineLayer(
+        userId,
+        "core_belief"
+      );
 
-  console.log(  "🧹 Core belief cleared");
+      if (!line.trim()) {
 
-} else { 
-await processCoreBeliefField({
+        console.log(
+          "🧹 Core belief cleared"
+        );
 
-  userId,
+      } else {
 
-  language,
+        await processCoreBeliefField({
 
-  source: "baseline",
+          userId,
 
-  batchId,
+          language,
 
-  coreBelief: line,
-});
+          source: "baseline",
 
-  //console.log(  "✨ Line reflection created");
+          batchId,
+
+          coreBelief: line,
+        });
+
+      }
+
+    })()
+  );
 }
-}
+
+
+// --------------------------------------------------
+// ⚖️ ENERGY AXES
+// --------------------------------------------------
 
 if (
 
@@ -787,37 +818,52 @@ if (
 
 ) {
 
-    await clearBaselineLayer(
-  userId,
-  "energy_axes"
-);
+  processingTasks.push(
+    (async () => {
 
+      await clearBaselineLayer(
+        userId,
+        "energy_axes"
+      );
 
-await processEnergyAxes({
-  userId,
-  language,
-  source: "baseline",
-   batchId,
-  energyAxes: {
-    givingReceiving:
-      sliders.givingreceiving,
+      await processEnergyAxes({
 
-    structureFlow:
-      sliders.flowstructure,
+        userId,
 
-    lackAbundance:
-      sliders.abundancelack,
-  },
-});
+        language,
 
-  //console.log(  "✨ Energy reflection created");
+        source: "baseline",
+
+        batchId,
+
+        energyAxes: {
+
+          givingReceiving:
+            sliders.givingreceiving,
+
+          structureFlow:
+            sliders.flowstructure,
+
+          lackAbundance:
+            sliders.abundancelack,
+        },
+      });
+
+    })()
+  );
 }
+
+
+// --------------------------------------------------
+// 🧒 CHILDHOOD
+// --------------------------------------------------
 
 if (
 
   JSON.stringify(
     childhoodSignals
   ) !==
+
   JSON.stringify(
     originalProfile?.childhood_signals ||
     INITIAL_CHILDHOOD_SIGNALS
@@ -825,38 +871,58 @@ if (
 
 ) {
 
+  processingTasks.push(
+    (async () => {
 
-  await clearBaselineLayer(
-  userId,
-  "childhood"
-);  
+      await clearBaselineLayer(
+        userId,
+        "childhood"
+      );
 
-const hasSignals =
+      const hasSignals =
+        Object.values(
+          childhoodSignals
+        ).some(
+          (v) => v === 1
+        );
 
-  Object.values(
-    childhoodSignals
-  ).some(
-    (v) => v === 1
+      if (!hasSignals) {
+
+        console.log(
+          "🧹 Childhood layer cleared"
+        );
+
+      } else {
+
+        await processChildhoodField({
+
+          userId,
+
+          language,
+
+          source: "baseline",
+
+          batchId,
+
+          childhoodSignals,
+
+          repeats,
+        });
+
+      }
+
+    })()
   );
-
-if (!hasSignals) {
-
-  console.log( "🧹 Childhood layer cleared");
-
-} else {
-
-  await processChildhoodField({
-  userId,
-  language,
-  source: "baseline",
-  batchId,
-  childhoodSignals,
-  repeats,
-});
-
-  //console.log(  "✨ Childhood reflection created");
 }
-}
+
+
+// --------------------------------------------------
+// ⏳ WAIT FOR ALL LAYERS
+// --------------------------------------------------
+
+await Promise.all(
+  processingTasks
+);
     //
     // ✨ UPDATE STATE
     //
