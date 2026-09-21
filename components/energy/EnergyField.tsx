@@ -322,26 +322,9 @@ const chakraManifestations =
     distortionList.map(
       (d: any, i: number) => {
 
-const primaryChakra =
-
-  d?.chakra_key ||
-
-  awarenessChakra ||
-
-  energy?.dominant_chakra ||
-
-  "heart";
-
-const baseY =
-
-  chakraY[
-    primaryChakra as keyof typeof chakraY
-  ] || 180;
-
-const y = Math.min(
-  baseY + 55,
-  315
-);
+const y =
+  150 +
+  (i % 3) * 45;
 
         const side =
 
@@ -363,9 +346,8 @@ const y = Math.min(
 
           side === "left"
 
-            ? 145
-
-            : 255;
+    ? 221
+    : 336;
 
         const intensity =
 
@@ -800,8 +782,6 @@ scores={
 
           </View>
 
-          {/* 🌌 OVERLAY */}
-
 {/* 🌌 OVERLAY */}
 
 <View
@@ -818,38 +798,36 @@ scores={
 
 <View
   pointerEvents="box-none"
-style={[
-  styles.energyBall,
-Platform.OS === "web" && {
-  width: ENERGY_BALL_CANVAS_SIZE,
-  height: ENERGY_BALL_CANVAS_SIZE,
-  zIndex: 220,
-  left: "50%",
-  top: "50%",
-marginLeft: -ENERGY_BALL_CANVAS_SIZE / 2 + 45,
-marginTop: -ENERGY_BALL_CANVAS_SIZE / 2 + 34,
-},
-]}
+  style={[
+    styles.energyBall,
+    {
+      alignSelf: "center",
+    },
+    Platform.OS === "web" && {
+      zIndex: 220,
+    },
+  ]}
 >
   {dotPositions.map((dot: any, i: number) => (
-    <View
-      key={i}
-      style={{
-  position: "absolute",
-  width: 20,
-  height: 20,
-left:
-  dot.side === "right"
-    ? dot.x - 60
-    : dot.x - 10,
-top: dot.y - 10,
-  borderRadius: 10,
-  zIndex: 220,
-      }}
-      pointerEvents="auto"
+<View
+  key={i}
+  style={{
+    position: "absolute",
+width: 44,
+height: 44,
+left: dot.x - 22,
+top: dot.y - 22,
+borderRadius: 22,
+backgroundColor: "red",
+zIndex: 1000,
+  }}
+  pointerEvents="auto"
       onPointerDown={
         Platform.OS === "web"
           ? () => {
+
+            console.log("🌑 DISTORTION CLICK", i);
+
               setSelectedChakra(null);
               setSelectedDistortion(
                 selectedDistortion === i ? null : i
@@ -873,69 +851,7 @@ top: dot.y - 10,
       />
     </View>
   ))}
-</View>
 
-            {/* ✨ CHAKRA LABEL */}           
-
-{selectedChakra &&
- chakraInsight && ( 
-
- <Pressable
-
-  onPress={() =>
-    setSelectedChakra(null)
-  }
-
-  style={{
-
-    position:
-      "absolute",
-
-    left: 210,
-
-    top:
-
-      (
-        chakraY[
-          selectedChakra
-        ] || 180
-      ) + 32,
-
-    maxWidth: 180,
-
-    backgroundColor:
-      "rgba(0,0,0,0.22)",
-
-    padding: 10,
-
-    borderRadius: 14,
-
-zIndex: 999,
-elevation: 999,
-  }}
->
-
-  <Text
-
-    style={{
-
-      color:
-        "white",
-
-      fontSize: 10.5,
-
-      lineHeight: 16,
-
-      opacity: 0.92,
-    }}
-  >
-
-    {chakraInsight}
-
-  </Text>
-
-</Pressable>
-            )}
 
 {/* 🌑 DISTORTION REFLECTION */}
 
@@ -954,8 +870,8 @@ elevation: 999,
 
 left:
   dotPositions[selectedDistortion].side === "left"
-    ? dotPositions[selectedDistortion].x + 120
-    : dotPositions[selectedDistortion].x + 5,
+    ? 20
+    : ENERGY_BALL_CANVAS_SIZE - 150,
 
 top:
   dotPositions[selectedDistortion].y - 35,
@@ -1012,8 +928,72 @@ elevation: 999,
 </Pressable>
 )}
 
+</View>
+
+
           </View>
 
+         {/* ✨ CHAKRA LABEL */}           
+
+{selectedChakra &&
+ chakraInsight && ( 
+
+ <Pressable
+
+  onPress={() =>
+    setSelectedChakra(null)
+  }
+
+  style={{
+
+    position:
+      "absolute",
+
+   left: "55%",
+
+    top:
+
+      (
+        chakraY[
+          selectedChakra
+        ] || 180
+      ) + 32,
+
+    maxWidth: 180,
+
+    backgroundColor:
+      "rgba(0,0,0,0.22)",
+
+    padding: 10,
+
+    borderRadius: 14,
+
+zIndex: 999,
+elevation: 999,
+  }}
+>
+
+  <Text
+
+    style={{
+
+      color:
+        "white",
+
+      fontSize: 10.5,
+
+      lineHeight: 16,
+
+      opacity: 0.92,
+    }}
+  >
+
+    {chakraInsight}
+
+  </Text>
+
+</Pressable>
+            )}
         </View>
 
       </View>
@@ -1096,9 +1076,8 @@ const styles =
       position:
         "absolute",
 
-      width: 460,
-
-      height: 460,
+width: ENERGY_BALL_CANVAS_SIZE,
+height: ENERGY_BALL_CANVAS_SIZE,
 
       justifyContent:
         "center",
@@ -1143,16 +1122,24 @@ chakras: {
   zIndex: 70,
 },
 
-    overlay: {
+overlay: {
+  position: "absolute",
 
-      ...StyleSheet
-        .absoluteFillObject,
+  width: ENERGY_BALL_CANVAS_SIZE,
+  height: ENERGY_BALL_CANVAS_SIZE,
 
-      zIndex: 60,
+  left: "50%",
+  top: "50%",
 
-      pointerEvents:
-        "box-none",
-    },
+  transform: [
+    { translateX: -ENERGY_BALL_CANVAS_SIZE / 2 },
+    { translateY: -ENERGY_BALL_CANVAS_SIZE / 2 },
+  ],
+
+  zIndex: 60,
+
+  pointerEvents: "box-none",
+},
 
     affirmationWrapper: {
 
