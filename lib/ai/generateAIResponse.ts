@@ -112,11 +112,6 @@ if (error) {
   throw error;
 }
 
-console.log(
-  "📦 BACKEND RESULT:",
-  result
-);
-
     /*
      * -----------------------------------------------------
      * ✅ FINAL RESPONSE

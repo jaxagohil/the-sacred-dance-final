@@ -317,7 +317,7 @@ const layeredOpacity = 0.96;
 
         alignSelf: "center",
 
-      maxWidth: "92%",
+      maxWidth: "62%",
 
 opacity,
 
@@ -570,7 +570,7 @@ if (
 
       const nextDelay =
 
-        9200
+        5200
 
         +
 
@@ -592,12 +592,17 @@ if (
      * --------------------------------------------------------
      */
 
-    runConversation();
+const entryTimer = setTimeout(
+  runConversation,
+  1800
+);
 
-    return () => {
+return () => {
 
-      mounted = false;
-    };
+  mounted = false;
+
+  clearTimeout(entryTimer);
+};
 
   }, []);
 

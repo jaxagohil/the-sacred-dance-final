@@ -275,6 +275,8 @@ ${nervousSystem || "unknown"}
       hasNarrativeReflection
     ) {
 
+      console.time("⏱️ JOURNAL NARRATIVE");
+
       const {
   data: narrativeData,
   error: narrativeError,
@@ -344,6 +346,8 @@ ${nervousSystem || "unknown"}
   }
 );
 
+console.timeEnd("⏱️ JOURNAL NARRATIVE");
+
 if (narrativeError) {
 
   console.error(
@@ -369,6 +373,8 @@ if (narrativeError) {
     if (
       hasEmotionReflection
     ) {
+
+      console.time("⏱️ JOURNAL EMOTIONAL");
 
  const {
   data: emotionalData,
@@ -425,6 +431,8 @@ if (narrativeError) {
     },
   }
 );
+
+console.timeEnd("⏱️ JOURNAL EMOTIONAL");
 
 if (emotionalError) {
 

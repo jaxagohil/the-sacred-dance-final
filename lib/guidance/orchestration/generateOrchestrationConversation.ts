@@ -578,7 +578,7 @@ Do not include markdown.
      * --------------------------------------------------------
      */
 
-    console.log("🌌 ORCHESTRATION PROMPT LENGTH:", conversationPrompt.length);
+//    console.log("🌌 ORCHESTRATION PROMPT LENGTH:", conversationPrompt.length);
 
     const response =
 

@@ -682,7 +682,7 @@ return (
               styles.energyBall
             }
 
-            pointerEvents="none"
+            pointerEvents="box-none"
           >
 
             <EnergyBallSkia
@@ -701,6 +701,50 @@ return (
                 dotPositions
               }
             />
+
+     {dotPositions.map((dot: any, i: number) => (
+<View
+  key={i}
+  style={{
+    position: "absolute",
+width: 44,
+height: 44,
+left: dot.x - 22,
+top: dot.y - 22,
+borderRadius: 22,
+backgroundColor: "transparent",
+zIndex: 1000,
+  }}
+  pointerEvents="auto"
+      onPointerDown={
+        Platform.OS === "web"
+          ? () => {
+
+            console.log("🌑 DISTORTION CLICK", i);
+
+              setSelectedChakra(null);
+              setSelectedDistortion(
+                selectedDistortion === i ? null : i
+              );
+            }
+          : undefined
+      }
+    >
+      <Pressable
+        onPress={() => {
+          setSelectedChakra(null);
+          setSelectedDistortion(
+            selectedDistortion === i ? null : i
+          );
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: 30,
+        }}
+      />
+    </View>
+  ))}         
 
           </View>
 
@@ -808,49 +852,6 @@ scores={
     },
   ]}
 >
-  {dotPositions.map((dot: any, i: number) => (
-<View
-  key={i}
-  style={{
-    position: "absolute",
-width: 44,
-height: 44,
-left: dot.x - 22,
-top: dot.y - 22,
-borderRadius: 22,
-backgroundColor: "red",
-zIndex: 1000,
-  }}
-  pointerEvents="auto"
-      onPointerDown={
-        Platform.OS === "web"
-          ? () => {
-
-            console.log("🌑 DISTORTION CLICK", i);
-
-              setSelectedChakra(null);
-              setSelectedDistortion(
-                selectedDistortion === i ? null : i
-              );
-            }
-          : undefined
-      }
-    >
-      <Pressable
-        onPress={() => {
-          setSelectedChakra(null);
-          setSelectedDistortion(
-            selectedDistortion === i ? null : i
-          );
-        }}
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 30,
-        }}
-      />
-    </View>
-  ))}
 
 
 {/* 🌑 DISTORTION REFLECTION */}

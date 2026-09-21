@@ -591,15 +591,41 @@ const emotionalThemes =
 // --------------------------------------------------
 
 const entityLensEvidence =
-
-  buildThreads(
-
-    entries.flatMap(
+  entries
+    .flatMap(
       (e: any) =>
-        e?.entities || []
-    )
+        (e?.entities || []).map(
+          (entity: any) => ({
+            entity,
 
-  ).slice(0, 10);
+            sourceSummary:
+              e?.source_summary || null,
+
+            sourceReflection:
+              e?.source_reflection || null,
+
+            observableScene:
+              e?.observable_scene || null,
+
+            manifestation:
+              e?.manifestation || null,
+
+            bodyResponse:
+              e?.body_response || null,
+
+            copingStrategy:
+              e?.coping_strategy || null,
+
+            weight:
+              e?.weight || 0,
+          })
+        )
+    )
+    .filter(
+      (e: any) =>
+        e?.entity
+    )
+    .slice(0, 10);
 
   //console.log( "🪞 ENTITY LENS EVIDENCE", entityLensEvidence);
 

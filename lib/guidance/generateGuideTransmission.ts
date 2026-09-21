@@ -11,14 +11,6 @@ import {
 } from "../alignment/buildAlignmentOSContext";
 
 import {
-  buildGuidanceMirrorWorld,
-} from "./context/buildGuidanceMirrorWorld";
-
-import {
-  buildGuidePrompt,
-} from "../ai/prompts/guides/buildGuidePrompt";
-
-import {
   transmissionWrapper,
 } from "../ai/prompts/guides/transmissionWrapper";
 
@@ -94,74 +86,122 @@ alignmentContext,
 );
 
 
-const mirrorWorld =
-  buildGuidanceMirrorWorld(
-    alignmentContext.mirrorContext
-  );
-
-const guidePrompt =
-
-  buildGuidePrompt({
-
-    fieldContext: {
-
-      user:
-        alignmentContext.userContext,
-
-      sacred: {
-
-        emergenceMemory,
-
-        selectedGuide:
-          guide,
-      },
-
-      mirrorContext:
-        mirrorWorld,
-
-      expressionProfile:
-        alignmentContext.expressionProfile,
-
-      spiralScores:
-        alignmentContext.spiralScores,
-
-      activeLens:
-        alignmentContext.activeLens,
-
-      entityLenses:
-        alignmentContext.entityLenses,
-
-      dailyField:
-        alignmentContext.dailyField,
-    },
-
-    orchestration:
-      orchestrationField,
-
-    transmissionDecision:
-  transmissionDecision || {},  
-
-    recentMessages,
-
-    guidanceSignals:
-      field?.guidanceSignals || {},
-
-    reflectionResult:
-      field?.reflectionResult || {},
-
-    language,
-
-    message:
-      reflection,
-
-    workflow: "transmission",  
-  });
-  
-  const finalPrompt = `
+const finalPrompt = `
 
 ${transmissionWrapper}
 
-${guidePrompt}
+--------------------------------------------------
+GUIDE
+--------------------------------------------------
+
+You are the Guide:
+
+${guide}
+
+You are speaking directly to the person.
+
+Your role is not to analyse the Living Field again.
+
+The Transmission Agent has already decided
+what this moment needs.
+
+Your task is simply to express that movement
+naturally through the voice of this Guide.
+
+--------------------------------------------------
+TRANSMISSION DECISION
+--------------------------------------------------
+
+${JSON.stringify(
+  transmissionDecision || {},
+  null,
+  2
+)}
+
+--------------------------------------------------
+CURRENT REFLECTION
+--------------------------------------------------
+
+${reflection}
+
+--------------------------------------------------
+RECENT CONVERSATION
+--------------------------------------------------
+
+${recentMessages
+  ?.slice(-8)
+  ?.map(
+    (message: any) =>
+      `${message?.role}: ${
+        message?.text ||
+        message?.content ||
+        ""
+      }`
+  )
+  ?.join("\n") || "none"}
+
+--------------------------------------------------
+ORCHESTRATION
+--------------------------------------------------
+
+${JSON.stringify(
+  orchestrationField || {},
+  null,
+  2
+)}
+
+--------------------------------------------------
+EMERGENCE
+--------------------------------------------------
+
+${JSON.stringify(
+  emergenceMemory || {},
+  null,
+  2
+)}
+
+--------------------------------------------------
+LANGUAGE
+--------------------------------------------------
+
+${language}
+
+--------------------------------------------------
+RESPONSE
+--------------------------------------------------
+
+Follow the Transmission Decision.
+
+Do not redo the orchestration.
+
+Do not analyse the Living Field again.
+
+Do not introduce a new lesson,
+pattern, question, or insight
+unless the Transmission Decision calls for it.
+
+Match the response mode exactly.
+
+If the decision calls for a brief response,
+be brief.
+
+If it calls for presence,
+be present.
+
+If it calls for a question,
+ask only the question that belongs
+to this moment.
+
+If it calls for silence,
+do not manufacture a response.
+
+Speak naturally.
+
+The person should feel that they are
+in conversation with a Guide,
+not receiving an AI-generated explanation.
+
+Return only the Guide's response.
 
 `;
 

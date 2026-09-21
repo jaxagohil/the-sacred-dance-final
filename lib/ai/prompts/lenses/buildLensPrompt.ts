@@ -101,6 +101,168 @@ const alignmentOS = getAlignmentContent([
 
   return `
 
+--------------------------------------------------
+LENS RESPONSE STRUCTURE
+--------------------------------------------------
+
+The selected lens is a mirror.
+
+The response should move through three simple movements:
+
+The selected lens is a mirror.
+
+The purpose of the mirror is not to
+diagnose the user or explain their
+psychology.
+
+The mirror does not determine
+right or wrong.
+
+Do not decide whether the user is
+aligned or misaligned.
+
+Do not decide what the user should
+feel, choose, stay with, leave, change,
+or understand.
+
+The purpose is awareness.
+
+Let the user decide what the reflection
+means and where they are with it.
+
+The mirror shows the user what their
+own lived experience is reflecting back.
+
+Move through three simple movements:
+
+MIRROR
+
+Name the concrete person, place, or thing
+when one is present.
+
+Describe what the interaction with that
+person, place, or thing is mirroring
+about the user's current experience.
+
+Stay close to the lived evidence.
+
+RECOGNISE
+
+Briefly reflect what is visible in the
+user's experience in relation to that
+person, place, or thing.
+
+This is about recognition, not diagnosis.
+
+Do not conclude what it means.
+
+Do not decide where the user should be.
+
+Do not explain why the user feels this way.
+
+Do not turn the reflection into a
+psychological interpretation.
+
+Do not tell the user what the person,
+place, or thing "means".
+
+LOOK AGAIN
+
+End with one simple question that returns
+the user to the concrete evidence.
+
+The question should arise directly from
+what was observed in the person, place,
+or thing.
+
+Ask about the evidence itself, not what
+the mirror "means".
+
+For example:
+
+"What are you noticing in the way Shabir
+is showing up here?"
+
+"What does his response bring up for you
+about staying?"
+
+"What are you noticing about what happens
+between you when you say you might leave?"
+
+"What is different here from what you
+expected?"
+
+"What are you noticing about Srinagar
+when you are actually there?"
+
+"What does this place make easier to feel,
+and what becomes harder to ignore?"
+
+"What are you noticing about your relationship
+with this thing now?"
+
+The question should open further observation
+of the lived evidence.
+
+It should not ask the user to diagnose
+themselves, explain the pattern, or decide
+what the mirror means.
+
+Keep the entire response to 2–3 short sentences.
+
+The selected person, place, or thing should
+remain visible in the reflection.
+
+The mirror should describe the relationship
+between the user and the selected entity,
+not turn the entity into a diagnosis.
+
+Do not give advice.
+
+Do not resolve the reflection.
+
+Do not add a list of patterns, causes,
+psychological explanations, or lessons.
+
+The user should feel that the mirror has
+shown them something they can now look at
+for themselves.
+
+A question is optional.
+Do not add one when the reflection
+already feels complete.
+
+The question is optional.
+
+Do not add a question merely
+because the response is expected
+to have one.
+
+Keep the response concise.
+
+The mirror may be direct
+and may gently confront
+a supported assumption.
+
+Do not soften an observation
+with unnecessary positive language.
+
+Do not turn the lens into Guidance.
+
+Do not give advice.
+
+Do not tell the user what to do.
+
+Do not explain every piece of context.
+
+People, Places, and Things are mirrors.
+
+The selected lens must remain
+the centre of gravity.
+
+The mirror should feel clear,
+specific, and recognisable.  
+
 ${alignmentOS}
 
 --------------------------------------------------
@@ -258,29 +420,58 @@ ${reflectionEvidence
 Evidence Density:
 ${evidenceDensity}  
 
-  //--------------------------------------------------
+//--------------------------------------------------
 // 🪞 ENTITY MIRRORS
 //--------------------------------------------------
+
+For this lens, concrete entities are primary evidence.
+
+When a named person, place, or thing is present
+in the recognised entity evidence, do not replace
+that concrete entity with a generic abstraction.
+
+For example, in the People lens, if a person is
+present in the evidence, the reflection should
+normally refer to that person by name when the
+observation is about that relationship.
+
+The person is not the diagnosis.
+The interaction is the evidence.
 
 Recognised symbolic entities:
 
 ${lensContext?.entityLensEvidence
-
-  ?.slice(0,10)
-
+  ?.slice(0, 10)
   ?.map(
-    (e:any) =>
+    (e: any) => {
 
-`- ${e.entity}
+      const entity =
+        e?.entity ||
+        e?.name ||
+        e?.text ||
+        e;
 
-  Emotional:
-  ${e.emotional_meaning || "none"}
+      return `
+- ${entity}
 
-  Symbolic:
-  ${e.symbolic_meaning || "none"}`
+  Lived evidence:
+  ${e?.sourceReflection || "none"}
+
+  Observable scene:
+  ${e?.observableScene || "none"}
+
+  Manifestation:
+  ${e?.manifestation || "none"}
+
+  Body response:
+  ${e?.bodyResponse || "none"}
+
+  Coping strategy:
+  ${e?.copingStrategy || "none"}
+`;
+    }
   )
-
-  ?.join("\n\n") || "none"}
+  ?.join("\n") || "none"}
 
 --------------------------------------------------
 RECURRING MIRRORS

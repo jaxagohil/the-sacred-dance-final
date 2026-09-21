@@ -1087,6 +1087,8 @@ color:
           style={{
             paddingHorizontal: 20,
             marginBottom: 2,
+            width: "78%",
+alignSelf: "center",
           }}
         >
 
@@ -1185,12 +1187,14 @@ style={{
         </View>
 
         {/* SLIDERS */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            marginBottom: 10,
-          }}
-        >
+<View
+  style={{
+    width: "78%",
+    alignSelf: "center",
+    marginTop: 18,
+    marginBottom: 10,
+  }}
+>
 
           <Text
             style={{
@@ -1298,11 +1302,14 @@ color:
         </View>
 
         {/* CHILDHOOD */}
-        <View
-          style={{
-            marginBottom: 20,
-          }}
-        >
+<View
+  style={{
+    width: "78%",
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 20,
+  }}
+>
 
           <Text
             style={{

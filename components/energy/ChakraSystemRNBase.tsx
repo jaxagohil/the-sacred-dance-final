@@ -66,13 +66,6 @@ ChakraSystemRN({
 
 }: Props) {
 
-  console.log("🌈 CHAKRA SYSTEM RENDERING", {
-    awareness,
-    scores,
-    chakraOrder,
-    chakraY,
-  });
-
   // --------------------------------------------------
   // 🌊 AVERAGE
   // --------------------------------------------------

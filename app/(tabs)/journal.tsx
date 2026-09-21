@@ -469,7 +469,7 @@ onPress={(event) => {
     paddingHorizontal: 32,
 
     maxHeight:
-      height * 0.25,
+      height * 0.45,
 
     alignItems:
       "center",
@@ -528,12 +528,12 @@ paddingVertical: 75,
       textAlign:
         "center",
 
-      maxWidth: 340,
+      maxWidth: 800,
 
       width: "100%",
 
-      maxHeight:
-        height * 0.32,
+     height:
+  height * 0.50,
     }}
   />
 
@@ -546,7 +546,7 @@ paddingVertical: 75,
 
     position: "absolute",
 
-    top: 340,
+    top: 520,
 
     left: 0,
     right: 0,
@@ -656,7 +656,7 @@ paddingVertical: 75,
         fontFamily:
           Fonts.light,
 
-        fontSize: 24,
+        fontSize: 28,
 
         opacity:
 
@@ -681,8 +681,8 @@ paddingVertical: 75,
             bottom:
               height * 0.04,
 
-            left: 0,
-            right: 0,
+left: "12%",
+right: "12%",
 
             alignItems:
               "center",

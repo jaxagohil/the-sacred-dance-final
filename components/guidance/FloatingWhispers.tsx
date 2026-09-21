@@ -87,22 +87,22 @@ const cosmicPositions = [
 
   {
     top: 12,
-    left: 18,
+    left: 32,
   },
 
   {
     top: 42,
-    right: 20,
+    right: 32,
   },
 
   {
     top: 92,
-    left: 84,
+    left: 70,
   },
 
   {
     top: 138,
-    right: 72,
+    right: 58,
   },
 ];
 

@@ -18,6 +18,8 @@ import {
   buildAlignmentOSContext,
 } from "../../lib/alignment/buildAlignmentOSContext";
 
+import { useMirrorStore } from "../../stores/mirrorStore";
+
 import {
   transmissionAgent,
 } from "../../lib/ai/agents/transmissionAgent";
@@ -93,6 +95,11 @@ import {
  */
 
 export default function GuidanceScreen() {
+
+    const contextVersion =
+    useMirrorStore(
+      (state) => state.contextVersion
+    );
 
   /*
    * --------------------------------------------------------
@@ -296,6 +303,8 @@ const result =
   emergenceMemory,
 
   activeGuide,
+
+    contextVersion,
 ]);
 
   useEffect(() => {
@@ -546,6 +555,25 @@ await enterTransmission({
       result?.residue
     );
 
+const refreshedOrchestration =
+  await orchestrateGuidance({
+
+    alignmentContext,
+
+    selectedGuide:
+      guide,
+
+    resolvedContent:
+      field || {},
+
+    emergenceMemory:
+      result?.residue,
+  });
+
+setOrchestrationField(
+  refreshedOrchestration
+);    
+
 const agentDecision =
   await transmissionAgent({
 
@@ -570,12 +598,7 @@ const agentDecision =
 
     language:
       alignmentContext.language || "en",
-  });
-
-console.log(
-  "🌊 TRANSMISSION AGENT DECISION",
-  agentDecision
-);    
+  });   
 
 const speakers =
   agentDecision?.speakers || [];
@@ -760,15 +783,16 @@ for (const speaker of speakers) {
 
 <ScrollView
   style={{
-    flex: 1,
-    width: "78%",
+flex: 1,
+marginTop: 30,
+marginBottom: 30,
+    width: "90%",
     alignSelf: "center",
-    backgroundColor: "#181719",
-    borderRadius: 28,
+    backgroundColor: "transparent",
   }}
 
         contentContainerStyle={{
-          paddingTop: 40,
+          paddingTop: 80,
           paddingBottom: 220,
         }}
 
@@ -862,6 +886,7 @@ guideName={
         style={{
           paddingBottom: 20,
           paddingTop: 10,
+
         }}
       >
 
