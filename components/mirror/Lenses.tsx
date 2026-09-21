@@ -66,8 +66,8 @@ export default function Lenses({
     selected,
     setSelected,
   ] = useState<
-    string | null
-  >(null);
+  "people" | "places" | "things" | null
+>(null);
 
   const [
     responses,
@@ -604,14 +604,16 @@ const styles =
       letterSpacing: 0.4,
     },
 
-    responseBox: {
+responseBox: {
 
-      marginTop: 24,
+  marginTop: 24,
 
-      paddingHorizontal: 32,
+  paddingHorizontal: 32,
 
-      maxWidth: "92%",
-    },
+  width: "70%",
+
+  maxWidth: 700,
+},
 
     responseText: {
 

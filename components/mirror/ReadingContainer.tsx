@@ -8,6 +8,7 @@ import React, {
 
 import {
   Animated,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -1155,19 +1156,25 @@ const styles =
       zIndex: 1,
     },
 
-    tarot: {
+ tarot: {
 
-      marginTop: -120,
+  marginTop:
+    Platform.OS === "web"
+      ? -150
+      : -120,
 
-      alignSelf:
-        "flex-end",
+  alignSelf:
+    "flex-end",
 
-      marginRight: 22,
+marginRight:
+  Platform.OS === "web"
+    ? 420
+    : 22,
 
-      width: 180,
+  width: 180,
 
-      zIndex: 2,
-    },
+  zIndex: 2,
+},
 
     readingLine: {
 

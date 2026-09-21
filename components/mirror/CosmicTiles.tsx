@@ -5,6 +5,7 @@ import React, {
 
 import {
   Animated,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -329,18 +330,24 @@ const styles =
     minHeight: 110,
   },
 
-  row: {
+row: {
 
-    flexDirection: "row",
+  flexDirection: "row",
 
-    justifyContent: "center",
+  justifyContent: "center",
 
-    gap: 10,
-  },
+  gap:
+    Platform.OS === "web"
+      ? 14
+      : 10,
+},
 
-  tile: {
+    tile: {
 
-    width: 78,
+  width:
+    Platform.OS === "web"
+      ? 176
+      : 78,
 
     borderRadius: 22,
 

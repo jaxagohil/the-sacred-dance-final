@@ -323,31 +323,29 @@ const chakraManifestations =
       (d: any, i: number) => {
 
 const y =
-  150 +
-  (i % 3) * 45;
+  165 +
+  (i % 3) * 65;
 
-        const side =
+const side =
+  (
+    Number(
+      d?.masculine || 0
+    ) >
+    Number(
+      d?.feminine || 0
+    )
+  )
+    ? "right"
+    : "left";
 
-          (
-            Number(
-              d?.masculine || 0
-            ) >
-
-            Number(
-              d?.feminine || 0
-            )
-          )
-
-            ? "right"
-
-            : "left";
-
-        const x =
-
-          side === "left"
-
-    ? 221
-    : 336;
+const x =
+  Platform.OS === "web"
+    ? side === "left"
+      ? 175
+      : 365
+    : side === "left"
+      ? 221
+      : 336;
 
         const intensity =
 
@@ -702,50 +700,6 @@ return (
               }
             />
 
-     {dotPositions.map((dot: any, i: number) => (
-<View
-  key={i}
-  style={{
-    position: "absolute",
-width: 44,
-height: 44,
-left: dot.x - 22,
-top: dot.y - 22,
-borderRadius: 22,
-backgroundColor: "transparent",
-zIndex: 1000,
-  }}
-  pointerEvents="auto"
-      onPointerDown={
-        Platform.OS === "web"
-          ? () => {
-
-            console.log("🌑 DISTORTION CLICK", i);
-
-              setSelectedChakra(null);
-              setSelectedDistortion(
-                selectedDistortion === i ? null : i
-              );
-            }
-          : undefined
-      }
-    >
-      <Pressable
-        onPress={() => {
-          setSelectedChakra(null);
-          setSelectedDistortion(
-            selectedDistortion === i ? null : i
-          );
-        }}
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 30,
-        }}
-      />
-    </View>
-  ))}         
-
           </View>
 
           {/* 🧍 BODY */}
@@ -853,6 +807,42 @@ scores={
   ]}
 >
 
+    {dotPositions.map((dot: any, i: number) => (
+<View
+  key={i}
+style={{
+  position: "absolute",
+
+  width: 60,
+  height: 60,
+
+  left: dot.x -25,
+  top: dot.y,
+
+  borderRadius: 22,
+
+  backgroundColor: "transparent",
+
+  zIndex: 1000,
+  elevation: 1000,
+}}
+  pointerEvents="auto"
+    >
+      <Pressable
+        onPress={() => {
+          setSelectedChakra(null);
+          setSelectedDistortion(
+            selectedDistortion === i ? null : i
+          );
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: 30,
+        }}
+      />
+    </View>
+  ))}         
 
 {/* 🌑 DISTORTION REFLECTION */}
 
