@@ -6,7 +6,8 @@ export type AIType =
   | "tarot"
   | "transmission"
   | "orchestration"
-  | "cosmic";
+  | "cosmic"
+  | "sovereign_i_engine";
 
 export interface CompleteGuideContext {
 

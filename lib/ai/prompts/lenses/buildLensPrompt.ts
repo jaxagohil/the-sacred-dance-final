@@ -409,11 +409,24 @@ ${reflectionEvidence
 
   ?.slice(0, 5)
 
-  ?.map(
-    (e: any) =>
+?.map(
+  (e: any) =>
 
-`- ${e.reflection}`
-  )
+`- Reflection:
+  ${e.reflection || "none"}
+
+  Person:
+  ${e.person || e.person_name || "none"}
+
+  Place:
+  ${e.place || e.place_name || "none"}
+
+  Thing:
+  ${e.thing || e.thing_name || "none"}
+
+  Entity:
+  ${e.entity || e.entity_name || "none"}`
+)
 
   ?.join("\n") || "none"}
 
@@ -424,21 +437,191 @@ ${evidenceDensity}
 // 🪞 ENTITY MIRRORS
 //--------------------------------------------------
 
-For this lens, concrete entities are primary evidence.
+PEOPLE, PLACES, AND THINGS ARE LIVED-WORLD MIRRORS.
 
-When a named person, place, or thing is present
-in the recognised entity evidence, do not replace
-that concrete entity with a generic abstraction.
+The selected lens is always a mirror of the user's
+lived-world experience.
 
-For example, in the People lens, if a person is
-present in the evidence, the reflection should
-normally refer to that person by name when the
-observation is about that relationship.
+People lens:
+The mirror is a real person in the user's lived
+experience and the relationship or interaction with them.
 
-The person is not the diagnosis.
+Places lens:
+The mirror is a real place in the user's lived
+experience and what becomes visible through the
+relationship with that place.
+
+Things lens:
+The mirror is a real thing or object in the user's
+lived experience and what becomes visible through
+the user's relationship with it.
+
+The concrete person, place, or thing is therefore
+the centre of gravity of the reflection.
+
+Do not replace a concrete person, place, or thing
+with a generic description of the user's emotional
+state.
+
+If a concrete entity is present in the evidence,
+name it.
+
+The reflection should answer:
+
+"What is this person showing me?"
+"What is this place showing me?"
+"What is this thing showing me?"
+
+Not:
+
+"What psychological state is the user in?"
+
+The entity itself is not the diagnosis,
+cause, lesson, or explanation.
+
 The interaction is the evidence.
 
+The external Dance is the expression of the
+Inner Dance.
+
+People, Places, and Things help the user SEE
+that Inner Dance through lived experience.
+
+--------------------------------------------------
+GUIDES ARE NOT LIVED-WORLD MIRRORS
+--------------------------------------------------
+
+Guides may appear in signals, reflections,
+conversation history, or other context.
+
+A Guide is part of the Sacred Dance guidance
+system.
+
+A Guide is NOT:
+
+- a People-lens entity
+- a relationship mirror
+- evidence about another person
+- a lived-world person
+- a People, Places, or Things mirror
+
+Never treat Heart, Structure, or Cosmic as
+the person being reflected on simply because
+the user is speaking with that Guide.
+
+If a Guide appears in the evidence, separate
+the Guide from the lived-world entity being
+discussed.
+
+For example:
+
+If the user asks Heart about Shabir,
+Shabir is the People mirror.
+
+Heart is not the mirror.
+
+If the user asks Cosmic about Srinagar,
+Srinagar is the Places mirror.
+
+Cosmic is not the mirror.
+
+If the user asks Structure about a particular
+object, that object is the Things mirror.
+
+Structure is not the mirror.
+
+The Guide may help the user SEE the mirror.
+
+The Guide is never itself the mirror.
+
+Only people, places, and things belonging to
+the user's lived-world experience should become
+People, Places, or Things mirror evidence.
+
+--------------------------------------------------
+RECOGNISED LIVED-WORLD ENTITIES
+--------------------------------------------------
+
+For this lens, concrete lived-world entities
+are primary evidence.
+
+When a named person, place, or thing is present
+in the recognised entity evidence, use that
+entity as the centre of the reflection.
+
+The selected entity should normally be visible
+in the response.
+
+Do not hide concrete evidence behind abstract
+psychological language.
+
 Recognised symbolic entities:
+
+IMPORTANT:
+
+The recognised lived-world entities below are the
+concrete evidence for the selected lens.
+
+The concrete entity is the mirror.
+
+When concrete entity evidence is available,
+the response MUST name that entity.
+
+For the People lens:
+name the actual person.
+
+For the Places lens:
+name the actual place.
+
+For the Things lens:
+name the actual thing.
+
+Do not replace a concrete entity with a category,
+abstraction, or generic wording.
+
+Do not write:
+
+"someone" when a person is available.
+
+"different places" when a specific place is available.
+
+"this place" when a specific place is available.
+
+"things" or "possessions" when a specific thing is available.
+
+"your relationship" when the actual person, place,
+or thing can be named.
+
+The concrete entity should normally appear
+in the first sentence of the reflection.
+
+The structure is:
+
+CONCRETE ENTITY
+→ WHAT THE ENCOUNTER IS SHOWING
+→ CURRENT INNER DANCE
+→ OPTIONAL QUESTION ABOUT THAT ENTITY
+
+For example:
+
+Shabir is showing...
+
+Srinagar is showing...
+
+This particular object is showing...
+
+Do not produce a generic emotional reflection
+when concrete entity evidence is available.
+
+If no concrete entity is present in the evidence,
+do not invent one.
+
+Guides such as Heart, Structure, and Cosmic must
+never be selected as the lived-world entity.
+
+A Guide may be part of the interaction through
+which the user sees the mirror, but the Guide is
+never the People, Places, or Things mirror.
 
 ${lensContext?.entityLensEvidence
   ?.slice(0, 10)

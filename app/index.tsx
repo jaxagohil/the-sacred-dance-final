@@ -455,7 +455,7 @@ const hasInput =
 if (!hasInput) {
 
   router.push(
-    "/mirror"
+    "/sovereign"
   );
 
   return;
@@ -522,7 +522,7 @@ setImageBase64(null);
 setAudioUri(null);
 
       router.push(
-        "/mirror"
+        "/sovereign"
       );
 
     } catch (error) {

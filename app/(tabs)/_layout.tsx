@@ -4,6 +4,7 @@ import {
   BookOpen,
   CircleUserRound,
   Compass,
+  Gem,
   Orbit,
   Sparkles,
 } from "lucide-react-native";
@@ -60,6 +61,34 @@ export default function TabLayout() {
         },
       }}
     >
+
+      {/* ✦ SOVEREIGN I */}
+
+<Tabs.Screen
+
+  name="sovereign"
+
+  options={{
+
+    title: "Sovereign I",
+
+    tabBarIcon: ({
+      color,
+    }) => (
+
+      <Gem
+
+        size={19}
+
+        color={color}
+
+        strokeWidth={
+          1.8
+        }
+      />
+    ),
+  }}
+/>
 
       {/* ✨ MIRROR */}
 

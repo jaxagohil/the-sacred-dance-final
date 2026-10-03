@@ -14,8 +14,6 @@ type ProcessJournalReflectionInput = {
 
   language?: string;
 
-  batchId?: string;
-
   text?: string;
 
   emotions?: string[];
@@ -44,8 +42,6 @@ export async function processJournalReflection({
   userId,
 
   language = "en",
-
-  batchId,
 
   text = "",
 
@@ -315,9 +311,6 @@ if (hasNarrativeReflection) {
 
               metadata: {
 
-                batch_id:
-                  batchId,
-
                 processing_layer:
                   "journal.narrative",
 
@@ -421,9 +414,6 @@ if (hasEmotionReflection) {
               emotions,
 
               metadata: {
-
-                batch_id:
-                  batchId,
 
                 processing_layer:
                   "journal.emotional_field",

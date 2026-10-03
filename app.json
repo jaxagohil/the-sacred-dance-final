@@ -31,7 +31,17 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-    "web": {},
+"web": {
+  "favicon": "./assets/logo.png",
+  "name": "Sacred Dance",
+  "shortName": "Sacred Dance",
+  "lang": "en",
+  "themeColor": "#000000",
+  "backgroundColor": "#000000",
+  "description": "Sacred Dance — Love.. Remembering itself",
+  "display": "standalone",
+  "orientation": "landscape"
+},
     "plugins": [
       "expo-router",
       [

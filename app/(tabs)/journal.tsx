@@ -1,7 +1,4 @@
 import { useEffect, useState } from "react";
-import "react-native-get-random-values";
-
-import { v4 as uuidv4 } from "uuid";
 
 import {
   Dimensions,
@@ -299,14 +296,11 @@ const handleVoice =
     if (saving)
   return;
 
-    const userId =
-      await getUserId();
+const userId =
+  await getUserId();
 
-    if (!userId)
-      return;
-
-          const batchId =
-  uuidv4();
+if (!userId)
+  return;
   
     try {
 
@@ -343,8 +337,6 @@ void processJournalReflection({
   userId,
 
   language,
-
-  batchId,
 
   text:
     packet.text,

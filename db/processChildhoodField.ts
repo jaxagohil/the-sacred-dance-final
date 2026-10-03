@@ -165,10 +165,10 @@ export async function processChildhoodField({
         childhoodSignals
       )
 
-        .filter(
-          ([_, value]) =>
-            value === 1
-        );
+.filter(
+  ([_, value]) =>
+    value === 0 || value === 1
+);
 
     // --------------------------------------------------
     // 🚫 NOTHING ACTIVE
@@ -189,16 +189,24 @@ export async function processChildhoodField({
     // 🌱 PROCESS EACH SIGNAL
     // --------------------------------------------------
 
-    for (const [key] of activeSignals) {
+    for (const [key, value] of activeSignals) {
 
       console.log(
         `🧒 Processing childhood signal: ${key}`
       );
 
-      const reflectionText = `
+const state =
+  value === 1
+    ? "experienced"
+    : "unmet";
 
-Based on what has been shared so far,
-there are early emotional environments
+const reflectionText = `
+
+A childhood experience has been identified
+as ${state}.
+
+The childhood field "${key}"
+describes an early emotional environment
 that may still influence
 how safety,
 connection,
@@ -213,6 +221,9 @@ ${
     key as keyof typeof CHILDHOOD_MAP
   ]
 }
+
+The state of this childhood experience is:
+${state}.
 `;
 
       // --------------------------------------------------
@@ -241,7 +252,7 @@ const { data, error } =
           reflectionText,
 
         childhoodSignals: {
-          [key]: 1,
+          [key]: value,
         },
 
         metadata: {
