@@ -5,10 +5,12 @@
  * 25% What Matters | 50% Creations | 25% What This Creation Is Changing
  *
  * Creation Journey:
- * 01 THINK — What do you see?
- * 02 FEEL — How do you feel?
- * 03 SAY — Your conscious desire
- * 04 DO — Exploring possibilities
+ *   | "dream"
+ *   | "discover"
+ *   | "build"
+ *   | "grow"
+ *   | "scale"
+ *   | "renew";
  *
  * Patterns are visible inside the creation journey.
  * The Living Field remains the intelligence underneath.
@@ -24,7 +26,7 @@
  * Existing data, signals and buildUserContext logic connect later.
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   Pressable,
@@ -35,8 +37,19 @@ import {
   View,
 } from "react-native";
 
+
 import { processSovereignLifePicture } from "../../db/processSovereignLifePicture";
 import { saveSovereignLifePicture } from "../../db/saveSovereignLifePicture";
+
+import { chooseNextMove } from "../../lib/consciousCreating/agents/mirror/chooseNextMove";
+import type { NextMove } from "../../lib/consciousCreating/agents/mirror/generateNextMoves";
+import { mirrorBuild } from "../../lib/consciousCreating/agents/mirror/mirrorBuild";
+
+import {
+  discoverConsciousDesire,
+  getCreationContext,
+} from "../../lib/consciousCreating";
+
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 
@@ -55,13 +68,13 @@ type LifeEntry = {
   text: string;
 };
 
-type JourneyStage = "think" | "feel" | "say" | "do";
-
-type StepOption = {
-  id: string;
-  label: string;
-  description: string;
-};
+type JourneyStage =
+  | "dream"
+  | "discover"
+  | "build"
+  | "grow"
+  | "scale"
+  | "renew";
 
 const JOURNEY: {
   id: JourneyStage;
@@ -69,53 +82,63 @@ const JOURNEY: {
   number: string;
   prompt: string;
 }[] = [
-  { id: "think", label: "THINK", number: "01", prompt: "What do you see?" },
-  { id: "feel", label: "FEEL", number: "02", prompt: "How do you feel?" },
-  { id: "say", label: "SAY", number: "03", prompt: "Your conscious desire" },
-  { id: "do", label: "DO", number: "04", prompt: "Exploring possibilities" },
+  {
+    id: "dream",
+    label: "DREAM",
+    number: "01",
+    prompt: "What do you see, feel or imagine? This is your space. Dream away.",
+  },
+  {
+    id: "discover",
+    label: "DISCOVER",
+    number: "02",
+    prompt: "Conscious Desire",
+  },
+  {
+    id: "build",
+    label: "BUILD",
+    number: "03",
+    prompt: "What wants to become real? Bring it into conversation. Let reality answer back.",
+  },
+  {
+    id: "grow",
+    label: "GROW",
+    number: "04",
+    prompt: "What is alive, and what is ready to grow? Be open to what wants to support you.",
+  },
+  {
+    id: "scale",
+    label: "SCALE",
+    number: "05",
+    prompt: "Where could this expand? Notice what is already available to receive.",
+  },
+  {
+    id: "renew",
+    label: "RENEW",
+    number: "06",
+    prompt: "What has changed, what can be released, and what wants to emerge? Listen to your heart.",
+  },
 ];
 
 // UI placeholder only. Existing 18-pattern structure will replace this in Step 2.
-const MOCK_PATTERNS = [
-  { id: "connection", left: "Connection", right: "Isolation", position: 0.68 },
-  { id: "visibility", left: "Visibility", right: "Invisibility", position: 0.54 },
-  { id: "flow", left: "Flow", right: "Control", position: 0.72 },
-  { id: "reciprocity", left: "Receiving", right: "Giving", position: 0.61 },
-  { id: "trust", left: "Trust", right: "Protection", position: 0.47 },
-];
+type CreationPattern = {
+  id: string;
+  name: string;
+  leftPole: string;
+  rightPole: string;
+  position: number;
+};
 
-const STEP_OPTIONS: StepOption[] = [
-  {
-    id: "conversation",
-    label: "Open one real conversation",
-    description:
-      "Find one person with whom this creation wants to be spoken about.",
-  },
-  {
-    id: "explore",
-    label: "Explore where this belongs",
-    description:
-      "Discover conversations, communities and places where it could naturally meet people.",
-  },
-  {
-    id: "make",
-    label: "Make one small piece real",
-    description:
-      "Create one tangible piece now — a page, post, chapter, invitation or prototype.",
-  },
-  {
-    id: "connect",
-    label: "Make one connection",
-    description:
-      "Reach toward one person, community or possibility already in the field.",
-  },
-  {
-    id: "nothing",
-    label: "Do nothing for now",
-    description:
-      "Pause. Receive. Notice what comes back before choosing another step.",
-  },
-];
+type Artifact = {
+  id: string;
+  intention_id: string;
+  area: "I" | "People" | "Planet";
+  artifact_type: string;
+  title: string;
+  content: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+};
 
 export default function SovereignIConsole() {
   const { width } = useWindowDimensions();
@@ -187,12 +210,17 @@ useEffect(() => {
 
 useEffect(() => {
   const loadJourneySteps = async () => {
-    if (!selectedIntentionId) {
-      setThinking("");
-      setFeeling(0.72);
-      setSaying("");
-      return;
-    }
+if (!selectedIntentionId) {
+  setJourneyData({
+    dream: {},
+    discover: {},
+    build: {},
+    grow: {},
+    scale: {},
+    renew: {},
+  });
+  return;
+}
 
     const { data, error } = await supabase
       .from("sovereign_intention_steps")
@@ -209,34 +237,75 @@ useEffect(() => {
 
     const rows = data || [];
 
-    const thinkRow = rows.find((row) => row.step === "think");
-    const feelRow = rows.find((row) => row.step === "feel");
-    const sayRow = rows.find((row) => row.step === "say");
+const dreamRow = rows.find((row) => row.step === "dream");
+const discoverRow = rows.find((row) => row.step === "discover");
+const buildRow = rows.find((row) => row.step === "build");
+const growRow = rows.find((row) => row.step === "grow");
+const scaleRow = rows.find((row) => row.step === "scale");
+const renewRow = rows.find((row) => row.step === "renew");
 
-    setThinking(
-      typeof thinkRow?.response === "string"
-        ? thinkRow.response
-        : ""
-    );
+setJourneyData({
+  dream:
+    dreamRow?.response &&
+    typeof dreamRow.response === "object" &&
+    !Array.isArray(dreamRow.response)
+      ? (dreamRow.response as Record<string, unknown>)
+      : dreamRow?.response
+        ? { value: dreamRow.response }
+        : {},
 
-    setFeeling(
-      feelRow?.response
-        ? Number(feelRow.response)
-        : 0.72
-    );
+  discover:
+    discoverRow?.response &&
+    typeof discoverRow.response === "object" &&
+    !Array.isArray(discoverRow.response)
+      ? (discoverRow.response as Record<string, unknown>)
+      : discoverRow?.response
+        ? { value: discoverRow.response }
+        : {},
 
-    setSaying(
-      typeof sayRow?.response === "string"
-        ? sayRow.response
-        : ""
-    );
+  build:
+    buildRow?.response &&
+    typeof buildRow.response === "object" &&
+    !Array.isArray(buildRow.response)
+      ? (buildRow.response as Record<string, unknown>)
+      : buildRow?.response
+        ? { value: buildRow.response }
+        : {},
+
+  grow:
+    growRow?.response &&
+    typeof growRow.response === "object" &&
+    !Array.isArray(growRow.response)
+      ? (growRow.response as Record<string, unknown>)
+      : growRow?.response
+        ? { value: growRow.response }
+        : {},
+
+  scale:
+    scaleRow?.response &&
+    typeof scaleRow.response === "object" &&
+    !Array.isArray(scaleRow.response)
+      ? (scaleRow.response as Record<string, unknown>)
+      : scaleRow?.response
+        ? { value: scaleRow.response }
+        : {},
+
+  renew:
+    renewRow?.response &&
+    typeof renewRow.response === "object" &&
+    !Array.isArray(renewRow.response)
+      ? (renewRow.response as Record<string, unknown>)
+      : renewRow?.response
+        ? { value: renewRow.response }
+        : {},
+});
   };
 
   loadJourneySteps();
 }, [selectedIntentionId]);
 
   const [activeStage, setActiveStage] =
-    useState<JourneyStage>("think");
+    useState<JourneyStage>("dream");
 
   const [lifeEntries, setLifeEntries] = useState<LifeEntry[]>([
     {
@@ -251,11 +320,66 @@ useEffect(() => {
 const [lifePictureLoaded, setLifePictureLoaded] =
   useState(false);
 
-const [thinking, setThinking] = useState("");
+type CreationStageData = {
+  dream: Record<string, unknown>;
+  discover: Record<string, unknown>;
+  build: Record<string, unknown>;
+  grow: Record<string, unknown>;
+  scale: Record<string, unknown>;
+  renew: Record<string, unknown>;
+};
 
-const [feeling, setFeeling] = useState(0.72);
-const [saying, setSaying] = useState("");
-const [selectedStep, setSelectedStep] = useState<string | null>(null);
+const [journeyData, setJourneyData] =
+  useState<CreationStageData>({
+    dream: {},
+    discover: {},
+    build: {},
+    grow: {},
+    scale: {},
+    renew: {},
+  });
+
+  const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [nextStepOptions, setNextStepOptions] =
+  useState<string[]>([]);
+
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+const [artifactsLoaded, setArtifactsLoaded] = useState(false);
+
+useEffect(() => {
+  const loadArtifacts = async () => {
+    if (!selectedIntentionId) {
+      setArtifacts([]);
+      setArtifactsLoaded(true);
+      return;
+    }
+
+    setArtifactsLoaded(false);
+
+    const { data, error } = await supabase
+      .from("sovereign_intention_artifacts")
+      .select(
+        "id, intention_id, area, artifact_type, title, content, created_at, updated_at"
+      )
+      .eq("intention_id", selectedIntentionId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(
+        "❌ SOVEREIGN ARTIFACTS LOAD ERROR:",
+        error
+      );
+      setArtifacts([]);
+      setArtifactsLoaded(true);
+      return;
+    }
+
+    setArtifacts((data || []) as Artifact[]);
+    setArtifactsLoaded(true);
+  };
+
+  void loadArtifacts();
+}, [selectedIntentionId]);
 
 // --------------------------------------------------
 // 💠 LIFE PICTURE — LOAD FROM DB
@@ -391,13 +515,6 @@ await processSovereignLifePicture({
 const selectedIntention =
   intentions.find((item) => item.id === selectedIntentionId) || null;
 
-  const feelingLabel =
-    feeling < 0.34
-      ? "Contracted"
-      : feeling < 0.67
-        ? "Neutral"
-        : "Expanded";
-
 const createIntention = async () => {
   try {
     const userId = await getUserId();
@@ -411,8 +528,8 @@ const createIntention = async () => {
       .insert({
         user_id: userId,
         raw_input: "New creation",
-        status: "intention",
-        spiral_stage: "awareness",
+status: "active",
+        spiral_stage: "dream",
       })
       .select(
         "id, raw_input, outcome, status, spiral_stage, created_at, updated_at"
@@ -575,20 +692,25 @@ const chooseStep = async (id: string) => {
               </Pressable>
             </View>
 
-            <CompactInputIcons />
           </View>
 
           {/* =====================================================
               COLUMN 2 — CREATIONS
           ===================================================== */}
           <View style={[styles.column, styles.middleColumn, mobile && styles.mobileColumn]}>
-            <View style={styles.columnHeader}>
-              <ColumnHeading label="What I'm Creating" />
+<View style={styles.columnHeader}>
+  <ColumnHeading label="What I'm Creating" />
 
-              <Pressable onPress={createIntention} hitSlop={12}>
-                <Text style={styles.plus}>+</Text>
-              </Pressable>
-            </View>
+  <View style={styles.columnHeaderActions}>
+    <Pressable onPress={createIntention} hitSlop={12}>
+      <Text style={styles.plus}>+</Text>
+    </Pressable>
+
+    <Pressable onPress={() => {}} hitSlop={12}>
+      <Text style={styles.headerVoice}>🎤</Text>
+    </Pressable>
+  </View>
+</View>
 
             <View style={styles.creationTiles}>
               <ScrollView
@@ -671,15 +793,6 @@ const chooseStep = async (id: string) => {
             {stage.number}
           </Text>
 
-          <Text
-            style={[
-              styles.journeyPrompt,
-              active && styles.journeyPromptActive,
-            ]}
-          >
-            {stage.prompt}
-          </Text>
-
           {index < JOURNEY.length - 1 && (
             <View style={styles.journeyConnector} />
           )}
@@ -694,113 +807,111 @@ const chooseStep = async (id: string) => {
 >
 
   <View style={styles.stageWorkspace}>
-{activeStage === "think" && (
-  <StageThink
-    value={thinking}
-    onChange={setThinking}
+{activeStage === "dream" && (
+<StageDream
+  intentionId={selectedIntentionId}
+/>
+)}
+
+{activeStage === "discover" && (
+  <StageDiscover intentionId={selectedIntentionId} />
+)}
+
+{activeStage === "build" && (
+  <StageBuild
+    intentionId={selectedIntentionId}
+    onOptionsChange={setNextStepOptions}
+  />
+)}
+
+{activeStage === "grow" && (
+  <StageGrow
     intentionId={selectedIntentionId}
   />
 )}
 
-{activeStage === "feel" && (
-  <StageFeel
-    value={feeling}
-    label={feelingLabel}
-    onChange={setFeeling}
-    intentionId={selectedIntentionId}
-  />
+{activeStage === "scale" && (
+  <StageScale intentionId={selectedIntentionId} />
 )}
 
-{activeStage === "say" && (
-  <StageSay
-    value={saying}
-    onChange={setSaying}
-    intentionId={selectedIntentionId}
-  />
-)}
-
-    {activeStage === "do" && (
-  <StageDo intentionId={selectedIntentionId} />
+{activeStage === "renew" && (
+  <StageRenew intentionId={selectedIntentionId} />
 )}
   </View>
-
-  {activeStage === "feel" && (
-    <View style={styles.patternsSection}>
-      {/* Patterns are part of the experience, not a new taxonomy. */}
-      <View style={styles.patternsHeader}>
-        <Text style={styles.patternsHint}>
-          What is participating in this creation?
-        </Text>
-      </View>
-
-      <View style={styles.patternGrid}>
-        {MOCK_PATTERNS.map((pattern) => (
-          <View key={pattern.id} style={styles.patternCard}>
-            <View style={styles.patternLabels}>
-              <Text style={styles.patternLabel}>{pattern.left}</Text>
-              <Text style={styles.patternLabel}>{pattern.right}</Text>
-            </View>
-
-            <View style={styles.patternTrack}>
-              <View
-                style={[
-                  styles.patternDot,
-                  { left: `${pattern.position * 100}%` },
-                ]}
-              />
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  )}
+  
 </ScrollView>
 </View>
 
-            <RowHeading number="03" title="What We Create Together" />
+<View style={styles.oneStepRail}>
+  {nextStepOptions.map((option, index) => {
+    const selected = selectedStep === option;
 
-            <View style={styles.oneStepRail}>
-              {STEP_OPTIONS.map((option) => {
-                const selected = selectedStep === option.id;
+    return (
+      <Pressable
+        key={`${option}-${index}`}
+        onPress={() => chooseStep(option)}
+        style={[
+          styles.stepTile,
+          selected && styles.stepTileSelected,
+        ]}
+      >
+        <Text style={styles.stepTileTitle}>
+          NEXT
+        </Text>
 
-                return (
-                  <Pressable
-                    key={option.id}
-                    onPress={() => chooseStep(option.id)}
-                    style={[
-                      styles.stepTile,
-                      selected && styles.stepTileSelected,
-                    ]}
-                  >
-                    <Text style={styles.stepTileTitle} numberOfLines={2}>
-                      {option.label}
-                    </Text>
+        <Text style={styles.stepTileDescription}>
+          {option}
+        </Text>
+      </Pressable>
+    );
+  })}
 
-                    <Text
-                      style={styles.stepTileDescription}
-                      numberOfLines={3}
-                    >
-                      {option.description}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+  <Pressable
+    onPress={() => chooseStep("DO NOTHING FOR NOW")}
+    style={[
+      styles.stepTile,
+      selectedStep === "DO NOTHING FOR NOW" &&
+        styles.stepTileSelected,
+    ]}
+  >
+    <Text style={styles.stepTileTitle}>
+      PAUSE
+    </Text>
 
-            <CompactInputIcons />
+    <Text style={styles.stepTileDescription}>
+      Do nothing for now.
+    </Text>
+  </Pressable>
+</View>
+
           </View>
 
           {/* =====================================================
               COLUMN 3 — WHAT THIS CREATION IS CHANGING
           ===================================================== */}
           <View style={[styles.column, styles.rightColumn, mobile && styles.mobileColumn]}>
-            <ColumnHeading label="What This Creation Is Changing" />
+<ColumnHeading label="What This Creation Creates" />
 
-  <OutputArea label="I" title="Embodiment" />
+<ArtifactArea
+  area="I"
+  title="Embodiment"
+  artifacts={artifacts}
+  loaded={artifactsLoaded}
+/>
 
-  <OutputArea label="People" title="Relationships" />
+<ArtifactArea
+  area="People"
+  title="Relationships"
+  artifacts={artifacts}
+  loaded={artifactsLoaded}
+/>
 
-  <OutputArea label="Planet" title="Contribution" />
+<ArtifactArea
+  area="Planet"
+  title="Contribution"
+  artifacts={artifacts}
+  loaded={artifactsLoaded}
+/>
 
           </View>
         </View>
@@ -849,341 +960,105 @@ function CompactInputIcons() {
   );
 }
 
-
-function OutputArea({
-  label,
+function ArtifactArea({
+  area,
   title,
+  artifacts,
+  loaded,
 }: {
-  label: string;
+  area: "I" | "People" | "Planet";
   title: string;
+  artifacts: Artifact[];
+  loaded: boolean;
 }) {
+  const areaArtifacts = artifacts.filter(
+    (artifact) => artifact.area === area
+  );
+
   return (
     <View style={styles.outputArea}>
       <View style={styles.outputAreaHeader}>
-        <Text style={styles.outputAreaLabel}>{label}</Text>
-        <Text style={styles.outputAreaTitle}>{title}</Text>
+        <Text style={styles.outputAreaLabel}>
+          {area}
+        </Text>
+
+        <Text style={styles.outputAreaTitle}>
+          {title}
+        </Text>
       </View>
 
-      <View style={styles.outputAreaWork} />
-    </View>
-  );
-}
+      {!loaded ? (
+        <Text style={styles.outputAreaBody}>
+          Loading...
+        </Text>
+      ) : areaArtifacts.length === 0 ? (
+        <Text style={styles.outputAreaBody}>
+          Artifacts created from this journey will appear here.
+        </Text>
+      ) : (
+        <View style={{ gap: 9 }}>
+          {areaArtifacts.map((artifact) => (
+            <Pressable
+              key={artifact.id}
+              onPress={() => {
+                // Artifact reader will come here.
+              }}
+              style={{
+                padding: 12,
+                borderRadius: 10,
+                backgroundColor:
+                  "rgba(255,255,255,0.045)",
+                borderWidth: 1,
+                borderColor:
+                  "rgba(255,255,255,0.07)",
+              }}
+            >
+              <Text
+                style={{
+                  color: Colors.white,
+                  fontFamily: Fonts.light,
+                  fontSize: 11,
+                  lineHeight: 16,
+                }}
+              >
+                {artifact.title}
+              </Text>
 
-function StageThink({
-  value,
-  onChange,
-  intentionId,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  intentionId: string | null;
-}) {
-  return (
-    <View>
-
-<TextInput
-  value={value}
-  onChangeText={onChange}
-  onBlur={async () => {
-    if (!intentionId || !value.trim()) {
-      return;
-    }
-
-    try {
-      const { data: existing, error: findError } = await supabase
-        .from("sovereign_intention_steps")
-        .select("id")
-        .eq("intention_id", intentionId)
-        .eq("step", "think")
-        .maybeSingle();
-
-      if (findError) {
-        console.error(
-          "❌ SOVEREIGN THINK LOAD ERROR:",
-          findError
-        );
-        return;
-      }
-
-      if (existing) {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .update({
-            response: value.trim(),
-          })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN THINK UPDATE ERROR:",
-            error
-          );
-        }
-      } else {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .insert({
-            intention_id: intentionId,
-            step: "think",
-            response: value.trim(),
-          });
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN THINK SAVE ERROR:",
-            error
-          );
-        }
-      }
-    } catch (error) {
-      console.error(
-        "❌ SOVEREIGN THINK SAVE ERROR:",
-        error
-      );
-    }
-  }}
-  multiline
-  placeholder="Let the picture emerge before interpreting it."
-  placeholderTextColor={Colors.subtleText}
-  style={styles.largeInput}
-/>
-    </View>
-  );
-}
-
-function StageFeel({
-  value,
-  label,
-  onChange,
-  intentionId,
-}: {
-  value: number;
-  label: string;
-  onChange: (value: number) => void;
-  intentionId: string | null;
-}) {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const latestValue = useRef(value);
-
-  const updateFeelingFromX = (x: number) => {
-    if (!trackWidth) {
-      return;
-    }
-
-    const nextValue = Math.max(
-      0,
-      Math.min(1, x / trackWidth)
-    );
-
-    latestValue.current = nextValue;
-    onChange(nextValue);
-  };
-
-  const saveFeeling = async (nextValue: number) => {
-    if (!intentionId) {
-      return;
-    }
-
-    try {
-      const { data: existing, error: findError } = await supabase
-        .from("sovereign_intention_steps")
-        .select("id")
-        .eq("intention_id", intentionId)
-        .eq("step", "feel")
-        .maybeSingle();
-
-      if (findError) {
-        console.error(
-          "❌ SOVEREIGN FEEL LOAD ERROR:",
-          findError
-        );
-        return;
-      }
-
-      if (existing) {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .update({
-            response: String(nextValue),
-          })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN FEEL UPDATE ERROR:",
-            error
-          );
-        }
-      } else {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .insert({
-            intention_id: intentionId,
-            step: "feel",
-            response: String(nextValue),
-          });
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN FEEL SAVE ERROR:",
-            error
-          );
-        }
-      }
-    } catch (error) {
-      console.error(
-        "❌ SOVEREIGN FEEL SAVE ERROR:",
-        error
-      );
-    }
-  };
-
-  return (
-    <View>
-      <View style={styles.feelingCard}>
-        <View style={styles.feelingLabels}>
-          <Text style={styles.smallLabel}>CONTRACTED</Text>
-          <Text style={styles.smallLabel}>EXPANDED</Text>
+              <Text
+                style={{
+                  color: Colors.subtleText,
+                  fontFamily: Fonts.light,
+                  fontSize: 8,
+                  lineHeight: 13,
+                  marginTop: 5,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                }}
+              >
+                {artifact.artifact_type.replace(
+                  /_/g,
+                  " "
+                )}
+              </Text>
+            </Pressable>
+          ))}
         </View>
-
-        <View
-          style={styles.sliderTrack}
-          onLayout={(event) => {
-            setTrackWidth(event.nativeEvent.layout.width);
-          }}
-          onStartShouldSetResponder={() => true}
-          onMoveShouldSetResponder={() => true}
-          onResponderGrant={(event) => {
-            updateFeelingFromX(
-              event.nativeEvent.locationX
-            );
-          }}
-          onResponderMove={(event) => {
-            updateFeelingFromX(
-              event.nativeEvent.locationX
-            );
-          }}
-          onResponderRelease={() => {
-            void saveFeeling(latestValue.current);
-          }}
-        >
-          <View
-            style={[
-              styles.sliderFill,
-              { width: `${value * 100}%` },
-            ]}
-          />
-
-          <View
-            style={[
-              styles.sliderThumb,
-              { left: `${value * 100}%` },
-            ]}
-          />
-        </View>
-      </View>
+      )}
     </View>
   );
 }
 
-function StageSay({
-  value,
-  onChange,
-  intentionId,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  intentionId: string | null;
-}) {
-  return (
-    <View>
-
-<TextInput
-  value={value}
-  onChangeText={onChange}
-  onBlur={async () => {
-    if (!intentionId || !value.trim()) {
-      return;
-    }
-
-    try {
-      const { data: existing, error: findError } = await supabase
-        .from("sovereign_intention_steps")
-        .select("id")
-        .eq("intention_id", intentionId)
-        .eq("step", "say")
-        .maybeSingle();
-
-      if (findError) {
-        console.error(
-          "❌ SOVEREIGN SAY LOAD ERROR:",
-          findError
-        );
-        return;
-      }
-
-      if (existing) {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .update({
-            response: value.trim(),
-          })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN SAY UPDATE ERROR:",
-            error
-          );
-        }
-      } else {
-        const { error } = await supabase
-          .from("sovereign_intention_steps")
-          .insert({
-            intention_id: intentionId,
-            step: "say",
-            response: value.trim(),
-          });
-
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN SAY SAVE ERROR:",
-            error
-          );
-        }
-      }
-    } catch (error) {
-      console.error(
-        "❌ SOVEREIGN SAY SAVE ERROR:",
-        error
-      );
-    }
-  }}
-  multiline
-  placeholder="Let yourself say it as it is."
-  placeholderTextColor={Colors.subtleText}
-  style={styles.conversationInput}
-/>
-
-    </View>
-  );
-}
-
-function StageDo({
+function StageDream({
   intentionId,
 }: {
   intentionId: string | null;
 }) {
-  const [conversation, setConversation] = useState<any[]>([]);
-  const [message, setMessage] = useState("");
+  const [value, setValue] = useState("");
 
   useEffect(() => {
-    const loadDoStep = async () => {
-
-          setMessage("");
-          
+    const loadDream = async () => {
       if (!intentionId) {
-        setConversation([]);
+        setValue("");
         return;
       }
 
@@ -1191,84 +1066,242 @@ function StageDo({
         .from("sovereign_intention_steps")
         .select("response")
         .eq("intention_id", intentionId)
-        .eq("step", "do")
+        .eq("step", "dream")
         .maybeSingle();
 
       if (error) {
-        console.error(
-          "❌ SOVEREIGN DO LOAD ERROR:",
-          error
-        );
+        console.error("❌ SOVEREIGN DREAM LOAD ERROR:", error);
         return;
       }
 
       if (!data?.response) {
-        setConversation([]);
+        setValue("");
+        return;
+      }
+
+      setValue(
+        typeof data.response === "string"
+          ? data.response
+          : ""
+      );
+    };
+
+    void loadDream();
+  }, [intentionId]);
+
+  return (
+    <View>
+      <TextInput
+        value={value}
+        onChangeText={setValue}
+        onBlur={async () => {
+          if (!intentionId || !value.trim()) {
+            return;
+          }
+
+          try {
+            const {
+              data: existing,
+              error: findError,
+            } = await supabase
+              .from("sovereign_intention_steps")
+              .select("id")
+              .eq("intention_id", intentionId)
+              .eq("step", "dream")
+              .maybeSingle();
+
+            if (findError) {
+              console.error(
+                "❌ SOVEREIGN DREAM LOAD ERROR:",
+                findError
+              );
+              return;
+            }
+
+            if (existing) {
+              const { error } = await supabase
+                .from("sovereign_intention_steps")
+                .update({
+                  response: value.trim(),
+                })
+                .eq("id", existing.id);
+
+              if (error) {
+                console.error(
+                  "❌ SOVEREIGN DREAM UPDATE ERROR:",
+                  error
+                );
+              }
+            } else {
+              const { error } = await supabase
+                .from("sovereign_intention_steps")
+                .insert({
+                  intention_id: intentionId,
+                  step: "dream",
+                  response: value.trim(),
+                });
+
+              if (error) {
+                console.error(
+                  "❌ SOVEREIGN DREAM SAVE ERROR:",
+                  error
+                );
+              }
+            }
+          } catch (error) {
+            console.error(
+              "❌ SOVEREIGN DREAM SAVE ERROR:",
+              error
+            );
+          }
+        }}
+        multiline
+placeholder="What do you see, feel or imagine? This is your space. Dream away."
+placeholderTextColor="#77746F"
+        style={styles.largeInput}
+      />
+    </View>
+  );
+}
+
+function StageDiscover({
+  intentionId,
+}: {
+  intentionId: string | null;
+}) {
+const [consciousDesire, setConsciousDesire] = useState("");
+
+const [patternReflection, setPatternReflection] = useState("");
+
+const [isRefreshing, setIsRefreshing] = useState(false);
+
+const [creationPatterns, setCreationPatterns] =
+  useState<CreationPattern[]>([]);
+
+  useEffect(() => {
+    const loadDiscoverStep = async () => {
+      if (!intentionId) {
         return;
       }
 
       try {
-        const parsed =
-          typeof data.response === "string"
-            ? JSON.parse(data.response)
-            : data.response;
+const { data, error } = await supabase
+  .from("sovereign_intention_steps")
+  .select("response, ai_response")
+  .eq("intention_id", intentionId)
+  .eq("step", "discover")
+  .maybeSingle();
 
-        setConversation(
-          Array.isArray(parsed?.conversation)
-            ? parsed.conversation
-            : []
-        );
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN DISCOVER LOAD ERROR:",
+            error
+          );
+          return;
+        }
+
+if (data) {
+  const response =
+    typeof data.response === "object" &&
+    data.response !== null
+      ? data.response as {
+          consciousDesire?: string;
+        }
+      : {};
+
+const aiResponse =
+  typeof data.ai_response === "object" &&
+  data.ai_response !== null
+    ? data.ai_response as {
+        desire?: string;
+        patternReflection?: string;
+      }
+    : {};
+
+setConsciousDesire(
+  response.consciousDesire ||
+  aiResponse.desire ||
+  ""
+);
+
+setPatternReflection(
+  aiResponse.patternReflection ||
+  ""
+);
+}
       } catch (error) {
         console.error(
-          "❌ SOVEREIGN DO RESPONSE PARSE ERROR:",
+          "❌ SOVEREIGN DISCOVER LOAD ERROR:",
           error
         );
-        setConversation([]);
       }
     };
 
-    loadDoStep();
+    void loadDiscoverStep();
   }, [intentionId]);
 
-  const sendMessage = async () => {
-    const trimmed = message.trim();
+  useEffect(() => {
+    const loadCreationPatterns = async () => {
+      if (!intentionId) {
+        setCreationPatterns([]);
+        return;
+      }
 
-    if (!intentionId || !trimmed) {
+      try {
+        const userId = await getUserId();
+
+        if (!userId) {
+          setCreationPatterns([]);
+          return;
+        }
+
+        const context = await getCreationContext({
+          userId,
+          intentionId,
+        });
+
+setCreationPatterns(
+  Array.isArray(context.livingField?.creationPatterns)
+    ? (context.livingField.creationPatterns as CreationPattern[])
+    : []
+);
+      } catch (error) {
+        console.error(
+          "❌ SOVEREIGN DISCOVER PATTERNS LOAD ERROR:",
+          error
+        );
+        setCreationPatterns([]);
+      }
+    };
+
+    void loadCreationPatterns();
+  }, [intentionId]);
+
+  const saveConsciousDesire = async () => {
+    if (!intentionId) {
       return;
     }
 
-    const nextConversation = [
-      ...conversation,
-      {
-        role: "user",
-        content: trimmed,
-      },
-    ];
-
-    setConversation(nextConversation);
-    setMessage("");
-
     try {
-      const { data: existing, error: findError } = await supabase
-        .from("sovereign_intention_steps")
-        .select("id")
-        .eq("intention_id", intentionId)
-        .eq("step", "do")
-        .maybeSingle();
+      const response = {
+        consciousDesire: consciousDesire.trim(),
+      };
+
+      const { data: existing, error: findError } =
+        await supabase
+          .from("sovereign_intention_steps")
+          .select("id")
+          .eq("intention_id", intentionId)
+          .eq("step", "discover")
+          .maybeSingle();
 
       if (findError) {
         console.error(
-          "❌ SOVEREIGN DO LOAD ERROR:",
+          "❌ SOVEREIGN DISCOVER FIND ERROR:",
           findError
         );
         return;
       }
-
-      const response = JSON.stringify({
-        conversation: nextConversation,
-        options: [],
-        selected_next_step: null,
-      });
 
       if (existing) {
         const { error } = await supabase
@@ -1280,7 +1313,7 @@ function StageDo({
 
         if (error) {
           console.error(
-            "❌ SOVEREIGN DO UPDATE ERROR:",
+            "❌ SOVEREIGN DISCOVER UPDATE ERROR:",
             error
           );
         }
@@ -1289,60 +1322,1772 @@ function StageDo({
           .from("sovereign_intention_steps")
           .insert({
             intention_id: intentionId,
-            step: "do",
+            step: "discover",
             response,
           });
 
         if (error) {
           console.error(
-            "❌ SOVEREIGN DO SAVE ERROR:",
+            "❌ SOVEREIGN DISCOVER SAVE ERROR:",
             error
           );
         }
       }
     } catch (error) {
       console.error(
-        "❌ SOVEREIGN DO SAVE ERROR:",
+        "❌ SOVEREIGN DISCOVER SAVE ERROR:",
         error
       );
     }
   };
 
-  return (
-    <View>
-      <View style={styles.doConversation}>
-        {conversation.map((item, index) => (
-          <View key={`${item.role}-${index}`}>
-            <Text style={styles.doConversationRole}>
-              {item.role === "user" ? "YOU" : "MIRROR"}
-            </Text>
+  const refreshConsciousDesire = async () => {
 
-            <Text style={styles.doConversationText}>
-              {item.content}
-            </Text>
-          </View>
-        ))}
-      </View>
+    console.log(
+  "🔄 SOVEREIGN DISCOVER — REFRESH START",
+  Date.now()
+);
 
-      <TextInput
-        value={message}
-        onChangeText={setMessage}
-        multiline
-        placeholder="Talk to me about this creation."
-        placeholderTextColor={Colors.subtleText}
-        style={styles.doInput}
-      />
+  if (!intentionId || isRefreshing) {
+    return;
+  }
+
+  try {
+    setIsRefreshing(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error(
+        "❌ SOVEREIGN DISCOVER REFRESH USER ERROR:",
+        userError
+      );
+      return;
+    }
+
+    const context = await getCreationContext({
+      userId: user.id,
+      intentionId,
+    });
+
+    const proposal = await discoverConsciousDesire({
+      context,
+    });
+
+    if (!proposal) {
+      console.error(
+        "❌ SOVEREIGN DISCOVER REFRESH — NO PROPOSAL"
+      );
+      return;
+    }
+
+setConsciousDesire(proposal.desire || "");
+
+setPatternReflection(
+  proposal.patternReflection || ""
+);
+
+console.log(
+  "🔄 SOVEREIGN DISCOVER — REFRESHED:",
+  proposal
+);
+  } catch (error) {
+    console.error(
+      "❌ SOVEREIGN DISCOVER REFRESH ERROR:",
+      error
+    );
+  } finally {
+    setIsRefreshing(false);
+  }
+};
+
+return (
+  <View>
+
+<View style={styles.feelingCard}>
+
+  <TextInput
+    value={consciousDesire}
+    onChangeText={setConsciousDesire}
+    onBlur={() => {
+      void saveConsciousDesire();
+    }}
+    multiline
+    placeholder="Conscious desire"
+    placeholderTextColor="#77746F"
+    style={styles.conversationInput}
+  />
+
+</View>
+
+          <View style={styles.discoverHeader}>
 
       <Pressable
-        onPress={sendMessage}
-        style={styles.doSend}
+        onPress={() => {
+          void refreshConsciousDesire();
+        }}
+        disabled={isRefreshing}
+        style={styles.refreshButton}
       >
-        <Text style={styles.doSendText}>
-          SEND
+        <Text style={styles.refreshButtonText}>
+          {isRefreshing ? "Refreshing…" : "↻ Refresh"}
         </Text>
       </Pressable>
     </View>
+
+      {/* -------------------------------------------- */}
+      {/* PATTERNS                                    */}
+      {/* -------------------------------------------- */}
+
+      <View style={styles.patternsSection}>
+        <View style={styles.patternsHeader}>
+          <Text style={styles.patternsHint}>
+            What is participating in this creation?
+          </Text>
+        </View>
+
+        <View style={styles.patternGrid}>
+{creationPatterns.map((pattern) => (
+              <View
+              key={pattern.id}
+              style={styles.patternCard}
+            >
+<View style={styles.patternAxis}>
+  <Text style={styles.patternLabel}>
+    {pattern.leftPole}
+  </Text>
+
+  <View style={styles.patternTrack}>
+    <View
+      style={[
+        styles.patternDot,
+        {
+          left: `${pattern.position * 100}%`,
+        },
+      ]}
+    />
+  </View>
+
+  <Text style={styles.patternLabel}>
+    {pattern.rightPole}
+  </Text>
+</View>
+
+
+            </View>
+          ))}
+
+            {patternReflection ? (
+    <Text
+      style={{
+        marginTop: 14,
+        color: "#77746F",
+        fontFamily: Fonts.light,
+        fontSize: 10,
+        lineHeight: 16,
+      }}
+    >
+      {patternReflection}
+    </Text>
+  ) : null}
+        </View>
+      </View>
+    </View>
   );
+}
+
+function StageBuild({
+  intentionId,
+  onOptionsChange,
+}: {
+  intentionId: string | null;
+  onOptionsChange: (options: NextMove[]) => void;
+}) {
+  type ConversationMessage = {
+    role: "user" | "mirror";
+    content: string;
+  };
+
+  const [conversation, setConversation] =
+    useState<ConversationMessage[]>([]);
+
+  const [message, setMessage] = useState("");
+
+  const [nextMoves, setNextMoves] =
+    useState<NextMove[]>([]);
+
+  const [selectedNextMove, setSelectedNextMove] =
+    useState<string | null>(null);
+
+  const [isSending, setIsSending] =
+    useState(false);
+
+  const [isChoosing, setIsChoosing] =
+    useState(false);
+
+  // --------------------------------------------------
+  // LOAD EXISTING BUILD CONVERSATION
+  // --------------------------------------------------
+
+  useEffect(() => {
+    const loadBuildStep = async () => {
+      if (!intentionId) {
+        setConversation([]);
+        setNextMoves([]);
+        onOptionsChange([]);
+        setSelectedNextMove(null);
+        setMessage("");
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("sovereign_intention_steps")
+          .select("response, ai_response")
+          .eq("intention_id", intentionId)
+          .eq("step", "build")
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN BUILD LOAD ERROR:",
+            error
+          );
+          return;
+        }
+
+        if (!data) {
+          setConversation([]);
+          setNextMoves([]);
+          onOptionsChange([]);
+          setSelectedNextMove(null);
+          return;
+        }
+
+        const response =
+          typeof data.response === "object" &&
+          data.response !== null
+            ? data.response as Record<string, unknown>
+            : {};
+
+        const aiResponse =
+          typeof data.ai_response === "object" &&
+          data.ai_response !== null
+            ? data.ai_response as Record<string, unknown>
+            : {};
+
+const loadedConversation =
+  Array.isArray(response.conversation)
+    ? response.conversation.filter(
+        (item): item is ConversationMessage =>
+          typeof item === "object" &&
+          item !== null &&
+          ((item as any).role === "user" ||
+            (item as any).role === "mirror") &&
+          typeof (item as any).content === "string"
+      )
+    : [];
+
+        const loadedNextMoves =
+          Array.isArray(aiResponse.nextMoves)
+            ? aiResponse.nextMoves as NextMove[]
+            : [];
+
+        setConversation(loadedConversation);
+        setNextMoves(loadedNextMoves);
+        onOptionsChange(loadedNextMoves);
+
+        setSelectedNextMove(null);
+      } catch (error) {
+        console.error(
+          "❌ SOVEREIGN BUILD LOAD ERROR:",
+          error
+        );
+
+        setConversation([]);
+        setNextMoves([]);
+        onOptionsChange([]);
+        setSelectedNextMove(null);
+      }
+    };
+
+    void loadBuildStep();
+  }, [intentionId]);
+
+  // --------------------------------------------------
+  // SEND MESSAGE TO MIRROR
+  // --------------------------------------------------
+
+  const sendMessage = async () => {
+    const trimmed = message.trim();
+
+    if (
+      !intentionId ||
+      !trimmed ||
+      isSending
+    ) {
+      return;
+    }
+
+    try {
+      setIsSending(true);
+
+      const userId = await getUserId();
+
+      if (!userId) {
+        return;
+      }
+
+      const nextConversation = [
+        ...conversation,
+        {
+          role: "user" as const,
+          content: trimmed,
+        },
+      ];
+
+      setConversation(nextConversation);
+      setMessage("");
+
+      const result = await mirrorBuild({
+        userId,
+        intentionId,
+        message: trimmed,
+      });
+
+      const mirrorConversation = [
+        ...nextConversation,
+        {
+          role: "mirror" as const,
+          content: result.message,
+        },
+      ];
+
+      setConversation(mirrorConversation);
+
+      const generatedMoves = result.nextMoves || [];
+
+      setNextMoves(generatedMoves);
+      onOptionsChange(generatedMoves);
+
+      setSelectedNextMove(null);
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN MIRROR BUILD ERROR:",
+        error
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // CHOOSE ONE NEXT MOVE
+  // --------------------------------------------------
+
+  const handleNextMove = async (
+    move: NextMove
+  ) => {
+    if (
+      !intentionId ||
+      isChoosing
+    ) {
+      return;
+    }
+
+    try {
+      setIsChoosing(true);
+
+      setSelectedNextMove(move.title);
+
+      const result = await chooseNextMove({
+        intentionId,
+        move,
+      });
+
+      console.log(
+        "✨ CREATION CREATED:",
+        result
+      );
+
+      // The chosen move has now become real.
+      // Keep the available next moves visible;
+      // the parent Column 3 will refresh separately.
+    } catch (error) {
+      console.error(
+        "❌ CHOOSE NEXT MOVE ERROR:",
+        error
+      );
+
+      setSelectedNextMove(null);
+    } finally {
+      setIsChoosing(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // PAUSE
+  // --------------------------------------------------
+
+  const handlePause = () => {
+    setSelectedNextMove("DO NOTHING FOR NOW");
+  };
+
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
+  return (
+    <View style={styles.buildWorkspace}>
+
+      {/* -------------------------------------------- */}
+      {/* MIRROR CONVERSATION                         */}
+      {/* -------------------------------------------- */}
+
+      <ScrollView style={styles.buildConversation}>
+
+        {conversation.length === 0 ? (
+          <View style={styles.mirrorWelcome}>
+
+            <Text style={styles.mirrorWelcomeText}>
+              I'm here with you in this creation.
+              Tell me what's alive.
+            </Text>
+          </View>
+        ) : (
+          conversation.map((item, index) => {
+            const isUser =
+              item.role === "user";
+
+            return (
+              <View
+                key={`${item.role}-${index}`}
+                style={[
+                  styles.chatRow,
+                  isUser
+                    ? styles.chatRowUser
+                    : styles.chatRowMirror,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.chatBubble,
+                    isUser
+                      ? styles.chatBubbleUser
+                      : styles.chatBubbleMirror,
+                  ]}
+                >
+                  {!isUser && (
+                    <Text style={styles.chatSender}>
+                      MIRROR
+                    </Text>
+                  )}
+
+                  <Text
+                    style={
+                      isUser
+                        ? styles.chatTextUser
+                        : styles.chatTextMirror
+                    }
+                  >
+                    {item.content}
+                  </Text>
+                </View>
+              </View>
+            );
+          })
+        )}
+
+        {isSending && (
+          <View
+            style={[
+              styles.chatRow,
+              styles.chatRowMirror,
+            ]}
+          >
+            <View
+              style={[
+                styles.chatBubble,
+                styles.chatBubbleMirror,
+              ]}
+            >
+              <Text style={styles.chatSender}>
+                MIRROR
+              </Text>
+
+              <Text style={styles.chatTextMirror}>
+                ...
+              </Text>
+            </View>
+          </View>
+        )}
+
+      </ScrollView>
+
+      {/* -------------------------------------------- */}
+      {/* MESSAGE INPUT                               */}
+      {/* -------------------------------------------- */}
+
+      <View style={styles.buildInputRow}>
+
+        <TextInput
+          value={message}
+          onChangeText={setMessage}
+          multiline
+          placeholder="Talk to me about this creation..."
+          placeholderTextColor="#77746F"
+          style={styles.buildMessageInput}
+          editable={!isSending}
+          onSubmitEditing={() => {
+            void sendMessage();
+          }}
+        />
+
+        <Pressable
+          onPress={() => {
+            void sendMessage();
+          }}
+          disabled={
+            !message.trim() ||
+            isSending
+          }
+          style={[
+            styles.buildSendButton,
+            (!message.trim() || isSending) &&
+              styles.buildSendButtonDisabled,
+          ]}
+        >
+          <Text style={styles.buildSendButtonText}>
+            {isSending ? "…" : "↑"}
+          </Text>
+        </Pressable>
+
+      </View>
+
+      {/* -------------------------------------------- */}
+      {/* DYNAMIC NEXT MOVES                          */}
+      {/* -------------------------------------------- */}
+
+      {nextMoves.length > 0 && (
+        <View style={styles.nextMovesSection}>
+
+          <Text style={styles.nextMovesLabel}>
+            WHAT COULD HAPPEN NEXT
+          </Text>
+
+          <View style={styles.nextMovesList}>
+
+            {nextMoves.map((move, index) => {
+              const selected =
+                selectedNextMove === move.title;
+
+              return (
+                <Pressable
+                  key={`${move.title}-${index}`}
+                  onPress={() => {
+                    void handleNextMove(move);
+                  }}
+                  disabled={isChoosing}
+                  style={[
+                    styles.nextMoveButton,
+                    selected &&
+                      styles.nextMoveButtonSelected,
+                  ]}
+                >
+                  <Text style={styles.nextMoveTitle}>
+                    {move.title}
+                  </Text>
+
+                  <Text style={styles.nextMoveDescription}>
+                    {move.description}
+                  </Text>
+                </Pressable>
+              );
+            })}
+
+          </View>
+
+          {/* DO NOTHING IS ALWAYS A HUMAN CHOICE */}
+
+          <Pressable
+            onPress={handlePause}
+            style={[
+              styles.pauseMoveButton,
+              selectedNextMove ===
+                "DO NOTHING FOR NOW" &&
+                styles.nextMoveButtonSelected,
+            ]}
+          >
+            <Text style={styles.pauseMoveTitle}>
+              DO NOTHING FOR NOW
+            </Text>
+          </Pressable>
+
+        </View>
+      )}
+
+    </View>
+  );
+}
+
+function StageGrow({
+  intentionId,
+}: {
+  intentionId: string | null;
+  creationText: string;
+}) {
+  const GROW_OPTIONS = [
+    "Space",
+    "Time",
+    "Attention",
+    "Support",
+    "Energy",
+    "Resources",
+    "Something else",
+  ];
+
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [text, setText] = useState("");
+  const [additionalText, setAdditionalText] = useState("");
+
+  useEffect(() => {
+    const loadGrowStep = async () => {
+      if (!intentionId) {
+        setSelectedOptions([]);
+        setText("");
+        setAdditionalText("");
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("sovereign_intention_steps")
+          .select("response")
+          .eq("intention_id", intentionId)
+          .eq("step", "grow")
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN GROW LOAD ERROR:",
+            error
+          );
+          return;
+        }
+
+        if (!data?.response) {
+          setSelectedOptions([]);
+          setText("");
+          setAdditionalText("");
+          return;
+        }
+
+        const parsed =
+          typeof data.response === "string"
+            ? JSON.parse(data.response)
+            : data.response;
+
+        setSelectedOptions(
+          Array.isArray(parsed?.selectedOptions)
+            ? parsed.selectedOptions
+            : []
+        );
+
+        setText(
+          typeof parsed?.text === "string"
+            ? parsed.text
+            : ""
+        );
+
+        setAdditionalText(
+          typeof parsed?.additionalText === "string"
+            ? parsed.additionalText
+            : ""
+        );
+      } catch (error) {
+        console.error(
+          "❌ SOVEREIGN GROW RESPONSE PARSE ERROR:",
+          error
+        );
+
+        setSelectedOptions([]);
+        setText("");
+        setAdditionalText("");
+      }
+    };
+
+    void loadGrowStep();
+  }, [intentionId]);
+
+  const saveGrow = async (
+    nextOptions: string[],
+    nextText: string,
+    nextAdditionalText: string
+  ) => {
+    if (!intentionId) {
+      return;
+    }
+
+    try {
+      const response = {
+        selectedOptions: nextOptions,
+        text: nextText,
+        additionalText: nextAdditionalText,
+      };
+
+      const { data: existing, error: findError } =
+        await supabase
+          .from("sovereign_intention_steps")
+          .select("id")
+          .eq("intention_id", intentionId)
+          .eq("step", "grow")
+          .maybeSingle();
+
+      if (findError) {
+        console.error(
+          "❌ SOVEREIGN GROW FIND ERROR:",
+          findError
+        );
+        return;
+      }
+
+      if (existing) {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .update({
+            response,
+          })
+          .eq("id", existing.id);
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN GROW UPDATE ERROR:",
+            error
+          );
+        }
+      } else {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .insert({
+            intention_id: intentionId,
+            step: "grow",
+            response,
+          });
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN GROW SAVE ERROR:",
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN GROW SAVE ERROR:",
+        error
+      );
+    }
+  };
+
+  const toggleOption = async (option: string) => {
+    const nextOptions = selectedOptions.includes(option)
+      ? selectedOptions.filter((item) => item !== option)
+      : [...selectedOptions, option];
+
+    setSelectedOptions(nextOptions);
+
+    await saveGrow(
+      nextOptions,
+      text,
+      additionalText
+    );
+  };
+
+  const updateText = (value: string) => {
+    setText(value);
+  };
+
+  const updateAdditionalText = (value: string) => {
+    setAdditionalText(value);
+  };
+
+  const saveText = async () => {
+    await saveGrow(
+      selectedOptions,
+      text,
+      additionalText
+    );
+  };
+
+  const saveAdditionalText = async () => {
+    await saveGrow(
+      selectedOptions,
+      text,
+      additionalText
+    );
+  };
+
+  return (
+    <View>
+
+      {/* MAIN REFLECTION */}
+
+      {/* OPTIONS */}
+      <View style={{ marginTop: 20 }}>
+        <Text style={styles.smallLabel}>
+          What does it need now?
+        </Text>
+
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 8,
+            marginTop: 12,
+          }}
+        >
+          {GROW_OPTIONS.map((option) => {
+            const selected =
+              selectedOptions.includes(option);
+
+            return (
+              <Pressable
+                key={option}
+                onPress={() =>
+                  void toggleOption(option)
+                }
+                style={{
+                  paddingVertical: 9,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: selected
+                    ? "#EEECE6"
+                    : "rgba(255,255,255,0.045)",
+                  borderWidth: 1,
+                  borderColor: selected
+                    ? "#EEECE6"
+                    : "rgba(255,255,255,0.10)",
+                }}
+              >
+                <Text
+                  style={{
+                    color: selected
+                      ? "#2A2927"
+                      : Colors.mutedText,
+                    fontFamily: Fonts.light,
+                    fontSize: 10,
+                    lineHeight: 14,
+                  }}
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* OPTIONAL ADDITION */}
+      <View style={{ marginTop: 20 }}>
+        <View
+style={{
+  width: "100%",
+  minHeight: 90,
+  padding: 14,
+  borderRadius: 11,
+  backgroundColor: "#EEECE6",
+}}
+        >
+          <TextInput
+            value={additionalText}
+            onChangeText={updateAdditionalText}
+            onBlur={() =>
+              void saveAdditionalText()
+            }
+            multiline
+            placeholder="Anything else you want to notice..."
+            placeholderTextColor="#77746F"
+            style={{
+              minHeight: 60,
+              color: "#2A2927",
+              fontFamily: Fonts.light,
+              fontSize: 12,
+              lineHeight: 18,
+              padding: 0,
+              outlineStyle: "none" as const,
+              textAlignVertical: "top" as const,
+            }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function StageScale({
+  intentionId,
+}: {
+  intentionId: string | null;
+}) {
+const SCALE_QUESTIONS = [
+  {
+    id: "desire",
+    question: "Does this creation want to expand?",
+    options: [
+      "Yes",
+      "Not yet",
+      "Unsure",
+    ],
+    multiple: false,
+  },
+  {
+    id: "where",
+    question: "Where or what could expand?",
+    options: [
+      "Reach",
+      "Impact",
+      "Expression",
+      "Community",
+      "Geography",
+      "Something else",
+    ],
+    multiple: true,
+  },
+  {
+    id: "support",
+    question:
+      "What support is available — or could be received — for this expansion?",
+    options: [
+      "People",
+      "Partnership",
+      "Resources",
+      "Money",
+      "Technology",
+      "Visibility",
+      "Community",
+      "An invitation",
+      "Something unexpected",
+    ],
+    multiple: true,
+  },
+  {
+    id: "pace",
+    question: "What pace feels right?",
+    options: [
+      "Gentle",
+      "Steady",
+      "Focused",
+      "Bold",
+      "Not sure",
+    ],
+    multiple: false,
+  },
+  {
+    id: "notRequired",
+    question:
+      "What does this expansion NOT require from you?",
+    options: [
+      "Hustling",
+      "Proving",
+      "Doing everything myself",
+      "Moving faster",
+      "Saying yes to everything",
+      "Controlling the outcome",
+      "Nothing — it feels aligned",
+    ],
+    multiple: true,
+  },
+];
+
+  const [responses, setResponses] = useState<
+    Record<
+      string,
+      {
+        selectedOptions: string[];
+        text: string;
+      }
+    >
+  >({});
+
+  useEffect(() => {
+    const loadScaleStep = async () => {
+      if (!intentionId) {
+        setResponses({});
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("sovereign_intention_steps")
+          .select("response")
+          .eq("intention_id", intentionId)
+          .eq("step", "scale")
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN SCALE LOAD ERROR:",
+            error
+          );
+          return;
+        }
+
+        if (!data?.response) {
+          setResponses({});
+          return;
+        }
+
+        const parsed =
+          typeof data.response === "string"
+            ? JSON.parse(data.response)
+            : data.response;
+
+        setResponses(
+          parsed?.responses &&
+            typeof parsed.responses === "object"
+            ? parsed.responses
+            : {}
+        );
+      } catch (error) {
+        console.error(
+          "❌ SOVEREIGN SCALE RESPONSE PARSE ERROR:",
+          error
+        );
+
+        setResponses({});
+      }
+    };
+
+    void loadScaleStep();
+  }, [intentionId]);
+
+  const saveScale = async (
+    nextResponses: Record<
+      string,
+      {
+        selectedOptions: string[];
+        text: string;
+      }
+    >
+  ) => {
+    if (!intentionId) {
+      return;
+    }
+
+    try {
+      const response = {
+        responses: nextResponses,
+      };
+
+      const { data: existing, error: findError } =
+        await supabase
+          .from("sovereign_intention_steps")
+          .select("id")
+          .eq("intention_id", intentionId)
+          .eq("step", "scale")
+          .maybeSingle();
+
+      if (findError) {
+        console.error(
+          "❌ SOVEREIGN SCALE FIND ERROR:",
+          findError
+        );
+        return;
+      }
+
+      if (existing) {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .update({
+            response,
+          })
+          .eq("id", existing.id);
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN SCALE UPDATE ERROR:",
+            error
+          );
+        }
+      } else {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .insert({
+            intention_id: intentionId,
+            step: "scale",
+            response,
+          });
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN SCALE SAVE ERROR:",
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN SCALE SAVE ERROR:",
+        error
+      );
+    }
+  };
+
+  const selectOption = async (
+    questionId: string,
+    option: string,
+    multiple: boolean
+  ) => {
+    const current = responses[questionId] || {
+      selectedOptions: [],
+      text: "",
+    };
+
+    let selectedOptions: string[];
+
+    if (multiple) {
+      selectedOptions = current.selectedOptions.includes(
+        option
+      )
+        ? current.selectedOptions.filter(
+            (item) => item !== option
+          )
+        : [
+            ...current.selectedOptions,
+            option,
+          ];
+    } else {
+      selectedOptions =
+        current.selectedOptions[0] === option
+          ? []
+          : [option];
+    }
+
+    const nextResponses = {
+      ...responses,
+      [questionId]: {
+        ...current,
+        selectedOptions,
+      },
+    };
+
+    setResponses(nextResponses);
+
+    await saveScale(nextResponses);
+  };
+
+  const updateText = (
+    questionId: string,
+    text: string
+  ) => {
+    const current = responses[questionId] || {
+      selectedOptions: [],
+      text: "",
+    };
+
+    setResponses({
+      ...responses,
+      [questionId]: {
+        ...current,
+        text,
+      },
+    });
+  };
+
+  const saveText = async () => {
+    await saveScale(responses);
+  };
+
+  return (
+    <View>
+
+      {/* MAIN REFLECTION */}
+<View
+  style={{
+    width: "100%",
+    flexDirection: "row",
+    gap: 18,
+    marginTop: 28,
+    marginBottom: 30,
+  }}
+>
+  {SCALE_QUESTIONS.map((item) => {
+    const response = responses[item.id] || {
+      selectedOptions: [],
+      text: "",
+    };
+
+    return (
+      <View
+        key={item.id}
+        style={{
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+<Text
+  style={{
+    minHeight: 42,
+    marginBottom: 14,
+    color: "rgba(255,255,255,0.72)",
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.2,
+  }}
+>
+  {item.question}
+</Text>
+
+        <View
+          style={{
+            width: "100%",
+            gap: 8,
+          }}
+        >
+          {item.options.map((option) => {
+            const selected =
+              response.selectedOptions.includes(option);
+
+            return (
+              <Pressable
+                key={option}
+                onPress={() =>
+                  void selectOption(
+                    item.id,
+                    option,
+                    item.multiple
+                  )
+                }
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 5,
+                }}
+              >
+                {/* TOGGLE */}
+                <View
+                  style={{
+                    width: 28,
+                    height: 16,
+                    borderRadius: 8,
+                    backgroundColor: selected
+                      ? "#EEECE6"
+                      : "rgba(255,255,255,0.10)",
+                    borderWidth: 1,
+                    borderColor: selected
+                      ? "#EEECE6"
+                      : "rgba(255,255,255,0.16)",
+                    justifyContent: "center",
+                    paddingHorizontal: 2,
+                    marginRight: 8,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: selected
+                        ? "#2A2927"
+                        : "rgba(255,255,255,0.45)",
+                      alignSelf: selected
+                        ? "flex-end"
+                        : "flex-start",
+                    }}
+                  />
+                </View>
+
+                <Text
+                  style={{
+                    flex: 1,
+                    color: selected
+                      ? "#EEECE6"
+                      : "rgba(255,255,255,0.55)",
+                    fontFamily: Fonts.light,
+                    fontSize: 10,
+                    lineHeight: 14,
+                  }}
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    );
+  })}
+</View>
+
+        <View style={{ marginTop: 20 }}>
+        <View
+          style={{
+            minHeight: 90,
+            padding: 14,
+            borderRadius: 11,
+            backgroundColor: "#EEECE6",
+          }}
+        >
+          <TextInput
+            value={responses.alignment?.text || ""}
+            onChangeText={(text) =>
+              updateText("alignment", text)
+            }
+            onBlur={() => void saveText()}
+            multiline
+            placeholder="Anything else you want to notice..."
+            placeholderTextColor="#77746F"
+            style={{
+              minHeight: 60,
+              color: "#2A2927",
+              fontFamily: Fonts.light,
+              fontSize: 11,
+              lineHeight: 18,
+              padding: 0,
+              outlineStyle: "none" as const,
+              textAlignVertical: "top" as const,
+            }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function StageRenew({
+  intentionId,
+}: {
+  intentionId: string | null;
+}) {
+  const RENEW_QUESTIONS = [
+    {
+      id: "release",
+      question: "What is ready to be released?",
+      options: [
+        "An old expectation",
+        "A pattern",
+        "A relationship or dynamic",
+        "A way of doing things",
+        "Something I have been holding onto",
+        "Nothing yet",
+        "Something else",
+      ],
+      multiple: true,
+    },
+    {
+      id: "moment",
+      question: "What is this moment asking for?",
+      options: [
+        "Action",
+        "Waiting",
+        "Listening",
+        "Letting go",
+        "Changing direction",
+        "Staying with what is",
+      ],
+      multiple: true,
+    },
+    {
+      id: "repeat",
+      question:
+        "Am I repeating something and expecting a different result?",
+      options: [
+        "Yes",
+        "Maybe",
+        "No",
+        "I'm not sure",
+      ],
+      multiple: false,
+    },
+    {
+      id: "receive",
+      question: "What might be trying to find me?",
+      options: [
+        "A new idea",
+        "An opportunity",
+        "A person",
+        "A possibility",
+        "A new direction",
+        "A different way of doing things",
+        "Nothing yet",
+      ],
+      multiple: true,
+    },
+  ];
+
+  const [responses, setResponses] = useState<
+    Record<
+      string,
+      {
+        selectedOptions: string[];
+        text: string;
+      }
+    >
+  >({});
+
+  useEffect(() => {
+    const loadRenewStep = async () => {
+      if (!intentionId) {
+        setResponses({});
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("sovereign_intention_steps")
+          .select("response")
+          .eq("intention_id", intentionId)
+          .eq("step", "renew")
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN RENEW LOAD ERROR:",
+            error
+          );
+          return;
+        }
+
+        if (!data?.response) {
+          setResponses({});
+          return;
+        }
+
+        const parsed =
+          typeof data.response === "string"
+            ? JSON.parse(data.response)
+            : data.response;
+
+        setResponses(
+          parsed?.responses &&
+            typeof parsed.responses === "object"
+            ? parsed.responses
+            : {}
+        );
+      } catch (error) {
+        console.error(
+          "❌ SOVEREIGN RENEW RESPONSE PARSE ERROR:",
+          error
+        );
+
+        setResponses({});
+      }
+    };
+
+    void loadRenewStep();
+  }, [intentionId]);
+
+  const saveRenew = async (
+    nextResponses: Record<
+      string,
+      {
+        selectedOptions: string[];
+        text: string;
+      }
+    >
+  ) => {
+    if (!intentionId) {
+      return;
+    }
+
+    try {
+      const response = {
+        responses: nextResponses,
+      };
+
+      const { data: existing, error: findError } =
+        await supabase
+          .from("sovereign_intention_steps")
+          .select("id")
+          .eq("intention_id", intentionId)
+          .eq("step", "renew")
+          .maybeSingle();
+
+      if (findError) {
+        console.error(
+          "❌ SOVEREIGN RENEW FIND ERROR:",
+          findError
+        );
+        return;
+      }
+
+      if (existing) {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .update({
+            response,
+          })
+          .eq("id", existing.id);
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN RENEW UPDATE ERROR:",
+            error
+          );
+        }
+      } else {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .insert({
+            intention_id: intentionId,
+            step: "renew",
+            response,
+          });
+
+        if (error) {
+          console.error(
+            "❌ SOVEREIGN RENEW SAVE ERROR:",
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN RENEW SAVE ERROR:",
+        error
+      );
+    }
+  };
+
+  const selectOption = async (
+    questionId: string,
+    option: string,
+    multiple: boolean
+  ) => {
+    const current = responses[questionId] || {
+      selectedOptions: [],
+      text: "",
+    };
+
+    let selectedOptions: string[];
+
+    if (multiple) {
+      selectedOptions =
+        current.selectedOptions.includes(option)
+          ? current.selectedOptions.filter(
+              (item) => item !== option
+            )
+          : [
+              ...current.selectedOptions,
+              option,
+            ];
+    } else {
+      selectedOptions =
+        current.selectedOptions[0] === option
+          ? []
+          : [option];
+    }
+
+    const nextResponses = {
+      ...responses,
+      [questionId]: {
+        ...current,
+        selectedOptions,
+      },
+    };
+
+    setResponses(nextResponses);
+
+    await saveRenew(nextResponses);
+  };
+
+  const updateText = (
+    questionId: string,
+    text: string
+  ) => {
+    const current = responses[questionId] || {
+      selectedOptions: [],
+      text: "",
+    };
+
+    setResponses({
+      ...responses,
+      [questionId]: {
+        ...current,
+        text,
+      },
+    });
+  };
+
+  const saveText = async () => {
+    await saveRenew(responses);
+  };
+
+  return (
+    <View>
+
+      {/* RENEW QUESTIONS */}
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          gap: 18,
+          marginTop: 28,
+          marginBottom: 30,
+        }}
+      >
+        {RENEW_QUESTIONS.map((item) => {
+          const response = responses[item.id] || {
+            selectedOptions: [],
+            text: "",
+          };
+
+          return (
+            <View
+              key={item.id}
+              style={{
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              <Text
+                style={{
+                  minHeight: 42,
+                  marginBottom: 14,
+                  color: "rgba(255,255,255,0.72)",
+                  fontFamily: Fonts.light,
+                  fontSize: 11,
+                  lineHeight: 16,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {item.question}
+              </Text>
+
+              <View
+                style={{
+                  width: "100%",
+                  gap: 8,
+                }}
+              >
+                {item.options.map((option) => {
+                  const selected =
+                    response.selectedOptions.includes(option);
+
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() =>
+                        void selectOption(
+                          item.id,
+                          option,
+                          item.multiple
+                        )
+                      }
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingVertical: 5,
+                      }}
+                    >
+                      {/* TOGGLE */}
+                      <View
+                        style={{
+                          width: 28,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: selected
+                            ? "#EEECE6"
+                            : "rgba(255,255,255,0.10)",
+                          borderWidth: 1,
+                          borderColor: selected
+                            ? "#EEECE6"
+                            : "rgba(255,255,255,0.16)",
+                          justifyContent: "center",
+                          paddingHorizontal: 2,
+                          marginRight: 8,
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: 5,
+                            backgroundColor: selected
+                              ? "#2A2927"
+                              : "rgba(255,255,255,0.45)",
+                            alignSelf: selected
+                              ? "flex-end"
+                              : "flex-start",
+                          }}
+                        />
+                      </View>
+
+                      <Text
+                        style={{
+                          flex: 1,
+                          color: selected
+                            ? "#EEECE6"
+                            : "rgba(255,255,255,0.55)",
+                          fontFamily: Fonts.light,
+                          fontSize: 10,
+                          lineHeight: 14,
+                        }}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* BEGIN AGAIN */}
+      <View style={{ marginBottom: 10 }}>
+        <Text
+          style={{
+            color: "rgba(255,255,255,0.72)",
+            fontFamily: Fonts.light,
+            fontSize: 11,
+            lineHeight: 16,
+            letterSpacing: 0.2,
+            marginBottom: 12,
+          }}
+        >
+          What wants to begin again?
+        </Text>
+
+        <View
+          style={{
+            minHeight: 110,
+            padding: 14,
+            borderRadius: 11,
+            backgroundColor: "#EEECE6",
+          }}
+        >
+          <TextInput
+            value={responses.beginAgain?.text || ""}
+            onChangeText={(text) =>
+              updateText("beginAgain", text)
+            }
+            onBlur={() => void saveText()}
+            multiline
+            placeholder="A creation, a direction, a possibility — or nothing yet."
+            placeholderTextColor="#77746F"
+            style={{
+              minHeight: 75,
+              color: "#2A2927",
+              fontFamily: Fonts.light,
+              fontSize: 12,
+              lineHeight: 18,
+              padding: 0,
+              outlineStyle: "none" as const,
+              textAlignVertical: "top" as const,
+            }}
+          />
+        </View>
+      </View>
+
+    </View>
+  );
+
 }
 
 /* ===============================================================
@@ -1421,11 +3166,13 @@ columns: {
     marginBottom: 0,
   },
 
-  columnHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
+columnHeader: {
+  flexDirection: "row" as const,
+  alignItems: "flex-start" as const,
+  justifyContent: "space-between" as const,
+    paddingRight: 30,
+    paddingLeft: 30,
+},
 
   eyebrow: {
     color: Colors.mutedText,
@@ -1441,6 +3188,18 @@ columns: {
     fontSize: 22,
     lineHeight: 22,
   },
+
+  columnHeaderActions: {
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  gap: 14,
+},
+
+headerVoice: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 15,
+},
 
   lifeEntries: {
     marginTop: 18,
@@ -1459,8 +3218,8 @@ lifeEntryText: {
   minHeight: 90,
   color: "#2A2927",
   fontFamily: Fonts.light,
-  fontSize: 15,
-  lineHeight: 24,
+  fontSize: 12,
+  lineHeight: 22,
   padding: 0,
   outlineStyle: "none" as const,
   textAlignVertical: "top" as const,
@@ -1588,10 +3347,11 @@ journeyArea: {
   height: 0,
   paddingTop: 18,
   paddingBottom: 10,
+  paddingLeft: 10,
 },
 
 journeyContentScroll: {
-  height: 200,
+  height: 280,
 },
 
   journeyRail: {
@@ -1606,21 +3366,21 @@ journeyContentScroll: {
     position: "relative" as const,
   },
 
-  journeyNode: {
-    width: 42,
-    height: 42,
-    borderRadius: 42,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
+journeyNode: {
+  width: 48,
+  height: 48,
+  borderRadius: 48,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.30)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: Colors.background,
   },
 
-  journeyNodeActive: {
-    borderColor: "rgba(255,255,255,0.60)",
-    backgroundColor: "rgba(255,255,255,0.10)",
-  },
+journeyNodeActive: {
+  borderColor: "rgba(255,255,255,0.75)",
+  backgroundColor: "rgba(255,255,255,0.10)",
+},
 
   journeyConcept: {
     color: Colors.subtleText,
@@ -1672,6 +3432,214 @@ journeyContentScroll: {
     borderColor: "rgba(255,255,255,0.06)",
   },
 
+    // --------------------------------------------------
+  // BUILD — MIRROR
+  // --------------------------------------------------
+
+  buildWorkspace: {
+    gap: 16,
+  },
+
+buildConversation: {
+  height: 160,
+},
+
+buildConversationContent: {
+  gap: 12,
+  paddingVertical: 4,
+},
+
+  mirrorWelcome: {
+    paddingVertical: 18,
+    paddingHorizontal: 4,
+  },
+
+  mirrorName: {
+    color: Colors.subtleText,
+    fontFamily: Fonts.light,
+    fontSize: 8,
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+
+  mirrorWelcomeText: {
+    color: Colors.mutedText,
+    fontFamily: Fonts.light,
+    fontSize: 12,
+    lineHeight: 19,
+  },
+
+  chatRow: {
+    width: "100%" as const,
+    flexDirection: "row" as const,
+  },
+
+chatRowUser: {
+  justifyContent: "flex-end" as const,
+  paddingRight: 14,
+},
+
+  chatRowMirror: {
+    justifyContent: "flex-start" as const,
+  },
+
+  chatBubble: {
+    maxWidth: "82%" as const,
+    paddingVertical: 10,
+    paddingHorizontal: 13,
+    borderRadius: 13,
+  },
+
+  chatBubbleMirror: {
+    backgroundColor: "rgba(255,255,255,0.045)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+
+  chatBubbleUser: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+
+  chatSender: {
+    color: Colors.subtleText,
+    fontFamily: Fonts.light,
+    fontSize: 7,
+    letterSpacing: 1.3,
+    marginBottom: 5,
+  },
+
+  chatTextMirror: {
+    color: Colors.mutedText,
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  chatTextUser: {
+    color: Colors.white,
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  buildInputRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-end" as const,
+    gap: 8,
+  },
+
+  buildMessageInput: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 110,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    borderRadius: 13,
+    backgroundColor: "#EEECE6",
+    color: "#2A2927",
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 17,
+    outlineStyle: "none" as const,
+    textAlignVertical: "top" as const,
+  },
+
+  buildSendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+
+  buildSendButtonDisabled: {
+    opacity: 0.35,
+  },
+
+  buildSendButtonText: {
+    color: Colors.white,
+    fontFamily: Fonts.light,
+    fontSize: 16,
+  },
+
+  // --------------------------------------------------
+  // BUILD — NEXT MOVES
+  // --------------------------------------------------
+
+  nextMovesSection: {
+    paddingTop: 4,
+  },
+
+  nextMovesLabel: {
+    color: Colors.subtleText,
+    fontFamily: Fonts.light,
+    fontSize: 7,
+    letterSpacing: 1.4,
+    marginBottom: 9,
+  },
+
+  nextMovesList: {
+    gap: 7,
+  },
+
+  nextMoveButton: {
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+
+  nextMoveButtonSelected: {
+    backgroundColor: "rgba(95,158,114,0.15)",
+    borderColor: "rgba(95,158,114,0.42)",
+  },
+
+  nextMoveTitle: {
+    color: Colors.white,
+    fontFamily: Fonts.light,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  nextMoveDescription: {
+    color: Colors.subtleText,
+    fontFamily: Fonts.light,
+    fontSize: 8,
+    lineHeight: 13,
+    marginTop: 5,
+  },
+
+  pauseMoveButton: {
+    marginTop: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "transparent",
+  },
+
+  pauseMoveTitle: {
+    color: Colors.subtleText,
+    fontFamily: Fonts.light,
+    fontSize: 7,
+    letterSpacing: 1.1,
+  },
+  
+  stagePlaceholder: {
+  color: Colors.subtleText,
+  fontFamily: Fonts.light,
+  fontSize: 14,
+  lineHeight: 22,
+},
+
   stageEyebrow: {
     color: Colors.subtleText,
     fontFamily: Fonts.light,
@@ -1693,19 +3661,18 @@ largeInput: {
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
-  fontSize: 17,
-  lineHeight: 28,
+  fontSize: 12,
+  lineHeight: 18,
   padding: 18,
   borderRadius: 13,
   outlineStyle: "none" as const,
   textAlignVertical: "top" as const,
 },
 
-  feelingCard: {
-    padding: 8,
-    borderRadius: 11,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
+feelingCard: {
+  padding: 0,
+  backgroundColor: "transparent",
+},
 
   feelingLabels: {
     flexDirection: "row" as const,
@@ -1766,8 +3733,8 @@ conversationInput: {
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
-  fontSize: 17,
-  lineHeight: 28,
+  fontSize: 12,
+  lineHeight: 18,
   padding: 18,
   borderRadius: 13,
   outlineStyle: "none" as const,
@@ -1796,8 +3763,8 @@ doHint: {
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
-  fontSize: 14,
-  lineHeight: 24,
+  fontSize: 12,
+  lineHeight: 18,
   padding: 18,
   borderRadius: 13,
   outlineStyle: "none" as const,
@@ -1824,12 +3791,12 @@ doConversationText: {
 },
 
 doInput: {
-  minHeight: 120,
+  minHeight: 150,
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
-  fontSize: 16,
-  lineHeight: 25,
+  fontSize: 12,
+  lineHeight: 18,
   padding: 18,
   borderRadius: 13,
   outlineStyle: "none" as const,
@@ -1876,41 +3843,43 @@ patternsHeader: {
   },
 
   patternsHint: {
-    color: Colors.subtleText,
+    color: Colors.mutedText,
     fontFamily: Fonts.light,
     fontSize: 8,
   },
 
-  patternGrid: {
-    gap: 7,
-  },
+patternGrid: {
+  gap: 4,
+},
 
-  patternCard: {
-      width: "40%",
-      alignSelf: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 11,
-    borderRadius: 9,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
+patternCard: {
+  width: "65%",
+  alignSelf: "center",
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 9,
+  backgroundColor: "rgba(255,255,255,0.04)",
+},
 
-  patternLabels: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-  },
+patternAxis: {
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  gap: 8,
+},
 
-  patternLabel: {
-    color: Colors.mutedText,
-    fontFamily: Fonts.light,
-    fontSize: 9,
-  },
+patternLabel: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 9,
+  flexShrink: 0,
+},
 
-  patternTrack: {
-    height: 1,
-    marginTop: 11,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    position: "relative" as const,
-  },
+patternTrack: {
+  flex: 1,
+  height: 1,
+  backgroundColor: "rgba(255,255,255,0.28)",
+  position: "relative" as const,
+},
 
   patternDot: {
     position: "absolute" as const,
@@ -2027,6 +3996,59 @@ patternsHeader: {
     lineHeight: 13,
     marginTop: 5,
   },
+
+  discoverHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 10,
+},
+
+discoverLabel: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 9,
+  letterSpacing: 1.4,
+},
+
+refreshButton: {
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.10)",
+  backgroundColor: "rgba(255,255,255,0.035)",
+},
+
+refreshButtonText: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 9,
+  letterSpacing: 0.6,
+},
+
+patternReflectionCard: {
+  marginTop: 16,
+  paddingTop: 14,
+  paddingBottom: 8,
+  borderTopWidth: 1,
+  borderTopColor: "#242424",
+},
+
+patternReflectionLabel: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1.4,
+  marginBottom: 8,
+},
+
+patternReflectionText: {
+  color: "#A8A49D",
+  fontFamily: Fonts.light,
+  fontSize: 11,
+  lineHeight: 17,
+},
 };
 
 export { SovereignIConsole };

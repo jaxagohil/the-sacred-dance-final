@@ -1410,14 +1410,58 @@ const spiral =
 
     enrichedBehaviours,
 
-    patterns:
-      patternIds,
+patterns:
+  patternIds,
 
-    enrichedPatterns,
+enrichedPatterns,
 
-    patternField,
+patternField,
 
-    distortions,
+creationPatterns:
+  Object.values(patternField)
+    .map((field: any) => ({
+      id:
+        field?.pattern?.id ||
+        field?.id,
+
+      name:
+        field?.pattern?.name ||
+        null,
+
+      leftPole:
+        field?.pattern?.left_pole ||
+        null,
+
+      rightPole:
+        field?.pattern?.right_pole ||
+        null,
+
+      activation:
+        Number(field?.activation || 0),
+
+      signalCount:
+        Number(field?.signalCount || 0),
+
+      contraction:
+        Number(field?.contraction || 0),
+
+expansion:
+  Number(field?.expansion || 0),
+
+position:
+  Number(field?.expansion || 0),
+    }))
+    .filter(
+      (pattern: any) =>
+        pattern.name
+    )
+    .sort(
+      (a: any, b: any) =>
+        b.activation -
+        a.activation
+    ),
+
+distortions,
 
     chakraManifestations,
 
