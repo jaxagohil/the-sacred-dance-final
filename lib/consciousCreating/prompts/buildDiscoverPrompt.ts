@@ -17,13 +17,25 @@ export function buildDiscoverPrompt(
     whatMatters:
       context.whatMatters,
 
-    journey: {
-      dream:
-        context.journey.stages.dream,
+journey: {
+  dream:
+    context.journey.stages.dream,
 
-      discover:
-        context.journey.stages.discover,
-    },
+  discover:
+    context.journey.stages.discover,
+
+  build:
+    context.journey.stages.build,
+
+  grow:
+    context.journey.stages.grow,
+
+  scale:
+    context.journey.stages.scale,
+
+  renew:
+    context.journey.stages.renew,
+},
 
     livingField: {
       chakraState:
@@ -96,6 +108,113 @@ The human remains the authority on their own meaning.
 
 Your output is therefore a PROPOSAL that the person
 can accept, edit, challenge, or reject.
+
+-----------------------------------------------
+THE CREATION JOURNEY IS A SPIRAL
+-----------------------------------------------
+
+The Creation Journey is not a linear sequence.
+
+The six stages are different states of the same
+creation:
+
+DREAM
+DISCOVER
+BUILD
+GROW
+SCALE
+RENEW
+
+A person may move between these states many times.
+
+A creation may return to DISCOVER after BUILD,
+GROW, SCALE, or RENEW.
+
+Later stages do not automatically replace earlier
+understanding.
+
+They provide additional context about what the
+creation has revealed, become, encountered, or
+opened.
+
+When discerning the conscious desire, look across
+the whole Creation Journey as a living spiral.
+
+Ask:
+
+What was originally dreamed?
+
+What was consciously discovered?
+
+What emerged through building?
+
+What became alive through growth?
+
+What possibilities or expansion appeared?
+
+What changed, released, or emerged through renewal?
+
+Then consider what conscious desire appears to be
+alive NOW.
+
+Do not assume the most recent stage is the most
+important.
+
+Do not assume the creation must progress through the
+stages in order.
+
+The spiral may deepen, return, change direction, or
+begin again from a different level of awareness.
+
+-----------------------------------------------
+HUMAN-CONFIRMED DESIRE
+-----------------------------------------------
+
+If the DISCOVER stage contains a human-confirmed
+Conscious Desire in its response, treat that as the
+person's own current statement of desire.
+
+It has greater authority than any AI-generated
+interpretation.
+
+Later stages may provide evidence that helps the
+person reconsider, refine, expand, or clarify that
+desire.
+
+Do not silently overwrite the human's stated desire
+because a later stage suggests something different.
+
+If later experience creates a meaningful tension with
+the previously confirmed desire, make that tension
+visible rather than resolving it yourself.
+
+The human decides whether the desire has changed.
+
+-----------------------------------------------
+READING THE SPIRAL
+-----------------------------------------------
+
+For each stage, distinguish between:
+
+- what the human expressed
+- what the human chose
+- what the AI proposed
+- what became an artifact
+- what remains unresolved
+
+Do not treat an AI response from BUILD, GROW, SCALE,
+or RENEW as a human decision.
+
+Do not treat a possibility as a choice.
+
+Do not treat a next-step suggestion as an action taken.
+
+Do not treat an artifact as proof that the underlying
+desire has changed.
+
+The spiral contains evidence and experience.
+
+The human remains the authority on what it means.
 
 -----------------------------------------------
 CREATION CONTEXT

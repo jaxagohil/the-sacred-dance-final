@@ -39,6 +39,8 @@ export interface GenerateNextMovesInput {
     content: string;
   }>;
 
+  consciousDesire?: string;
+
   livingField?: unknown;
   expressions?: unknown[];
   meanings?: unknown[];
@@ -166,6 +168,145 @@ const normaliseMoves = (
 };
 
 // --------------------------------------------------
+// COMPACT CONTEXT FOR NEXT MOVES
+// --------------------------------------------------
+
+const compactJourney = (
+  value: unknown
+) => {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
+    return null;
+  }
+
+  const journey =
+    value as Record<string, unknown>;
+
+  const stages =
+    journey.stages;
+
+  if (
+    !stages ||
+    typeof stages !== "object"
+  ) {
+    return journey;
+  }
+
+  const stageMap =
+    stages as Record<string, unknown>;
+
+  return {
+    activeStage:
+      journey.activeStage ?? "build",
+
+    stages: Object.fromEntries(
+      Object.entries(stageMap).map(
+        ([stage, data]) => {
+
+          if (
+            !data ||
+            typeof data !== "object"
+          ) {
+            return [
+              stage,
+              data,
+            ];
+          }
+
+          const stageData =
+            data as Record<string, unknown>;
+
+          return [
+            stage,
+            {
+              step:
+                stageData.step,
+
+              response:
+                stageData.response,
+
+              ai_response:
+                stageData.ai_response,
+            },
+          ];
+        }
+      )
+    ),
+  };
+};
+
+const compactLivingField = (
+  value: unknown
+) => {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
+    return null;
+  }
+
+  const field =
+    value as Record<string, unknown>;
+
+  return {
+    ready:
+      field.ready ?? null,
+
+    energy:
+      field.energy ?? null,
+
+    realityLayers:
+      field.realityLayers ?? null,
+
+    signals:
+      Array.isArray(field.signals)
+        ? field.signals.slice(-5)
+        : [],
+
+    chakraState:
+      field.chakraState ?? null,
+
+    spiralScores:
+      field.spiralScores ?? null,
+
+    creationPatterns:
+      Array.isArray(
+        field.creationPatterns
+      )
+        ? field.creationPatterns
+            .slice(0, 5)
+        : [],
+
+    cosmic:
+      field.cosmic ?? null,
+  };
+};
+
+const compactConversation =
+  (
+    value: GenerateNextMovesInput["conversation"]
+  ) => {
+
+    return value.slice(-8);
+  };
+
+const compactList = (
+  value: unknown[] | undefined,
+  limit: number
+) => {
+
+  if (
+    !Array.isArray(value)
+  ) {
+    return [];
+  }
+
+  return value.slice(-limit);
+};
+
+// --------------------------------------------------
 // GENERATE NEXT MOVES
 // --------------------------------------------------
 
@@ -177,6 +318,7 @@ export async function generateNextMoves(
     creation,
     journey,
     conversation,
+    consciousDesire,
     livingField,
     expressions,
     meanings,
@@ -198,14 +340,40 @@ export async function generateNextMoves(
     );
   }
 
-  if (
-    readiness.state !== "ready"
-  ) {
-    return {
-      moves: [],
-      confidence: 0,
-    };
-  }
+  // --------------------------------------------------
+  // COMPACT THE CONTEXT BEFORE BUILDING THE PROMPT
+  // --------------------------------------------------
+
+  const compactJourneyContext =
+    compactJourney(journey);
+
+  const compactLivingFieldContext =
+    compactLivingField(
+      livingField
+    );
+
+  const compactConversationContext =
+    compactConversation(
+      conversation
+    );
+
+  const compactExpressions =
+    compactList(
+      expressions,
+      10
+    );
+
+  const compactMeanings =
+    compactList(
+      meanings,
+      10
+    );
+
+  const compactArtifacts =
+    compactList(
+      artifacts,
+      10
+    );
 
   const prompt = `
 You are generating possible next moves for an ongoing
@@ -290,29 +458,97 @@ Return ONLY valid JSON:
   "confidence": 0
 }
 
+CONSCIOUS DESIRE:
+${JSON.stringify(
+  consciousDesire?.trim() || null,
+  null,
+  2
+)}
+
+CONSCIOUS CREATING:
+
+The Creation Journey is a spiral, not a linear sequence.
+
+The creation may move between:
+DREAM → DISCOVER → BUILD → GROW → SCALE → RENEW
+in any direction and may return to an earlier state.
+
+Generate possibilities from the creation as it exists now.
+
+The human-confirmed Conscious Desire is the current human-owned
+anchor.
+
+Do not silently replace or redefine that desire.
+
+Later experiences, expressions, meanings, artifacts, patterns,
+or other journey stages may reveal new possibilities or tension,
+but they do not automatically mean the human's desire has changed.
+
+A next move should emerge from the thread of the creation —
+not from a generic idea of what usually comes next.
+
+Specificity is not the opposite of expansion.
+A small, specific possibility may be exactly what allows the
+creation to become more real.
+
+Use the human's own expressions and meanings as important
+sources of language and direction.
+
+Do not introduce unrelated possibilities simply because they
+sound interesting.
+
 READINESS:
 ${JSON.stringify(readiness, null, 2)}
 
 CONVERSATION:
-${JSON.stringify(conversation, null, 2)}
+${JSON.stringify(
+  compactConversationContext,
+  null,
+  2
+)}
 
 CREATION:
-${JSON.stringify(creation ?? null, null, 2)}
+${JSON.stringify(
+  creation ?? null,
+  null,
+  2
+)}
 
 JOURNEY:
-${JSON.stringify(journey ?? null, null, 2)}
+${JSON.stringify(
+  compactJourneyContext,
+  null,
+  2
+)}
 
 LIVING FIELD:
-${JSON.stringify(livingField ?? null, null, 2)}
+${JSON.stringify(
+  compactLivingFieldContext,
+  null,
+  2
+)}
 
 EXPRESSIONS:
-${JSON.stringify(expressions ?? [], null, 2)}
+${JSON.stringify(
+  compactExpressions,
+  null,
+  2
+)}
 
 MEANINGS:
-${JSON.stringify(meanings ?? [], null, 2)}
+${JSON.stringify(
+  compactMeanings,
+  null,
+  2
+)}
 
 ARTIFACTS:
-${JSON.stringify(artifacts ?? [], null, 2)}
+${JSON.stringify(
+  compactArtifacts,
+  null,
+  2
+)}
+
 `;
 
   try {

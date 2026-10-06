@@ -17,6 +17,8 @@ export interface AssessBuildReadinessInput {
     content: string;
   }>;
 
+  consciousDesire?: string;
+
   creation?: unknown;
   journey?: unknown;
   livingField?: unknown;
@@ -126,14 +128,15 @@ export async function assessBuildReadiness(
 ): Promise<BuildReadiness> {
 
   const {
-    conversation,
-    creation,
-    journey,
-    livingField,
-    expressions,
-    meanings,
-    artifacts,
-  } = input;
+  conversation,
+  consciousDesire,
+  creation,
+  journey,
+  livingField,
+  expressions,
+  meanings,
+  artifacts,
+} = input;
 
   if (
     !Array.isArray(conversation)
@@ -161,6 +164,27 @@ This is NOT a judgement of the human.
 This is NOT a decision about what the human should do.
 
 The human remains sovereign.
+
+CONSCIOUS DESIRE:
+
+If a human-confirmed Conscious Desire is present, treat it as
+the current human-owned anchor for the creation.
+
+Do not silently rewrite, replace, or reinterpret it as though
+the human has changed their desire.
+
+Later conversation, experience, patterns, emotions, evidence,
+or other stages of the Creation Journey may reveal tension,
+new information, refinement, expansion, or change.
+
+If there is tension between the confirmed Conscious Desire and
+later information, make the tension visible rather than
+deciding that the desire has changed.
+
+The human decides whether their desire has changed.
+
+Readiness does not require a perfect plan, certainty, absence
+of fear, or a decision to act.
 
 Your task is to assess whether the conversation has developed
 enough understanding of the creation to eventually surface
@@ -195,8 +219,16 @@ Enough has emerged to reflect on and integrate the current
 understanding, but it is not yet necessary to surface next moves.
 
 ready
-There is enough contextual understanding of the creation that
-possible next moves could meaningfully be explored.
+There is enough contextual understanding of:
+- what is being created
+- why it matters
+- the human's current Conscious Desire
+- what has emerged through the Build conversation
+- relevant constraints, tensions or possibilities
+
+that meaningful next possibilities could now be surfaced.
+
+The human does NOT need to have chosen one.
 
 pause
 The conversation has reached a natural point where continuing
@@ -227,8 +259,41 @@ ${JSON.stringify(creation ?? null, null, 2)}
 JOURNEY:
 ${JSON.stringify(journey ?? null, null, 2)}
 
+CONSCIOUS DESIRE:
+${JSON.stringify(
+  consciousDesire?.trim() || null,
+  null,
+  2
+)}
+
 LIVING FIELD:
-${JSON.stringify(livingField ?? null, null, 2)}
+${JSON.stringify(
+  {
+    creationPatterns:
+      (livingField as any)?.creationPatterns ?? [],
+
+    signals:
+      Array.isArray(
+        (livingField as any)?.signals
+      )
+        ? (livingField as any).signals.slice(-8)
+        : [],
+
+    chakraState:
+      (livingField as any)?.chakraState ?? null,
+
+    spiralScores:
+      (livingField as any)?.spiralScores ?? null,
+
+    realityLayers:
+      (livingField as any)?.realityLayers ?? null,
+
+    cosmic:
+      (livingField as any)?.cosmic ?? null,
+  },
+  null,
+  2
+)}
 
 EXPRESSIONS:
 ${JSON.stringify(expressions ?? [], null, 2)}

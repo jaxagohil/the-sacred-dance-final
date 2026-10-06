@@ -29,6 +29,9 @@ const {
   prompt,
 } = await req.json();
 
+const wantsJson =
+  /return\s+only\s+valid\s+json/i.test(prompt);
+
 const completion =
   await openai.chat.completions.create({
 
@@ -37,6 +40,14 @@ const completion =
 
     temperature:
       0.7,
+
+    ...(wantsJson
+      ? {
+          response_format: {
+            type: "json_object" as const,
+          },
+        }
+      : {}),
 
     messages: [
       {

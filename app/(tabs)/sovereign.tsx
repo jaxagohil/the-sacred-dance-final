@@ -26,9 +26,14 @@
  * Existing data, signals and buildUserContext logic connect later.
  */
 
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState
+} from "react";
 
 import {
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -36,6 +41,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+
+import {
+  buildAlignmentOSContext,
+} from "../../lib/alignment/buildAlignmentOSContext";
 
 
 import { processSovereignLifePicture } from "../../db/processSovereignLifePicture";
@@ -46,9 +55,17 @@ import type { NextMove } from "../../lib/consciousCreating/agents/mirror/generat
 import { mirrorBuild } from "../../lib/consciousCreating/agents/mirror/mirrorBuild";
 
 import {
+  generateRenewReflection,
+} from "../../lib/consciousCreating/agents/renew/generateRenewReflection";
+
+import {
   discoverConsciousDesire,
   getCreationContext,
 } from "../../lib/consciousCreating";
+
+import {
+  generateScalePossibilities,
+} from "../../lib/consciousCreating/agents/scale/generateScalePossibilities";
 
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
@@ -110,7 +127,7 @@ const JOURNEY: {
     id: "scale",
     label: "SCALE",
     number: "05",
-    prompt: "Where could this expand? Notice what is already available to receive.",
+    prompt: "Where does this creation want to expand.",
   },
   {
     id: "renew",
@@ -141,6 +158,9 @@ type Artifact = {
 };
 
 export default function SovereignIConsole() {
+
+  const alignmentContext = buildAlignmentOSContext();
+
   const { width } = useWindowDimensions();
   const mobile = width < 900;
 
@@ -340,8 +360,8 @@ const [journeyData, setJourneyData] =
   });
 
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
-  const [nextStepOptions, setNextStepOptions] =
-  useState<string[]>([]);
+const [nextStepOptions, setNextStepOptions] =
+  useState<NextMove[]>([]);
 
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 const [artifactsLoaded, setArtifactsLoaded] = useState(false);
@@ -801,9 +821,10 @@ const chooseStep = async (id: string) => {
     })}
   </View>
 
-  <ScrollView
+<ScrollView
   style={styles.journeyContentScroll}
   showsVerticalScrollIndicator={true}
+  scrollEnabled={activeStage !== "build"}
 >
 
   <View style={styles.stageWorkspace}>
@@ -814,7 +835,10 @@ const chooseStep = async (id: string) => {
 )}
 
 {activeStage === "discover" && (
-  <StageDiscover intentionId={selectedIntentionId} />
+  <StageDiscover
+    intentionId={selectedIntentionId}
+    alignmentContext={alignmentContext}
+  />
 )}
 
 {activeStage === "build" && (
@@ -843,34 +867,49 @@ const chooseStep = async (id: string) => {
 </View>
 
 <View style={styles.oneStepRail}>
-  {nextStepOptions.map((option, index) => {
-    const selected = selectedStep === option;
+  {nextStepOptions.map((move, index) => {
+    const selected =
+      selectedStep === move.title;
 
     return (
       <Pressable
-        key={`${option}-${index}`}
-        onPress={() => chooseStep(option)}
+        key={`${move.title}-${index}`}
+        onPress={() =>
+          chooseStep(move.title)
+        }
         style={[
           styles.stepTile,
-          selected && styles.stepTileSelected,
+          selected &&
+            styles.stepTileSelected,
         ]}
       >
-        <Text style={styles.stepTileTitle}>
-          NEXT
+        <Text
+          style={styles.stepTileTitle}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {move.title}
         </Text>
 
-        <Text style={styles.stepTileDescription}>
-          {option}
+        <Text
+          style={styles.stepTileDescription}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {move.description}
         </Text>
       </Pressable>
     );
   })}
 
   <Pressable
-    onPress={() => chooseStep("DO NOTHING FOR NOW")}
+    onPress={() =>
+      chooseStep("DO NOTHING FOR NOW")
+    }
     style={[
       styles.stepTile,
-      selectedStep === "DO NOTHING FOR NOW" &&
+      selectedStep ===
+        "DO NOTHING FOR NOW" &&
         styles.stepTileSelected,
     ]}
   >
@@ -878,7 +917,10 @@ const chooseStep = async (id: string) => {
       PAUSE
     </Text>
 
-    <Text style={styles.stepTileDescription}>
+    <Text
+      style={styles.stepTileDescription}
+      numberOfLines={2}
+    >
       Do nothing for now.
     </Text>
   </Pressable>
@@ -976,7 +1018,9 @@ function ArtifactArea({
   );
 
   return (
+    
     <View style={styles.outputArea}>
+
       <View style={styles.outputAreaHeader}>
         <Text style={styles.outputAreaLabel}>
           {area}
@@ -1091,6 +1135,10 @@ function StageDream({
 
   return (
     <View>
+
+                      <Text style={styles.stagePrompt}>
+        Whar is the Dream?
+      </Text>
       <TextInput
         value={value}
         onChangeText={setValue}
@@ -1166,8 +1214,10 @@ placeholderTextColor="#77746F"
 
 function StageDiscover({
   intentionId,
+  alignmentContext,
 }: {
   intentionId: string | null;
+  alignmentContext: ReturnType<typeof buildAlignmentOSContext>;
 }) {
 const [consciousDesire, setConsciousDesire] = useState("");
 
@@ -1406,6 +1456,9 @@ console.log(
 
 return (
   <View>
+          <Text style={styles.stagePrompt}>
+        Your Concious Desire
+      </Text>
 
 <View style={styles.feelingCard}>
 
@@ -1527,6 +1580,9 @@ function StageBuild({
 
   const [isChoosing, setIsChoosing] =
     useState(false);
+
+  const conversationScrollRef =
+  useRef<ScrollView>(null);  
 
   // --------------------------------------------------
   // LOAD EXISTING BUILD CONVERSATION
@@ -1743,22 +1799,27 @@ const loadedConversation =
   return (
     <View style={styles.buildWorkspace}>
 
+           <Text style={styles.mirrorWelcomeText}>
+              I'm here with you in this creation.
+              Tell me what's alive.
+            </Text>
       {/* -------------------------------------------- */}
       {/* MIRROR CONVERSATION                         */}
       {/* -------------------------------------------- */}
 
-      <ScrollView style={styles.buildConversation}>
+<ScrollView
+  ref={conversationScrollRef}
+  style={styles.buildConversation}
+  onContentSizeChange={() => {
+    requestAnimationFrame(() => {
+      conversationScrollRef.current?.scrollToEnd({
+        animated: true,
+      });
+    });
+  }}
+>
 
-        {conversation.length === 0 ? (
-          <View style={styles.mirrorWelcome}>
-
-            <Text style={styles.mirrorWelcomeText}>
-              I'm here with you in this creation.
-              Tell me what's alive.
-            </Text>
-          </View>
-        ) : (
-          conversation.map((item, index) => {
+  {conversation.map((item, index) => {
             const isUser =
               item.role === "user";
 
@@ -1798,8 +1859,7 @@ const loadedConversation =
                 </View>
               </View>
             );
-          })
-        )}
+          })}
 
         {isSending && (
           <View
@@ -1937,27 +1997,103 @@ function StageGrow({
   intentionId,
 }: {
   intentionId: string | null;
-  creationText: string;
 }) {
-  const GROW_OPTIONS = [
-    "Space",
-    "Time",
-    "Attention",
-    "Support",
-    "Energy",
-    "Resources",
-    "Something else",
+  const GROW_VALUES = [
+    {
+      id: "oneness",
+      label: "Oneness",
+      invitation: "Be with nature",
+      chakra: "earth_star",
+    },
+    {
+      id: "abundance",
+      label: "Abundance",
+      invitation: "Trust and receive",
+      chakra: "root",
+    },
+    {
+      id: "aliveness",
+      label: "Aliveness",
+      invitation: "Everyday moments",
+      chakra: "sacral",
+    },
+    {
+      id: "presence",
+      label: "Presence",
+      invitation: "Just be",
+      chakra: "solar_plexus",
+    },
+    {
+      id: "wellbeing",
+      label: "Wellbeing",
+      invitation: "Love yourself",
+      chakra: "heart",
+    },
+    {
+      id: "freedom",
+      label: "Freedom",
+      invitation: "Express yourself",
+      chakra: "throat",
+    },
+    {
+      id: "possibility",
+      label: "Possibility",
+      invitation: "See the magic",
+      chakra: "third_eye",
+    },
+    {
+      id: "clarity",
+      label: "Clarity",
+      invitation: "Keep it simple",
+      chakra: "crown",
+    },
+    {
+      id: "connection",
+      label: "Connection",
+      invitation: "The bigger picture",
+      chakra: "soul_star",
+    },
   ];
 
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [text, setText] = useState("");
-  const [additionalText, setAdditionalText] = useState("");
+  const CHAKRA_COLORS: Record<string, string> = {
+    earth_star: "#6B4F3A",
+    root: "#D94A4A",
+    sacral: "#E88935",
+    solar_plexus: "#E5C94A",
+    heart: "#62A86B",
+    throat: "#4F8FBF",
+    third_eye: "#6657A6",
+    crown: "#9A72B5",
+    soul_star: "#D8C7A2",
+  };
+
+  const [sliders, setSliders] = useState<
+    Record<string, number>
+  >({});
+
+  const [additionalText, setAdditionalText] =
+    useState("");
+
+  const [sliderWidth, setSliderWidth] =
+    useState(0);
+
+  /*
+   * --------------------------------------------------
+   * LOAD GROW
+   * --------------------------------------------------
+   *
+   * Existing saved creation values win.
+   *
+   * If this creation has never had GROW values,
+   * seed the sliders from the current Living Field
+   * chakra polarity.
+   * --------------------------------------------------
+   */
 
   useEffect(() => {
     const loadGrowStep = async () => {
       if (!intentionId) {
-        setSelectedOptions([]);
-        setText("");
+        setSliders({});
         setAdditionalText("");
         return;
       }
@@ -1978,43 +2114,107 @@ function StageGrow({
           return;
         }
 
-        if (!data?.response) {
-          setSelectedOptions([]);
-          setText("");
-          setAdditionalText("");
+        /*
+         * ------------------------------------------------
+         * EXISTING GROW
+         * ------------------------------------------------
+         */
+
+        if (data?.response) {
+          const parsed =
+            typeof data.response === "string"
+              ? JSON.parse(data.response)
+              : data.response;
+
+          if (
+            parsed?.sliders &&
+            typeof parsed.sliders === "object"
+          ) {
+            setSliders(parsed.sliders);
+          } else {
+            setSliders({});
+          }
+
+          setAdditionalText(
+            typeof parsed?.additionalText === "string"
+              ? parsed.additionalText
+              : ""
+          );
+
           return;
         }
 
-        const parsed =
-          typeof data.response === "string"
-            ? JSON.parse(data.response)
-            : data.response;
+        /*
+         * ------------------------------------------------
+         * NEW GROW
+         *
+         * Seed from current chakra state.
+         * Chakra polarity is -1 → +1.
+         * Slider position is 0 → 1.
+         * ------------------------------------------------
+         */
 
-        setSelectedOptions(
-          Array.isArray(parsed?.selectedOptions)
-            ? parsed.selectedOptions
-            : []
-        );
+        const userId = await getUserId();
 
-        setText(
-          typeof parsed?.text === "string"
-            ? parsed.text
-            : ""
-        );
+        if (!userId) {
+          setSliders({});
+          return;
+        }
 
-        setAdditionalText(
-          typeof parsed?.additionalText === "string"
-            ? parsed.additionalText
-            : ""
-        );
+        const context = await getCreationContext({
+          userId,
+          intentionId,
+          activeStage: "grow",
+        });
+
+const chakraScores =
+  context?.livingField?.chakraState?.scores ||
+  {};
+
+        const seededSliders: Record<
+          string,
+          number
+        > = {};
+
+        GROW_VALUES.forEach((value) => {
+          const chakraScore = Number(
+            chakraScores?.[value.chakra]
+          );
+
+          /*
+           * Existing chakra polarity:
+           * -1 = contracted
+           *  0 = neutral
+           * +1 = expansive
+           *
+           * GROW slider:
+           *  0 = low
+           *  0.5 = neutral
+           *  1 = high
+           */
+
+          if (Number.isFinite(chakraScore)) {
+            seededSliders[value.id] = Math.max(
+              0,
+              Math.min(
+                1,
+                (chakraScore + 1) / 2
+              )
+            );
+          } else {
+            seededSliders[value.id] = 0.5;
+          }
+        });
+
+        setSliders(seededSliders);
+        setAdditionalText("");
       } catch (error) {
         console.error(
-          "❌ SOVEREIGN GROW RESPONSE PARSE ERROR:",
+          "❌ SOVEREIGN GROW LOAD ERROR:",
           error
         );
 
-        setSelectedOptions([]);
-        setText("");
+        setSliders({});
         setAdditionalText("");
       }
     };
@@ -2022,9 +2222,14 @@ function StageGrow({
     void loadGrowStep();
   }, [intentionId]);
 
+  /*
+   * --------------------------------------------------
+   * SAVE GROW
+   * --------------------------------------------------
+   */
+
   const saveGrow = async (
-    nextOptions: string[],
-    nextText: string,
+    nextSliders: Record<string, number>,
     nextAdditionalText: string
   ) => {
     if (!intentionId) {
@@ -2033,18 +2238,19 @@ function StageGrow({
 
     try {
       const response = {
-        selectedOptions: nextOptions,
-        text: nextText,
+        sliders: nextSliders,
         additionalText: nextAdditionalText,
       };
 
-      const { data: existing, error: findError } =
-        await supabase
-          .from("sovereign_intention_steps")
-          .select("id")
-          .eq("intention_id", intentionId)
-          .eq("step", "grow")
-          .maybeSingle();
+      const {
+        data: existing,
+        error: findError,
+      } = await supabase
+        .from("sovereign_intention_steps")
+        .select("id")
+        .eq("intention_id", intentionId)
+        .eq("step", "grow")
+        .maybeSingle();
 
       if (findError) {
         console.error(
@@ -2092,118 +2298,279 @@ function StageGrow({
     }
   };
 
-  const toggleOption = async (option: string) => {
-    const nextOptions = selectedOptions.includes(option)
-      ? selectedOptions.filter((item) => item !== option)
-      : [...selectedOptions, option];
+  /*
+   * --------------------------------------------------
+   * SLIDER UPDATE
+   * --------------------------------------------------
+   */
 
-    setSelectedOptions(nextOptions);
+  const updateSlider = (
+    id: string,
+    value: number
+  ) => {
+    const nextValue = Math.max(
+      0,
+      Math.min(1, value)
+    );
 
-    await saveGrow(
-      nextOptions,
-      text,
+    const nextSliders = {
+      ...sliders,
+      [id]: nextValue,
+    };
+
+    setSliders(nextSliders);
+
+    void saveGrow(
+      nextSliders,
       additionalText
     );
   };
 
-  const updateText = (value: string) => {
-    setText(value);
-  };
+  /*
+   * --------------------------------------------------
+   * ADDITIONAL TEXT
+   * --------------------------------------------------
+   */
 
-  const updateAdditionalText = (value: string) => {
+  const updateAdditionalText = (
+    value: string
+  ) => {
     setAdditionalText(value);
-  };
-
-  const saveText = async () => {
-    await saveGrow(
-      selectedOptions,
-      text,
-      additionalText
-    );
   };
 
   const saveAdditionalText = async () => {
     await saveGrow(
-      selectedOptions,
-      text,
+      sliders,
       additionalText
+    );
+  };
+
+  /*
+   * --------------------------------------------------
+   * SLIDER
+   * --------------------------------------------------
+   */
+
+  const renderSlider = (
+    item: (typeof GROW_VALUES)[number]
+  ) => {
+    const value =
+      sliders[item.id] ?? 0.5;
+
+    const lineHeight = 150;
+    const thumbSize = 14;
+
+    const updateFromY = (
+      y: number
+    ) => {
+      const position =
+        Math.max(
+          0,
+          Math.min(
+            lineHeight,
+            y
+          )
+        );
+
+      /*
+       * Vertical slider:
+       * top = 1
+       * bottom = 0
+       */
+
+      const nextValue =
+        1 -
+        position / lineHeight;
+
+      updateSlider(
+        item.id,
+        nextValue
+      );
+    };
+
+    const panResponder =
+      PanResponder.create({
+        onStartShouldSetPanResponder:
+          () => true,
+
+        onMoveShouldSetPanResponder:
+          () => true,
+
+        onPanResponderGrant: (
+          event
+        ) => {
+          updateFromY(
+            event.nativeEvent.locationY
+          );
+        },
+
+        onPanResponderMove: (
+          event
+        ) => {
+          updateFromY(
+            event.nativeEvent.locationY
+          );
+        },
+      });
+
+    const thumbTop =
+      (1 - value) *
+        lineHeight -
+      thumbSize / 2;
+
+    return (
+      <View
+        key={item.id}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          minWidth: 45,
+        }}
+      >
+        <View
+          {...panResponder.panHandlers}
+          onLayout={(event) => {
+            if (!sliderWidth) {
+              setSliderWidth(
+                event.nativeEvent.layout.width
+              );
+            }
+          }}
+          style={{
+            height: lineHeight,
+            width: 32,
+            alignItems: "center",
+            justifyContent:
+              "flex-start",
+          }}
+        >
+          {/* TRACK */}
+
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              width: 2,
+              borderRadius: 2,
+              backgroundColor:
+                CHAKRA_COLORS[
+                  item.chakra
+                ],
+              opacity: 0.65,
+            }}
+          />
+
+          {/* THUMB */}
+
+          <View
+            style={{
+              position: "absolute",
+              top: thumbTop,
+              width: thumbSize,
+              height: thumbSize,
+              borderRadius:
+                thumbSize / 2,
+              backgroundColor:
+                CHAKRA_COLORS[
+                  item.chakra
+                ],
+              borderWidth: 2,
+              borderColor:
+                "#EEECE6",
+            }}
+          />
+        </View>
+
+        {/* LABEL */}
+
+ <Text
+  style={{
+    marginTop: 12,
+    color: "#B8B4AC",
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: "center",
+  }}
+>
+  {item.label}
+</Text>
+
+        {/* INVITATION */}
+
+ <Text
+  style={{
+    marginTop: 4,
+    color: "rgba(255,255,255,0.58)",
+    fontFamily: Fonts.light,
+    fontSize: 9,
+    lineHeight: 12,
+    textAlign: "center",
+    maxWidth: 62,
+  }}
+>
+  {item.invitation}
+</Text>
+
+      </View>
     );
   };
 
   return (
     <View>
+      {/* QUESTION */}
 
-      {/* MAIN REFLECTION */}
+      <Text
+        style={{
+          color: Colors.mutedText,
+          fontFamily: Fonts.light,
+          fontSize: 12,
+          lineHeight: 18,
+          marginTop: 6,
+        }}
+      >
+        What wants to rise in this creation?
+      </Text>
 
-      {/* OPTIONS */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={styles.smallLabel}>
-          What does it need now?
-        </Text>
+      {/* NINE SLIDERS */}
 
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 8,
-            marginTop: 12,
-          }}
-        >
-          {GROW_OPTIONS.map((option) => {
-            const selected =
-              selectedOptions.includes(option);
-
-            return (
-              <Pressable
-                key={option}
-                onPress={() =>
-                  void toggleOption(option)
-                }
-                style={{
-                  paddingVertical: 9,
-                  paddingHorizontal: 14,
-                  borderRadius: 20,
-                  backgroundColor: selected
-                    ? "#EEECE6"
-                    : "rgba(255,255,255,0.045)",
-                  borderWidth: 1,
-                  borderColor: selected
-                    ? "#EEECE6"
-                    : "rgba(255,255,255,0.10)",
-                }}
-              >
-                <Text
-                  style={{
-                    color: selected
-                      ? "#2A2927"
-                      : Colors.mutedText,
-                    fontFamily: Fonts.light,
-                    fontSize: 10,
-                    lineHeight: 14,
-                  }}
-                >
-                  {option}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+      <View
+        style={{
+          flexDirection: "row",
+          width: "100%",
+          marginTop: 28,
+          paddingHorizontal: 4,
+          minHeight: 205,
+        }}
+      >
+        {GROW_VALUES.map(
+          renderSlider
+        )}
       </View>
 
       {/* OPTIONAL ADDITION */}
-      <View style={{ marginTop: 20 }}>
+
+      <View
+        style={{
+          marginTop: 24,
+        }}
+      >
         <View
-style={{
-  width: "100%",
-  minHeight: 90,
-  padding: 14,
-  borderRadius: 11,
-  backgroundColor: "#EEECE6",
-}}
+          style={{
+            width: "100%",
+            minHeight: 90,
+            padding: 14,
+            borderRadius: 11,
+            backgroundColor:
+              "#EEECE6",
+          }}
         >
           <TextInput
             value={additionalText}
-            onChangeText={updateAdditionalText}
+            onChangeText={
+              updateAdditionalText
+            }
             onBlur={() =>
               void saveAdditionalText()
             }
@@ -2217,8 +2584,10 @@ style={{
               fontSize: 12,
               lineHeight: 18,
               padding: 0,
-              outlineStyle: "none" as const,
-              textAlignVertical: "top" as const,
+              outlineStyle:
+                "none" as const,
+              textAlignVertical:
+                "top" as const,
             }}
           />
         </View>
@@ -2232,90 +2601,84 @@ function StageScale({
 }: {
   intentionId: string | null;
 }) {
-const SCALE_QUESTIONS = [
+const SCALE_PORTALS = [
   {
-    id: "desire",
-    question: "Does this creation want to expand?",
-    options: [
-      "Yes",
-      "Not yet",
-      "Unsure",
-    ],
-    multiple: false,
+    id: "people",
+    label: "PEOPLE",
+    question: "Who wants to be part of this creation?",
   },
   {
-    id: "where",
-    question: "Where or what could expand?",
-    options: [
-      "Reach",
-      "Impact",
-      "Expression",
-      "Community",
-      "Geography",
-      "Something else",
-    ],
-    multiple: true,
+    id: "places",
+    label: "PLACES",
+    question: "Where does this creation want to live?",
   },
   {
-    id: "support",
-    question:
-      "What support is available — or could be received — for this expansion?",
-    options: [
-      "People",
-      "Partnership",
-      "Resources",
-      "Money",
-      "Technology",
-      "Visibility",
-      "Community",
-      "An invitation",
-      "Something unexpected",
-    ],
-    multiple: true,
+    id: "things",
+    label: "THINGS",
+    question: "What does this creation want to bring into the world?",
   },
-  {
-    id: "pace",
-    question: "What pace feels right?",
-    options: [
-      "Gentle",
-      "Steady",
-      "Focused",
-      "Bold",
-      "Not sure",
-    ],
-    multiple: false,
-  },
-  {
-    id: "notRequired",
-    question:
-      "What does this expansion NOT require from you?",
-    options: [
-      "Hustling",
-      "Proving",
-      "Doing everything myself",
-      "Moving faster",
-      "Saying yes to everything",
-      "Controlling the outcome",
-      "Nothing — it feels aligned",
-    ],
-    multiple: true,
-  },
-];
+] as const;
 
-  const [responses, setResponses] = useState<
-    Record<
-      string,
-      {
-        selectedOptions: string[];
-        text: string;
-      }
-    >
-  >({});
+  type PortalId = (typeof SCALE_PORTALS)[number]["id"];
+
+  type PortalResponse = {
+    selectedOptions: string[];
+    text: string;
+  };
+
+  type ScaleState = {
+    activePortal: PortalId;
+    portals: Record<PortalId, PortalResponse>;
+  };
+
+  const createEmptyState = (): ScaleState => ({
+    activePortal: "people",
+    portals: {
+      people: {
+        selectedOptions: [],
+        text: "",
+      },
+      places: {
+        selectedOptions: [],
+        text: "",
+      },
+      things: {
+        selectedOptions: [],
+        text: "",
+      },
+    },
+  });
+
+  const [scaleState, setScaleState] =
+    useState<ScaleState>(createEmptyState);
+
+    const [possibilities, setPossibilities] =
+  useState<{
+    people: string[];
+    places: string[];
+    things: string[];
+  }>({
+    people: [],
+    places: [],
+    things: [],
+  });
+
+const [isGenerating, setIsGenerating] =
+  useState(false);
+
+  /*
+   * --------------------------------------------------
+   * LOAD SCALE
+   *
+   * Everything belongs to the selected creation.
+   * Each creation has its own People / Places / Things.
+   * --------------------------------------------------
+   */
 
   useEffect(() => {
-    const loadScaleStep = async () => {
+    const loadScale = async () => {
       if (!intentionId) {
-        setResponses({});
+        setScaleState(createEmptyState());
         return;
       }
 
@@ -2336,7 +2699,7 @@ const SCALE_QUESTIONS = [
         }
 
         if (!data?.response) {
-          setResponses({});
+          setScaleState(createEmptyState());
           return;
         }
 
@@ -2345,33 +2708,143 @@ const SCALE_QUESTIONS = [
             ? JSON.parse(data.response)
             : data.response;
 
-        setResponses(
-          parsed?.responses &&
-            typeof parsed.responses === "object"
-            ? parsed.responses
-            : {}
-        );
+        const loadedPortals =
+          parsed?.portals &&
+          typeof parsed.portals === "object"
+            ? parsed.portals
+            : {};
+
+        const activePortal =
+          parsed?.activePortal === "people" ||
+          parsed?.activePortal === "places" ||
+          parsed?.activePortal === "things"
+            ? parsed.activePortal
+            : "people";
+
+        setScaleState({
+          activePortal,
+          portals: {
+            people: {
+              selectedOptions:
+                Array.isArray(
+                  loadedPortals.people?.selectedOptions
+                )
+                  ? loadedPortals.people.selectedOptions
+                  : [],
+              text:
+                typeof loadedPortals.people?.text === "string"
+                  ? loadedPortals.people.text
+                  : "",
+            },
+            places: {
+              selectedOptions:
+                Array.isArray(
+                  loadedPortals.places?.selectedOptions
+                )
+                  ? loadedPortals.places.selectedOptions
+                  : [],
+              text:
+                typeof loadedPortals.places?.text === "string"
+                  ? loadedPortals.places.text
+                  : "",
+            },
+            things: {
+              selectedOptions:
+                Array.isArray(
+                  loadedPortals.things?.selectedOptions
+                )
+                  ? loadedPortals.things.selectedOptions
+                  : [],
+              text:
+                typeof loadedPortals.things?.text === "string"
+                  ? loadedPortals.things.text
+                  : "",
+            },
+          },
+        });
       } catch (error) {
         console.error(
-          "❌ SOVEREIGN SCALE RESPONSE PARSE ERROR:",
+          "❌ SOVEREIGN SCALE PARSE ERROR:",
           error
         );
 
-        setResponses({});
+        setScaleState(createEmptyState());
       }
     };
 
-    void loadScaleStep();
+    void loadScale();
   }, [intentionId]);
 
-  const saveScale = async (
-    nextResponses: Record<
-      string,
-      {
-        selectedOptions: string[];
-        text: string;
+  useEffect(() => {
+  const loadPossibilities = async () => {
+    if (!intentionId) {
+      setPossibilities({
+        people: [],
+        places: [],
+        things: [],
+      });
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+
+      const userId = await getUserId();
+
+      if (!userId) {
+        return;
       }
-    >
+
+console.log(
+  "🟣 SCALE POSSIBILITIES — START",
+  {
+    userId,
+    intentionId,
+  }
+);
+
+const result = await generateScalePossibilities({
+  userId,
+  intentionId,
+});
+
+console.log(
+  "🟢 SCALE POSSIBILITIES — RETURNED",
+  result
+);
+
+      setPossibilities({
+        people: result.people.map(
+          (item) => item.text
+        ),
+        places: result.places.map(
+          (item) => item.text
+        ),
+        things: result.things.map(
+          (item) => item.text
+        ),
+      });
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN SCALE POSSIBILITIES ERROR:",
+        error
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  void loadPossibilities();
+}, [intentionId]);
+
+  /*
+   * --------------------------------------------------
+   * SAVE SCALE
+   * --------------------------------------------------
+   */
+
+  const saveScale = async (
+    nextState: ScaleState
   ) => {
     if (!intentionId) {
       return;
@@ -2379,16 +2852,19 @@ const SCALE_QUESTIONS = [
 
     try {
       const response = {
-        responses: nextResponses,
+        activePortal: nextState.activePortal,
+        portals: nextState.portals,
       };
 
-      const { data: existing, error: findError } =
-        await supabase
-          .from("sovereign_intention_steps")
-          .select("id")
-          .eq("intention_id", intentionId)
-          .eq("step", "scale")
-          .maybeSingle();
+      const {
+        data: existing,
+        error: findError,
+      } = await supabase
+        .from("sovereign_intention_steps")
+        .select("id")
+        .eq("intention_id", intentionId)
+        .eq("step", "scale")
+        .maybeSingle();
 
       if (findError) {
         console.error(
@@ -2436,223 +2912,414 @@ const SCALE_QUESTIONS = [
     }
   };
 
-  const selectOption = async (
-    questionId: string,
-    option: string,
-    multiple: boolean
+  /*
+   * --------------------------------------------------
+   * SELECT PORTAL
+   * --------------------------------------------------
+   */
+
+  const selectPortal = async (
+    portalId: PortalId
   ) => {
-    const current = responses[questionId] || {
-      selectedOptions: [],
-      text: "",
+    const nextState = {
+      ...scaleState,
+      activePortal: portalId,
     };
 
-    let selectedOptions: string[];
+    setScaleState(nextState);
 
-    if (multiple) {
-      selectedOptions = current.selectedOptions.includes(
-        option
-      )
-        ? current.selectedOptions.filter(
-            (item) => item !== option
-          )
-        : [
-            ...current.selectedOptions,
-            option,
-          ];
-    } else {
-      selectedOptions =
-        current.selectedOptions[0] === option
-          ? []
-          : [option];
-    }
+    await saveScale(nextState);
+  };
 
-    const nextResponses = {
-      ...responses,
-      [questionId]: {
-        ...current,
-        selectedOptions,
+  /*
+   * --------------------------------------------------
+   * SELECT POSSIBILITY
+   * --------------------------------------------------
+   */
+
+  const toggleOption = async (
+    option: string
+  ) => {
+    const current =
+      scaleState.portals[
+        scaleState.activePortal
+      ];
+
+    const selected =
+      current.selectedOptions.includes(option);
+
+    const selectedOptions = selected
+      ? current.selectedOptions.filter(
+          (item) => item !== option
+        )
+      : [
+          ...current.selectedOptions,
+          option,
+        ];
+
+    const nextState: ScaleState = {
+      ...scaleState,
+      portals: {
+        ...scaleState.portals,
+        [scaleState.activePortal]: {
+          ...current,
+          selectedOptions,
+        },
       },
     };
 
-    setResponses(nextResponses);
+    setScaleState(nextState);
 
-    await saveScale(nextResponses);
+    await saveScale(nextState);
   };
 
-  const updateText = (
-    questionId: string,
-    text: string
-  ) => {
-    const current = responses[questionId] || {
-      selectedOptions: [],
-      text: "",
-    };
+  /*
+   * --------------------------------------------------
+   * HUMAN RESPONSE
+   * --------------------------------------------------
+   */
 
-    setResponses({
-      ...responses,
-      [questionId]: {
-        ...current,
-        text,
+  const updateText = (text: string) => {
+    const current =
+      scaleState.portals[
+        scaleState.activePortal
+      ];
+
+    setScaleState({
+      ...scaleState,
+      portals: {
+        ...scaleState.portals,
+        [scaleState.activePortal]: {
+          ...current,
+          text,
+        },
       },
     });
   };
 
   const saveText = async () => {
-    await saveScale(responses);
+    await saveScale(scaleState);
   };
+
+  const activePortal =
+    SCALE_PORTALS.find(
+      (portal) =>
+        portal.id === scaleState.activePortal
+    ) || SCALE_PORTALS[0];
+
+  const activeResponse =
+    scaleState.portals[
+      scaleState.activePortal
+    ];
 
   return (
     <View>
+      {/* -------------------------------------------- */}
+      {/* SCALE                                       */}
+      {/* -------------------------------------------- */}
 
-      {/* MAIN REFLECTION */}
-<View
-  style={{
-    width: "100%",
-    flexDirection: "row",
-    gap: 18,
-    marginTop: 28,
-    marginBottom: 30,
-  }}
->
-  {SCALE_QUESTIONS.map((item) => {
-    const response = responses[item.id] || {
-      selectedOptions: [],
-      text: "",
-    };
+      <Text
+        style={[
+          styles.stagePrompt,
+          {
+            maxWidth: 430,
+          },
+        ]}
+      >
+        Where does this creation want to expand?
+      </Text>
 
-    return (
+      {/* -------------------------------------------- */}
+      {/* THREE PORTALS                               */}
+      {/* -------------------------------------------- */}
+
       <View
-        key={item.id}
         style={{
-          flex: 1,
-          minWidth: 0,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          gap: 12,
+          marginTop: 30,
+          marginBottom: 34,
         }}
       >
-<Text
-  style={{
-    minHeight: 42,
-    marginBottom: 14,
-    color: "rgba(255,255,255,0.72)",
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 16,
-    letterSpacing: 0.2,
-  }}
->
-  {item.question}
-</Text>
+        {SCALE_PORTALS.map((portal) => {
+          const selected =
+            scaleState.activePortal === portal.id;
+
+          const hasResponse =
+            scaleState.portals[
+              portal.id
+            ].selectedOptions.length > 0 ||
+            scaleState.portals[
+              portal.id
+            ].text.trim().length > 0;
+
+          return (
+            <Pressable
+              key={portal.id}
+              onPress={() =>
+                void selectPortal(portal.id)
+              }
+              style={{
+                flex: 1,
+                alignItems: "center",
+              }}
+            >
+              {/* PORTAL */}
+              <View
+                style={{
+                  width: selected ? 92 : 76,
+                  height: selected ? 92 : 76,
+                  borderRadius: 46,
+                  borderWidth: 1,
+                  borderColor: selected
+                    ? "#EEECE6"
+                    : "rgba(255,255,255,0.16)",
+                  backgroundColor: selected
+                    ? "rgba(238,236,230,0.08)"
+                    : "rgba(255,255,255,0.025)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    width: selected ? 54 : 44,
+                    height: selected ? 54 : 44,
+                    borderRadius: 27,
+                    borderWidth: 1,
+                    borderColor: selected
+                      ? "rgba(238,236,230,0.55)"
+                      : "rgba(255,255,255,0.12)",
+                  }}
+                />
+              </View>
+
+              <Text
+                style={{
+                  marginTop: 12,
+                  color: selected
+                    ? "#EEECE6"
+                    : "rgba(255,255,255,0.52)",
+                  fontFamily: Fonts.light,
+                  fontSize: 10,
+                  letterSpacing: 1.2,
+                }}
+              >
+                {portal.label}
+              </Text>
+
+              {hasResponse && (
+                <View
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: 3,
+                    backgroundColor:
+                      "#EEECE6",
+                    marginTop: 7,
+                  }}
+                />
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* -------------------------------------------- */}
+      {/* EXPANDED PORTAL                             */}
+      {/* -------------------------------------------- */}
+
+      <View
+        style={{
+          borderTopWidth: 1,
+          borderTopColor:
+            "rgba(255,255,255,0.08)",
+          paddingTop: 26,
+        }}
+      >
+        <Text
+          style={{
+            color: "#EEECE6",
+            fontFamily: Fonts.light,
+            fontSize: 15,
+            lineHeight: 22,
+          }}
+        >
+          {activePortal.question}
+        </Text>
+
+        <Text
+          style={{
+            marginTop: 8,
+            color: "rgba(255,255,255,0.45)",
+            fontFamily: Fonts.light,
+            fontSize: 10,
+            lineHeight: 16,
+          }}
+        >
+          Some possibilities I can already see…
+        </Text>
+
+        {/* ---------------------------------------- */}
+        {/* POSSIBILITY SPARKS                       */}
+        {/* ---------------------------------------- */}
 
         <View
           style={{
-            width: "100%",
+            marginTop: 20,
             gap: 8,
           }}
         >
-          {item.options.map((option) => {
-            const selected =
-              response.selectedOptions.includes(option);
+{possibilities[activePortal.id].map(
+  (option) => {
+              const selected =
+                activeResponse.selectedOptions.includes(
+                  option
+                );
 
-            return (
-              <Pressable
-                key={option}
-                onPress={() =>
-                  void selectOption(
-                    item.id,
-                    option,
-                    item.multiple
-                  )
-                }
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: 5,
-                }}
-              >
-                {/* TOGGLE */}
-                <View
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() =>
+                    void toggleOption(option)
+                  }
                   style={{
-                    width: 28,
-                    height: 16,
-                    borderRadius: 8,
-                    backgroundColor: selected
-                      ? "#EEECE6"
-                      : "rgba(255,255,255,0.10)",
+                    paddingVertical: 13,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    backgroundColor:
+                      selected
+                        ? "#EEECE6"
+                        : "rgba(255,255,255,0.035)",
                     borderWidth: 1,
                     borderColor: selected
                       ? "#EEECE6"
-                      : "rgba(255,255,255,0.16)",
-                    justifyContent: "center",
-                    paddingHorizontal: 2,
-                    marginRight: 8,
+                      : "rgba(255,255,255,0.08)",
                   }}
                 >
-                  <View
+                  <Text
                     style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: selected
+                      color: selected
                         ? "#2A2927"
-                        : "rgba(255,255,255,0.45)",
-                      alignSelf: selected
-                        ? "flex-end"
-                        : "flex-start",
+                        : "rgba(255,255,255,0.62)",
+                      fontFamily:
+                        Fonts.light,
+                      fontSize: 11,
+                      lineHeight: 16,
                     }}
-                  />
-                </View>
-
-                <Text
-                  style={{
-                    flex: 1,
-                    color: selected
-                      ? "#EEECE6"
-                      : "rgba(255,255,255,0.55)",
-                    fontFamily: Fonts.light,
-                    fontSize: 10,
-                    lineHeight: 14,
-                  }}
-                >
-                  {option}
-                </Text>
-              </Pressable>
-            );
-          })}
+                  >
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            }
+          )}
         </View>
-      </View>
-    );
-  })}
-</View>
 
-        <View style={{ marginTop: 20 }}>
+        {/* ---------------------------------------- */}
+        {/* HUMAN RESPONSE                           */}
+        {/* ---------------------------------------- */}
+
         <View
           style={{
-            minHeight: 90,
-            padding: 14,
-            borderRadius: 11,
-            backgroundColor: "#EEECE6",
+            marginTop: 22,
           }}
         >
-          <TextInput
-            value={responses.alignment?.text || ""}
-            onChangeText={(text) =>
-              updateText("alignment", text)
-            }
-            onBlur={() => void saveText()}
-            multiline
-            placeholder="Anything else you want to notice..."
-            placeholderTextColor="#77746F"
+          <Text
             style={{
-              minHeight: 60,
-              color: "#2A2927",
+              color:
+                "rgba(255,255,255,0.48)",
               fontFamily: Fonts.light,
-              fontSize: 11,
-              lineHeight: 18,
-              padding: 0,
-              outlineStyle: "none" as const,
-              textAlignVertical: "top" as const,
+              fontSize: 9,
+              lineHeight: 14,
+              letterSpacing: 0.8,
+              textTransform:
+                "uppercase",
             }}
-          />
+          >
+            What feels alive?
+          </Text>
+
+          <View
+            style={{
+              marginTop: 9,
+              minHeight: 110,
+              padding: 14,
+              borderRadius: 11,
+              backgroundColor:
+                "#EEECE6",
+            }}
+          >
+            <TextInput
+              value={activeResponse.text}
+              onChangeText={updateText}
+              onBlur={() =>
+                void saveText()
+              }
+              multiline
+              placeholder="Add, change, reject, or describe what you see..."
+              placeholderTextColor="#77746F"
+              style={{
+                minHeight: 78,
+                color: "#2A2927",
+                fontFamily: Fonts.light,
+                fontSize: 11,
+                lineHeight: 18,
+                padding: 0,
+                outlineStyle:
+                  "none" as const,
+                textAlignVertical:
+                  "top" as const,
+              }}
+            />
+          </View>
         </View>
+
+        {/* ---------------------------------------- */}
+        {/* CURRENT SELECTION                        */}
+        {/* ---------------------------------------- */}
+
+        {activeResponse.selectedOptions
+          .length > 0 && (
+          <View
+            style={{
+              marginTop: 20,
+            }}
+          >
+            <Text
+              style={{
+                color:
+                  "rgba(255,255,255,0.38)",
+                fontFamily:
+                  Fonts.light,
+                fontSize: 9,
+                lineHeight: 14,
+                letterSpacing: 0.8,
+                textTransform:
+                  "uppercase",
+              }}
+            >
+              What you are carrying forward
+            </Text>
+
+            <Text
+              style={{
+                marginTop: 8,
+                color:
+                  "rgba(255,255,255,0.65)",
+                fontFamily:
+                  Fonts.light,
+                fontSize: 10,
+                lineHeight: 17,
+              }}
+            >
+              {activeResponse.selectedOptions.join(
+                "  ·  "
+              )}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -2663,78 +3330,43 @@ function StageRenew({
 }: {
   intentionId: string | null;
 }) {
-  const RENEW_QUESTIONS = [
-    {
-      id: "release",
-      question: "What is ready to be released?",
-      options: [
-        "An old expectation",
-        "A pattern",
-        "A relationship or dynamic",
-        "A way of doing things",
-        "Something I have been holding onto",
-        "Nothing yet",
-        "Something else",
-      ],
-      multiple: true,
-    },
-    {
-      id: "moment",
-      question: "What is this moment asking for?",
-      options: [
-        "Action",
-        "Waiting",
-        "Listening",
-        "Letting go",
-        "Changing direction",
-        "Staying with what is",
-      ],
-      multiple: true,
-    },
-    {
-      id: "repeat",
-      question:
-        "Am I repeating something and expecting a different result?",
-      options: [
-        "Yes",
-        "Maybe",
-        "No",
-        "I'm not sure",
-      ],
-      multiple: false,
-    },
-    {
-      id: "receive",
-      question: "What might be trying to find me?",
-      options: [
-        "A new idea",
-        "An opportunity",
-        "A person",
-        "A possibility",
-        "A new direction",
-        "A different way of doing things",
-        "Nothing yet",
-      ],
-      multiple: true,
-    },
-  ];
+type RenewState = {
+  feel: string;
+  think: string;
+  say: string;
+  do: string;
+  reflection: string;
+};
 
-  const [responses, setResponses] = useState<
-    Record<
-      string,
-      {
-        selectedOptions: string[];
-        text: string;
-      }
-    >
-  >({});
+const createEmptyState = (): RenewState => ({
+  feel: "",
+  think: "",
+  say: "",
+  do: "",
+  reflection: "",
+});
+
+  const [renewState, setRenewState] =
+    useState<RenewState>(createEmptyState);
+
+  const [loaded, setLoaded] = useState(false);
+
+  const [isReflecting, setIsReflecting] =
+  useState(false);
+
+  // --------------------------------------------------
+  // LOAD RENEW
+  // --------------------------------------------------
 
   useEffect(() => {
-    const loadRenewStep = async () => {
+    const loadRenew = async () => {
       if (!intentionId) {
-        setResponses({});
+        setRenewState(createEmptyState());
+        setLoaded(false);
         return;
       }
+
+      setLoaded(false);
 
       try {
         const { data, error } = await supabase
@@ -2753,59 +3385,84 @@ function StageRenew({
         }
 
         if (!data?.response) {
-          setResponses({});
+          setRenewState(createEmptyState());
           return;
         }
 
-        const parsed =
+        const response =
           typeof data.response === "string"
             ? JSON.parse(data.response)
             : data.response;
 
-        setResponses(
-          parsed?.responses &&
-            typeof parsed.responses === "object"
-            ? parsed.responses
-            : {}
-        );
+        setRenewState({
+          feel:
+            typeof response?.feel === "string"
+              ? response.feel
+              : "",
+
+          think:
+            typeof response?.think === "string"
+              ? response.think
+              : "",
+
+          say:
+            typeof response?.say === "string"
+              ? response.say
+              : "",
+
+          do:
+            typeof response?.do === "string"
+              ? response.do
+              : "",
+          reflection:
+  typeof response?.reflection === "string"
+    ? response.reflection
+    : "",    
+        });
       } catch (error) {
         console.error(
-          "❌ SOVEREIGN RENEW RESPONSE PARSE ERROR:",
+          "❌ SOVEREIGN RENEW LOAD ERROR:",
           error
         );
 
-        setResponses({});
+        setRenewState(createEmptyState());
+      } finally {
+        setLoaded(true);
       }
     };
 
-    void loadRenewStep();
+    void loadRenew();
   }, [intentionId]);
 
+  // --------------------------------------------------
+  // SAVE RENEW
+  // --------------------------------------------------
+
   const saveRenew = async (
-    nextResponses: Record<
-      string,
-      {
-        selectedOptions: string[];
-        text: string;
-      }
-    >
+    nextState: RenewState
   ) => {
     if (!intentionId) {
       return;
     }
 
     try {
-      const response = {
-        responses: nextResponses,
-      };
+const response = {
+  feel: nextState.feel.trim(),
+  think: nextState.think.trim(),
+  say: nextState.say.trim(),
+  do: nextState.do.trim(),
+  reflection: nextState.reflection.trim(),
+};
 
-      const { data: existing, error: findError } =
-        await supabase
-          .from("sovereign_intention_steps")
-          .select("id")
-          .eq("intention_id", intentionId)
-          .eq("step", "renew")
-          .maybeSingle();
+      const {
+        data: existing,
+        error: findError,
+      } = await supabase
+        .from("sovereign_intention_steps")
+        .select("id")
+        .eq("intention_id", intentionId)
+        .eq("step", "renew")
+        .maybeSingle();
 
       if (findError) {
         console.error(
@@ -2853,237 +3510,271 @@ function StageRenew({
     }
   };
 
-  const selectOption = async (
-    questionId: string,
-    option: string,
-    multiple: boolean
+  // --------------------------------------------------
+  // UPDATE ONE FIELD
+  // --------------------------------------------------
+
+const updateField = (
+  field: keyof RenewState,
+  value: string
+) => {
+  setRenewState((current) => ({
+    ...current,
+    [field]: value,
+    reflection: "",
+  }));
+};
+
+  // --------------------------------------------------
+  // SAVE ONE FIELD
+  // --------------------------------------------------
+
+  const saveField = (
+    field: keyof RenewState
   ) => {
-    const current = responses[questionId] || {
-      selectedOptions: [],
-      text: "",
+    const nextState = {
+      ...renewState,
     };
 
-    let selectedOptions: string[];
+    void saveRenew(nextState);
+  };
 
-    if (multiple) {
-      selectedOptions =
-        current.selectedOptions.includes(option)
-          ? current.selectedOptions.filter(
-              (item) => item !== option
-            )
-          : [
-              ...current.selectedOptions,
-              option,
-            ];
-    } else {
-      selectedOptions =
-        current.selectedOptions[0] === option
-          ? []
-          : [option];
+const generateReflection = async () => {
+  if (!intentionId) {
+    return;
+  }
+
+  const hasInput =
+    renewState.feel.trim() ||
+    renewState.think.trim() ||
+    renewState.say.trim() ||
+    renewState.do.trim();
+
+  if (!hasInput) {
+    return;
+  }
+
+  try {
+    setIsReflecting(true);
+
+    const userId = await getUserId();
+
+    if (!userId) {
+      return;
     }
 
-    const nextResponses = {
-      ...responses,
-      [questionId]: {
-        ...current,
-        selectedOptions,
-      },
+    console.log(
+      "🟣 RENEW REFLECTION — START",
+      {
+        userId,
+        intentionId,
+      }
+    );
+
+    const result =
+      await generateRenewReflection({
+        userId,
+        intentionId,
+        inputs: {
+          feel: renewState.feel,
+          think: renewState.think,
+          say: renewState.say,
+          do: renewState.do,
+        },
+      });
+
+    console.log(
+      "🟢 RENEW REFLECTION — RETURNED",
+      result
+    );
+
+    const nextState = {
+      ...renewState,
+      reflection: result.reflection,
     };
 
-    setResponses(nextResponses);
+    setRenewState(nextState);
 
-    await saveRenew(nextResponses);
+    await saveRenew(nextState);
+  } catch (error) {
+    console.error(
+      "❌ SOVEREIGN RENEW REFLECTION ERROR:",
+      error
+    );
+  } finally {
+    setIsReflecting(false);
+  }
+};
+
+// --------------------------------------------------
+// 🌱 AUTO REFLECTION
+// --------------------------------------------------
+// When all four fields are present and the human
+// becomes quiet for 3 seconds, let the RENEW agent
+// reflect.
+// --------------------------------------------------
+
+useEffect(() => {
+  if (
+    !loaded ||
+    isReflecting ||
+    renewState.reflection.trim()
+  ) {
+    return;
+  }
+
+  const hasAllInputs =
+    renewState.feel.trim() &&
+    renewState.think.trim() &&
+    renewState.say.trim() &&
+    renewState.do.trim();
+
+  if (!hasAllInputs) {
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    void generateReflection();
+  }, 3000);
+
+  return () => {
+    clearTimeout(timer);
   };
+}, [
+  loaded,
+  renewState.feel,
+  renewState.think,
+  renewState.say,
+  renewState.do,
+  renewState.reflection,
+  isReflecting,
+]);
 
-  const updateText = (
-    questionId: string,
-    text: string
-  ) => {
-    const current = responses[questionId] || {
-      selectedOptions: [],
-      text: "",
-    };
+  if (!loaded) {
+    return (
+      <View>
 
-    setResponses({
-      ...responses,
-      [questionId]: {
-        ...current,
-        text,
-      },
-    });
-  };
+        <Text style={styles.stagePlaceholder}>
+          ...
+        </Text>
+      </View>
+    );
+  }
 
-  const saveText = async () => {
-    await saveRenew(responses);
-  };
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
 
   return (
     <View>
 
-      {/* RENEW QUESTIONS */}
-      <View
-        style={{
-          width: "100%",
-          flexDirection: "row",
-          gap: 18,
-          marginTop: 28,
-          marginBottom: 30,
-        }}
-      >
-        {RENEW_QUESTIONS.map((item) => {
-          const response = responses[item.id] || {
-            selectedOptions: [],
-            text: "",
-          };
+      <Text style={styles.stagePrompt}>
+        Pause. Notice what is here now.
+      </Text>
 
-          return (
-            <View
-              key={item.id}
-              style={{
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              <Text
-                style={{
-                  minHeight: 42,
-                  marginBottom: 14,
-                  color: "rgba(255,255,255,0.72)",
-                  fontFamily: Fonts.light,
-                  fontSize: 11,
-                  lineHeight: 16,
-                  letterSpacing: 0.2,
-                }}
-              >
-                {item.question}
-              </Text>
+      {/* -------------------------------------------- */}
+      {/* FOUR REFLECTION BLOCKS                       */}
+      {/* -------------------------------------------- */}
 
-              <View
-                style={{
-                  width: "100%",
-                  gap: 8,
-                }}
-              >
-                {item.options.map((option) => {
-                  const selected =
-                    response.selectedOptions.includes(option);
+      <View style={styles.renewGrid}>
 
-                  return (
-                    <Pressable
-                      key={option}
-                      onPress={() =>
-                        void selectOption(
-                          item.id,
-                          option,
-                          item.multiple
-                        )
-                      }
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingVertical: 5,
-                      }}
-                    >
-                      {/* TOGGLE */}
-                      <View
-                        style={{
-                          width: 28,
-                          height: 16,
-                          borderRadius: 8,
-                          backgroundColor: selected
-                            ? "#EEECE6"
-                            : "rgba(255,255,255,0.10)",
-                          borderWidth: 1,
-                          borderColor: selected
-                            ? "#EEECE6"
-                            : "rgba(255,255,255,0.16)",
-                          justifyContent: "center",
-                          paddingHorizontal: 2,
-                          marginRight: 8,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                            backgroundColor: selected
-                              ? "#2A2927"
-                              : "rgba(255,255,255,0.45)",
-                            alignSelf: selected
-                              ? "flex-end"
-                              : "flex-start",
-                          }}
-                        />
-                      </View>
+        {/* FEEL */}
+        <View style={styles.renewBlock}>
+          <Text style={styles.renewLabel}>
+            FEEL
+          </Text>
 
-                      <Text
-                        style={{
-                          flex: 1,
-                          color: selected
-                            ? "#EEECE6"
-                            : "rgba(255,255,255,0.55)",
-                          fontFamily: Fonts.light,
-                          fontSize: 10,
-                          lineHeight: 14,
-                        }}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        })}
-      </View>
-
-      {/* BEGIN AGAIN */}
-      <View style={{ marginBottom: 10 }}>
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.72)",
-            fontFamily: Fonts.light,
-            fontSize: 11,
-            lineHeight: 16,
-            letterSpacing: 0.2,
-            marginBottom: 12,
-          }}
-        >
-          What wants to begin again?
-        </Text>
-
-        <View
-          style={{
-            minHeight: 110,
-            padding: 14,
-            borderRadius: 11,
-            backgroundColor: "#EEECE6",
-          }}
-        >
           <TextInput
-            value={responses.beginAgain?.text || ""}
-            onChangeText={(text) =>
-              updateText("beginAgain", text)
+            value={renewState.feel}
+            onChangeText={(value) =>
+              updateField("feel", value)
             }
-            onBlur={() => void saveText()}
+            onBlur={() =>
+              saveField("feel")
+            }
             multiline
-            placeholder="A creation, a direction, a possibility — or nothing yet."
+            placeholder="What am I feeling?"
             placeholderTextColor="#77746F"
-            style={{
-              minHeight: 75,
-              color: "#2A2927",
-              fontFamily: Fonts.light,
-              fontSize: 12,
-              lineHeight: 18,
-              padding: 0,
-              outlineStyle: "none" as const,
-              textAlignVertical: "top" as const,
-            }}
+            style={styles.renewInput}
           />
         </View>
+
+        {/* THINK */}
+        <View style={styles.renewBlock}>
+          <Text style={styles.renewLabel}>
+            THINK
+          </Text>
+
+          <TextInput
+            value={renewState.think}
+            onChangeText={(value) =>
+              updateField("think", value)
+            }
+            onBlur={() =>
+              saveField("think")
+            }
+            multiline
+            placeholder="What am I thinking?"
+            placeholderTextColor="#77746F"
+            style={styles.renewInput}
+          />
+        </View>
+
+        {/* SAY */}
+        <View style={styles.renewBlock}>
+          <Text style={styles.renewLabel}>
+            SAY
+          </Text>
+
+          <TextInput
+            value={renewState.say}
+            onChangeText={(value) =>
+              updateField("say", value)
+            }
+            onBlur={() =>
+              saveField("say")
+            }
+            multiline
+            placeholder="What am I saying?"
+            placeholderTextColor="#77746F"
+            style={styles.renewInput}
+          />
+        </View>
+
+        {/* DO */}
+        <View style={styles.renewBlock}>
+          <Text style={styles.renewLabel}>
+            DO
+          </Text>
+
+          <TextInput
+            value={renewState.do}
+            onChangeText={(value) =>
+              updateField("do", value)
+            }
+            onBlur={() =>
+              saveField("do")
+            }
+            multiline
+            placeholder="What am I doing?"
+            placeholderTextColor="#77746F"
+            style={styles.renewInput}
+          />
+        </View>
+
       </View>
+
+{renewState.reflection ? (
+  <View style={styles.renewReflection}>
+    <Text style={styles.renewReflectionLabel}>
+      REFLECTION
+    </Text>
+
+    <Text style={styles.renewReflectionText}>
+      {renewState.reflection}
+    </Text>
+  </View>
+) : null}
 
     </View>
   );
@@ -3341,6 +4032,34 @@ lifeEntryText: {
     textAlignVertical: "top" as const,
   },
 
+  // --------------------------------------------------
+// RENEW — REFLECTION
+// --------------------------------------------------
+
+renewReflection: {
+  marginTop: 30,
+  paddingTop: 24,
+  paddingBottom: 28,
+  borderTopWidth: 1,
+  borderTopColor: "rgba(255,255,255,0.08)",
+},
+
+renewReflectionLabel: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1.5,
+  marginBottom: 14,
+},
+
+renewReflectionText: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 13,
+  lineHeight: 22,
+  maxWidth: 760,
+},
+
 journeyArea: {
   flex: 1,
   minHeight: 0,
@@ -3436,12 +4155,12 @@ journeyNodeActive: {
   // BUILD — MIRROR
   // --------------------------------------------------
 
-  buildWorkspace: {
-    gap: 16,
-  },
+buildWorkspace: {
+  gap: 12,
+},
 
 buildConversation: {
-  height: 160,
+  height: 145,
 },
 
 buildConversationContent: {
@@ -3668,6 +4387,43 @@ largeInput: {
   outlineStyle: "none" as const,
   textAlignVertical: "top" as const,
 },
+
+  // --------------------------------------------------
+  // RENEW
+  // --------------------------------------------------
+
+  renewGrid: {
+    flexDirection: "row" as const,
+    gap: 10,
+    width: "100%",
+    marginTop: 18,
+  },
+
+  renewBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+renewLabel: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1.5,
+  marginBottom: 8,
+},
+
+  renewInput: {
+    minHeight: 145,
+    backgroundColor: "#EEECE6",
+    color: "#2A2927",
+    fontFamily: Fonts.light,
+    fontSize: 11,
+    lineHeight: 17,
+    padding: 14,
+    borderRadius: 11,
+    outlineStyle: "none" as const,
+    textAlignVertical: "top" as const,
+  },
 
 feelingCard: {
   padding: 0,
@@ -3921,20 +4677,20 @@ patternTrack: {
     borderColor: "rgba(95,158,114,0.42)",
   },
 
-  stepTileTitle: {
-    color: Colors.white,
-    fontFamily: Fonts.light,
-    fontSize: 10,
-    lineHeight: 15,
-  },
+stepTileTitle: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 11,
+  lineHeight: 16,
+},
 
-  stepTileDescription: {
-    color: Colors.subtleText,
-    fontFamily: Fonts.light,
-    fontSize: 8,
-    lineHeight: 13,
-    marginTop: 7,
-  },
+stepTileDescription: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 9,
+  lineHeight: 14,
+  marginTop: 6,
+},
 
   rightColumnSpacer: {
     height: 18,

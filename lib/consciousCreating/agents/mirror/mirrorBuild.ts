@@ -267,37 +267,22 @@ export async function mirrorBuild(
   // 4. INTERPRET CURRENT EXPRESSION
   // --------------------------------------------------
 
-  await interpretExpression({
-    userId,
+await interpretExpression({
+  userId,
 
-    expressionId:
-      expression.id,
+  expressionId:
+    expression.id,
 
-    expression:
-      humanMessage,
+  expression:
+    humanMessage,
 
-    intentionId,
+  intentionId,
 
-    context: {
-      creation:
-        contextBeforeMeaning.creation,
-
-      journey:
-        contextBeforeMeaning.journey,
-
-      livingField:
-        contextBeforeMeaning.livingField,
-
-      expressions:
-        contextBeforeMeaning.expressions,
-
-      meanings:
-        contextBeforeMeaning.meanings,
-
-      artifacts:
-        contextBeforeMeaning.artifacts,
-    },
-  });
+  context: {
+    creation:
+      contextBeforeMeaning.creation,
+  },
+});
 
   // --------------------------------------------------
   // 5. RELOAD CONTEXT
@@ -314,13 +299,16 @@ export async function mirrorBuild(
   // 6. BUILD MIRROR'S BRAIN
   // --------------------------------------------------
 
-  const prompt =
-    buildMirrorPrompt({
-      context,
+const prompt =
+  buildMirrorPrompt({
+    context,
 
-      message:
-        humanMessage,
-    });
+    message:
+      humanMessage,
+
+    conversation:
+      existingConversation.conversation,
+  });
 
   // --------------------------------------------------
   // 7. SEND THROUGH EXISTING AI SERVICE
@@ -368,11 +356,17 @@ const nextConversation = [
 
 const readiness =
   await assessBuildReadiness({
-    conversation:
-      nextConversation,
+conversation:
+  nextConversation,
 
-    creation:
-      context.creation,
+consciousDesire:
+  context.journey.stages.discover?.response &&
+  typeof context.journey.stages.discover.response.consciousDesire === "string"
+    ? context.journey.stages.discover.response.consciousDesire.trim()
+    : "",
+
+creation:
+  context.creation,
 
     journey:
       context.journey,
@@ -393,38 +387,53 @@ const readiness =
 mirrorResponse.readiness =
   readiness;  
 
-  // --------------------------------------------------
-// 10. GENERATE NEXT MOVES
+// --------------------------------------------------
+// 10. GENERATE NEXT MOVES FROM THE BUILD CONVERSATION
 // --------------------------------------------------
 
-const nextMovesResult =
-  await generateNextMoves({
-    conversation:
-      nextConversation,
+// Readiness remains useful intelligence,
+// but it is no longer the gate for possibilities.
 
-    creation:
-      context.creation,
+if (
+  mirrorResponse.conversationState !== "pause"
+) {
+  const nextMovesResult =
+    await generateNextMoves({
+      conversation:
+        nextConversation,
 
-    journey:
-      context.journey,
+      consciousDesire:
+        context.journey.stages.discover?.response &&
+        typeof context.journey.stages.discover.response.consciousDesire === "string"
+          ? context.journey.stages.discover.response.consciousDesire.trim()
+          : "",
 
-    livingField:
-      context.livingField,
+      creation:
+        context.creation,
 
-    expressions:
-      context.expressions,
+      journey:
+        context.journey,
 
-    meanings:
-      context.meanings,
+      livingField:
+        context.livingField,
 
-    artifacts:
-      context.artifacts,
+      expressions:
+        context.expressions,
 
-    readiness,
-  });
+      meanings:
+        context.meanings,
 
-mirrorResponse.nextMoves =
-  nextMovesResult.moves;
+      artifacts:
+        context.artifacts,
+
+      readiness,
+    });
+
+  mirrorResponse.nextMoves =
+    nextMovesResult.moves;
+} else {
+  mirrorResponse.nextMoves = [];
+}
 
 
     // --------------------------------------------------
@@ -445,8 +454,8 @@ await persistBuildConversation({
 
   readiness,
 
-  nextMoves:
-    nextMovesResult.moves,
+nextMoves:
+  mirrorResponse.nextMoves,
 });
 
     // --------------------------------------------------
