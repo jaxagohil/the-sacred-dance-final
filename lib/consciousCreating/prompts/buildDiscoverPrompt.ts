@@ -259,32 +259,26 @@ Identify:
 3. A concise synthesis explaining how the different
    pieces of context come together.
 
-4. A reflection on the creation patterns.
+4. A concise reflection on the creation patterns.
 
-   Look specifically at the selected creation patterns
-   in the Living Field and consider whether any of them
-   meaningfully participate in this creation.
+Look at the selected creation patterns and describe only the
+most meaningful relationship they have with this creation.
 
-   Describe whether a pattern appears to:
-   - support the creation
-   - shape how the creation is being approached
-   - protect something important
-   - constrain or complicate the creation
-   - create a meaningful tension with the stated desire
+Write ONLY 2–3 short sentences.
 
-   Only describe a relationship when the available
-   context supports it.
+Keep it specific to this creation and grounded in the available evidence.
 
-   If the patterns do not appear to materially relate
-   to the creation, say so rather than forcing a
-   connection.
+Do not explain every pattern.
 
-   Do not interpret a pattern as good, bad, right,
-   wrong, healthy, unhealthy, balanced, or imbalanced.
+Do not list the patterns again.
 
-   Do not prescribe changing a pattern.
+Do not repeat the conscious desire.
 
-   Do not turn a pattern into an identity statement.
+Do not give advice, prescribe change, diagnose, or turn patterns
+into identity statements.
+
+If the patterns do not materially relate to the creation,
+say so briefly rather than forcing a connection.
 
 5. The strongest pieces of evidence supporting the
    proposal.
@@ -366,6 +360,9 @@ language.
 The conscious desire may be a synthesis, but the
 creation details must preserve what the person actually
 said, chose, imagined, or specified.
+
+The patternReflection must remain brief and readable in the UI:
+maximum 40 words.
 
 Return ONLY valid JSON in exactly this structure:
 

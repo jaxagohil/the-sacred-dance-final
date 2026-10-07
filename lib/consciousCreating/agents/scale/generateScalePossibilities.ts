@@ -319,6 +319,24 @@ this creation become?
 
 Generate up to 5 possibilities for each.
 
+IMPORTANT FORMAT:
+
+Each possibility must be a short headline, not a sentence or explanation.
+
+Keep each one to approximately 2–6 words.
+
+Examples:
+- A Garden Home
+- Sacred Dance Community
+- Local Women
+- Mountain Retreats
+- Walking Together
+- Conscious Living Space
+
+Do not explain the possibility.
+Do not add context.
+Do not use full sentences.
+
 The possibilities should:
 
 - emerge from the creation itself
@@ -332,7 +350,7 @@ The possibilities should:
   signals
 - include possibilities the human may not have
   consciously considered
-- be specific enough to imagine
+- be specific enough to imagine while remaining a short headline
 - remain open rather than prescriptive
 - honour the human's values and what matters
 - avoid generic business-growth advice

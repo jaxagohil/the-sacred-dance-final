@@ -741,12 +741,7 @@ const chooseStep = async (id: string) => {
                 {intentions.map((intention) => {
                   const selected = intention.id === selectedIntentionId;
 
-                  const stateColor =
-                    intention.state === "creation"
-                      ? "#5F9E72"
-                      : intention.state === "exploring"
-                        ? "#C9A84E"
-                        : "#666666";
+const stateColor = "#C9A84E";
 
                   return (
                     <Pressable
@@ -809,10 +804,6 @@ const chooseStep = async (id: string) => {
             </Text>
           </View>
 
-          <Text style={styles.journeyNumber}>
-            {stage.number}
-          </Text>
-
           {index < JOURNEY.length - 1 && (
             <View style={styles.journeyConnector} />
           )}
@@ -866,65 +857,6 @@ const chooseStep = async (id: string) => {
 </ScrollView>
 </View>
 
-<View style={styles.oneStepRail}>
-  {nextStepOptions.map((move, index) => {
-    const selected =
-      selectedStep === move.title;
-
-    return (
-      <Pressable
-        key={`${move.title}-${index}`}
-        onPress={() =>
-          chooseStep(move.title)
-        }
-        style={[
-          styles.stepTile,
-          selected &&
-            styles.stepTileSelected,
-        ]}
-      >
-        <Text
-          style={styles.stepTileTitle}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {move.title}
-        </Text>
-
-        <Text
-          style={styles.stepTileDescription}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {move.description}
-        </Text>
-      </Pressable>
-    );
-  })}
-
-  <Pressable
-    onPress={() =>
-      chooseStep("DO NOTHING FOR NOW")
-    }
-    style={[
-      styles.stepTile,
-      selectedStep ===
-        "DO NOTHING FOR NOW" &&
-        styles.stepTileSelected,
-    ]}
-  >
-    <Text style={styles.stepTileTitle}>
-      PAUSE
-    </Text>
-
-    <Text
-      style={styles.stepTileDescription}
-      numberOfLines={2}
-    >
-      Do nothing for now.
-    </Text>
-  </Pressable>
-</View>
 
           </View>
 
@@ -1228,67 +1160,115 @@ const [isRefreshing, setIsRefreshing] = useState(false);
 const [creationPatterns, setCreationPatterns] =
   useState<CreationPattern[]>([]);
 
-  useEffect(() => {
-    const loadDiscoverStep = async () => {
-      if (!intentionId) {
-        return;
-      }
+useEffect(() => {
+  const loadDiscoverStep = async () => {
+    if (!intentionId) {
+      setConsciousDesire("");
+      setPatternReflection("");
+      return;
+    }
 
-      try {
-const { data, error } = await supabase
-  .from("sovereign_intention_steps")
-  .select("response, ai_response")
-  .eq("intention_id", intentionId)
-  .eq("step", "discover")
-  .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("sovereign_intention_steps")
+        .select("id, response, ai_response")
+        .eq("intention_id", intentionId)
+        .eq("step", "discover")
+        .maybeSingle();
 
-        if (error) {
-          console.error(
-            "❌ SOVEREIGN DISCOVER LOAD ERROR:",
-            error
-          );
-          return;
-        }
-
-if (data) {
-  const response =
-    typeof data.response === "object" &&
-    data.response !== null
-      ? data.response as {
-          consciousDesire?: string;
-        }
-      : {};
-
-const aiResponse =
-  typeof data.ai_response === "object" &&
-  data.ai_response !== null
-    ? data.ai_response as {
-        desire?: string;
-        patternReflection?: string;
-      }
-    : {};
-
-setConsciousDesire(
-  response.consciousDesire ||
-  aiResponse.desire ||
-  ""
-);
-
-setPatternReflection(
-  aiResponse.patternReflection ||
-  ""
-);
-}
-      } catch (error) {
+      if (error) {
         console.error(
           "❌ SOVEREIGN DISCOVER LOAD ERROR:",
           error
         );
+        return;
       }
-    };
 
-    void loadDiscoverStep();
-  }, [intentionId]);
+      const response =
+        typeof data?.response === "object" &&
+        data.response !== null
+          ? data.response as {
+              consciousDesire?: string;
+            }
+          : {};
+
+      const aiResponse =
+        typeof data?.ai_response === "object" &&
+        data.ai_response !== null
+          ? data.ai_response as {
+              desire?: string;
+              patternReflection?: string;
+            }
+          : {};
+
+      setConsciousDesire(
+        response.consciousDesire ||
+        aiResponse.desire ||
+        ""
+      );
+
+      // Existing stored reflection
+      if (aiResponse.patternReflection?.trim()) {
+        setPatternReflection(
+          aiResponse.patternReflection.trim()
+        );
+        return;
+      }
+
+      // No reflection exists yet for this creation.
+      // Generate it now so every creation gets its own reflection.
+      const userId = await getUserId();
+
+      if (!userId) {
+        setPatternReflection("");
+        return;
+      }
+
+      const context = await getCreationContext({
+        userId,
+        intentionId,
+      });
+
+      const proposal = await discoverConsciousDesire({
+        context,
+      });
+
+      if (!proposal) {
+        setPatternReflection("");
+        return;
+      }
+
+      setPatternReflection(
+        proposal.patternReflection || ""
+      );
+
+      // Preserve the human-confirmed response.
+      // Store the AI proposal alongside it.
+      if (data?.id) {
+        const { error: updateError } = await supabase
+          .from("sovereign_intention_steps")
+          .update({
+            ai_response: proposal,
+          })
+          .eq("id", data.id);
+
+        if (updateError) {
+          console.error(
+            "❌ SOVEREIGN DISCOVER AI RESPONSE SAVE ERROR:",
+            updateError
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "❌ SOVEREIGN DISCOVER LOAD ERROR:",
+        error
+      );
+    }
+  };
+
+  void loadDiscoverStep();
+}, [intentionId]);
 
   useEffect(() => {
     const loadCreationPatterns = async () => {
@@ -1439,6 +1419,35 @@ setConsciousDesire(proposal.desire || "");
 setPatternReflection(
   proposal.patternReflection || ""
 );
+
+const { data: existing, error: findError } =
+  await supabase
+    .from("sovereign_intention_steps")
+    .select("id")
+    .eq("intention_id", intentionId)
+    .eq("step", "discover")
+    .maybeSingle();
+
+if (findError) {
+  console.error(
+    "❌ SOVEREIGN DISCOVER REFRESH FIND ERROR:",
+    findError
+  );
+} else if (existing) {
+  const { error: updateError } = await supabase
+    .from("sovereign_intention_steps")
+    .update({
+      ai_response: proposal,
+    })
+    .eq("id", existing.id);
+
+  if (updateError) {
+    console.error(
+      "❌ SOVEREIGN DISCOVER REFRESH SAVE ERROR:",
+      updateError
+    );
+  }
+}
 
 console.log(
   "🔄 SOVEREIGN DISCOVER — REFRESHED:",
@@ -1799,67 +1808,61 @@ const loadedConversation =
   return (
     <View style={styles.buildWorkspace}>
 
-           <Text style={styles.mirrorWelcomeText}>
-              I'm here with you in this creation.
-              Tell me what's alive.
-            </Text>
+      <Text style={styles.mirrorWelcomeText}>
+        I'm here with you in this creation.
+        Tell me what's alive.
+      </Text>
+
       {/* -------------------------------------------- */}
       {/* MIRROR CONVERSATION                         */}
       {/* -------------------------------------------- */}
 
-<ScrollView
-  ref={conversationScrollRef}
-  style={styles.buildConversation}
-  onContentSizeChange={() => {
-    requestAnimationFrame(() => {
-      conversationScrollRef.current?.scrollToEnd({
-        animated: true,
-      });
-    });
-  }}
->
+      <ScrollView
+        ref={conversationScrollRef}
+        style={styles.buildConversation}
+        onContentSizeChange={() => {
+          requestAnimationFrame(() => {
+            conversationScrollRef.current?.scrollToEnd({
+              animated: true,
+            });
+          });
+        }}
+      >
+        {conversation.map((item, index) => {
+          const isUser = item.role === "user";
 
-  {conversation.map((item, index) => {
-            const isUser =
-              item.role === "user";
-
-            return (
+          return (
+            <View
+              key={`${item.role}-${index}`}
+              style={[
+                styles.chatRow,
+                isUser
+                  ? styles.chatRowUser
+                  : styles.chatRowMirror,
+              ]}
+            >
               <View
-                key={`${item.role}-${index}`}
                 style={[
-                  styles.chatRow,
+                  styles.chatBubble,
                   isUser
-                    ? styles.chatRowUser
-                    : styles.chatRowMirror,
+                    ? styles.chatBubbleUser
+                    : styles.chatBubbleMirror,
                 ]}
               >
-                <View
-                  style={[
-                    styles.chatBubble,
-                    isUser
-                      ? styles.chatBubbleUser
-                      : styles.chatBubbleMirror,
-                  ]}
-                >
-                  {!isUser && (
-                    <Text style={styles.chatSender}>
-                      MIRROR
-                    </Text>
-                  )}
 
-                  <Text
-                    style={
-                      isUser
-                        ? styles.chatTextUser
-                        : styles.chatTextMirror
-                    }
-                  >
-                    {item.content}
-                  </Text>
-                </View>
+                <Text
+                  style={
+                    isUser
+                      ? styles.chatTextUser
+                      : styles.chatTextMirror
+                  }
+                >
+                  {item.content}
+                </Text>
               </View>
-            );
-          })}
+            </View>
+          );
+        })}
 
         {isSending && (
           <View
@@ -1884,7 +1887,6 @@ const loadedConversation =
             </View>
           </View>
         )}
-
       </ScrollView>
 
       {/* -------------------------------------------- */}
@@ -1892,7 +1894,6 @@ const loadedConversation =
       {/* -------------------------------------------- */}
 
       <View style={styles.buildInputRow}>
-
         <TextInput
           value={message}
           onChangeText={setMessage}
@@ -1910,10 +1911,7 @@ const loadedConversation =
           onPress={() => {
             void sendMessage();
           }}
-          disabled={
-            !message.trim() ||
-            isSending
-          }
+          disabled={!message.trim() || isSending}
           style={[
             styles.buildSendButton,
             (!message.trim() || isSending) &&
@@ -1924,7 +1922,6 @@ const loadedConversation =
             {isSending ? "…" : "↑"}
           </Text>
         </Pressable>
-
       </View>
 
       {/* -------------------------------------------- */}
@@ -1933,10 +1930,6 @@ const loadedConversation =
 
       {nextMoves.length > 0 && (
         <View style={styles.nextMovesSection}>
-
-          <Text style={styles.nextMovesLabel}>
-            WHAT COULD HAPPEN NEXT
-          </Text>
 
           <View style={styles.nextMovesList}>
 
@@ -1961,31 +1954,26 @@ const loadedConversation =
                     {move.title}
                   </Text>
 
-                  <Text style={styles.nextMoveDescription}>
-                    {move.description}
-                  </Text>
                 </Pressable>
               );
             })}
 
+            {/* DO NOTHING IS ALWAYS A HUMAN CHOICE */}
+
+            <Pressable
+              onPress={handlePause}
+              style={[
+                styles.pauseMoveButton,
+                selectedNextMove === "DO NOTHING FOR NOW" &&
+                  styles.nextMoveButtonSelected,
+              ]}
+            >
+              <Text style={styles.pauseMoveTitle}>
+                DO NOTHING FOR NOW
+              </Text>
+            </Pressable>
+
           </View>
-
-          {/* DO NOTHING IS ALWAYS A HUMAN CHOICE */}
-
-          <Pressable
-            onPress={handlePause}
-            style={[
-              styles.pauseMoveButton,
-              selectedNextMove ===
-                "DO NOTHING FOR NOW" &&
-                styles.nextMoveButtonSelected,
-            ]}
-          >
-            <Text style={styles.pauseMoveTitle}>
-              DO NOTHING FOR NOW
-            </Text>
-          </Pressable>
-
         </View>
       )}
 
@@ -2357,8 +2345,8 @@ const chakraScores =
     const value =
       sliders[item.id] ?? 0.5;
 
-    const lineHeight = 150;
-    const thumbSize = 14;
+    const lineHeight = 105;
+    const thumbSize = 9;
 
     const updateFromY = (
       y: number
@@ -2438,7 +2426,7 @@ const chakraScores =
           }}
           style={{
             height: lineHeight,
-            width: 32,
+            width: 20,
             alignItems: "center",
             justifyContent:
               "flex-start",
@@ -2539,9 +2527,9 @@ const chakraScores =
         style={{
           flexDirection: "row",
           width: "100%",
-          marginTop: 28,
-          paddingHorizontal: 4,
-          minHeight: 205,
+marginTop: 50,
+paddingHorizontal: 2,
+minHeight: 145,
         }}
       >
         {GROW_VALUES.map(
@@ -2553,13 +2541,13 @@ const chakraScores =
 
       <View
         style={{
-          marginTop: 24,
+          marginTop: 60,
         }}
       >
         <View
           style={{
             width: "100%",
-            minHeight: 90,
+            minHeight: 70,
             padding: 14,
             borderRadius: 11,
             backgroundColor:
@@ -3068,9 +3056,9 @@ console.log(
               {/* PORTAL */}
               <View
                 style={{
-                  width: selected ? 92 : 76,
-                  height: selected ? 92 : 76,
-                  borderRadius: 46,
+width: selected ? 62 : 54,
+height: selected ? 62 : 54,
+borderRadius: 31,
                   borderWidth: 1,
                   borderColor: selected
                     ? "#EEECE6"
@@ -3084,9 +3072,9 @@ console.log(
               >
                 <View
                   style={{
-                    width: selected ? 54 : 44,
-                    height: selected ? 54 : 44,
-                    borderRadius: 27,
+width: selected ? 36 : 32,
+height: selected ? 36 : 32,
+borderRadius: 18,
                     borderWidth: 1,
                     borderColor: selected
                       ? "rgba(238,236,230,0.55)"
@@ -3135,42 +3123,33 @@ console.log(
           borderTopWidth: 1,
           borderTopColor:
             "rgba(255,255,255,0.08)",
-          paddingTop: 26,
+          paddingTop: 18,
         }}
       >
         <Text
           style={{
             color: "#EEECE6",
             fontFamily: Fonts.light,
-            fontSize: 15,
+            fontSize: 12,
             lineHeight: 22,
           }}
         >
           {activePortal.question}
         </Text>
 
-        <Text
-          style={{
-            marginTop: 8,
-            color: "rgba(255,255,255,0.45)",
-            fontFamily: Fonts.light,
-            fontSize: 10,
-            lineHeight: 16,
-          }}
-        >
-          Some possibilities I can already see…
-        </Text>
-
         {/* ---------------------------------------- */}
         {/* POSSIBILITY SPARKS                       */}
         {/* ---------------------------------------- */}
 
-        <View
-          style={{
-            marginTop: 20,
-            gap: 8,
-          }}
-        >
+<View
+  style={{
+    flexDirection: "row",
+    gap: 7,
+    marginTop: 12,
+    width: "100%",
+  }}
+>
+
 {possibilities[activePortal.id].map(
   (option) => {
               const selected =
@@ -3184,19 +3163,23 @@ console.log(
                   onPress={() =>
                     void toggleOption(option)
                   }
-                  style={{
-                    paddingVertical: 13,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    backgroundColor:
-                      selected
-                        ? "#EEECE6"
-                        : "rgba(255,255,255,0.035)",
-                    borderWidth: 1,
-                    borderColor: selected
-                      ? "#EEECE6"
-                      : "rgba(255,255,255,0.08)",
-                  }}
+ style={{
+  flex: 1,
+  minWidth: 0,
+  minHeight: 48,
+  paddingVertical: 8,
+  paddingHorizontal: 6,
+  borderRadius: 8,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: selected
+    ? "#EEECE6"
+    : "rgba(255,255,255,0.035)",
+  borderWidth: 1,
+  borderColor: selected
+    ? "#EEECE6"
+    : "rgba(255,255,255,0.07)",
+}}
                 >
                   <Text
                     style={{
@@ -3205,8 +3188,9 @@ console.log(
                         : "rgba(255,255,255,0.62)",
                       fontFamily:
                         Fonts.light,
-                      fontSize: 11,
-                      lineHeight: 16,
+fontSize: 9,
+lineHeight: 12,
+textAlign: "center",
                     }}
                   >
                     {option}
@@ -3223,29 +3207,15 @@ console.log(
 
         <View
           style={{
-            marginTop: 22,
+            marginTop: 14,
           }}
         >
-          <Text
-            style={{
-              color:
-                "rgba(255,255,255,0.48)",
-              fontFamily: Fonts.light,
-              fontSize: 9,
-              lineHeight: 14,
-              letterSpacing: 0.8,
-              textTransform:
-                "uppercase",
-            }}
-          >
-            What feels alive?
-          </Text>
 
           <View
             style={{
               marginTop: 9,
-              minHeight: 110,
-              padding: 14,
+minHeight: 72,
+padding: 12,
               borderRadius: 11,
               backgroundColor:
                 "#EEECE6",
@@ -3261,7 +3231,7 @@ console.log(
               placeholder="Add, change, reject, or describe what you see..."
               placeholderTextColor="#77746F"
               style={{
-                minHeight: 78,
+minHeight: 58,
                 color: "#2A2927",
                 fontFamily: Fonts.light,
                 fontSize: 11,
@@ -3276,50 +3246,6 @@ console.log(
           </View>
         </View>
 
-        {/* ---------------------------------------- */}
-        {/* CURRENT SELECTION                        */}
-        {/* ---------------------------------------- */}
-
-        {activeResponse.selectedOptions
-          .length > 0 && (
-          <View
-            style={{
-              marginTop: 20,
-            }}
-          >
-            <Text
-              style={{
-                color:
-                  "rgba(255,255,255,0.38)",
-                fontFamily:
-                  Fonts.light,
-                fontSize: 9,
-                lineHeight: 14,
-                letterSpacing: 0.8,
-                textTransform:
-                  "uppercase",
-              }}
-            >
-              What you are carrying forward
-            </Text>
-
-            <Text
-              style={{
-                marginTop: 8,
-                color:
-                  "rgba(255,255,255,0.65)",
-                fontFamily:
-                  Fonts.light,
-                fontSize: 10,
-                lineHeight: 17,
-              }}
-            >
-              {activeResponse.selectedOptions.join(
-                "  ·  "
-              )}
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -3766,9 +3692,6 @@ useEffect(() => {
 
 {renewState.reflection ? (
   <View style={styles.renewReflection}>
-    <Text style={styles.renewReflectionLabel}>
-      REFLECTION
-    </Text>
 
     <Text style={styles.renewReflectionText}>
       {renewState.reflection}
@@ -4000,13 +3923,13 @@ lifeEntryText: {
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.045)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.03)",
+    borderColor: "rgba(201,168,78,0.16)",
   },
 
-  intentionTileSelected: {
-    backgroundColor: "rgba(255,255,255,0.075)",
-    borderColor: "rgba(255,255,255,0.18)",
-  },
+intentionTileSelected: {
+  backgroundColor: "rgba(201,168,78,0.045)",
+  borderColor: "rgba(201,168,78,0.65)",
+},
 
   stateDot: {
     width: 7,
@@ -4063,14 +3986,14 @@ renewReflectionText: {
 journeyArea: {
   flex: 1,
   minHeight: 0,
-  height: 0,
   paddingTop: 18,
   paddingBottom: 10,
   paddingLeft: 10,
 },
 
 journeyContentScroll: {
-  height: 280,
+  flex: 1,
+  minHeight: 0,
 },
 
   journeyRail: {
@@ -4090,15 +4013,15 @@ journeyNode: {
   height: 48,
   borderRadius: 48,
   borderWidth: 1,
-  borderColor: "rgba(255,255,255,0.30)",
+borderColor: "rgba(201,168,78,0.38)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: Colors.background,
   },
 
 journeyNodeActive: {
-  borderColor: "rgba(255,255,255,0.75)",
-  backgroundColor: "rgba(255,255,255,0.10)",
+  borderColor: "rgba(201,168,78,0.90)",
+  backgroundColor: "rgba(201,168,78,0.08)",
 },
 
   journeyConcept: {
@@ -4140,7 +4063,7 @@ journeyNodeActive: {
     left: "58%" as const,
     width: "84%" as const,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.10)",
+  backgroundColor: "rgba(201,168,78,0.18)",
   },
 
   stageWorkspace: {
@@ -4160,12 +4083,12 @@ buildWorkspace: {
 },
 
 buildConversation: {
-  height: 145,
+  height: 205,
 },
 
 buildConversationContent: {
-  gap: 12,
-  paddingVertical: 4,
+  gap: 14,
+  paddingVertical: 6,
 },
 
   mirrorWelcome: {
@@ -4202,24 +4125,23 @@ chatRowUser: {
     justifyContent: "flex-start" as const,
   },
 
-  chatBubble: {
-    maxWidth: "82%" as const,
-    paddingVertical: 10,
-    paddingHorizontal: 13,
-    borderRadius: 13,
-  },
+chatBubble: {
+  maxWidth: "82%" as const,
+  paddingVertical: 7,
+  paddingHorizontal: 11,
+  borderRadius: 11,
+},
 
-  chatBubbleMirror: {
-    backgroundColor: "rgba(255,255,255,0.045)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-  },
+chatBubbleMirror: {
+  backgroundColor: "transparent",
+  borderWidth: 0,
+},
 
-  chatBubbleUser: {
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
+chatBubbleUser: {
+  backgroundColor: "rgba(255,255,255,0.08)",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.08)",
+},
 
   chatSender: {
     color: Colors.subtleText,
@@ -4249,12 +4171,12 @@ chatRowUser: {
     gap: 8,
   },
 
-  buildMessageInput: {
-    flex: 1,
-    minHeight: 44,
-    maxHeight: 110,
-    paddingVertical: 11,
-    paddingHorizontal: 13,
+buildMessageInput: {
+  flex: 1,
+  minHeight: 38,
+  maxHeight: 90,
+  paddingVertical: 8,
+  paddingHorizontal: 13,
     borderRadius: 13,
     backgroundColor: "#EEECE6",
     color: "#2A2927",
@@ -4291,7 +4213,7 @@ chatRowUser: {
   // --------------------------------------------------
 
   nextMovesSection: {
-    paddingTop: 4,
+    paddingTop: 20,
   },
 
   nextMovesLabel: {
@@ -4302,30 +4224,38 @@ chatRowUser: {
     marginBottom: 9,
   },
 
-  nextMovesList: {
-    gap: 7,
-  },
+nextMovesList: {
+  flexDirection: "row" as const,
+  gap: 7,
+  width: "100%",
+},
 
-  nextMoveButton: {
-    paddingVertical: 11,
-    paddingHorizontal: 13,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
+nextMoveButton: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 58,
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+  borderRadius: 10,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  backgroundColor: "rgba(255,255,255,0.035)",
+  borderWidth: 1,
+  borderColor: "rgba(201,168,78,0.14)",
+},
 
   nextMoveButtonSelected: {
     backgroundColor: "rgba(95,158,114,0.15)",
     borderColor: "rgba(95,158,114,0.42)",
   },
 
-  nextMoveTitle: {
-    color: Colors.white,
-    fontFamily: Fonts.light,
-    fontSize: 10,
-    lineHeight: 15,
-  },
+nextMoveTitle: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 9,
+  lineHeight: 13,
+  textAlign: "center" as const,
+},
 
   nextMoveDescription: {
     color: Colors.subtleText,
@@ -4335,22 +4265,28 @@ chatRowUser: {
     marginTop: 5,
   },
 
-  pauseMoveButton: {
-    marginTop: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    backgroundColor: "transparent",
-  },
+pauseMoveButton: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 58,
+  marginTop: 0,
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+  borderRadius: 10,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.06)",
+  backgroundColor: "transparent",
+},
 
-  pauseMoveTitle: {
-    color: Colors.subtleText,
-    fontFamily: Fonts.light,
-    fontSize: 7,
-    letterSpacing: 1.1,
-  },
+pauseMoveTitle: {
+  color: Colors.subtleText,
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1,
+  textAlign: "center" as const,
+},
   
   stagePlaceholder: {
   color: Colors.subtleText,
@@ -4376,7 +4312,9 @@ chatRowUser: {
   },
 
 largeInput: {
-  minHeight:150,
+  width: "92%",
+  alignSelf: "center" as const,
+  minHeight: 350,
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
@@ -4392,12 +4330,12 @@ largeInput: {
   // RENEW
   // --------------------------------------------------
 
-  renewGrid: {
-    flexDirection: "row" as const,
-    gap: 10,
-    width: "100%",
-    marginTop: 18,
-  },
+renewGrid: {
+  flexDirection: "row" as const,
+  gap: 10,
+  width: "100%",
+  marginTop: 34,
+},
 
   renewBlock: {
     flex: 1,
@@ -4485,7 +4423,9 @@ feelingCard: {
   },
 
 conversationInput: {
-  minHeight:150,
+  width: "92%",
+  alignSelf: "center" as const,
+  minHeight: 155,
   backgroundColor: "#EEECE6",
   color: "#2A2927",
   fontFamily: Fonts.light,
@@ -4576,19 +4516,19 @@ doSendText: {
   letterSpacing: 1.2,
 },
 
-  patternsSection: {
-    marginTop: 10,
-    paddingTop: 5,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.07)",
-  },
+patternsSection: {
+  marginTop: 1,
+  paddingTop: 1,
+  borderTopWidth: 1,
+  borderTopColor: "rgba(255,255,255,0.07)",
+},
 
 patternsHeader: {
   flexDirection: "row" as const,
   alignItems: "baseline" as const,
   justifyContent: "center" as const,
   gap: 9,
-  marginBottom: 9,
+  marginBottom: 5,
 },
 
   patternsTitle: {
@@ -4605,16 +4545,18 @@ patternsHeader: {
   },
 
 patternGrid: {
-  gap: 4,
+  gap: 1,
+  width: "92%",
+  alignSelf: "center" as const,
 },
 
 patternCard: {
   width: "65%",
   alignSelf: "center",
-  paddingVertical: 6,
+  paddingVertical: 3,
   paddingHorizontal: 12,
-  borderRadius: 9,
-  backgroundColor: "rgba(255,255,255,0.04)",
+  borderRadius: 7,
+  backgroundColor: "transparent",
 },
 
 patternAxis: {
@@ -4633,19 +4575,19 @@ patternLabel: {
 patternTrack: {
   flex: 1,
   height: 1,
-  backgroundColor: "rgba(255,255,255,0.28)",
+  backgroundColor: "rgba(255,255,255,0.18)",
   position: "relative" as const,
 },
 
-  patternDot: {
-    position: "absolute" as const,
-    top: -4,
-    marginLeft: -4,
-    width: 9,
-    height: 9,
-    borderRadius: 9,
-    backgroundColor: Colors.white,
-  },
+patternDot: {
+  position: "absolute" as const,
+  top: -2,
+  marginLeft: -2,
+  width: 5,
+  height: 5,
+  borderRadius: 5,
+  backgroundColor: "rgba(255,255,255,0.75)",
+},
 
   patternObservation: {
     color: Colors.subtleText,
@@ -4662,20 +4604,20 @@ patternTrack: {
     paddingBottom: 0,
   },
 
-  stepTile: {
-    flex: 1,
-    minHeight: 92,
-    padding: 11,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.04)",
-  },
+stepTile: {
+  flex: 1,
+  minHeight: 92,
+  padding: 11,
+  borderRadius: 10,
+  backgroundColor: "rgba(255,255,255,0.04)",
+  borderWidth: 1,
+  borderColor: "rgba(201,168,78,0.14)",
+},
 
-  stepTileSelected: {
-    backgroundColor: "rgba(95,158,114,0.15)",
-    borderColor: "rgba(95,158,114,0.42)",
-  },
+stepTileSelected: {
+  backgroundColor: "rgba(201,168,78,0.10)",
+  borderColor: "rgba(201,168,78,0.55)",
+},
 
 stepTileTitle: {
   color: Colors.white,
@@ -4768,8 +4710,9 @@ discoverLabel: {
 },
 
 refreshButton: {
-  paddingVertical: 6,
-  paddingHorizontal: 10,
+  marginLeft: 26,
+  paddingVertical: 5,
+  paddingHorizontal: 9,
   borderRadius: 14,
   borderWidth: 1,
   borderColor: "rgba(255,255,255,0.10)",
@@ -4784,26 +4727,26 @@ refreshButtonText: {
 },
 
 patternReflectionCard: {
-  marginTop: 16,
-  paddingTop: 14,
-  paddingBottom: 8,
+  marginTop: 15,
+  paddingTop: 15,
+  paddingBottom: 4,
   borderTopWidth: 1,
-  borderTopColor: "#242424",
+  borderTopColor: "rgba(255,255,255,0.05)",
 },
 
 patternReflectionLabel: {
   color: Colors.mutedText,
   fontFamily: Fonts.light,
-  fontSize: 8,
-  letterSpacing: 1.4,
-  marginBottom: 8,
+  fontSize: 7,
+  letterSpacing: 1.2,
+  marginBottom: 4,
 },
 
 patternReflectionText: {
   color: "#A8A49D",
   fontFamily: Fonts.light,
-  fontSize: 11,
-  lineHeight: 17,
+  fontSize: 9,
+  lineHeight: 13,
 },
 };
 
