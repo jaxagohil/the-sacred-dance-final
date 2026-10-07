@@ -19,6 +19,9 @@ export const Colors = {
   border:
     "rgba(255,255,255,0.04)",
 
+    divider:
+    "rgba(255,255,255,0.08)",  
+
   //
   // ✨ TEXT
   //

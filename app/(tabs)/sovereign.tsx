@@ -33,6 +33,7 @@ import React, {
 } from "react";
 
 import {
+  Image,
   PanResponder,
   Pressable,
   ScrollView,
@@ -49,6 +50,7 @@ import {
 
 import { processSovereignLifePicture } from "../../db/processSovereignLifePicture";
 import { saveSovereignLifePicture } from "../../db/saveSovereignLifePicture";
+import { uploadSovereignImage } from "../../lib/sovereignI/uploads/uploadSovereignImage";
 
 import { chooseNextMove } from "../../lib/consciousCreating/agents/mirror/chooseNextMove";
 import type { NextMove } from "../../lib/consciousCreating/agents/mirror/generateNextMoves";
@@ -67,6 +69,7 @@ import {
   generateScalePossibilities,
 } from "../../lib/consciousCreating/agents/scale/generateScalePossibilities";
 
+import { pickSovereignImage } from "../../lib/sovereignI/uploads/pickSovereignImage";
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 
@@ -83,6 +86,21 @@ type Intention = {
 type LifeEntry = {
   id: string;
   text: string;
+  itemType:
+    | "text"
+    | "image"
+    | "voice"
+    | "quote"
+    | "link"
+    | "attachment";
+  mimeType?: string;
+  uri?: string;
+  title?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
 };
 
 type JourneyStage =
@@ -327,18 +345,27 @@ setJourneyData({
   const [activeStage, setActiveStage] =
     useState<JourneyStage>("dream");
 
-  const [lifeEntries, setLifeEntries] = useState<LifeEntry[]>([
-    {
-      id: "life-1",
-      text: "A simple, conscious life with love, peace, joy and enough space to create.",
-    },
-  ]);
+const [lifeEntries, setLifeEntries] = useState<LifeEntry[]>([
+  {
+    id: "life-1",
+    text: "A simple, conscious life with love, peace, joy and enough space to create.",
+    itemType: "text",
+    x: 10,
+    y: 10,
+    width: 180,
+    height: 120,
+    rotation: -1,
+  },
+]);
 
   const [lifePictureIds, setLifePictureIds] =
   useState<Record<string, string>>({});
 
 const [lifePictureLoaded, setLifePictureLoaded] =
   useState(false);
+
+const [showLifeEntryMenu, setShowLifeEntryMenu] =
+  useState(false);  
 
 type CreationStageData = {
   dream: Record<string, unknown>;
@@ -365,6 +392,9 @@ const [nextStepOptions, setNextStepOptions] =
 
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 const [artifactsLoaded, setArtifactsLoaded] = useState(false);
+
+const [artifactsRefreshKey, setArtifactsRefreshKey] =
+  useState(0);
 
 useEffect(() => {
   const loadArtifacts = async () => {
@@ -399,7 +429,7 @@ useEffect(() => {
   };
 
   void loadArtifacts();
-}, [selectedIntentionId]);
+}, [selectedIntentionId, artifactsRefreshKey]);
 
 // --------------------------------------------------
 // 💠 LIFE PICTURE — LOAD FROM DB
@@ -419,7 +449,9 @@ useEffect(() => {
         error,
       } = await supabase
         .from("sovereign_life_pictures")
-        .select("id, picture, status, version, updated_at")
+.select(
+  "id, picture, status, version, updated_at, item_type, uri, title, x, y, width, height, rotation"
+)
         .eq("user_id", userId)
         .order("created_at", { ascending: true });
 
@@ -434,15 +466,52 @@ useEffect(() => {
       const rows = data || [];
 
       if (rows.length > 0) {
-        setLifeEntries(
-          rows.map((row) => ({
-            id: row.id,
-            text:
-              typeof row.picture?.text === "string"
-                ? row.picture.text
-                : "",
-          }))
-        );
+setLifeEntries(
+  rows.map((row, index) => {
+    const storedX = Number(row.x);
+    const storedY = Number(row.y);
+
+    const hasStoredPosition =
+      Number.isFinite(storedX) &&
+      Number.isFinite(storedY) &&
+      !(storedX === 0 && storedY === 0);
+
+    return {
+      id: row.id,
+
+      text:
+        typeof row.picture?.text === "string"
+          ? row.picture.text
+          : "",
+
+      itemType:
+        row.item_type || "text",
+
+      uri: row.uri || undefined,
+
+      title: row.title || undefined,
+
+      x: hasStoredPosition
+        ? storedX
+        : (index % 2) * 135 + 10,
+
+      y: hasStoredPosition
+        ? storedY
+        : Math.floor(index / 2) * 150 + 10,
+
+      width: Number(row.width) || 180,
+
+      height: Number(row.height) || 120,
+
+      rotation:
+        Number.isFinite(Number(row.rotation))
+          ? Number(row.rotation)
+          : index % 2 === 0
+            ? -1
+            : 1,
+    };
+  })
+);
 
         setLifePictureIds(
           Object.fromEntries(
@@ -464,6 +533,11 @@ useEffect(() => {
 }, []);
 
 // --------------------------------------------------
+// ☁️ LIFE PICTURE — UPLOAD IMAGE
+// --------------------------------------------------
+
+
+// --------------------------------------------------
 // 💾 LIFE PICTURE — SAVE ONE ENTRY
 // --------------------------------------------------
 
@@ -472,11 +546,11 @@ const saveLifeEntry = async (entry: LifeEntry) => {
     return;
   }
 
-  const rawText = entry.text.trim();
+const rawText = entry.text.trim();
 
-  if (!rawText) {
-    return;
-  }
+if (!rawText && entry.itemType === "text") {
+  return;
+}
 
   try {
     const userId = await getUserId();
@@ -485,11 +559,51 @@ const saveLifeEntry = async (entry: LifeEntry) => {
       return;
     }
 
+let storedUri: string | null = entry.uri ?? null;
+
+if (
+  entry.itemType === "image" &&
+  entry.uri
+) {
+  storedUri = await uploadSovereignImage({
+    uri: entry.uri,
+    userId,
+    mimeType: entry.mimeType,
+  });
+
+  if (!storedUri) {
+    return;
+  }
+}
+
     const saved = await saveSovereignLifePicture({
       userId,
       lifePictureId: lifePictureIds[entry.id],
       text: rawText,
     });
+
+    if (saved?.id) {
+  const { error: layoutError } = await supabase
+    .from("sovereign_life_pictures")
+    .update({
+      item_type: entry.itemType,
+uri: storedUri || null,
+      title: entry.title || null,
+      x: entry.x,
+      y: entry.y,
+      width: entry.width,
+      height: entry.height,
+      rotation: entry.rotation,
+    })
+    .eq("id", saved.id);
+
+  if (layoutError) {
+    console.error(
+      "❌ LIFE ENTRY LAYOUT SAVE ERROR:",
+      layoutError
+    );
+  }
+}
 
 if (saved && !lifePictureIds[entry.id]) {
   setLifePictureIds((current) => ({
@@ -641,6 +755,95 @@ const chooseStep = async (id: string) => {
   }
 };
 
+const addLifeEntry = () => {
+  const index = lifeEntries.length;
+
+const newEntry: LifeEntry = {
+  id: `life-${Date.now()}`,
+  text: "",
+  itemType: "image",
+  uri: image.originalUri,
+  mimeType: image.mimeType,
+  x: (index % 2) * 135 + 10,
+    y: Math.floor(index / 2) * 150 + 10,
+    width: 180,
+    height: 120,
+    rotation: index % 2 === 0 ? -1 : 1,
+  };
+
+setLifeEntries((current) => [
+  ...current,
+  newEntry,
+]);
+
+setShowLifeEntryMenu(false);
+
+void saveLifeEntry(newEntry);
+
+};
+
+const addLifeImage = async () => {
+  try {
+    const image = await pickSovereignImage();
+
+    if (!image) {
+      return;
+    }
+
+    const index = lifeEntries.length;
+
+    const newEntry: LifeEntry = {
+      id: `life-${Date.now()}`,
+      text: "",
+      itemType: "image",
+      uri: image.originalUri,
+      x: (index % 2) * 135 + 10,
+      y: Math.floor(index / 2) * 150 + 10,
+      width: 180,
+      height: 140,
+      rotation: index % 2 === 0 ? -1.2 : 1.2,
+    };
+
+    setLifeEntries((current) => [
+      ...current,
+      newEntry,
+    ]);
+
+    setShowLifeEntryMenu(false);
+
+    void saveLifeEntry(newEntry);
+  } catch (error) {
+    console.error(
+      "❌ LIFE ENTRY IMAGE ERROR:",
+      error
+    );
+  }
+};
+
+const addLifeQuote = () => {
+  const index = lifeEntries.length;
+
+  const newEntry: LifeEntry = {
+    id: `life-${Date.now()}`,
+    text: "",
+    itemType: "quote",
+    x: (index % 2) * 135 + 10,
+    y: Math.floor(index / 2) * 150 + 10,
+width: 320,
+height: 240,
+    rotation: index % 2 === 0 ? -1.2 : 1.2,
+  };
+
+  setLifeEntries((current) => [
+    ...current,
+    newEntry,
+  ]);
+
+  setShowLifeEntryMenu(false);
+
+  void saveLifeEntry(newEntry);
+};
+
   return (
     <View style={styles.screen}>
 <ScrollView
@@ -664,53 +867,241 @@ const chooseStep = async (id: string) => {
               COLUMN 1 — WHAT MATTERS
           ===================================================== */}
           <View style={[styles.column, styles.leftColumn, mobile && styles.mobileColumn]}>
-            <ColumnHeading label="What Matters To Me" />
+ <ColumnHeading label="What Matters To Me" />
 
-            <View style={styles.lifeEntries}>
-              {lifeEntries.map((entry) => (
-                <View key={entry.id} style={styles.lifeEntry}>
-<TextInput
-  value={entry.text}
-  onChangeText={(value) =>
+<View style={styles.lifeBoard}>
+
+{lifeEntries.map((entry) => {
+const panResponder = PanResponder.create({
+  onStartShouldSetPanResponder: () => true,
+
+  onStartShouldSetPanResponderCapture: () => true,
+
+  onMoveShouldSetPanResponder: () => true,
+
+  onMoveShouldSetPanResponderCapture: () => true,
+
+  onPanResponderMove: (_, gestureState) => {
     setLifeEntries((current) =>
       current.map((item) =>
         item.id === entry.id
-          ? { ...item, text: value }
+          ? {
+              ...item,
+              x: entry.x + gestureState.dx,
+              y: entry.y + gestureState.dy,
+            }
           : item
       )
-    )
-  }
-  onBlur={() => {
-    const currentEntry = lifeEntries.find(
-      (item) => item.id === entry.id
     );
+  },
 
-    if (currentEntry) {
-      void saveLifeEntry(currentEntry);
-    }
-  }}
-  multiline
-  placeholder="What matters to you?"
-  placeholderTextColor={Colors.subtleText}
-  style={styles.lifeEntryText}
-/>
-                </View>
-              ))}
+  onPanResponderRelease: (_, gestureState) => {
+    const finalEntry = {
+      ...entry,
+      x: entry.x + gestureState.dx,
+      y: entry.y + gestureState.dy,
+    };
 
-              <Pressable
-                onPress={() =>
-                  setLifeEntries((current) => [
-                    ...current,
-                    { id: `life-${Date.now()}`, text: "" },
-                  ])
-                }
-                style={styles.addLifeEntry}
-              >
-                <Text style={styles.addLifeEntryText}>
-                  + ADD SOMETHING THAT MATTERS
-                </Text>
-              </Pressable>
-            </View>
+    void saveLifeEntry(finalEntry);
+  },
+});
+
+  return (
+    <View
+      key={entry.id}
+      {...panResponder.panHandlers}
+style={[
+  entry.itemType === "quote"
+    ? styles.lifeQuoteEntry
+    : styles.lifeEntry,
+  {
+    left: entry.x,
+    top: entry.y,
+    width: entry.width,
+    height: entry.height,
+          transform: [
+            {
+              rotate: `${entry.rotation}deg`,
+            },
+          ],
+        },
+      ]}
+    >
+      {entry.itemType === "image" && entry.uri ? (
+        <Image
+          source={{ uri: entry.uri }}
+          style={styles.lifeEntryImage}
+          resizeMode="cover"
+            pointerEvents="none"
+
+        />
+      ) : entry.itemType === "quote" ? (
+        <View style={styles.lifeQuoteCard}>
+          <Text style={styles.lifeQuoteMark}>“</Text>
+
+          <TextInput
+            value={entry.text}
+onChangeText={(value) => {
+  const charactersPerLine = 34;
+  const lineHeight = 24;
+  const minimumHeight = 120;
+
+  const estimatedLines = Math.max(
+    1,
+    Math.ceil(value.length / charactersPerLine)
+  );
+
+  const nextHeight = Math.max(
+    minimumHeight,
+    estimatedLines * lineHeight + 60
+  );
+
+  setLifeEntries((current) =>
+    current.map((item) =>
+      item.id === entry.id
+        ? {
+            ...item,
+            text: value,
+            height: nextHeight,
+          }
+        : item
+    )
+  );
+}}
+            onBlur={() => {
+              const currentEntry = lifeEntries.find(
+                (item) => item.id === entry.id
+              );
+
+              if (currentEntry) {
+                void saveLifeEntry(currentEntry);
+              }
+            }}
+            multiline
+            placeholder="Your quote..."
+            placeholderTextColor="#77746F"
+            style={styles.lifeQuoteText}
+          />
+
+          <Text style={styles.lifeQuoteMark}>”</Text>
+        </View>
+      ) : (
+        <TextInput
+          value={entry.text}
+          onChangeText={(value) =>
+            setLifeEntries((current) =>
+              current.map((item) =>
+                item.id === entry.id
+                  ? {
+                      ...item,
+                      text: value,
+                    }
+                  : item
+              )
+            )
+          }
+          onBlur={() => {
+            const currentEntry = lifeEntries.find(
+              (item) => item.id === entry.id
+            );
+
+            if (currentEntry) {
+              void saveLifeEntry(currentEntry);
+            }
+          }}
+          multiline
+          placeholder="What matters to you?"
+          placeholderTextColor="#77746F"
+          style={styles.lifeEntryText}
+        />
+      )}
+    </View>
+  );
+})}
+
+{showLifeEntryMenu && (
+  <View style={styles.lifeEntryMenu}>
+
+    <Pressable
+      onPress={addLifeEntry}
+      style={styles.lifeEntryMenuItem}
+    >
+      <Text style={styles.lifeEntryMenuText}>
+        TEXT
+      </Text>
+    </Pressable>
+
+    <Pressable
+      onPress={() => {
+        void addLifeImage();
+      }}
+      style={styles.lifeEntryMenuItem}
+    >
+      <Text style={styles.lifeEntryMenuText}>
+        IMAGE
+      </Text>
+    </Pressable>
+
+    <Pressable
+      disabled
+      style={[
+        styles.lifeEntryMenuItem,
+        styles.lifeEntryMenuItemDisabled,
+      ]}
+    >
+      <Text style={styles.lifeEntryMenuText}>
+        VOICE
+      </Text>
+    </Pressable>
+
+<Pressable
+  onPress={addLifeQuote}
+  style={styles.lifeEntryMenuItem}
+>
+  <Text style={styles.lifeEntryMenuText}>
+    QUOTE
+  </Text>
+</Pressable>
+
+    <Pressable
+      disabled
+      style={[
+        styles.lifeEntryMenuItem,
+        styles.lifeEntryMenuItemDisabled,
+      ]}
+    >
+      <Text style={styles.lifeEntryMenuText}>
+        LINK
+      </Text>
+    </Pressable>
+
+    <Pressable
+      disabled
+      style={[
+        styles.lifeEntryMenuItem,
+        styles.lifeEntryMenuItemDisabled,
+      ]}
+    >
+      <Text style={styles.lifeEntryMenuText}>
+        ATTACHMENT
+      </Text>
+    </Pressable>
+
+  </View>
+)}
+
+<Pressable
+  onPress={() =>
+    setShowLifeEntryMenu((current) => !current)
+  }
+  style={styles.addLifeEntry}
+>
+  <Text style={styles.addLifeEntryText}>
+    {showLifeEntryMenu ? "×" : "+"}
+  </Text>
+</Pressable>
+
+</View>
 
           </View>
 
@@ -833,10 +1224,13 @@ const stateColor = "#C9A84E";
 )}
 
 {activeStage === "build" && (
-  <StageBuild
-    intentionId={selectedIntentionId}
-    onOptionsChange={setNextStepOptions}
-  />
+<StageBuild
+  intentionId={selectedIntentionId}
+  onOptionsChange={setNextStepOptions}
+  onCreationCreated={() =>
+    setArtifactsRefreshKey((value) => value + 1)
+  }
+/>
 )}
 
 {activeStage === "grow" && (
@@ -934,6 +1328,7 @@ function CompactInputIcons() {
   );
 }
 
+
 function ArtifactArea({
   area,
   title,
@@ -945,14 +1340,190 @@ function ArtifactArea({
   artifacts: Artifact[];
   loaded: boolean;
 }) {
+  const [selectedArtifact, setSelectedArtifact] =
+    useState<Artifact | null>(null);
+
   const areaArtifacts = artifacts.filter(
     (artifact) => artifact.area === area
   );
 
-  return (
-    
-    <View style={styles.outputArea}>
+  const affirmation = areaArtifacts.find((artifact) =>
+    artifact.artifact_type
+      .toLowerCase()
+      .includes("affirmation")
+  );
 
+  const otherArtifacts = areaArtifacts.filter(
+    (artifact) => artifact.id !== affirmation?.id
+  );
+
+  const getSymbol = (
+    artifactType: string,
+    titleText: string
+  ) => {
+    const type = artifactType.toLowerCase();
+    const title = titleText.toLowerCase();
+
+    // -----------------------------
+    // I — INNER / EMBODIMENT
+    // -----------------------------
+    if (
+      type.includes("affirmation") ||
+      type.includes("embodiment")
+    ) {
+      return "✦";
+    }
+
+    if (
+      type.includes("pattern") ||
+      type.includes("reflection")
+    ) {
+      return "◇";
+    }
+
+    if (
+      type.includes("inner_shift") ||
+      type.includes("shift") ||
+      type.includes("insight")
+    ) {
+      return "◌";
+    }
+
+    if (
+      type.includes("behaviour") ||
+      type.includes("behavior")
+    ) {
+      return "↗";
+    }
+
+    if (
+      type.includes("symbol") ||
+      type.includes("sign")
+    ) {
+      return "✧";
+    }
+
+    // -----------------------------
+    // PEOPLE — RELATIONSHIPS
+    // -----------------------------
+    if (type.includes("conversation")) return "◌";
+    if (type.includes("connection")) return "∞";
+    if (type.includes("community")) return "✦";
+    if (type.includes("collaboration")) return "◇";
+    if (type.includes("reciprocity")) return "↔";
+    if (type.includes("mentoring")) return "○";
+    if (type.includes("celebration")) return "✧";
+
+    // -----------------------------
+    // PLANET — CONTRIBUTION
+    // -----------------------------
+    if (type.includes("instagram")) return "✦";
+    if (type.includes("linkedin")) return "◇";
+    if (type.includes("article")) return "◇";
+    if (type.includes("project")) return "□";
+    if (type.includes("website")) return "◌";
+    if (type.includes("app")) return "◌";
+    if (type.includes("event")) return "△";
+    if (type.includes("book")) return "✦";
+    if (type.includes("art")) return "✧";
+    if (type.includes("video")) return "▷";
+    if (type.includes("podcast")) return "◉";
+    if (type.includes("launch")) return "↗";
+
+    // -----------------------------
+    // GENERIC CREATION ARTIFACTS
+    // -----------------------------
+    if (
+      type.includes("creation_seed") ||
+      type.includes("seed")
+    ) {
+      return "✦";
+    }
+
+    if (type.includes("practice")) return "◇";
+    if (type.includes("plan")) return "□";
+    if (type.includes("possibility")) return "✧";
+
+    // Use the title as a gentle fallback.
+    if (
+      title.includes("practice") ||
+      title.includes("exercise") ||
+      title.includes("meditation")
+    ) {
+      return "◇";
+    }
+
+    if (
+      title.includes("plan") ||
+      title.includes("routine")
+    ) {
+      return "□";
+    }
+
+    if (
+      title.includes("connection") ||
+      title.includes("relationship")
+    ) {
+      return "∞";
+    }
+
+    // Unknown artifact = meaningful OTHER
+    return "⋯";
+  };
+
+  const getArtifactContent = (artifact: Artifact) => {
+    if (!artifact.content) {
+      return "";
+    }
+
+    if (typeof artifact.content === "string") {
+      return artifact.content;
+    }
+
+    const content =
+      artifact.content as Record<string, unknown>;
+
+    const preferredKeys = [
+      "content",
+      "text",
+      "body",
+      "description",
+      "reflection",
+      "message",
+    ];
+
+    for (const key of preferredKeys) {
+      if (typeof content[key] === "string") {
+        return content[key] as string;
+      }
+    }
+
+    return JSON.stringify(content, null, 2);
+  };
+
+  const deleteArtifact = async () => {
+    if (!selectedArtifact) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("sovereign_intention_artifacts")
+      .delete()
+      .eq("id", selectedArtifact.id);
+
+    if (error) {
+      console.error(
+        "❌ ARTIFACT DELETE ERROR:",
+        error
+      );
+      return;
+    }
+
+    setSelectedArtifact(null);
+  };
+
+  return (
+    <View style={styles.outputArea}>
       <View style={styles.outputAreaHeader}>
         <Text style={styles.outputAreaLabel}>
           {area}
@@ -967,57 +1538,103 @@ function ArtifactArea({
         <Text style={styles.outputAreaBody}>
           Loading...
         </Text>
-      ) : areaArtifacts.length === 0 ? (
-        <Text style={styles.outputAreaBody}>
-          Artifacts created from this journey will appear here.
-        </Text>
       ) : (
-        <View style={{ gap: 9 }}>
-          {areaArtifacts.map((artifact) => (
+        <View style={styles.outputField}>
+
+          {/* I — AFFIRMATION ONLY */}
+{area === "I" && (
+  <View style={styles.affirmationArea}>
+    <Text style={styles.affirmationText}>
+      {affirmation
+        ? getArtifactContent(affirmation)
+        : "Your affirmation will appear here."}
+    </Text>
+  </View>
+)}
+
+          {/* SYMBOLIC FIELD */}
+          <View style={styles.symbolField}>
+            {otherArtifacts.map((artifact) => (
+              <Pressable
+                key={artifact.id}
+                onPress={() =>
+                  setSelectedArtifact(artifact)
+                }
+                style={styles.symbolArtifact}
+              >
+                <Text style={styles.artifactSymbol}>
+                  {getSymbol(
+                    artifact.artifact_type,
+                    artifact.title
+                  )}
+                </Text>
+              </Pressable>
+            ))}
+
+            {/* OTHER — always available */}
             <Pressable
-              key={artifact.id}
               onPress={() => {
-                // Artifact reader will come here.
+                // Reserved for future "Other" creation flow.
               }}
-              style={{
-                padding: 12,
-                borderRadius: 10,
-                backgroundColor:
-                  "rgba(255,255,255,0.045)",
-                borderWidth: 1,
-                borderColor:
-                  "rgba(255,255,255,0.07)",
-              }}
+              style={styles.symbolArtifact}
             >
               <Text
-                style={{
-                  color: Colors.white,
-                  fontFamily: Fonts.light,
-                  fontSize: 11,
-                  lineHeight: 16,
-                }}
+                style={[
+                  styles.artifactSymbol,
+                  styles.otherSymbol,
+                ]}
               >
-                {artifact.title}
+                ⋯
               </Text>
+            </Pressable>
+          </View>
 
-              <Text
-                style={{
-                  color: Colors.subtleText,
-                  fontFamily: Fonts.light,
-                  fontSize: 8,
-                  lineHeight: 13,
-                  marginTop: 5,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.8,
-                }}
+          {/* ARTIFACT READER */}
+          {selectedArtifact && (
+            <View style={styles.artifactReader}>
+
+              <Pressable
+                onPress={() =>
+                  setSelectedArtifact(null)
+                }
+                style={styles.artifactReaderClose}
+                hitSlop={12}
               >
-                {artifact.artifact_type.replace(
+                <Text
+                  style={styles.artifactReaderCloseText}
+                >
+                  ×
+                </Text>
+              </Pressable>
+
+              <Text style={styles.artifactReaderType}>
+                {selectedArtifact.artifact_type.replace(
                   /_/g,
                   " "
                 )}
               </Text>
-            </Pressable>
-          ))}
+
+              <Text style={styles.artifactReaderTitle}>
+                {selectedArtifact.title}
+              </Text>
+
+              <Text style={styles.artifactReaderContent}>
+                {getArtifactContent(selectedArtifact)}
+              </Text>
+
+              <Pressable
+                onPress={() => {
+                  void deleteArtifact();
+                }}
+                style={styles.artifactDelete}
+              >
+                <Text style={styles.artifactDeleteText}>
+                  DELETE
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
         </View>
       )}
     </View>
@@ -1564,9 +2181,11 @@ return (
 function StageBuild({
   intentionId,
   onOptionsChange,
+  onCreationCreated,
 }: {
   intentionId: string | null;
   onOptionsChange: (options: NextMove[]) => void;
+  onCreationCreated: () => void;
 }) {
   type ConversationMessage = {
     role: "user" | "mirror";
@@ -1766,17 +2385,27 @@ const loadedConversation =
     try {
       setIsChoosing(true);
 
-      setSelectedNextMove(move.title);
+ setSelectedNextMove(move.title);
 
-      const result = await chooseNextMove({
-        intentionId,
-        move,
-      });
+console.log(
+  "🔎 CHOOSE NEXT MOVE INPUT:",
+  {
+    intentionId,
+    move,
+  }
+);
+
+const result = await chooseNextMove({
+  intentionId,
+  move,
+});
 
       console.log(
         "✨ CREATION CREATED:",
         result
       );
+
+      onCreationCreated();
 
       // The chosen move has now become real.
       // Keep the available next moves visible;
@@ -3744,28 +4373,25 @@ columns: {
     minWidth: 0,
   },
 
-  leftColumn: {
-    width: "25%",
-    flexGrow: 0,
-    flexShrink: 0,
-    borderRightWidth: 1,
-    borderRightColor: Colors.divider,
-  },
+leftColumn: {
+  flex: 1,
+  minWidth: 0,
+  borderRightWidth: 1,
+  borderRightColor: Colors.divider,
+},
 
-  middleColumn: {
-    width: "50%",
-    flexGrow: 0,
-    flexShrink: 0,
-    borderRightWidth: 1,
-    borderRightColor: Colors.divider,
-    flexDirection: "column" as const,
-  },
+middleColumn: {
+  flex: 2,
+  minWidth: 0,
+  borderRightWidth: 1,
+  borderRightColor: Colors.divider,
+  flexDirection: "column" as const,
+},
 
-  rightColumn: {
-    width: "25%",
-    flexGrow: 0,
-    flexShrink: 0,
-  },
+rightColumn: {
+  flex: 1,
+  minWidth: 0,
+},
 
   mobileColumn: {
     width: "100vw" as const,
@@ -3815,40 +4441,136 @@ headerVoice: {
   fontSize: 15,
 },
 
-  lifeEntries: {
-    marginTop: 18,
-    gap: 10,
-  },
+lifeBoard: {
+  position: "relative" as const,
+  minHeight: 620,
+  marginTop: 18,
+  overflow: "hidden" as const,
+  backgroundColor: "rgba(255,255,255,0.018)",
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.05)",
+},
 
 lifeEntry: {
-  minHeight: 125,
+  position: "absolute" as const,
   padding: 14,
-  borderRadius: 11,
-  backgroundColor: "#EEECE6",
-  borderWidth: 0,
+  borderRadius: 8,
+  backgroundColor: "rgba(255,255,255,0.045)",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.07)",
+},
+
+lifeEntryImage: {
+  width: "100%",
+  height: "100%",
+  borderRadius: 6,
+},
+
+lifeEntryQuote: {
+  flex: 1,
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 13,
+  lineHeight: 20,
+  padding: 0,
+  outlineStyle: "none" as const,
+  textAlignVertical: "center" as const,
+  fontStyle: "italic" as const,
 },
 
 lifeEntryText: {
-  minHeight: 90,
-  color: "#2A2927",
+  flex: 1,
+  color: Colors.white,
   fontFamily: Fonts.light,
-  fontSize: 12,
-  lineHeight: 22,
+  fontSize: 11,
+  lineHeight: 18,
   padding: 0,
   outlineStyle: "none" as const,
   textAlignVertical: "top" as const,
 },
 
-  addLifeEntry: {
-    paddingVertical: 12,
-  },
+lifeQuoteCard: {
+  flex: 1,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  paddingHorizontal: 8,
+},
 
-  addLifeEntryText: {
-    color: Colors.subtleText,
-    fontFamily: Fonts.light,
-    fontSize: 8,
-    letterSpacing: 1.1,
-  },
+lifeQuoteMark: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 28,
+  lineHeight: 28,
+},
+
+lifeQuoteEntry: {
+  position: "absolute" as const,
+  padding: 0,
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderColor: "transparent",
+},
+
+lifeQuoteText: {
+  width: "100%",
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 16,
+  lineHeight: 24,
+  fontStyle: "italic" as const,
+  textAlign: "center" as const,
+  padding: 0,
+  outlineStyle: "none" as const,
+  textAlignVertical: "center" as const,
+},
+
+addLifeEntry: {
+  position: "absolute" as const,
+  right: 12,
+  bottom: 12,
+  width: 28,
+  height: 28,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+},
+
+addLifeEntryText: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 22,
+  lineHeight: 22,
+},
+
+lifeEntryMenu: {
+  position: "absolute" as const,
+  right: 12,
+  bottom: 48,
+  paddingVertical: 6,
+  paddingHorizontal: 5,
+  minWidth: 110,
+  backgroundColor: "#11110F",
+  borderRadius: 9,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.10)",
+  zIndex: 20,
+},
+
+lifeEntryMenuItem: {
+  paddingVertical: 8,
+  paddingHorizontal: 10,
+},
+
+lifeEntryMenuItemDisabled: {
+  opacity: 0.28,
+},
+
+lifeEntryMenuText: {
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1.2,
+},
 
   quietText: {
     color: Colors.subtleText,
@@ -4643,6 +5365,132 @@ stepTileDescription: {
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.08)",
   },
+
+outputField: {
+  position: "relative" as const,
+  minHeight: 105,
+  marginTop: 14,
+},
+
+affirmationArea: {
+  paddingVertical: 8,
+  paddingRight: 18,
+},
+
+affirmationText: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 16,
+  lineHeight: 25,
+  fontStyle: "italic" as const,
+},
+
+symbolField: {
+  flexDirection: "row" as const,
+  flexWrap: "wrap" as const,
+  alignItems: "center" as const,
+  gap: 16,
+  marginTop: 20,
+},
+
+symbolArtifact: {
+  width: 34,
+  height: 34,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+},
+
+artifactSymbol: {
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 23,
+  lineHeight: 28,
+  opacity: 0.72,
+},
+
+otherSymbol: {
+  opacity: 0.32,
+},
+
+
+symbolArtifactTitle: {
+  marginTop: 7,
+  color: Colors.subtleText,
+  fontFamily: Fonts.light,
+  fontSize: 7,
+  letterSpacing: 0.8,
+  textTransform: "uppercase" as const,
+  textAlign: "center" as const,
+},
+
+artifactReader: {
+  position: "absolute" as const,
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  padding: 24,
+  paddingTop: 34,
+  backgroundColor: Colors.background,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.08)",
+  zIndex: 50,
+},
+
+artifactReaderClose: {
+  position: "absolute" as const,
+  right: 8,
+  top: 4,
+  width: 36,
+  height: 36,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  zIndex: 60,
+},
+
+artifactReaderCloseText: {
+  color: Colors.white,
+  fontSize: 28,
+  lineHeight: 32,
+  fontFamily: Fonts.light,
+},
+
+artifactReaderType: {
+  color: Colors.subtleText,
+  fontFamily: Fonts.light,
+  fontSize: 7,
+  letterSpacing: 1.4,
+  textTransform: "uppercase" as const,
+},
+
+artifactReaderTitle: {
+  marginTop: 10,
+  color: Colors.white,
+  fontFamily: Fonts.light,
+  fontSize: 15,
+  lineHeight: 21,
+},
+
+artifactReaderContent: {
+  marginTop: 18,
+  color: Colors.mutedText,
+  fontFamily: Fonts.light,
+  fontSize: 10,
+  lineHeight: 17,
+},
+
+artifactDelete: {
+  position: "absolute" as const,
+  left: 20,
+  bottom: 16,
+},
+
+artifactDeleteText: {
+  color: Colors.subtleText,
+  fontFamily: Fonts.light,
+  fontSize: 7,
+  letterSpacing: 1.2,
+},
 
   outputAreaHeader: {
     flexDirection: "row" as const,

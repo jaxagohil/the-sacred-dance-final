@@ -26,10 +26,6 @@ export async function saveSovereignLifePicture({
 
   const rawText = text.trim();
 
-  if (!rawText) {
-    return null;
-  }
-
   const payload = {
     user_id: userId,
     picture: {
