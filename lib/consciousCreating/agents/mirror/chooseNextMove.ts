@@ -1,13 +1,15 @@
+
 import {
-    createCreationTiles,
-    type CreateCreationTilesResult,
+  createCreationTiles,
+  type CreateCreationTilesResult,
 } from "./createCreationTiles";
 
 import {
-    createInitialArtifacts,
-    type CreationArtifact,
-} from "./createInitialArtifacts";
+  createArtifacts,
+} from "../artifacts/createArtifacts";
 
+import { getUserId } from "../../../user";
+import { getCreationContext } from "../../getCreationContext";
 import type { NextMove } from "./generateNextMoves";
 
 // --------------------------------------------------
@@ -21,7 +23,7 @@ export interface ChooseNextMoveInput {
 
 export interface ChooseNextMoveResult
   extends CreateCreationTilesResult {
-  artifacts: CreationArtifact[];
+  artifacts: Record<string, unknown>[];
 }
 
 // --------------------------------------------------
@@ -31,47 +33,45 @@ export interface ChooseNextMoveResult
 export async function chooseNextMove(
   input: ChooseNextMoveInput
 ): Promise<ChooseNextMoveResult> {
-  const {
-    intentionId,
-    move,
-  } = input;
+  const { intentionId, move } = input;
 
   if (!intentionId) {
-    throw new Error(
-      "chooseNextMove: intentionId is required."
-    );
+    throw new Error("chooseNextMove: intentionId is required.");
   }
 
   if (!move) {
-    throw new Error(
-      "chooseNextMove: move is required."
-    );
+    throw new Error("chooseNextMove: move is required.");
   }
 
-  // --------------------------------------------------
-  // 1. CREATE TILE(S)
-  // --------------------------------------------------
+  // 1. Resolve the current user.
+  const userId = await getUserId();
 
+  if (!userId) {
+    throw new Error("chooseNextMove: no authenticated user found.");
+  }
+
+  // 2. Load the real creation context.
+  const creationContext = await getCreationContext({
+    userId,
+    intentionId,
+    activeStage: "build",
+  });
+
+  // 3. Create the relevant I / People / Planet tiles.
   const tileResult = await createCreationTiles({
     intentionId,
     move,
   });
 
-  // --------------------------------------------------
-  // 2. CREATE INITIAL ARTIFACT(S)
-  // --------------------------------------------------
+  // 4. Generate and save substantive artifacts.
+  const artifactResult = await createArtifacts({
+    userId,
+    intentionId,
+    move,
+    creationContext,
+  });
 
-  const artifactResult =
-    await createInitialArtifacts({
-      intentionId,
-      move,
-      tiles: tileResult.tiles,
-    });
-
-  // --------------------------------------------------
-  // 3. RETURN THE CREATED CREATION
-  // --------------------------------------------------
-
+  // 5. Return the results for the UI to refresh.
   return {
     tiles: tileResult.tiles,
     artifacts: artifactResult.artifacts,

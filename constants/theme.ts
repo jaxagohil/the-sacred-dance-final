@@ -13,6 +13,8 @@ export const Colors = {
   background:
     "black",
 
+  surfaceLight: "#20201E",  
+
   card:
     "rgba(255,255,255,0.015)",
 

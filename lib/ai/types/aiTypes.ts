@@ -8,6 +8,7 @@ export type AIType =
   | "orchestration"
   | "cosmic"
   | "sovereign_i_engine"
+  | "artifacts"
   | "mirror";
 
 export interface CompleteGuideContext {

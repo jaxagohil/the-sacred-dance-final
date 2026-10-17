@@ -147,20 +147,7 @@ const normaliseResponse =
       return fallbackResponse();
     }
 
-    const nextMoves =
-      Array.isArray(
-        response.nextMoves
-      )
-        ? response.nextMoves.filter(
-            (
-              item
-            ): item is string =>
-              typeof item ===
-                "string" &&
-              item.trim()
-                .length > 0
-          )
-        : [];
+const nextMoves: NextMove[] = [];
 
 return {
   message,

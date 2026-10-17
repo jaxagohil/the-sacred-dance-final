@@ -94,6 +94,17 @@ export async function loadAlignmentModules() {
 
   );
 
+  console.log(
+  "🌱 LOADED PHILOSOPHY MODULES:",
+  useAlignmentStore
+    .getState()
+    .getModulesByType("philosophy")
+    .map((module) => ({
+      key: module.key,
+      title: module.title,
+    }))
+);
+
 //console.log( "✅ Store keys:",  Object.keys(useAlignmentStore.getState().modules));
 
 }

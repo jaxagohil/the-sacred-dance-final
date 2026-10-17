@@ -34,6 +34,7 @@ import React, {
 
 import {
   Image,
+  Modal,
   PanResponder,
   Pressable,
   ScrollView,
@@ -847,16 +848,18 @@ height: 240,
   return (
     <View style={styles.screen}>
 <ScrollView
+  style={{ flex: 1 }}
   horizontal={mobile}
   pagingEnabled={mobile}
   scrollEnabled={mobile}
   showsHorizontalScrollIndicator={false}
-  showsVerticalScrollIndicator={!mobile}
-        contentContainerStyle={[
-          styles.page,
-          mobile && styles.pageMobile,
-        ]}
-      >
+  showsVerticalScrollIndicator={false}
+contentContainerStyle={[
+  styles.page,
+  mobile && styles.pageMobile,
+  !mobile && { height: "100%" },
+]}
+>
         <View
           style={[
             styles.columns,
@@ -1108,8 +1111,9 @@ onChangeText={(value) => {
           {/* =====================================================
               COLUMN 2 — CREATIONS
           ===================================================== */}
-          <View style={[styles.column, styles.middleColumn, mobile && styles.mobileColumn]}>
-<View style={styles.columnHeader}>
+<View style={[styles.column, styles.middleColumn, mobile && styles.mobileColumn]}>
+
+  <View style={styles.columnHeader}>
   <ColumnHeading label="What I'm Creating" />
 
   <View style={styles.columnHeaderActions}>
@@ -1251,35 +1255,50 @@ const stateColor = "#C9A84E";
 </ScrollView>
 </View>
 
+</View>
 
-          </View>
+ 
+{/* =====================================================
+    COLUMN 3 — WHAT THIS CREATION IS CHANGING
+===================================================== */}
+<View
+  style={[
+    styles.column,
+    styles.rightColumn,
+    mobile && styles.mobileColumn,
+    { overflow: "hidden", minHeight: 0 },
+  ]}
+>
+  <ColumnHeading label="What This Creation Creates" />
 
-          {/* =====================================================
-              COLUMN 3 — WHAT THIS CREATION IS CHANGING
-          ===================================================== */}
-          <View style={[styles.column, styles.rightColumn, mobile && styles.mobileColumn]}>
-<ColumnHeading label="What This Creation Creates" />
+<ScrollView
+  style={{ flex: 1, minHeight: 0 }}
+  contentContainerStyle={{ paddingBottom: 24 }}
+  showsVerticalScrollIndicator={true}
+>
+    <ArtifactArea
+      area="I"
+      title="Embodiment"
+      artifacts={artifacts}
+      loaded={artifactsLoaded}
+    />
 
-<ArtifactArea
-  area="I"
-  title="Embodiment"
-  artifacts={artifacts}
-  loaded={artifactsLoaded}
-/>
+    <ArtifactArea
+      area="People"
+      title="Relationships"
+      artifacts={artifacts}
+      loaded={artifactsLoaded}
+    />
 
-<ArtifactArea
-  area="People"
-  title="Relationships"
-  artifacts={artifacts}
-  loaded={artifactsLoaded}
-/>
+    <ArtifactArea
+      area="Planet"
+      title="Contribution"
+      artifacts={artifacts}
+      loaded={artifactsLoaded}
+    />
+  </ScrollView>
 
-<ArtifactArea
-  area="Planet"
-  title="Contribution"
-  artifacts={artifacts}
-  loaded={artifactsLoaded}
-/>
+
 
           </View>
         </View>
@@ -1329,6 +1348,7 @@ function CompactInputIcons() {
 }
 
 
+
 function ArtifactArea({
   area,
   title,
@@ -1347,164 +1367,45 @@ function ArtifactArea({
     (artifact) => artifact.area === area
   );
 
-  const affirmation = areaArtifacts.find((artifact) =>
-    artifact.artifact_type
-      .toLowerCase()
-      .includes("affirmation")
-  );
-
-  const otherArtifacts = areaArtifacts.filter(
-    (artifact) => artifact.id !== affirmation?.id
-  );
-
-  const getSymbol = (
-    artifactType: string,
-    titleText: string
-  ) => {
-    const type = artifactType.toLowerCase();
-    const title = titleText.toLowerCase();
-
-    // -----------------------------
-    // I — INNER / EMBODIMENT
-    // -----------------------------
-    if (
-      type.includes("affirmation") ||
-      type.includes("embodiment")
-    ) {
-      return "✦";
-    }
-
-    if (
-      type.includes("pattern") ||
-      type.includes("reflection")
-    ) {
-      return "◇";
-    }
-
-    if (
-      type.includes("inner_shift") ||
-      type.includes("shift") ||
-      type.includes("insight")
-    ) {
-      return "◌";
-    }
-
-    if (
-      type.includes("behaviour") ||
-      type.includes("behavior")
-    ) {
-      return "↗";
-    }
-
-    if (
-      type.includes("symbol") ||
-      type.includes("sign")
-    ) {
-      return "✧";
-    }
-
-    // -----------------------------
-    // PEOPLE — RELATIONSHIPS
-    // -----------------------------
-    if (type.includes("conversation")) return "◌";
-    if (type.includes("connection")) return "∞";
-    if (type.includes("community")) return "✦";
-    if (type.includes("collaboration")) return "◇";
-    if (type.includes("reciprocity")) return "↔";
-    if (type.includes("mentoring")) return "○";
-    if (type.includes("celebration")) return "✧";
-
-    // -----------------------------
-    // PLANET — CONTRIBUTION
-    // -----------------------------
-    if (type.includes("instagram")) return "✦";
-    if (type.includes("linkedin")) return "◇";
-    if (type.includes("article")) return "◇";
-    if (type.includes("project")) return "□";
-    if (type.includes("website")) return "◌";
-    if (type.includes("app")) return "◌";
-    if (type.includes("event")) return "△";
-    if (type.includes("book")) return "✦";
-    if (type.includes("art")) return "✧";
-    if (type.includes("video")) return "▷";
-    if (type.includes("podcast")) return "◉";
-    if (type.includes("launch")) return "↗";
-
-    // -----------------------------
-    // GENERIC CREATION ARTIFACTS
-    // -----------------------------
-    if (
-      type.includes("creation_seed") ||
-      type.includes("seed")
-    ) {
-      return "✦";
-    }
-
-    if (type.includes("practice")) return "◇";
-    if (type.includes("plan")) return "□";
-    if (type.includes("possibility")) return "✧";
-
-    // Use the title as a gentle fallback.
-    if (
-      title.includes("practice") ||
-      title.includes("exercise") ||
-      title.includes("meditation")
-    ) {
-      return "◇";
-    }
-
-    if (
-      title.includes("plan") ||
-      title.includes("routine")
-    ) {
-      return "□";
-    }
-
-    if (
-      title.includes("connection") ||
-      title.includes("relationship")
-    ) {
-      return "∞";
-    }
-
-    // Unknown artifact = meaningful OTHER
-    return "⋯";
-  };
-
-  const getArtifactContent = (artifact: Artifact) => {
-    if (!artifact.content) {
-      return "";
-    }
+  const getArtifactContent = (artifact: Artifact): string => {
+    if (!artifact.content) return "";
 
     if (typeof artifact.content === "string") {
       return artifact.content;
     }
 
-    const content =
-      artifact.content as Record<string, unknown>;
+    const content = artifact.content as Record<string, unknown>;
 
-    const preferredKeys = [
+    for (const key of [
       "content",
       "text",
       "body",
       "description",
       "reflection",
       "message",
-    ];
-
-    for (const key of preferredKeys) {
+    ]) {
       if (typeof content[key] === "string") {
         return content[key] as string;
       }
     }
 
-    return JSON.stringify(content, null, 2);
+    return "";
   };
 
+
+const getPreview = (artifact: Artifact): string => {
+  const content = getArtifactContent(artifact).trim();
+
+  if (!content) return "Content not available yet.";
+
+  return content.length > 55
+    ? `${content.slice(0, 55).trim()}…`
+    : content;
+};
+
+
   const deleteArtifact = async () => {
-    if (!selectedArtifact) {
-      return;
-    }
+    if (!selectedArtifact) return;
 
     const { error } = await supabase
       .from("sovereign_intention_artifacts")
@@ -1512,10 +1413,7 @@ function ArtifactArea({
       .eq("id", selectedArtifact.id);
 
     if (error) {
-      console.error(
-        "❌ ARTIFACT DELETE ERROR:",
-        error
-      );
+      console.error("❌ ARTIFACT DELETE ERROR:", error);
       return;
     }
 
@@ -1525,121 +1423,211 @@ function ArtifactArea({
   return (
     <View style={styles.outputArea}>
       <View style={styles.outputAreaHeader}>
-        <Text style={styles.outputAreaLabel}>
-          {area}
-        </Text>
-
-        <Text style={styles.outputAreaTitle}>
-          {title}
-        </Text>
+        <Text style={styles.outputAreaLabel}>{area}</Text>
+        <Text style={styles.outputAreaTitle}>{title}</Text>
       </View>
 
       {!loaded ? (
-        <Text style={styles.outputAreaBody}>
-          Loading...
-        </Text>
+        <Text style={styles.outputAreaBody}>Loading...</Text>
       ) : (
         <View style={styles.outputField}>
+          {areaArtifacts.length === 0 ? (
+            <Text style={styles.outputAreaBody}>
+              Your creations will appear here.
+            </Text>
+          ) : (
 
-          {/* I — AFFIRMATION ONLY */}
-{area === "I" && (
-  <View style={styles.affirmationArea}>
-    <Text style={styles.affirmationText}>
-      {affirmation
-        ? getArtifactContent(affirmation)
-        : "Your affirmation will appear here."}
-    </Text>
-  </View>
-)}
+<View
+  style={{
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "stretch",
+    columnGap: 8,
+    rowGap: 8,
+    width: "100%",
+  }}
+>
+  {areaArtifacts.map((artifact) => (
+    <Pressable
+      key={artifact.id}
+      onPress={() => setSelectedArtifact(artifact)}
+      style={{
+width: "48%",
+minHeight: 130,
+flexGrow: 0,
+flexShrink: 0,
+        padding: 10,
+        marginBottom: 2,
+        borderWidth: 1,
+        borderColor: "#393834",
+        borderRadius: 8,
+        backgroundColor: "#20201E",
+        justifyContent: "space-between",
+      }}
+    >
+      <View>
+        <Text
+          numberOfLines={1}
+          style={{
+            color: "#C9A84E",
+            fontSize: 9,
+            letterSpacing: 1,
+            marginBottom: 8,
+          }}
+        >
+          {artifact.artifact_type.replace(/_/g, " ").toUpperCase()}
+        </Text>
 
-          {/* SYMBOLIC FIELD */}
-          <View style={styles.symbolField}>
-            {otherArtifacts.map((artifact) => (
-              <Pressable
-                key={artifact.id}
-                onPress={() =>
-                  setSelectedArtifact(artifact)
-                }
-                style={styles.symbolArtifact}
-              >
-                <Text style={styles.artifactSymbol}>
-                  {getSymbol(
-                    artifact.artifact_type,
-                    artifact.title
-                  )}
-                </Text>
-              </Pressable>
-            ))}
+        <Text
+          numberOfLines={3}
+          style={{
+            color: "#F7F4EE",
+            fontSize: 12,
+            fontWeight: "600",
+            lineHeight: 16,
+            marginBottom: 6,
+          }}
+        >
+          {artifact.title}
+        </Text>
 
-            {/* OTHER — always available */}
-            <Pressable
-              onPress={() => {
-                // Reserved for future "Other" creation flow.
-              }}
-              style={styles.symbolArtifact}
-            >
-              <Text
-                style={[
-                  styles.artifactSymbol,
-                  styles.otherSymbol,
-                ]}
-              >
-                ⋯
-              </Text>
-            </Pressable>
-          </View>
+        <Text
+          numberOfLines={2}
+          style={{
+            color: "#B7B3AB",
+            fontSize: 10,
+            lineHeight: 14,
+          }}
+        >
+          {getPreview(artifact)}
+        </Text>
+      </View>
 
-          {/* ARTIFACT READER */}
-          {selectedArtifact && (
-            <View style={styles.artifactReader}>
+      <Text
+        style={{
+          color: "#C9A84E",
+          fontSize: 9,
+          letterSpacing: 0.7,
+          marginTop: 10,
+        }}
+      >
+        OPEN →
+      </Text>
+    </Pressable>
+  ))}
+</View>
 
-              <Pressable
-                onPress={() =>
-                  setSelectedArtifact(null)
-                }
-                style={styles.artifactReaderClose}
-                hitSlop={12}
-              >
-                <Text
-                  style={styles.artifactReaderCloseText}
-                >
-                  ×
-                </Text>
-              </Pressable>
-
-              <Text style={styles.artifactReaderType}>
-                {selectedArtifact.artifact_type.replace(
-                  /_/g,
-                  " "
-                )}
-              </Text>
-
-              <Text style={styles.artifactReaderTitle}>
-                {selectedArtifact.title}
-              </Text>
-
-              <Text style={styles.artifactReaderContent}>
-                {getArtifactContent(selectedArtifact)}
-              </Text>
-
-              <Pressable
-                onPress={() => {
-                  void deleteArtifact();
-                }}
-                style={styles.artifactDelete}
-              >
-                <Text style={styles.artifactDeleteText}>
-                  DELETE
-                </Text>
-              </Pressable>
-            </View>
           )}
+
+
+{selectedArtifact && (
+  <Modal
+    visible={true}
+    transparent={false}
+    animationType="fade"
+    onRequestClose={() => setSelectedArtifact(null)}
+  >
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#111110",
+        paddingHorizontal: 32,
+        paddingTop: 28,
+        paddingBottom: 32,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 28,
+        }}
+      >
+        <Text
+          style={{
+            color: "#C9A84E",
+            fontSize: 11,
+            letterSpacing: 2,
+          }}
+        >
+          {selectedArtifact.artifact_type
+            .replace(/_/g, " ")
+            .toUpperCase()}
+        </Text>
+
+        <Pressable
+          onPress={() => setSelectedArtifact(null)}
+          hitSlop={12}
+        >
+          <Text style={{ color: "#F7F4EE", fontSize: 30 }}>
+            ×
+          </Text>
+        </Pressable>
+      </View>
+
+      <Text
+        style={{
+          color: "#F7F4EE",
+          fontSize: 26,
+          fontWeight: "600",
+          lineHeight: 34,
+          marginBottom: 24,
+          maxWidth: 900,
+        }}
+      >
+        {selectedArtifact.title}
+      </Text>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <Text
+          selectable
+          style={{
+            color: "#D6D2CA",
+            fontSize: 16,
+            lineHeight: 28,
+            maxWidth: 900,
+          }}
+        >
+          {getArtifactContent(selectedArtifact) ||
+            "Content has not been created yet."}
+        </Text>
+      </ScrollView>
+
+      <Pressable
+        onPress={() => {
+          void deleteArtifact();
+        }}
+        style={{
+          alignSelf: "flex-start",
+          marginTop: 20,
+          paddingVertical: 10,
+        }}
+      >
+        <Text
+          style={{
+            color: "#88847C",
+            fontSize: 11,
+            letterSpacing: 1.5,
+          }}
+        >
+          DELETE ARTIFACT
+        </Text>
+      </Pressable>
+    </View>
+  </Modal>
+)}
 
         </View>
       )}
     </View>
   );
 }
+
 
 function StageDream({
   intentionId,
@@ -4338,10 +4326,12 @@ useEffect(() => {
 =============================================================== */
 
 const styles = {
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+screen: {
+  flex: 1,
+  height: "100%",
+  minHeight: 0,
+  backgroundColor: Colors.background,
+},
 
   page: {
     padding: 24,
@@ -4350,13 +4340,14 @@ const styles = {
   },
 
   pageMobile: {
-    width: "300vw" as const,
+    width: "300%" as const,
   },
 
 columns: {
   width: "100%" as const,
   maxWidth: 1500,
   flex: 1,
+height: "100%" as const,
   minHeight: 0,
   alignSelf: "center" as const,
   flexDirection: "row" as const,
@@ -4366,7 +4357,7 @@ columns: {
 
   columnsMobile: {
     flexDirection: "row" as const,
-    width: "300vw" as const,
+    width: "300%" as const,
   },
 
   column: {
@@ -4376,25 +4367,35 @@ columns: {
 leftColumn: {
   flex: 1,
   minWidth: 0,
+  backgroundColor: Colors.surfaceLight,
   borderRightWidth: 1,
   borderRightColor: Colors.divider,
 },
 
-middleColumn: {
-  flex: 2,
-  minWidth: 0,
-  borderRightWidth: 1,
-  borderRightColor: Colors.divider,
-  flexDirection: "column" as const,
-},
 
 rightColumn: {
   flex: 1,
   minWidth: 0,
+  minHeight: 0,
+  backgroundColor: Colors.surfaceLight,
 },
 
-  mobileColumn: {
-    width: "100vw" as const,
+
+middleColumn: {
+  flex: 2,
+  minWidth: 0,
+  backgroundColor: Colors.background,
+
+  position: "relative" as const,
+
+  borderRightWidth: 1,
+  borderRightColor: Colors.divider,
+
+  flexDirection: "column" as const,
+},
+
+mobileColumn: {
+    width: "100%" as const,
     flex: 0,
     flexGrow: 0,
     flexShrink: 0,
@@ -4486,7 +4487,7 @@ lifeEntryText: {
   fontSize: 11,
   lineHeight: 18,
   padding: 0,
-  outlineStyle: "none" as const,
+outlineStyle: "solid" as const,
   textAlignVertical: "top" as const,
 },
 
@@ -4706,8 +4707,8 @@ renewReflectionText: {
 },
 
 journeyArea: {
-  flex: 1,
-  minHeight: 0,
+  height: 540,
+  minHeight: 540,
   paddingTop: 18,
   paddingBottom: 10,
   paddingLeft: 10,
@@ -5055,7 +5056,7 @@ largeInput: {
 renewGrid: {
   flexDirection: "row" as const,
   gap: 10,
-  width: "100%",
+width: "100%" as const,
   marginTop: 34,
 },
 
@@ -5081,7 +5082,7 @@ renewLabel: {
     lineHeight: 17,
     padding: 14,
     borderRadius: 11,
-    outlineStyle: "none" as const,
+outlineStyle: "solid" as const,
     textAlignVertical: "top" as const,
   },
 
