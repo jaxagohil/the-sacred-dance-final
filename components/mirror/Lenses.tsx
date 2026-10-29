@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import {
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,14 +33,11 @@ import {
 // --------------------------------------------------
 
 type Props = {
-
   userContext: any;
-
   context: any;
-
   language: any;
-
   languageContext: any;
+  presentation?: "buttons" | "icons";
 };
 
 // --------------------------------------------------
@@ -56,6 +54,8 @@ export default function Lenses({
 
   languageContext,
 
+    presentation = "buttons",
+
 }: Props) {
 
   // --------------------------------------------------
@@ -66,6 +66,10 @@ export default function Lenses({
     selected,
     setSelected,
   ] = useState<
+  "people" | "places" | "things" | null
+>(null);
+
+const [hovered, setHovered] = useState<
   "people" | "places" | "things" | null
 >(null);
 
@@ -422,6 +426,57 @@ awarenessChakra:
     );
   };
 
+
+const lensLabels = {
+  people: "People",
+  places: "Places",
+  things: "Things",
+};
+
+const renderIcon = (
+  lens: "people" | "places" | "things"
+) => {
+  const icons = {
+    people: "♙",
+    places: "⌖",
+    things: "✧",
+  };
+
+  return (
+    <Pressable
+      key={lens}
+      accessibilityRole="button"
+      accessibilityLabel={lensLabels[lens]}
+      onPress={() => {
+        setHovered((current) =>
+          current === lens ? null : lens
+        );
+        handlePress(lens);
+      }}
+      onHoverIn={() => {
+        setHovered(lens);
+        handlePress(lens);
+      }}
+      onHoverOut={() => setHovered(null)}
+      style={[
+        styles.iconButton,
+        selected === lens && styles.iconActive,
+      ]}
+    >
+      <Text style={styles.iconSymbol}>
+        {icons[lens]}
+      </Text>
+
+      {hovered === lens && (
+        <Text style={styles.hoverLabel}>
+          {lensLabels[lens]}
+        </Text>
+      )}
+    </Pressable>
+  );
+};
+
+
   // --------------------------------------------------
   // 🌌 RENDER
   // --------------------------------------------------
@@ -432,21 +487,28 @@ awarenessChakra:
 
       {/* 🔘 LENSES */}
 
-      <View style={styles.row}>
-
-        {renderButton(
-          "people"
-        )}
-
-        {renderButton(
-          "places"
-        )}
-
-        {renderButton(
-          "things"
-        )}
-
-      </View>
+<View
+  style={[
+    styles.row,
+    presentation === "icons" && styles.iconRow,
+  ]}
+>
+  {presentation === "icons"
+    ? (
+        <>
+          {renderIcon("people")}
+          {renderIcon("places")}
+          {renderIcon("things")}
+        </>
+      )
+    : (
+        <>
+          {renderButton("people")}
+          {renderButton("places")}
+          {renderButton("things")}
+        </>
+      )}
+</View>
 
       {/* ✨ LABEL */}
 
@@ -458,48 +520,28 @@ awarenessChakra:
 
       {/* 🪞 RESPONSE */}
 
-      {selected && (
 
-        <View
-          style={
-            styles.responseBox
-          }
-        >
+{hovered && (
+  <View
+    pointerEvents="none"
+    style={styles.responseBox}
+  >
+    <Text style={styles.responseHeading}>
+      {lensLabels[hovered]}
+    </Text>
 
-          {loading &&
-          !responses[
-            selected
-          ] ? (
+    {loading && !responses[hovered] ? (
+      <Text style={styles.loadingText}>
+        ...
+      </Text>
+    ) : (
+      <Text style={styles.responseText}>
+        {responses[hovered] || ""}
+      </Text>
+    )}
+  </View>
+)}
 
-            <Text
-              style={
-                styles.loadingText
-              }
-            >
-
-              ...
-
-            </Text>
-
-          ) : (
-
-            <Text
-              style={
-                styles.responseText
-              }
-            >
-
-              {
-                responses[
-                  selected
-                ]
-              }
-
-            </Text>
-          )}
-
-        </View>
-      )}
 
     </View>
   );
@@ -512,17 +554,14 @@ awarenessChakra:
 const styles =
   StyleSheet.create({
 
-    container: {
-
-      width: "100%",
-
-      alignItems:
-        "center",
-
-      marginTop: -10,
-
-      paddingBottom: 24,
-    },
+container: {
+  width: "100%",
+  alignItems: "center",
+  marginTop: -10,
+  paddingBottom: 24,
+  position: "relative",
+  zIndex: 20,
+},
 
     row: {
 
@@ -605,33 +644,39 @@ const styles =
     },
 
 responseBox: {
-
-  marginTop: 24,
-
-  paddingHorizontal: 32,
-
-  width: "70%",
-
-  maxWidth: 700,
+  position: "absolute",
+  top: 10,
+  paddingHorizontal: 24,
+  width: "100%",
+  maxWidth: 900,
+  backgroundColor: "rgba(3,4,5,0.96)",
+  zIndex: 20,
+  elevation: 20,
 },
 
-    responseText: {
+responseText: {
+  color: Colors.softText,
+  fontSize: 10,
+  lineHeight: 15,
+  textAlign: "center",
+  fontWeight: "300",
+  opacity: 0.85,
+},
 
-      color:
-        Colors.softText,
+responseHeading: {
+  color: "#C9AD70",
+  fontSize: 13,
+  textAlign: "center",
+  marginBottom: 8,
+},
 
-      fontSize: 14,
-
-      lineHeight: 28,
-
-      textAlign:
-        "center",
-
-      fontWeight:
-        "300",
-
-      opacity: 0.9,
-    },
+responsePrompt: {
+  color: Colors.mutedText,
+  fontSize: 10,
+  textAlign: "center",
+  marginBottom: 12,
+  letterSpacing: 0.3,
+},
 
     loadingText: {
 
@@ -645,4 +690,41 @@ responseBox: {
 
       opacity: 0.72,
     },
+
+    iconRow: {
+  gap: 0,
+  marginBottom: 14,
+  alignItems: "center",
+},
+
+iconButton: {
+  width: 76,
+  minHeight: 64,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  position: "relative",
+},
+
+iconActive: {
+  backgroundColor: "rgba(201,173,112,0.06)",
+  borderRadius: 12,
+},
+
+iconSymbol: {
+  color: "#C9AD70",
+  fontSize: 25,
+  fontWeight: "300",
+},
+
+hoverLabel: {
+  position: "absolute",
+  top: 48,
+  color: "#AAA2B6",
+  fontSize: 10,
+  textAlign: "center",
+},
+
+
   });

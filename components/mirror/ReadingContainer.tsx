@@ -8,11 +8,10 @@ import React, {
 
 import {
   Animated,
-  Platform,
-  ScrollView,
+  Image,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -37,13 +36,8 @@ import {
   selectTarotCard,
 } from "../../lib/selectTarotCard";
 
-import OracleCard from "./OracleCard";
 
-import TarotCard from "./TarotCard";
 
-import {
-  t,
-} from "../../lib/i18n/t";
 
 // --------------------------------------------------
 // 🧠 TYPES
@@ -60,6 +54,8 @@ type Props = {
   languageContext?: any;
 
   cosmic?: any;
+
+  autoOpen?: boolean;
 };
 
 // --------------------------------------------------
@@ -137,6 +133,9 @@ export default function ReadingContainer({
 
   cosmic,
 
+    autoOpen = false,
+
+
 }: Props) {
 
   // --------------------------------------------------
@@ -183,6 +182,10 @@ export default function ReadingContainer({
     setTarotWhisper,
   ] = useState("");
 
+  const [messageVisible, setMessageVisible] = useState(false);
+  const hasStarted = useRef(false);
+  const hasAutoOpened = useRef(false);
+
   const tarotAnim =
     useRef(
       new Animated.Value(0)
@@ -204,6 +207,8 @@ const mirror =
 
   const handleOpen =
     async () => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
 
     //
     // 🌌 DAILY FIELD
@@ -225,6 +230,7 @@ const mirror =
         "❌ No oracle card selected"
       );
 
+      hasStarted.current = false;
       return;
     }
 
@@ -839,43 +845,22 @@ setTarotWhisper(
     }
   };
 
+  useEffect(() => {
+    if (autoOpen && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      void handleOpen();
+    }
+  }, [autoOpen]);
+
   // --------------------------------------------------
   // 🔮 TAROT REVEAL
   // --------------------------------------------------
 
-  useEffect(() => {
-
-    if (
-      !show ||
-      !oracle
-    ) return;
-
-    const t =
-      setTimeout(() => {
-
-      setShowTarot(true);
-
-      Animated.timing(
-
-        tarotAnim,
-
-        {
-
-          toValue: 1,
-
-          duration: 700,
-
-          useNativeDriver: true,
-        }
-
-      ).start();
-
-    }, 1200);
-
-    return () =>
-      clearTimeout(t);
-
-  }, [show, oracle]);
+useEffect(() => {
+  if (show && oracle && tarot) {
+    setShowTarot(true);
+  }
+}, [show, oracle, tarot]);
 
   // --------------------------------------------------
   // ✨ TAROT STYLE
@@ -912,29 +897,9 @@ setTarotWhisper(
   // ✨ INITIAL
   // --------------------------------------------------
 
-  if (!oracle) {
 
-    return (
 
-      <View style={styles.container}>
 
-        <TouchableOpacity
-          onPress={handleOpen}
-        >
-
-          <Text style={styles.trigger}>
-
-            {t(
-              "mirror.divine_guidance"
-            )}
-
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-    );
-  }
 
   // --------------------------------------------------
   // 🎨 ORACLE COLOR
@@ -943,7 +908,7 @@ setTarotWhisper(
   const borderColor =
 
     COLOUR_CONFIG[
-      oracle.colour
+      oracle?.colour
     ] ||
 
     "#D4AF37";
@@ -952,154 +917,68 @@ setTarotWhisper(
   // 🌌 RENDER
   // --------------------------------------------------
 
-  return (
-
-    <View style={styles.container}>
-
-      {show && (
-
-        <View style={styles.canvas}>
-
-          {/* 🃏 ORACLE */}
-
-          <View
-            style={
-              styles.oracleWrap
-            }
-          >
-
-            <OracleCard
-
-              number={
-                oracle.card_number
-              }
-
-              title={
-
-                displayOracle
-                  ?.title ||
-
-                oracle.title
-              }
-
-              message={
-
-                displayOracle
-                  ?.affirmation ||
-
-                oracle.affirmation
-              }
-
-              colour={
-                borderColor
-              }
-            />
-
-          </View>
-
-          {/* 🔮 TAROT */}
-
-          {showTarot &&
-            tarot && (
-
-            <Animated.View
-
-              style={[
-
-                styles.tarot,
-
-                tarotStyle,
-              ]}
-            >
-
-              <TarotCard
-
-                number={
-                  tarot.number
-                }
-
-                title={
-                  tarot.name
-                }
-
-                archetype={
-                  tarot.archetype
-                }
-
-                message={
-
-                  loadingReading
-
-                    ? ""
-
-                    : tarotWhisper ||
-
-                      tarot.symbolic_temperature
-                }
-              />
-
-            </Animated.View>
-          )}
-
-          {/* 🧠 READING */}
-
-          {showTarot && (
-
-            <ScrollView
-
-              style={
-                styles.readingScroll
-              }
-
-              contentContainerStyle={{
-
-                alignItems:
-                  "center",
-
-                paddingBottom:
-                  140,
-              }}
-
-              showsVerticalScrollIndicator={
-                false
-              }
-            >
-
-              {/* 🌙 LINE */}
-
-              <View
-                style={
-                  styles.readingLine
-                }
-              />
-
-              {/* ✨ TEXT */}
-
-              <Text
-                style={
-                  styles.reading
-                }
-              >
-
-                {
-
-                  loadingReading
-
-                    ? ""
-
-                    : typed
-                }
-
+return (
+  <View style={styles.panelContent}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={oracle ? "Show Divine Message" : "Reveal Oracle and Tarot"}
+      onPress={() => {
+        if (!oracle) void handleOpen();
+      }}
+      onHoverIn={() => {
+        if (oracle) setMessageVisible(true);
+      }}
+      onHoverOut={() => setMessageVisible(false)}
+      style={styles.cardStage}
+    >
+      <View style={styles.cardsRow}>
+        {oracle ? (
+          <>
+            <View style={[styles.revealedCard, { borderColor }]}>
+              <Text style={[styles.cardTitle, { color: borderColor }]}>
+                {displayOracle?.title || oracle.title}
               </Text>
-
-            </ScrollView>
-          )}
-
+              <Text style={styles.cardMessage}>
+                {displayOracle?.affirmation || oracle.affirmation}
+              </Text>
+            </View>
+            <View style={[styles.revealedCard, { borderColor: "#D4AF37" }]}>
+              {showTarot && tarot ? (
+                <>
+                  <Text style={styles.cardTitle}>{tarot.name}</Text>
+                  <Text style={styles.cardMessage}>
+                    {loadingReading ? " " : tarotWhisper || tarot.symbolic_temperature}
+                  </Text>
+                </>
+              ) : null}
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.miniCard}>
+              <Image
+                source={require("../../assets/logo.png")}
+                style={styles.oracleLogo}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.miniCard}>
+              <Text style={styles.cardSymbol}>◉</Text>
+            </View>
+          </>
+        )}
+      </View>
+      {oracle && messageVisible ? (
+        <View pointerEvents="none" style={styles.messageOverlay}>
+          <View style={styles.readingLine} />
+          <Text style={styles.reading}>
+            {loadingReading ? "The message is emerging…" : typed}
+          </Text>
         </View>
-      )}
-
-    </View>
-  );
+      ) : null}
+    </Pressable>
+  </View>
+);
 }
 
 // --------------------------------------------------
@@ -1146,87 +1025,124 @@ const styles =
       marginTop: 20,
     },
 
-    oracleWrap: {
+oracleWrap: {
+  flex: 1,
+  alignItems: "center",
+  minWidth: 0,
+},
 
-      alignItems:
-        "center",
-
-      marginTop: 20,
-
-      zIndex: 1,
-    },
-
- tarot: {
-
-  marginTop:
-    Platform.OS === "web"
-      ? -150
-      : -120,
-
-  alignSelf:
-    "flex-end",
-
-marginRight:
-  Platform.OS === "web"
-    ? 420
-    : 22,
-
-  width: 180,
-
+tarot: {
+  flex: 1,
+  minWidth: 0,
+  alignSelf: "center",
   zIndex: 2,
 },
 
-    readingLine: {
+panelContent: {
+  width: "100%",
+  alignSelf: "stretch",
+},
 
-      width: 42,
+cardStage: {
+  width: "100%",
+  position: "relative",
+},
 
-      height: 1,
+cardsRow: {
+  width: "100%",
+  height: 96,
+  flexDirection: "row",
+  gap: 8,
+},
 
-      borderRadius: 999,
+miniCard: {
+  flex: 1,
+  minWidth: 0,
+  height: 96,
+  borderWidth: 1,
+  borderColor: "#C9AD70",
+  borderRadius: 12,
+  backgroundColor: "#111018",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
 
-      backgroundColor:
-        "rgba(255,255,255,0.12)",
+oracleLogo: {
+  width: "72%",
+  height: "72%",
+},
 
-      marginTop: 10,
+cardSymbol: {
+  color: "#C9AD70",
+  fontSize: 28,
+  fontWeight: "300",
+},
 
-      marginBottom: 2,
-    },
+revealedCard: {
+  flex: 1,
+  height: 96,
+  minWidth: 0,
+  borderWidth: 1,
+  borderRadius: 12,
+  backgroundColor: "#111018",
+  padding: 10,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
 
-    reading: {
+messageOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  zIndex: 10,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "rgba(212,175,55,0.8)",
+  backgroundColor: "rgba(8,8,14,0.96)",
+  padding: 16,
+  alignItems: "center",
+  justifyContent: "center",
+},
 
-      marginTop: 20,
+cardLabel: {
+  fontSize: 9,
+  letterSpacing: 2,
+  marginBottom: 8,
+},
 
-      paddingHorizontal: 20,
+cardTitle: {
+  color: "#E9DFC9",
+  fontSize: 12,
+  textAlign: "center",
+  marginBottom: 8,
+},
 
-      paddingVertical: 10,
+cardMessage: {
+  color: "rgba(255,255,255,0.7)",
+  fontSize: 10,
+  lineHeight: 15,
+  textAlign: "center",
+},
 
-      paddingBottom: 20,
+messageArea: {
+  width: "100%",
+  alignItems: "center",
+  marginTop: 12,
+},
 
-      maxWidth: 320,
+readingLine: {
+  width: 32,
+  height: 1,
+  backgroundColor: "rgba(212,175,55,0.5)",
+  marginBottom: 10,
+},
 
-      textAlign:
-        "center",
-
-      color:
-        "rgba(255, 230, 180, 0.88)",
-
-fontFamily:
-  Fonts.orchestration,
-
-lineHeight: 38,
-
-fontSize: 18,
-
-letterSpacing: 0,
-
-backgroundColor:
-  "rgba(255,255,255,0.012)",
-
-      borderRadius: 28,
-
-      borderWidth: 1,
-
-borderColor:
-  "rgba(255,255,255,0.02)",
-    },
+reading: {
+  width: "100%",
+  color: "rgba(255,230,180,0.88)",
+  fontFamily: Fonts.orchestration,
+  fontSize: 12,
+  lineHeight: 16,
+  textAlign: "center",
+},
   });

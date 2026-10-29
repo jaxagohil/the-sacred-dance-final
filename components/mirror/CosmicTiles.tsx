@@ -1,33 +1,29 @@
-import React, {
-  useEffect,
-  useRef,
-} from "react";
+
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Animated,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
-import {
-  Colors,
-} from "../../constants/theme";
+import { Colors } from "../../constants/theme";
 
-function getPhaseIcon(
-  type: string
-) {
+type CosmicTilesProps = {
+  cosmic: any;
+  language?: string;
+  languageContext?: any;
+  layout?: "horizontal" | "vertical";
+};
 
-  const map:
-    Record<string, string> = {
-
+function getPhaseIcon(type: string) {
+  const map: Record<string, string> = {
     amplify: "🌕",
-
     initiate: "🌑",
-
     build: "🌓",
-
     release: "🌘",
   };
 
@@ -35,387 +31,251 @@ function getPhaseIcon(
 }
 
 export default function CosmicTiles({
-
   cosmic,
-
   language,
-
   languageContext,
+  layout = "horizontal",
+}: CosmicTilesProps) {
 
-}: {
+  const [hoveredTile, setHoveredTile] = useState<string | null>(null);
 
-  cosmic: any;
-
-  language?: string;
-
-  languageContext?: any;
-
-}) {
-
-  //
-  // ✨ SHIMMER
-  //
-
-  const shimmerAnim =
-    useRef(
-      new Animated.Value(0.28)
-    ).current;
-
-  //
-  // 🌫 BREATHING EFFECT
-  //
+  const shimmerAnim = useRef(
+    new Animated.Value(0.18)
+  ).current;
 
   useEffect(() => {
-
-    Animated.loop(
-
+    const animation = Animated.loop(
       Animated.sequence([
-
-        Animated.timing(
-          shimmerAnim,
-
-          {
-            toValue: 0.06,
-
-            duration: 1600,
-
-            useNativeDriver: true,
-          }
-        ),
-
-        Animated.timing(
-          shimmerAnim,
-
-          {
-            toValue: 0.18,
-
-            duration: 1600,
-
-            useNativeDriver: true,
-          }
-        ),
+        Animated.timing(shimmerAnim, {
+          toValue: 0.06,
+          duration: 1600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0.18,
+          duration: 1600,
+          useNativeDriver: true,
+        }),
       ])
-
-    ).start();
-
-  }, []);
-
-  //
-  // 🌫 LOADING STATE
-  //
-
-  if (!cosmic) {
-
-    return (
-
-      <View style={styles.wrapper}>
-
-        <View style={styles.container}>
-
-          <View style={styles.row}>
-
-            {[1,2,3,4].map((i) => (
-
-              <Animated.View
-                key={i}
-
-                style={[
-
-                  styles.tile,
-
-                  styles.loadingTile,
-
-                  {
-                    opacity:
-                      shimmerAnim,
-                  },
-                ]}
-              />
-
-            ))}
-
-          </View>
-
-        </View>
-
-      </View>
     );
-  }
 
-  //
-  // 🌌 COSMIC DATA
-  //
+    animation.start();
 
-const cosmicData =
+    return () => animation.stop();
+  }, [shimmerAnim]);
 
-  cosmic?.dailyField
-    ?.cosmic || {};
-
-  //console.log(cosmic);  
-
-  //
-  // ✨ TILES
-  //
+  const cosmicData = cosmic?.dailyField?.cosmic || {};
 
   const tiles = [
-
-    {
-      key: "moon",
-
-      value:
-        cosmicData?.moon_sign || "",
-
-line:
-  cosmic?.moon?.line ||
-  cosmic?.moonLine,
-
-      icon: "🌙",
-    },
-
-    {
-      key: "phase",
-
-      value:
-        cosmicData?.moon_phase || "",
-
-line:
-  cosmic?.phase?.line ||
-  cosmic?.phaseLine,
-
-      icon:
-        getPhaseIcon(
-          cosmic.phaseType
-        ),
-    },
-
-{
-  key: "energy",
-
-  value:
-    (
-      (
-        cosmic?.dailyField
-          ?.dominantEnergy ||
-
-        "Energy"
-      )
-
-      .split(" ")[0]
-    )
-
-      .charAt(0)
-
-      .toUpperCase()
-
-    +
-
-    (
-      (
-        cosmic?.dailyField
-          ?.dominantEnergy ||
-
-        "Energy"
-      )
-
-      .split(" ")[0]
-    )
-
-      .slice(1),
-
-  line:
-    cosmic?.energy?.line ||
-    cosmic?.energyLine,
-
-  icon: "✨",
-},
-
     {
       key: "sun",
-
-      value:
-        cosmicData?.sun_sign || "",
-
-line:
-  cosmic?.sun?.line ||
-  cosmic?.sunLine,
-
+      value: cosmicData?.sun_sign || "",
+      line: cosmic?.sun?.line || cosmic?.sunLine || "",
       icon: "☀️",
+    },
+    {
+      key: "energy",
+      value: (
+        cosmic?.dailyField?.dominantEnergy || "Energy"
+      ).split(" ")[0],
+      line: cosmic?.energy?.line || cosmic?.energyLine || "",
+      icon: "✨",
+    },
+    {
+      key: "moon",
+      value: cosmicData?.moon_sign || "",
+      line: cosmic?.moon?.line || cosmic?.moonLine || "",
+      icon: "🌙",
+    },
+    {
+      key: "phase",
+      value: cosmicData?.moon_phase || "",
+      line: cosmic?.phase?.line || cosmic?.phaseLine || "",
+      icon: getPhaseIcon(cosmic?.phaseType),
     },
   ];
 
+
   return (
+    <View
+      style={[
+        styles.wrapper,
+        layout === "vertical" && styles.verticalWrapper,
+      ]}
+    >
+      <View
+        style={[
+          styles.row,
+          layout === "vertical" && styles.verticalRow,
+        ]}
+      >
+        {tiles.map((tile) => (
+          <Pressable
+            key={tile.key}
+            onHoverIn={() => setHoveredTile(tile.key)}
+            onHoverOut={() => setHoveredTile(null)}
+            style={styles.tile}
+          >
+            <Text style={styles.icon}>{tile.icon}</Text>
 
-    <View style={styles.wrapper}>
+            {Platform.OS === "web" && hoveredTile === tile.key && (
+  <View style={styles.hoverPanel} pointerEvents="none">
+    <Text style={styles.hoverTitle}>
+      {tile.value}
+    </Text>
 
-      <View style={styles.container}>
+    <Text style={styles.hoverText}>
+      {tile.line}
+    </Text>
+  </View>
+)}
 
-        <View style={styles.row}>
-
-          {tiles.map((t) => {
-
-            return (
-
-              <View
-                key={t.key}
-
-                style={
-                  styles.tile
-                }
-              >
-
-                <Text style={styles.icon}>
-                  {t.icon}
-                </Text>
-
-<View style={styles.valueWrapper}>
-
-<Text
-
-  style={styles.value}
-
-  numberOfLines={2}
-
->
-
-  {t.value}
-
-</Text>
-
-</View>
-
-                <Text style={styles.line}>
-                  {t.line}
-                </Text>
-
-              </View>
-            );
-          })}
-        </View>
-
+            {!cosmic && (
+              <Animated.View
+                style={[
+                  styles.loadingOverlay,
+                  { opacity: shimmerAnim },
+                ]}
+              />
+            )}
+          </Pressable>
+        ))}
       </View>
 
+
+      {Platform.OS !== "web" && (
+        <View style={styles.mobileLabels}>
+          {tiles.map((tile) => (
+            <View key={tile.key} style={styles.mobileLabel}>
+              <Text style={styles.value}>{cosmic ? tile.value : ""}</Text>
+              <Text style={styles.line}>{cosmic ? tile.line : ""}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
+
 }
 
-const styles =
-  StyleSheet.create({
-
- valueWrapper: {
-
-  minHeight: 28,
-
-  justifyContent: "center",
-
-  alignItems: "center",
-
-  paddingHorizontal: 4,
-},   
-
+const styles = StyleSheet.create({
   wrapper: {
-
     paddingHorizontal: 20,
-
-    paddingTop: 26,
-
-    paddingBottom: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
+      marginLeft: -100,
   },
 
-  container: {
+  verticalWrapper: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
 
+  row: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "stretch",
+    gap: Platform.OS === "web" ? 14 : 10,
+  },
+
+  verticalRow: {
+    flexDirection: "column",
     alignItems: "center",
-
-    paddingVertical: 6,
-
-    minHeight: 110,
+    gap: 12,
   },
 
-row: {
-
-  flexDirection: "row",
-
+tile: {
+  position: "relative",
+  width: Platform.OS === "web" ? 176 : 78,
+  minHeight: 92,
+  paddingHorizontal: 4,
+  paddingVertical: 8,
+  borderRadius: 0,
+  alignItems: "center",
+  alignSelf: "center",
   justifyContent: "center",
-
-  gap:
-    Platform.OS === "web"
-      ? 14
-      : 10,
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  overflow: "visible",
 },
 
-    tile: {
-
-  width:
-    Platform.OS === "web"
-      ? 176
-      : 78,
-
-    borderRadius: 22,
-
-    paddingHorizontal: 8,
-
-    paddingVertical: 14,
-
-    minHeight: 92,
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    backgroundColor:
-      "rgba(255,255,255,0.015)",
-
-    borderWidth: 0.5,
-
-    borderColor:
-      "rgba(255,255,255,0.03)",
-  },
-
-  loadingTile: {
-
-    backgroundColor:
-      "rgba(255,255,255,0.04)",
-  },
-
   icon: {
-
     fontSize: 14,
+    opacity: 0.65,
+    marginBottom: 5,
+  },
 
-    opacity: 0.48,
-
-    marginBottom: 6,
+  valueWrapper: {
+    minHeight: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
   },
 
   value: {
-
     fontSize: 10,
-
-    color:
-      Colors.white,
-
+    color: Colors.white,
     textAlign: "center",
-
-    marginTop: 1,
-
-    opacity: 1,
-
     fontWeight: "300",
   },
 
-  line: {
+line: {
+  width: 100,
+  minHeight: 14,
+  fontSize: 9,
+  color: Colors.mutedText,
+  marginTop: 5,
+  textAlign: "center",
+  lineHeight: 12,
+  opacity: 0.8,
+  alignSelf: "center",
+},
 
-      minHeight: 52,
-
-    fontSize: 10,
-
-    color:
-      Colors.mutedText,
-
-    marginTop: 10,
-
-    textAlign: "center",
-
-    lineHeight: 14,
-
-    opacity: 0.95,
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
+
+hoverPanel: {
+  position: "absolute",
+  bottom: 34,
+  left: "80%",
+  width: 150,
+  transform: [{ translateX: -75 }],
+  zIndex: 100,
+  alignItems: "flex-start",
+  paddingHorizontal: 10,
+  paddingVertical: 8,
+  backgroundColor: "rgba(0,0,0,0.96)",
+},
+
+hoverTitle: {
+  fontSize: 10,
+  color: "#D6B568",
+  textAlign: "left",
+  marginBottom: 5,
+  letterSpacing: 0.5,
+},
+
+hoverText: {
+  fontSize: 9,
+  color: Colors.mutedText,
+  textAlign: "left",
+  lineHeight: 13,
+  maxWidth: 150,
+},
+
+  mobileLabels: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 8,
+  },
+
+  mobileLabel: {
+    flex: 1,
+    alignItems: "center",
+  },
+
 });

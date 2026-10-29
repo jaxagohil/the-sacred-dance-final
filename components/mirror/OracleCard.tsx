@@ -188,8 +188,8 @@ const styles =
   aura: {
     position: "absolute",
 
-    width: 250,
-    height: 380,
+width: "100%",
+aspectRatio: 1,
 
     borderRadius: 46,
 
@@ -206,10 +206,9 @@ const styles =
   // 🃏 CARD
   //
 
-  card: {
-
-    width: 230,
-    height: 370,
+card: {
+  width: "100%",
+  aspectRatio: 1,
 
     borderRadius: 36,
 
