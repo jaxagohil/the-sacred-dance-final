@@ -230,6 +230,15 @@ export default function TabLayout() {
         }}
       />
 
+      <Tabs.Screen
+  name="livingSpace"
+  options={{
+    title: "Living Space",
+    href: null,
+    tabBarStyle: { display: "none" },
+  }}
+/>
+
     </Tabs>
   );
 }

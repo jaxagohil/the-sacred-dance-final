@@ -12,7 +12,10 @@ import {
 } from "react-native";
 
 import EnergyField from "../../components/energy/EnergyField";
+import CreationJourney from "../../components/livingSpace/CreationJourney";
 import LivingSpaceHeader from "../../components/livingSpace/LivingSpaceHeader";
+import ReflectionPad from "../../components/livingSpace/ReflectionPad";
+import VisionBoard from "../../components/livingSpace/VisionBoard";
 import CosmicTiles from "../../components/mirror/CosmicTiles";
 import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
@@ -80,12 +83,6 @@ console.log("LIVING SPACE DAILY FIELD:", dailyField);
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* COSMIC WHISPERS */}
-        <View style={styles.whispers}>
-          <Text style={styles.whisperText}>
-            A moment to notice what is emerging ✧
-          </Text>
-        </View>
 
         {/* MAIN LIVING SPACE */}
         <View
@@ -178,70 +175,22 @@ console.log("LIVING SPACE DAILY FIELD:", dailyField);
 </Pressable>
             </View>
 
-            {/* PERSONAL VISION BOARD */}
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.visionBoard,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.sectionLabel}>
-                WHAT MATTERS TO ME
-              </Text>
-              <Text style={styles.visionTitle}>
-                Your Vision Board
-              </Text>
-              <Text style={styles.portalSubtitle}>
-                Values · Truth · Intentions · Life Picture
-              </Text>
-            </Pressable>
+{/* REFLECTION PAD + PERSONAL VISION BOARD */}
+<View style={styles.worldBoards}>
+  <View style={styles.reflectionColumn}>
+    <ReflectionPad />
+  </View>
 
-            {/* GUIDES + CIRCLES */}
-            <View style={styles.connections}>
-              <Portal
-                title="Guides"
-                subtitle="Conversations"
-              />
-              <Portal
-                title="Circles"
-                subtitle="People walking with you"
-              />
-                <Portal
-                 title="Journaling"
-                 subtitle="Your reflections"
-                 />
-            </View>
+  <View style={styles.visionBoardColumn}>
+    <VisionBoard />
+  </View>
+</View>
+
           </View>
         </View>
 
-        {/* CREATION JOURNEY */}
-        <View style={styles.journey}>
-          <Text style={styles.sectionLabel}>
-            CREATION JOURNEY
-          </Text>
-
-          <View style={styles.journeyStages}>
-            {[
-              "Dream",
-              "Discover",
-              "Build",
-              "Grow",
-              "Scale",
-              "Renew",
-            ].map((stage, index) => (
-              <View key={stage} style={styles.stage}>
-                <View
-                  style={[
-                    styles.stageDot,
-                    index === 0 && styles.activeDot,
-                  ]}
-                />
-                <Text style={styles.stageText}>{stage}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+{/* CREATION JOURNEY */}
+<CreationJourney />
       </ScrollView>
     </View>
   );
@@ -263,6 +212,24 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 32,
   },
+worldBoards: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "flex-start",
+  gap: 12,
+},
+
+reflectionColumn: {
+  flex: 1,
+  minWidth: 0,
+  alignItems: "center",
+},
+
+visionBoardColumn: {
+  flex: 1,
+  minWidth: 0,
+  alignItems: "flex-end",
+},
   contentWide: {
     maxWidth: 1500,
     paddingHorizontal: 20,
@@ -296,7 +263,7 @@ energyColumn: {
   gap: 12,
 },
 energyColumnWide: {
-  width: "42%",
+  width: "43%",
   minWidth: 0,
   flexDirection: "row",
   alignItems: "center",
@@ -416,23 +383,6 @@ miniCard: {
     fontSize: 10,
     marginTop: 10,
     textAlign: "center",
-  },
-  visionBoard: {
-    minHeight: 155,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    backgroundColor: PANEL,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  visionTitle: {
-    color: "#E9DFC9",
-    fontSize: 23,
-    marginTop: 14,
-    textAlign: "center",
-    fontWeight: "300",
   },
 connections: {
   flexDirection: "row",
