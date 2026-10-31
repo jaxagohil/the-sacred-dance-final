@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -13,336 +12,351 @@ import {
 
 import { useMirrorStore } from "../../stores/mirrorStore";
 
+import { orchestrationAgent } from "../../lib/ai/agents/orchestrationAgent";
 import { transmissionAgent } from "../../lib/ai/agents/transmissionAgent";
 import { buildAlignmentOSContext } from "../../lib/alignment/buildAlignmentOSContext";
 
+import GuideSelector from "../guidance/GuideSelector";
 import GuideTransmission from "../guidance/GuideTransmission";
 import ReflectionPortal from "../guidance/ReflectionPortal";
 
-import { orchestrateGuidance } from "../../lib/guidance/orchestration/orchestrateGuidance";
-import { loadGuideMessages } from "../../lib/guidance/runtime/loadGuideMessages";
-import { saveGuideMessage } from "../../lib/guidance/runtime/saveGuideMessage";
-import { getUserId } from "../../lib/user";
+const VALID_GUIDES = ["heart", "structure", "cosmic"];
 
-import { resolveGuidancePacing } from "../../lib/guidance/foreground/guidancePacing";
-import { resolveForegroundField } from "../../lib/guidance/foreground/resolveForegroundField";
-import { buildGuidanceField } from "../../lib/guidance/runtime/buildGuidanceField";
+type Message = {
+  id: string;
+  role: "user" | "guide";
+  guide: string;
+  text: string;
+  createdAt: string;
+};
 
-import { processGuidanceReflection } from "../../db/processGuidanceReflection";
-import { enterTransmission } from "../../lib/guidance/enterTransmission";
-import { generateGuideTransmission } from "../../lib/guidance/generateGuideTransmission";
+export default function LivingSpaceHeader({ onFieldChange }: any) {
+  const contextVersion = useMirrorStore((state) => state.contextVersion);
+  const ready = useMirrorStore((state) => state.ready);
 
-export default function LivingSpaceHeader() {
-  const contextVersion = useMirrorStore(
-    (state) => state.contextVersion
+  const alignmentContext = useMemo(
+    () => buildAlignmentOSContext(),
+    [contextVersion, ready]
   );
 
-  const alignmentContext = buildAlignmentOSContext();
+  const [selectedGuide, setSelectedGuide] = useState("cosmic");
+  const [activeFieldGuide, setActiveFieldGuide] = useState("cosmic");
 
-  const [transmissions, setTransmissions] = useState<any[]>([]);
-  const [emergenceMemory, setEmergenceMemory] = useState<any>(null);
-  const [activeFieldGuide, setActiveFieldGuide] = useState<any>("cosmic");
-  const [orchestrationField, setOrchestrationField] = useState<any>(null);
-  const [field, setField] = useState<any>(null);
+  const [orchestrationResult, setOrchestrationResult] = useState<any>(null);
+  const [transmissions, setTransmissions] = useState<Message[]>([]);
 
+  const [orchestrationLoading, setOrchestrationLoading] = useState(false);
+  const [currentFragmentIndex, setCurrentFragmentIndex] = useState(0);
   const [thinking, setThinking] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [portalVisible, setPortalVisible] = useState(false);
+
+  const orchestrationRequest = useRef(0);
+  const transmissionRequest = useRef(0);
 
   const guideProfiles = {
     heart: {
-      name:
-        alignmentContext.userContext?.profile?.guide_1_name || "Heart",
+      name: alignmentContext?.userContext?.profile?.guide_1_name || "Heart",
     },
     structure: {
-      name:
-        alignmentContext.userContext?.profile?.guide_2_name || "Structure",
+      name: alignmentContext?.userContext?.profile?.guide_2_name || "Structure",
     },
     cosmic: {
-      name:
-        alignmentContext.userContext?.profile?.guide_3_name || "Cosmic",
+      name: alignmentContext?.userContext?.profile?.guide_3_name || "Cosmic",
     },
   };
 
-  // Load existing conversation
+  const language = alignmentContext?.language || "en";
+
+  // --------------------------------------------------
+  // ORCHESTRATION
+  // Runs on entry and when the existing Living Field changes.
+  // Its conversation is displayed in the centre section.
+  // --------------------------------------------------
+
   useEffect(() => {
     let active = true;
+    const requestId = ++orchestrationRequest.current;
 
-    async function loadMessages() {
+    async function runOrchestration() {
+      if (!ready || !alignmentContext?.mirrorContext) return;
+
+      setOrchestrationLoading(true);
+
       try {
-        const userId = await getUserId();
-        const messages = await loadGuideMessages(userId);
+        const result = await orchestrationAgent({
+          alignmentContext,
+          selectedGuide,
+          language,
+        });
 
-        if (active) {
-          setTransmissions(
-            (messages || []).filter(
-              (item: any) =>
-                item?.role === "user" || item?.role === "guide"
-            )
-          );
+        if (
+          !active ||
+          requestId !== orchestrationRequest.current ||
+          !result
+        ) {
+          return;
         }
+
+        const foregroundGuide = VALID_GUIDES.includes(
+          result?.speakers?.[0]?.guide
+        )
+          ? result.speakers[0].guide
+          : "cosmic";
+
+        setActiveFieldGuide(foregroundGuide);
+        setOrchestrationResult(result);
+        onFieldChange?.(result);
       } catch (error) {
-        console.error("DIVINE ORCHESTRATION LOAD ERROR", error);
+        console.error("ORCHESTRATION AGENT ERROR", error);
+      } finally {
+        if (active && requestId === orchestrationRequest.current) {
+          setOrchestrationLoading(false);
+        }
       }
     }
 
-    loadMessages();
+    runOrchestration();
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [contextVersion, ready, alignmentContext, selectedGuide, language]);
 
-  // Build orchestration field
-  useEffect(() => {
-    let active = true;
+  // --------------------------------------------------
+  // TRANSMISSION
+  // Runs only after the user submits through Reflection Portal.
+  // Conversation remains in local component state.
+  // --------------------------------------------------
 
-    async function hydrateField() {
-      try {
-        if (!alignmentContext.mirrorContext) return;
-
-        const result = await orchestrateGuidance({
-          alignmentContext,
-          selectedGuide: activeFieldGuide || "cosmic",
-          resolvedContent: field || {},
-          emergenceMemory,
-        });
-
-        if (active) {
-          setOrchestrationField(result);
-        }
-      } catch (error) {
-        console.error("DIVINE ORCHESTRATION HYDRATION ERROR", error);
-      }
-    }
-
-    hydrateField();
-
-    return () => {
-      active = false;
-    };
-  }, [
-    contextVersion,
-    emergenceMemory,
-    activeFieldGuide,
-    alignmentContext.mirrorContext,
-  ]);
-
-  // Build current guidance field
-  useEffect(() => {
-    let active = true;
-
-    async function buildField() {
-      try {
-        if (!alignmentContext.mirrorContext) return;
-
-        const foregroundField = resolveForegroundField({
-          alignmentContext,
-          residue: emergenceMemory,
-        });
-
-        const pacing = resolveGuidancePacing(foregroundField);
-
-        const finalField = buildGuidanceField({
-          alignmentContext,
-          foregroundField,
-          pacing,
-          activeGuide: activeFieldGuide,
-          transmissions,
-          emergenceMemory,
-          orchestrationField,
-        });
-
-        if (active) {
-          setField(finalField);
-        }
-      } catch (error) {
-        console.error("DIVINE ORCHESTRATION FIELD ERROR", error);
-      }
-    }
-
-    buildField();
-
-    return () => {
-      active = false;
-    };
-  }, [
-    alignmentContext.mirrorContext,
-    alignmentContext.activeLens,
-    alignmentContext.language,
-    activeFieldGuide,
-    transmissions,
-    emergenceMemory,
-    orchestrationField,
-  ]);
-
-  // Submit reflection and generate AI response
   async function handleReflection({ text }: any) {
-    if (!text?.trim() || thinking) return;
+    const reflection = text?.trim();
 
+    if (!reflection || thinking) return;
+
+    const requestId = ++transmissionRequest.current;
     setThinking(true);
 
+    const userMessage: Message = {
+      id: `user_${Date.now()}`,
+      role: "user",
+      guide: selectedGuide,
+      text: reflection,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...transmissions, userMessage];
+    setTransmissions(updatedMessages);
+
     try {
-      const userId = await getUserId();
-      const guide = activeFieldGuide || "cosmic";
-
-      const userMessage = {
-        id: Date.now(),
-        role: "user",
-        guide,
-        text: text.trim(),
-        createdAt: new Date().toISOString(),
-      };
-
-      const updatedMessages = [...transmissions, userMessage];
-
-      setTransmissions(updatedMessages);
-
-      await saveGuideMessage({
-        userId,
-        guide,
-        role: "user",
-        content: text.trim(),
-        language: alignmentContext.language || "en",
-        userField: field,
-        orchestrationSnapshot: orchestrationField,
-      });
-
-      void processGuidanceReflection({
-        userId,
-        text: text.trim(),
-        guide:
-          guide === "heart"
-            ? "guide_heart"
-            : guide === "structure"
-            ? "guide_structure"
-            : "guide_cosmic",
-        language: alignmentContext.language || "en",
-        fieldContext: field,
-      });
-
-      const result = await enterTransmission({
-        userId,
-        guide,
-        reflection: text.trim(),
-        field: field || {},
+      const result = await transmissionAgent({
+        reflection,
+        recentMessages: updatedMessages.slice(-8),
         alignmentContext,
-        existingMessages: updatedMessages,
+        field: alignmentContext?.userContext || {},
+        orchestrationField: orchestrationResult || {},
+        orchestrationDecision: orchestrationResult || {},
+        selectedGuide,
+        language,
       });
 
-      setEmergenceMemory(result?.residue);
+      if (requestId !== transmissionRequest.current) return;
 
-      const agentDecision = await transmissionAgent({
-        reflection: text.trim(),
-        recentMessages: updatedMessages,
-        alignmentContext,
-        field,
-        orchestrationField,
-        emergenceMemory: result?.residue,
-        selectedGuide: guide,
-        language: alignmentContext.language || "en",
-      });
+      if (!result) {
+        throw new Error("Transmission Agent returned no response.");
+      }
 
-      const speakers = agentDecision?.speakers || [];
+      const responses = Array.isArray(result?.responses)
+        ? result.responses
+        : [];
 
-      for (const speaker of speakers) {
-        const speakerGuide = speaker?.guide;
-
-        if (!["heart", "structure", "cosmic"].includes(speakerGuide)) {
-          continue;
-        }
-
-        const response = await generateGuideTransmission({
-          guide: speakerGuide,
-          reflection: text.trim(),
-          recentMessages: updatedMessages,
-          alignmentContext,
-          field,
-          orchestrationField,
-          transmissionDecision: agentDecision,
-          emergenceMemory: result?.residue,
-          language: alignmentContext.language || "en",
-        });
-
-        if (!response?.text) continue;
-
-        const guideMessage = {
-          id: `guide_${Date.now()}_${speakerGuide}`,
+      const guideMessages: Message[] = responses
+        .filter(
+          (item: any) =>
+            VALID_GUIDES.includes(item?.guide) &&
+            typeof item?.text === "string" &&
+            item.text.trim()
+        )
+        .map((item: any, index: number) => ({
+          id: `guide_${Date.now()}_${index}`,
           role: "guide",
-          guide: speakerGuide,
-          text: response.text,
+          guide: item.guide,
+          text: item.text.trim(),
           createdAt: new Date().toISOString(),
-        };
+        }));
 
-        setTransmissions((previous) => [...previous, guideMessage]);
-
-        await saveGuideMessage({
-          userId,
-          guide: speakerGuide,
-          role: "guide",
-          content: response.text,
-          language: alignmentContext.language || "en",
-          userField: field,
-          orchestrationSnapshot: orchestrationField,
-        });
+      if (guideMessages.length) {
+        setTransmissions((previous) => [...previous, ...guideMessages]);
       }
 
       setPortalVisible(false);
     } catch (error) {
-      console.error("DIVINE ORCHESTRATION REFLECTION ERROR", error);
+      console.error("TRANSMISSION AGENT ERROR", error);
     } finally {
-      setThinking(false);
+      if (requestId === transmissionRequest.current) {
+        setThinking(false);
+      }
     }
   }
 
+  const orchestrationFragments = Array.isArray(orchestrationResult?.fragments)
+    ? orchestrationResult.fragments.filter(
+        (item: any) =>
+          VALID_GUIDES.includes(item?.guide) &&
+          typeof item?.text === "string" &&
+          item.text.trim()
+      )
+    : [];
+
+  // Split long Guide fragments into readable continuations. Each continuation
+  // keeps the same Guide colour and occupies the same fixed area.
+  const orchestrationSegments = orchestrationFragments.flatMap(
+    (fragment: any, fragmentIndex: number) => {
+      const words = fragment.text.trim().split(/\s+/);
+      const chunks: string[] = [];
+      let chunk = "";
+
+      words.forEach((word: string) => {
+        const candidate = chunk ? `${chunk} ${word}` : word;
+
+        if (candidate.length > 105 && chunk) {
+          chunks.push(chunk);
+          chunk = word;
+        } else {
+          chunk = candidate;
+        }
+      });
+
+      if (chunk) chunks.push(chunk);
+
+return chunks.map((text: string, segmentIndex: number) => ({
+  guide: fragment.guide,
+  text,
+  fragmentIndex,
+  segmentIndex,
+  hasContinuation: segmentIndex < chunks.length - 1,
+}));
+    }
+  );
+
+  // Advance through a Guide's continuation before moving to the next Guide.
+  useEffect(() => {
+    setCurrentFragmentIndex(0);
+
+    if (orchestrationSegments.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentFragmentIndex((previous) =>
+        (previous + 1) % orchestrationSegments.length
+      );
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [orchestrationResult]);
+
+  const currentFragment =
+    orchestrationSegments.length > 0
+      ? orchestrationSegments[
+          currentFragmentIndex % orchestrationSegments.length
+        ]
+      : null;
+
+  // The selected segment is already sized for the fixed orchestration area.
+const displayFragment = currentFragment
+  ? `${currentFragment.text}${currentFragment.hasContinuation ? " ..." : ""}`
+  : "";
+
+  const guideColor =
+    currentFragment?.guide === "heart"
+      ? "#E7A6C8" // Heart — pink
+      : currentFragment?.guide === "structure"
+      ? "#91B8F4" // Structure — blue
+      : "#F2EEE8"; // Cosmic — white
+
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.titleArea}>
-          <Text style={styles.eyebrow}>✧ DIVINE ORCHESTRATION</Text>
-        </View>
-
-        <Pressable
-          style={styles.askButton}
-          onPress={() => setPortalVisible(true)}
-        >
-          <Text style={styles.askIcon}>✧</Text>
-        </Pressable>
+      {/* LEFT — GUIDE NAMES. Keep this selector and its placement intact. */}
+      <View style={styles.guidesColumn}>
+        <GuideSelector
+          activeGuide={selectedGuide}
+          activeFieldGuide={activeFieldGuide}
+          onSelectGuide={setSelectedGuide}
+          guideProfiles={guideProfiles}
+        />
       </View>
 
-{transmissions.length > 0 && (
-  <View style={styles.conversation}>
+      {/* CENTRE — ORCHESTRATION ABOVE THE ENERGY BALL */}
+      <View style={styles.orchestrationColumn}>
+        {currentFragment ? (
+          <Text
+            key={`${currentFragment.guide}_${currentFragmentIndex}`}
+style={[
+  styles.orchestrationText,
+  {
+    color: guideColor,
+    textShadowColor: guideColor,
+  },
+]}
+            numberOfLines={3}
+            ellipsizeMode="tail"
+          >
+            {displayFragment}
+          </Text>
+        ) : orchestrationLoading ? (
+          <View style={styles.orchestrationLoading}>
+            <ActivityIndicator color="#C8B4E8" size="small" />
+          </View>
+        ) : null}
+      </View>
 
-        <ScrollView
-          style={styles.messages}
-          contentContainerStyle={styles.messageContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {transmissions.map((item: any, index: number) => (
-            <GuideTransmission
-              key={item?.id || index}
-              role={item?.role}
-              guide={item?.guide}
-              guideName={
-                guideProfiles[item?.guide as keyof typeof guideProfiles]?.name ||
-                "Guide"
-              }
-              text={item?.text || item?.content || ""}
-              isThinking={false}
-            />
-          ))}
+{/* RIGHT — LATEST TRANSMISSION + ASK BUTTON */}
+<View style={styles.transmissionColumn}>
+  <View style={styles.transmissionDisplay}>
 
-          {thinking && (
-            <View style={styles.thinking}>
-              <ActivityIndicator color="#C8B4E8" size="small" />
-              <Text style={styles.thinkingText}>
-                The conversation is unfolding…
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+    <ScrollView
+      style={styles.transmissionScroll}
+      contentContainerStyle={styles.transmissionContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {transmissions.length > 0 ? (
+        <GuideTransmission
+          key={transmissions[transmissions.length - 1].id}
+          role={transmissions[transmissions.length - 1].role}
+          guide={transmissions[transmissions.length - 1].guide}
+          guideName={
+            guideProfiles[
+              transmissions[transmissions.length - 1].guide as keyof typeof guideProfiles
+            ]?.name || "Guide"
+          }
+          text={transmissions[transmissions.length - 1].text}
+          isThinking={false}
+        />
+      ) : (
+        <Text style={styles.transmissionPlaceholder}>
+          Your transmissions will appear here…
+        </Text>
+      )}
+
+      {thinking ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color="#C8B4E8" size="small" />
+          <Text style={styles.loadingText}>
+            The conversation is unfolding…
+          </Text>
+        </View>
+      ) : null}
+    </ScrollView>
   </View>
-)}
+
+  <Pressable
+    style={styles.askButton}
+    onPress={() => setPortalVisible(true)}
+    accessibilityRole="button"
+    accessibilityLabel="Ask or reflect"
+  >
+    <Text style={styles.askIcon}>✧</Text>
+  </Pressable>
+</View>
 
       <Modal
         visible={portalVisible}
@@ -354,26 +368,29 @@ export default function LivingSpaceHeader() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>A moment for reflection</Text>
-
-              <Pressable onPress={() => setPortalVisible(false)}>
+              <Pressable
+                onPress={() => setPortalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close reflection portal"
+              >
                 <Text style={styles.closeButton}>✕</Text>
               </Pressable>
             </View>
 
             <Text style={styles.modalSubtitle}>
-              Ask a question. Share what's on your mind.
+              Ask a question. Share what’s on your mind.
             </Text>
 
             <ReflectionPortal
-              isTyping={isTyping}
+              isTyping={thinking}
               onSubmitReflection={handleReflection}
             />
 
-            {thinking && (
+            {thinking ? (
               <Text style={styles.processing}>
                 Your reflection is being received…
               </Text>
-            )}
+            ) : null}
           </View>
         </View>
       </Modal>
@@ -384,66 +401,126 @@ export default function LivingSpaceHeader() {
 const styles = StyleSheet.create({
 container: {
   width: "100%",
-  height: 32,
-  backgroundColor: "#030405",
-  paddingHorizontal: 18,
-  paddingVertical: 0,
-  justifyContent: "center",
+  height: 76,
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "transparent",
+  paddingLeft: 0,
+  paddingRight: 150,
+  gap: 18,
+  overflow: "hidden",
 },
-  headerRow: {
-    flexDirection: "row",
+
+  guidesColumn: {
+    width: 150,
+    flexShrink: 0,
+    alignItems: "flex-start",
+  },
+
+  orchestrationColumn: {
+    flex: 1.05,
+    minWidth: 0,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingLeft: 10,
+    overflow: "visible",
+  },
+
+orchestrationText: {
+  width: 450,
+  maxWidth: 450,
+  marginLeft: 20,
+  alignSelf: "flex-start",
+  textAlign: "center",
+  fontSize: 14,
+  lineHeight: 20,
+  fontWeight: "400",
+  letterSpacing: 0.2,
+  textShadowOffset: {
+    width: 0,
+    height: 0,
+  },
+  textShadowRadius: 14,
+},
+
+  orchestrationLoading: {
+    width: 320,
     alignItems: "center",
-    justifyContent: "space-between",
-    zIndex: 2,
+    justifyContent: "center",
   },
-  titleArea: {
-    flex: 1,
-  },
-  eyebrow: {
-    color: "#C7B5E5",
-    fontSize: 10,
+
+transmissionColumn: {
+  flex: 1.15,
+  minWidth: 0,
+  height: "100%",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  overflow: "hidden",
+},
+
+transmissionDisplay: {
+  flex: 1,
+  minWidth: 0,
+  justifyContent: "center",
+  alignItems: "flex-end",
+},
+
+transmissionScroll: {
+  maxHeight: 52,
+},
+
+transmissionContent: {
+  paddingBottom: 2,
+  gap: 4,
+},
+
+transmissionPlaceholder: {
+  color: "#82798B",
+  fontSize: 11,
+  marginTop: 5,
+  textAlign: "right",
+},
+
+askButton: {
+  width: 42,
+  height: 42,
+  flexShrink: 0,
+  borderRadius: 21,
+  backgroundColor: "#211B2B",
+  borderWidth: 1,
+  borderColor: "#C9AD70",
+  alignItems: "center",
+  justifyContent: "center",
+  transform: [{ translateY: -5 }],
+marginLeft: 8,
+},
+
+  sectionLabel: {
+    color: "#82798B",
+    fontSize: 9,
     letterSpacing: 2,
     fontWeight: "600",
   },
-askButton: {
-  width: 28,
-  height: 28,
-  borderRadius: 14,
-  backgroundColor: "#211B2B",
-  borderWidth: 1,
-  borderColor: "#514064",
-  alignItems: "center",
-  justifyContent: "center",
-},
+
   askIcon: {
     color: "#E2CFFF",
     fontSize: 21,
   },
-conversation: {
-  minHeight: 0,
-  maxHeight: 180,
-  marginTop: 0,
-  overflow: "hidden",
-},
-  messages: {
-    flex: 1,
-    zIndex: 1,
-  },
-  messageContent: {
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    flexGrow: 1,
-  },
-  thinking: {
+
+  loadingRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 12,
+    gap: 9,
+    paddingVertical: 8,
   },
-  thinkingText: {
+
+  loadingText: {
     color: "#B7A9C8",
-    fontSize: 12,
+    fontSize: 11,
   },
+
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.82)",
@@ -451,6 +528,7 @@ conversation: {
     alignItems: "center",
     padding: 22,
   },
+
   modalCard: {
     width: "100%",
     maxWidth: 520,
@@ -461,27 +539,32 @@ conversation: {
     padding: 20,
     overflow: "hidden",
   },
+
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   modalTitle: {
     color: "#F0E8F7",
     fontSize: 17,
     fontWeight: "500",
   },
+
   closeButton: {
     color: "#C9B8D9",
     fontSize: 19,
     padding: 6,
   },
+
   modalSubtitle: {
     color: "#A99BB6",
     fontSize: 13,
     marginTop: 10,
     marginBottom: 18,
   },
+
   processing: {
     color: "#C8B4E8",
     textAlign: "center",

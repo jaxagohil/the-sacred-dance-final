@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   maxWidth: 360,
   aspectRatio: 1,
   alignSelf: "flex-end",
-  marginRight: 25,
+  marginRight: 15,
   position: "relative",
   overflow: "hidden",
   backgroundColor: "rgba(255,255,255,0.018)",

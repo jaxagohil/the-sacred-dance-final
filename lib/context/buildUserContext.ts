@@ -976,29 +976,37 @@ awareness_chakra:
    * ------------------------------------------------
    */
 
-  const allLensEntries =
+const allLensEntries = signals.flatMap((s: any) => [
+  ...(s?.ai_lens?.people || []).map((entry: any) => ({
+    ...entry,
+    lens: "people",
+  })),
 
-    signals.flatMap(
-      (s: any) => [
+  ...(s?.ai_lens?.places || []).map((entry: any) => ({
+    ...entry,
+    lens: "places",
+  })),
 
-        ...(
-          s?.ai_lens
-            ?.people || []
-        ),
+  ...(s?.ai_lens?.things || []).map((entry: any) => ({
+    ...entry,
+    lens: "things",
+  })),
+]);
 
-        ...(
-          s?.ai_lens
-            ?.places || []
-        ),
+console.log(
+  "🪞 RAW LENS ENTRY — PEOPLE",
+  allLensEntries.find((entry: any) => entry.lens === "people")
+);
 
-        ...(
-          s?.ai_lens
-            ?.things || []
-        ),
-      ]
-    );
+console.log(
+  "🪞 RAW LENS ENTRY — PLACES",
+  allLensEntries.find((entry: any) => entry.lens === "places")
+);
 
-    //console.log("🪞 ALL LENS ENTRIES", allLensEntries);
+console.log(
+  "🪞 RAW LENS ENTRY — THINGS",
+  allLensEntries.find((entry: any) => entry.lens === "things")
+);
 
 //console.log( "🪞 FIRST SIGNAL ENTITY LENSES",  signals?.[0]?.entity_lenses);
 

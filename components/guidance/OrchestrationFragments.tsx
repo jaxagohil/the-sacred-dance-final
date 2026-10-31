@@ -312,14 +312,21 @@ const layeredOpacity = 0.96;
 
   return (
 
-    <Animated.View
-      style={{
-
-        alignSelf: "center",
-
-      maxWidth: "62%",
-
-opacity,
+<Animated.View
+  style={{
+    alignSelf: "center",
+    width: "82%",
+    maxWidth: 440,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 24,
+    backgroundColor: "rgba(12,10,20,0.22)",
+    shadowColor: guideColor,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 22,
+    elevation: 4,
+    opacity,
 
         transform: [
 
@@ -352,7 +359,7 @@ opacity,
   fontFamily:
   Fonts.orchestration,
 
-          fontSize: 16,
+          fontSize: 17,
 
           lineHeight: 28,
 
@@ -410,22 +417,7 @@ export default function OrchestrationFragments({
 
 }: any) {
 
-  /*
-   * --------------------------------------------------------
-   * 🌌 EMPTY
-   * --------------------------------------------------------
-   */
 
-if (
-
-  !sequence?.length ||
-
-  !showFragments
-
-) {
-
-  return null;
-}
 
   /*
    * --------------------------------------------------------
@@ -452,6 +444,11 @@ if (
    */
 
   useEffect(() => {
+
+      if (!sequence?.length || !showFragments) {
+    setActiveLines([]);
+    return;
+  }
 
     let mounted = true;
 
@@ -604,7 +601,7 @@ return () => {
   clearTimeout(entryTimer);
 };
 
-  }, []);
+}, [sequence, showFragments, onForegroundGuideChange]);
 
   /*
    * --------------------------------------------------------

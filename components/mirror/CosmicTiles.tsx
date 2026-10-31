@@ -114,7 +114,10 @@ export default function CosmicTiles({
             key={tile.key}
             onHoverIn={() => setHoveredTile(tile.key)}
             onHoverOut={() => setHoveredTile(null)}
-            style={styles.tile}
+style={[
+  styles.tile,
+  layout === "vertical" && styles.verticalTile,
+]}
           >
             <Text style={styles.icon}>{tile.icon}</Text>
 
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
   verticalRow: {
     flexDirection: "column",
     alignItems: "center",
-    gap: 12,
+    gap: 1,
   },
 
 tile: {
@@ -198,6 +201,13 @@ tile: {
   backgroundColor: "transparent",
   borderWidth: 0,
   overflow: "visible",
+},
+
+verticalTile: {
+  width: 96,
+  minHeight: 54,
+  paddingVertical: 3,
+      paddingTop: 25,
 },
 
   icon: {
@@ -241,11 +251,11 @@ hoverPanel: {
   position: "absolute",
   bottom: 34,
   left: "80%",
-  width: 150,
+  width: 200,
   transform: [{ translateX: -75 }],
   zIndex: 100,
   alignItems: "flex-start",
-  paddingHorizontal: 10,
+  paddingHorizontal: 25,
   paddingVertical: 8,
   backgroundColor: "rgba(0,0,0,0.96)",
 },

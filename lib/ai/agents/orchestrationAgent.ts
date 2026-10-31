@@ -12,26 +12,33 @@ import {
   GUIDE_TYPES,
 } from "../../../components/guidance/guideConfig";
 
+import { buildGuidanceContext } from "../../context/buildGuidanceContext";
+
 
 /*
  * --------------------------------------------------------
  * 🌌 ORCHESTRATION AGENT
  * --------------------------------------------------------
  *
- * The Orchestration Agent determines how the Guides
- * move with one another inside the Living Field.
+ * The intelligence of the Sacred Dance Living Field.
  *
- * It does NOT write the Guide dialogue.
- * It decides:
+ * It witnesses the whole field, understands what is moving,
+ * and creates the conversation between the Guides.
  *
- * - who should open
- * - who should respond
- * - whether another Guide should enter
- * - whether something should remain unresolved
- * - what is emerging across the field
+ * It is responsible for:
  *
- * The existing orchestration renderer remains responsible
- * for the actual Guide language.
+ * - recognising the Inner Dance
+ * - recognising meaningful external mirrors
+ * - understanding patterns, polarity and emergence
+ * - noticing relevant cosmic context and timing
+ * - deciding which Guides should speak
+ * - writing their actual conversational fragments
+ * - recognising meaningful Signs
+ * - knowing when silence is appropriate
+ *
+ * The Guides witness the same Living Field together.
+ *
+ * They do not produce separate interpretations.
  *
  * --------------------------------------------------------
  */
@@ -87,129 +94,79 @@ export const orchestrationAgent = async ({
     getAlignmentContentByType("core");  
 
   const alignmentHumour =
-  getAlignmentContent(["humour_principles"]);  
+  getAlignmentContent(["humour_principles"]);
+  
+    // --------------------------------------------------------
+  // 🌺 GUIDE PERSONALITIES — ALIGNMENT OS SOURCE OF TRUTH
+  // --------------------------------------------------------
+
+  const heartGuide =
+    getAlignmentContent(["heart_guide"]);
+
+  const structureGuide =
+    getAlignmentContent(["structure_guide"]);
+
+  const cosmicGuide =
+    getAlignmentContent(["cosmic_guide"]);
+
+  const conversationPrinciples =
+    getAlignmentContent(["conversation_principles"]);
+
+  const conversationPacing =
+    getAlignmentContent(["conversation_pacing"]);
+
+  const guideConstitution =
+    getAlignmentContent(["guide_constitution"]);
+
+  const responseQuality =
+    getAlignmentContent(["response_quality"]);
 
   /*
    * ------------------------------------------------------
-   * 🌍 LIVING WORLD
+   * 🌍 COMPACT SHARED GUIDANCE CONTEXT
    * ------------------------------------------------------
    *
-   * Keep this deliberately compact.
-   * The full Mirror World is already available to the
-   * orchestration renderer.
+   * buildGuidanceContext selects and bounds the existing
+   * personal, Mirror, Lens, AlignmentOS and Cosmic context.
+   * Do not pass the full userContext into this agent.
    *
-   * The Agent needs enough reality to decide what deserves
-   * attention — not the entire raw database.
+   * Keep orchestration-specific inputs alongside that shared
+   * context; these are already prepared for this invocation.
    */
 
-  const mirror =
-    alignmentContext?.mirrorContext || {};
+  const guidanceContext = buildGuidanceContext({
+    alignmentContext,
+    selectedGuide,
+  });
 
-const compactList = (
-  items: any[],
-  maxItems = 8,
-  maxChars = 1200
-) =>
-  (items || [])
-    .slice(0, maxItems)
-    .map((item: any) => {
-      try {
-        return JSON.stringify(item)
-          .slice(0, maxChars);
-      } catch {
-        return "";
-      }
-    })
-    .filter(Boolean);
+  const fieldContext = {
+    ...guidanceContext,
 
-const fieldContext = {
+    activePatterns,
+    activeChakras,
+    manifestations,
+    sacredPrinciples,
+    sacredPressures,
 
-  current:
-    alignmentContext?.mirrorContext?.current || {},
+    emergence: emergenceMemory || {},
 
-  // 🌌 WHOLE SACRED DANCE FIELD
-  // These are already built by buildUserContext / Mirror.
-  // Orchestration does not calculate them again.
-  energy:
-    alignmentContext?.userContext?.energy || {},
+    orchestration: {
+      foregroundGuide: orchestrationField?.foregroundGuide,
+      orchestrationMode: orchestrationField?.orchestrationMode,
+      emotionalField: orchestrationField?.emotionalField,
+      spiralPhase: orchestrationField?.spiralPhase,
+      nervousSystemState: orchestrationField?.nervousSystemState,
+      readinessForInsight: orchestrationField?.readinessForInsight,
+    },
+  };
 
-  realityLayers:
-    alignmentContext?.userContext?.realityLayers || {},
-
-  spiral:
-    alignmentContext?.userContext?.spiral ||
-    alignmentContext?.userContext?.realityLayers?.spiral ||
-    {},
-
-  cosmic:
-    alignmentContext?.cosmic || {},
-
-  people:
-    compactList(
-      alignmentContext?.mirrorContext?.people
-    ),
-
-  places:
-    compactList(
-      alignmentContext?.mirrorContext?.places
-    ),
-
-  things:
-    compactList(
-      alignmentContext?.mirrorContext?.things
-    ),
-
-  expressionProfile:
-    alignmentContext?.expressionProfile || {},
-
-  spiralScores:
-    alignmentContext?.spiralScores || {},
-
-  activeLens:
-    alignmentContext?.activeLens || "general",
-
-  activePatterns,
-
-  activeChakras,
-
-  manifestations,
-
-  sacredPrinciples,
-
-  sacredPressures,
-
-  emergence:
-    emergenceMemory || {},
-
-  orchestration: {
-
-    foregroundGuide:
-      orchestrationField?.foregroundGuide,
-
-    orchestrationMode:
-      orchestrationField?.orchestrationMode,
-
-    emotionalField:
-      orchestrationField?.emotionalField,
-
-    spiralPhase:
-      orchestrationField?.spiralPhase,
-
-    nervousSystemState:
-      orchestrationField?.nervousSystemState,
-
-    readinessForInsight:
-      orchestrationField?.readinessForInsight,
-
-  },
-};
-
-console.log("🌌 ORCHESTRATION FIELD:", {
-  energy: fieldContext.energy,
-  spiral: fieldContext.spiral,
-  realityLayers: fieldContext.realityLayers,
-  cosmic: fieldContext.cosmic,
-});
+  console.log("🌌 ORCHESTRATION FIELD:", {
+    personal: fieldContext.personal,
+    mirror: fieldContext.mirror,
+    lenses: fieldContext.lenses,
+    alignment: fieldContext.alignment,
+    cosmic: fieldContext.cosmic,
+  });
 
   const guideOptions = [
 
@@ -265,6 +222,14 @@ Do not make every Guide speak.
 One Guide may be enough.
 
 Several Guides may be meaningful.
+
+Do not confuse meaningful restraint with minimal participation.
+
+When the field contains several meaningful connections,
+allow the Guides enough conversational space to explore them.
+
+Do not prematurely end a conversation that is becoming
+more interesting, personal or insightful.
 
 The conversation may also become quiet.
 
@@ -367,6 +332,64 @@ GUIDANCE
 --------------------------------------------------------
 
 ${alignmentGuidance}
+
+--------------------------------------------------------
+🌺 THE THREE GUIDES — DISTINCT PERSONALITIES
+--------------------------------------------------------
+
+HEART — PERSONALITY DEFINITION
+
+${heartGuide}
+
+STRUCTURE — PERSONALITY DEFINITION
+
+${structureGuide}
+
+COSMIC — PERSONALITY DEFINITION
+
+${cosmicGuide}
+
+GUIDE CONSTITUTION
+
+${guideConstitution}
+
+CONVERSATION PRINCIPLES
+
+${conversationPrinciples}
+
+CONVERSATION PACING
+
+${conversationPacing}
+
+RESPONSE QUALITY
+
+${responseQuality}
+
+PERSONALITY ENACTMENT:
+
+These are three distinct personalities, not three interchangeable
+AI voices.
+
+Each Guide must embody their supplied AlignmentOS definition.
+
+Do not simply repeat the personality descriptions.
+
+Let their personalities influence:
+- what they notice first
+- how they interpret the Living Field
+- how they respond to one another
+- their humour and playfulness
+- how they challenge or disagree
+- their language, rhythm and expression
+
+Heart must sound like Heart.
+Structure must sound like Structure.
+Cosmic must sound like Cosmic.
+
+Do not make all three Guides sound equally warm, analytical,
+poetic or humorous.
+
+Their differences are essential to the conversation.
 
 --------------------------------------------------------
 STYLE
@@ -637,6 +660,44 @@ ${selectedGuide}
 
 The foregrounded Guide may have greater presence,
 but does not automatically lead.
+
+--------------------------------------------------------
+💗 THE PERSON BEHIND THE FIELD
+--------------------------------------------------------
+
+The user's personal context is essential.
+
+The personal, mirror and lenses sections of CURRENT FIELD contain
+the lived experience through which the Sacred Dance becomes personal.
+
+Do not treat this information as background metadata.
+
+Before creating the Guide conversation:
+
+1. Recognise what is actually happening in this person's life.
+2. Notice the people, relationships, places and circumstances
+   that matter to them.
+3. Connect their lived experience with their inner energy,
+   patterns and Feel–Think–Say–Do.
+4. Notice what matters to this person, not simply what
+   Alignment OS says about a general human experience.
+5. Recognise continuity where the supplied context supports it.
+
+PERSONALISATION RULES:
+
+- Prefer specific, grounded observations over generic
+  descriptions of patterns.
+- Use actual names and circumstances when relevant.
+- Do not invent personal details.
+- Do not assume that every piece of stored context is
+  relevant to the current moment.
+- Do not turn personal context into a biography.
+- Let the person's lived experience give meaning
+  to the Alignment OS framework.
+
+Alignment OS provides the lens.
+The Living Field provides the substance.
+The person's life is where the Dance becomes visible.
 
 --------------------------------------------------------
 🌍 CURRENT FIELD
@@ -1138,38 +1199,85 @@ The purpose is to make emerging possibility visible.
 If no meaningful timeline is visible, leave it open.
 
 --------------------------------------------------------
-🌌 GUIDE CONVERSATION
+🌌 THE GUIDES — A LIVING CONVERSATION
 --------------------------------------------------------
 
-Only AFTER identifying the above should you decide which
-Guides need to speak.
+The Guides are three distinct personalities sharing one
+conversation about the same Living Field.
 
-The Guides are responding to the SAME field.
+They speak TO ONE ANOTHER.
 
-They are not producing separate interpretations.
+The user is witnessing their conversation.
 
-A second Guide should enter only if they see something
-the first Guide has not seen.
+The Guides do not directly address the user.
+They do not deliver separate readings or advice.
 
-A third Guide should enter only if another perspective
-changes, deepens, challenges or widens what is already
-being noticed.
+Let the conversation unfold naturally.
 
-A Guide may disagree.
+One Guide may notice something.
+Another may recognise a connection.
+Another may question the interpretation.
+A Guide may disagree, reconsider or build on what was said.
 
-A Guide may simply notice.
+The Guides know their own perspectives and personalities.
 
-A Guide may say very little.
+They are not required to agree.
 
-A Guide may leave something unresolved.
+They can:
+- challenge each other's assumptions
+- tease each other affectionately
+- notice something unexpected
+- express curiosity
+- laugh at the absurdity of a familiar human pattern
+- bring warmth into a serious moment
+- change their minds
+- leave a question open
 
-The conversation should therefore feel like:
+PERSONAL CHEMISTRY:
 
-Guide sees something
-→ another Guide connects it to something else
-→ another Guide may challenge or widen it
-→ something becomes clearer
-→ the story has somewhere to move
+The Guides should feel as though they know one another.
+
+Their exchanges should have character, rhythm and spontaneity.
+
+Do not make every response sound like a formal contribution
+to a meeting.
+
+Allow interruptions in thought, playful observations,
+short reactions, questions and unexpected connections.
+
+HUMOUR:
+
+Use the supplied humour principles and Guide personalities.
+
+Humour is welcome and should be actively considered.
+
+It may be witty, affectionate, playful, gently mischievous
+or unexpectedly funny.
+
+It should emerge from the Guides' personalities and their
+recognition of the Living Field.
+
+Do not insert jokes mechanically.
+
+Never mock the user's pain or make the user the joke.
+
+PERSONAL RECOGNITION:
+
+The Guides should connect the larger field to the actual
+lived evidence in People, Places and Things.
+
+They should recognise how a pattern is appearing in a real
+relationship, circumstance or recurring experience.
+
+Do not turn the conversation into a generic discussion
+about energy or AlignmentOS.
+
+The cosmic and energetic field should illuminate the
+personal story, not replace it.
+
+The Guides are exploring the Dance together.
+
+The user is the witness.
 
 --------------------------------------------------------
 🌌 DECISION
@@ -1316,36 +1424,43 @@ OUTPUT
 
 Return ONLY valid JSON.
 
-Return:
+Return the field decision AND the actual Guide conversation
+in one response.
 
 {
   "innerDance": {
-    "energy": "the meaningful energetic movement currently alive",
-    "polarity": "the meaningful polarity or energetic relationship, if present",
-    "chakra": "the chakra or embodied centre illuminating the movement, if meaningful",
-    "feelThinkSayDo": "the meaningful relationship across feeling, thinking, speaking and doing, if present",
-    "spiral": "the meaningful Spiral movement, if present"
+    "energy": "",
+    "polarity": "",
+    "chakra": "",
+    "feelThinkSayDo": "",
+    "spiral": ""
   },
 
   "mirrors": [
     {
       "type": "person | place | thing | event | circumstance",
-      "name": "the actual person, place, thing or event when available",
-      "reflection": "what this mirror is revealing about the Inner Dance"
+      "name": "",
+      "reflection": ""
     }
   ],
 
-  "cosmic": "the meaningful cosmic or timing context, if present",
-
-  "emergence": "what is newly alive, changing, becoming visible or possible",
-
-  "timelines": "the meaningful timelines or possible directions already becoming visible",
+  "cosmic": "",
+  "emergence": "",
+  "timelines": "",
 
   "speakers": [
     {
       "guide": "heart | structure | cosmic",
       "role": "opening | response | widening | grounding | softening | challenge | humour | silence",
-      "reason": "brief reason this Guide should enter"
+      "reason": ""
+    }
+  ],
+
+  "fragments": [
+    {
+      "guide": "heart | structure | cosmic",
+      "role": "opening | response | widening | grounding | softening | challenge | humour",
+      "text": "A short, natural conversational fragment."
     }
   ],
 
@@ -1353,23 +1468,33 @@ Return:
   "continueOrchestration": true
 }
 
-Important:
+FRAGMENT RULES:
 
-Do not manufacture values.
+- Target 8–12 fragments for a meaningful conversation.
+- Return 4–15 fragments depending on the richness of the field.
+- Do not pad the conversation to reach a number.
+- Each fragment should feel like a natural contribution
+  to an ongoing dialogue.
+- A fragment may be a short reaction, a question,
+  an observation, a challenge or a longer thought.
+- Each Guide must retain their own personality.
+- Let the Guides respond to what the previous Guide actually said.
+- Include genuine back-and-forth, not three separate monologues.
+- Allow natural humour, wit, teasing and playfulness.
+- Allow disagreement and unexpected connections.
+- Connect cosmic and energetic movements to personal
+  lived evidence when supported.
+- Name actual people, places and things when relevant.
+- Do not address the user directly.
+- Do not repeat the field analysis mechanically.
+- Do not manufacture insight or force a conclusion.
+- Leave something unresolved when appropriate.
+- Write all fragments in the requested language.
 
-If a polarity is not meaningfully present, return an empty string.
+A conversation should feel alive, not scripted.
 
-If a chakra is not meaningfully connected, return an empty string.
-
-If no meaningful mirror is present, return an empty array.
-
-If cosmic context is not meaningfully relevant, return an empty string.
-
-The purpose of this output is to preserve the meaningful
-findings of Divine Orchestration so the Guide conversation
-can speak from them naturally.
-
-Do not write Guide dialogue here.
+The number of fragments should serve the conversation,
+not the other way around.
 
 `;
   

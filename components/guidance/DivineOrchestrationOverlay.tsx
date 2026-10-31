@@ -760,6 +760,7 @@ const duration =
       style={{
 
         height: 270,
+            width: 500,
 
         position: "relative",
 

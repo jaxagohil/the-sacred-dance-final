@@ -156,6 +156,9 @@ export default function TabLayout() {
 
           title: "Circles",
 
+              href: null,
+    tabBarStyle: { display: "none" },
+
           tabBarIcon: ({
             color,
           }) => (

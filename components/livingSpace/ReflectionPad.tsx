@@ -114,7 +114,7 @@ export default function ReflectionPad() {
                 key={activeNote?.id}
                 value={activeNote?.text || ""}
                 onChangeText={updateNote}
-                placeholder="What is on your mind?"
+                placeholder="What do you.. FEEL.THINK.SAY.DO?"
                 placeholderTextColor="#A69B89"
                 multiline
                 textAlignVertical="top"
@@ -171,7 +171,7 @@ export default function ReflectionPad() {
 
 const styles = StyleSheet.create({
   container: {
-    width: 280,
+    width: 300,
     height: 360,
   },
 
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     height: 360,
     position: "relative",
     overflow: "hidden",
-    backgroundColor: "#101014",
+  backgroundColor: "rgba(255,255,255,0.018)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(201,173,112,0.12)",
@@ -188,8 +188,8 @@ const styles = StyleSheet.create({
 
   paperStack: {
     position: "absolute",
-    left: 12,
-    top: 12,
+    left: 35,
+    top: 20,
     width: 205,
     height: 290,
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   activePaper: {
     flex: 1,
     padding: 15,
-    backgroundColor: "#F3EBDD",
+    backgroundColor: "#f4efe8",
     borderRadius: 3,
     borderWidth: 1,
     borderColor: "#E4D8C5",

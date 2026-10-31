@@ -1,6 +1,5 @@
-
-import React, { useState } from "react";
-
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -11,7 +10,12 @@ import {
   View,
 } from "react-native";
 
+import { getUserId } from "../../lib/user";
+import { supabase } from "../../services/supabase";
+import You from "./you";
+
 import EnergyField from "../../components/energy/EnergyField";
+import DivineOrchestrationOverlay from "../../components/guidance/DivineOrchestrationOverlay";
 import CreationJourney from "../../components/livingSpace/CreationJourney";
 import LivingSpaceHeader from "../../components/livingSpace/LivingSpaceHeader";
 import ReflectionPad from "../../components/livingSpace/ReflectionPad";
@@ -19,6 +23,7 @@ import VisionBoard from "../../components/livingSpace/VisionBoard";
 import CosmicTiles from "../../components/mirror/CosmicTiles";
 import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
+import { initialiseAlignmentOSContext } from "../../lib/context/initialiseAlignmentOSContext";
 import { useMirrorStore } from "../../stores/mirrorStore";
 
 const GOLD = "#C9AD70";
@@ -59,6 +64,11 @@ export default function LivingSpace() {
   const [showDivineReading, setShowDivineReading] =
   useState(false);
 
+  const [profileVisible, setProfileVisible] = useState(false);
+const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  const [orchestrationField, setOrchestrationField] = useState<any>(null);
+
 const {
   cosmic,
   dailyField,
@@ -68,12 +78,69 @@ const {
   mirrorContext,
 } = useMirrorStore();
 
+useEffect(() => {
+  initialiseAlignmentOSContext();
+}, []);
+
+
 console.log("LIVING SPACE COSMIC:", cosmic);
 console.log("LIVING SPACE DAILY FIELD:", dailyField);
 
+useEffect(() => {
+  async function loadAvatar() {
+    const userId = await getUserId();
+
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.log("AVATAR LOAD ERROR:", error);
+      return;
+    }
+
+    setAvatarUrl(data?.avatar_url || null);
+  }
+
+  loadAvatar();
+}, [profileVisible]);
+
   return (
     <View style={styles.screen}>
-      <LivingSpaceHeader />
+<LivingSpaceHeader onFieldChange={setOrchestrationField} />
+
+<Pressable
+  accessibilityRole="button"
+  accessibilityLabel="Open Circles"
+onPress={() => router.push("/connections")}
+  style={styles.circlesButton}
+>
+<Image
+  source={require("../../assets/earth.png")}
+  style={styles.circlesImage}
+  resizeMode="contain"
+/>
+</Pressable>
+
+<Pressable
+  accessibilityRole="button"
+  accessibilityLabel="Open profile"
+  onPress={() => setProfileVisible(true)}
+  style={styles.profileAvatar}
+>
+  {avatarUrl ? (
+    <Image
+      source={{ uri: avatarUrl }}
+      style={styles.profileAvatarImage}
+    />
+  ) : (
+    <Text style={styles.profileAvatarFallback}>◉</Text>
+  )}
+</Pressable>
 
       <ScrollView
         style={styles.scroll}
@@ -113,12 +180,18 @@ console.log("LIVING SPACE DAILY FIELD:", dailyField);
 
 
             <View style={styles.energyArea}>
+              <DivineOrchestrationOverlay
+                field={orchestrationField}
+                initialWhispers={[]}
+              />
+
               <EnergyField
-                userContext={null}
-                language="en"
+                userContext={userContext}
+                language={language ?? "en"}
+                languageContext={languageContext}
               />
             </View>
-          </View>
+            </View>
 
           {/* RIGHT: YOUR WORLD */}
           <View style={styles.world}>
@@ -190,8 +263,15 @@ console.log("LIVING SPACE DAILY FIELD:", dailyField);
         </View>
 
 {/* CREATION JOURNEY */}
-<CreationJourney />
+<View style={{ marginTop: -95 }}>
+  <CreationJourney />
+</View>
       </ScrollView>
+
+      <You
+        visible={profileVisible}
+        onClose={() => setProfileVisible(false)}
+      />
     </View>
   );
 }
@@ -223,6 +303,7 @@ reflectionColumn: {
   flex: 1,
   minWidth: 0,
   alignItems: "center",
+    paddingLeft: 22,
 },
 
 visionBoardColumn: {
@@ -260,14 +341,14 @@ mainLayoutWide: {
 energyColumn: {
   flexDirection: "row",
   alignItems: "stretch",
-  gap: 12,
+  gap: 4,
 },
 energyColumnWide: {
   width: "43%",
   minWidth: 0,
   flexDirection: "row",
   alignItems: "center",
-  gap: 8,
+  gap: 0,
   paddingLeft: 12,
   paddingRight: 8,
 },
@@ -284,6 +365,7 @@ signals: {
   alignItems: "center",
   justifyContent: "center",
   marginLeft: 12,
+    transform: [{ translateY: -50 }],
 },
   portal: {
     flex: 1,
@@ -317,7 +399,8 @@ energyArea: {
   alignItems: "center",
   overflow: "visible",
   paddingLeft: 0,
-  transform: [{ translateX: -50 }],
+  transform: [{ translateX: -35 }],
+  marginTop: -380,
 },
   world: {
     flex: 1,
@@ -438,5 +521,51 @@ mirrorGlyph: {
   fontSize: 30,
   fontWeight: "300",
   opacity: 0.85,
+},
+
+circlesButton: {
+  position: "absolute",
+  top: 12,
+  right: 92,
+  zIndex: 30,
+  width: 42,
+  height: 42,
+  borderRadius: 21,
+  borderWidth: 1,
+  borderColor: GOLD,
+  backgroundColor: PANEL,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+circlesImage: {
+  width: 42,
+  height: 42,
+},
+
+profileAvatar: {
+  position: "absolute",
+  top: 12,
+  right: 38,
+  zIndex: 30,
+  width: 42,
+  height: 42,
+  borderRadius: 21,
+  borderWidth: 1,
+  borderColor: GOLD,
+  backgroundColor: PANEL,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
+
+profileAvatarImage: {
+  width: "100%",
+  height: "100%",
+},
+
+profileAvatarFallback: {
+  color: GOLD,
+  fontSize: 23,
 },
 });

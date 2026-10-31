@@ -1,254 +1,385 @@
 
-import { Feather } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    useWindowDimensions,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
 } from "react-native";
 
-type Stage = {
-  id: string;
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-  prompt: string;
-};
+import { getUserId } from "../../lib/user";
+import { supabase } from "../../services/supabase";
 
-const GOLD = "#C9AD70";
+import MyCreations, {
+  CreationItem,
+} from "./creationJourney/MyCreations";
+
+import JourneyStages, {
+  STAGES,
+} from "./creationJourney/JourneyStages";
+
+import StageDiscover from "./creationJourney/stages/StageDiscover";
+import StageDream from "./creationJourney/stages/StageDream";
+
 const MUTED = "#AAA2B6";
 const BORDER = "rgba(201,173,112,0.22)";
-
-const STAGES: Stage[] = [
-  { id: "dream", label: "Dream", icon: "star", prompt: "Imagine what is possible." },
-  { id: "discover", label: "Discover", icon: "compass", prompt: "What do you truly desire?" },
-  { id: "build", label: "Build", icon: "tool", prompt: "What wants to become real?" },
-  { id: "grow", label: "Grow", icon: "trending-up", prompt: "What is ready to flourish?" },
-  { id: "scale", label: "Scale", icon: "maximize-2", prompt: "Where can this creation reach?" },
-  { id: "renew", label: "Renew", icon: "refresh-cw", prompt: "What wants to emerge next?" },
-];
 
 export default function CreationJourney() {
   const { width } = useWindowDimensions();
   const wide = width >= 1050;
 
   const [activeStage, setActiveStage] = useState("dream");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [creations, setCreations] = useState<CreationItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadCreations = async () => {
+      try {
+        const userId = await getUserId();
+        if (!userId) return;
+
+        const { data, error } = await supabase
+          .from("sovereign_intentions")
+          .select(
+            "id, raw_input, outcome, status, spiral_stage, created_at, updated_at"
+          )
+          .eq("user_id", userId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        if (!active) return;
+
+        const items: CreationItem[] = (data || []).map((row) => ({
+          id: row.id,
+          title: row.raw_input || "",
+          description: row.outcome || "",
+        }));
+
+        setCreations(items);
+
+        if (items.length > 0) {
+          setSelectedId(items[0].id);
+        }
+      } catch (error) {
+        console.error("CREATIONS LOAD ERROR:", error);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadCreations();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const updateCreation = async (
+    updates: Partial<CreationItem>
+  ) => {
+    if (!selectedId) return;
+
+    setCreations((current) =>
+      current.map((item) =>
+        item.id === selectedId ? { ...item, ...updates } : item
+      )
+    );
+
+    const dbUpdates: Record<string, string> = {};
+
+    if (updates.title !== undefined) {
+      dbUpdates.raw_input = updates.title;
+    }
+
+    if (updates.description !== undefined) {
+      dbUpdates.outcome = updates.description;
+    }
+
+    if (Object.keys(dbUpdates).length === 0) return;
+
+    const { error } = await supabase
+      .from("sovereign_intentions")
+      .update(dbUpdates)
+      .eq("id", selectedId);
+
+    if (error) {
+      console.error("CREATION UPDATE ERROR:", error);
+    }
+  };
+
+  const createCreation = async () => {
+    try {
+      const userId = await getUserId();
+      if (!userId) return;
+
+      const { data, error } = await supabase
+        .from("sovereign_intentions")
+        .insert({
+          user_id: userId,
+          raw_input: "New creation",
+          status: "active",
+          spiral_stage: "dream",
+        })
+        .select(
+          "id, raw_input, outcome, status, spiral_stage, created_at, updated_at"
+        )
+        .single();
+
+      if (error) throw error;
+
+      const newCreation: CreationItem = {
+        id: data.id,
+        title: data.raw_input || "",
+        description: data.outcome || "",
+      };
+
+      setCreations((current) => [...current, newCreation]);
+      setSelectedId(data.id);
+      setActiveStage("dream");
+    } catch (error) {
+      console.error("CREATION CREATE ERROR:", error);
+    }
+  };
+
+
+  // DELETE A CREATION AND ITS RELATED DATA
+  const deleteCreation = async (id: string) => {
+    try {
+      const userId = await getUserId();
+      if (!userId) return;
+
+      const { error } = await supabase
+        .from("sovereign_intentions")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      setCreations((current) => {
+        const remaining = current.filter((item) => item.id !== id);
+
+        if (selectedId === id) {
+          setSelectedId(remaining[0]?.id ?? null);
+          setActiveStage("dream");
+        }
+
+        return remaining;
+      });
+    } catch (error) {
+      console.error("CREATION DELETE ERROR:", error);
+    }
+  };
 
   const selected =
     STAGES.find((stage) => stage.id === activeStage) ?? STAGES[0];
 
   return (
-    <View style={[styles.container, !wide && styles.narrow]}>
+    <View style={styles.container}>
+      {/* SMALL, SCROLLABLE CREATION NOTES */}
+      <MyCreations
+        creations={creations}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onCreate={createCreation}
+        onDelete={deleteCreation}
+        onUpdateTitle={(value) => updateCreation({ title: value })}
+        onUpdateDescription={(value) =>
+          updateCreation({ description: value })
+        }
+      />
 
-      {/* LEFT: CREATION */}
-      <View style={styles.sidePanel}>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="What are you creating?"
-          placeholderTextColor="#81796E"
-          style={styles.title}
-        />
+      {/* JOURNEY + ARTEFACTS */}
+      <View style={[styles.contentRow, !wide && styles.contentNarrow]}>
+        <View style={styles.middlePanel}>
+          <View style={styles.journeyContent}>
+            <JourneyStages
+              activeStage={activeStage}
+              onSelect={setActiveStage}
+            />
 
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="A little about your vision..."
-          placeholderTextColor="#81796E"
-          multiline
-          style={styles.description}
-        />
-      </View>
-
-      {/* CENTRE: JOURNEY */}
-      <View style={styles.middlePanel}>
-        <View style={styles.stages}>
-          {STAGES.map((stage) => {
-            const active = activeStage === stage.id;
-
-            return (
-              <Pressable
-                key={stage.id}
-                onPress={() => setActiveStage(stage.id)}
-                style={styles.stage}
-              >
-                <View
-                  style={[
-                    styles.circle,
-                    active && styles.activeCircle,
-                  ]}
-                >
-                  <Feather
-                    name={stage.icon}
-                    size={17}
-                    color={active ? "#F1D49A" : "#A89A83"}
-                  />
-                </View>
-
-                <Text
-                  style={[
-                    styles.stageLabel,
-                    active && styles.activeLabel,
-                  ]}
-                >
-                  {stage.label}
+            <ScrollView
+              style={styles.stageScroll}
+              contentContainerStyle={styles.stageScrollContent}
+              showsVerticalScrollIndicator
+            >
+              <View style={styles.selected}>
+                <Text style={styles.selectedTitle}>
+                  {selected.label}
                 </Text>
-              </Pressable>
-            );
-          })}
+              </View>
+
+              {!loading && selectedId && activeStage === "dream" && (
+                <StageDream intentionId={selectedId} />
+              )}
+
+              {!loading && selectedId && activeStage === "discover" && (
+                <StageDiscover intentionId={selectedId} />
+              )}
+            </ScrollView>
+          </View>
         </View>
 
-        <View style={styles.selected}>
-          <Text style={styles.selectedTitle}>
-            {selected.label}
-          </Text>
-          <Text style={styles.prompt}>
-            {selected.prompt}
-          </Text>
+        <View style={[styles.sidePanel, !wide && styles.sidePanelNarrow]}>
+          <View style={styles.artifactHeader}>
+            <Text style={styles.artifactTitle}>CREATION ARTEFACTS</Text>
+            <Text style={styles.artifactSymbol}>✧</Text>
+          </View>
+
+          <View style={styles.artifactCanvas}>
+            <Text style={styles.artifactMessage}>
+              Your ideas are taking shape.
+            </Text>
+            <Text style={styles.emptySubtext}>
+              Plans, experiments, images and outcomes will gather here.
+            </Text>
+            <View style={styles.artifactDecoration}>
+              <Text style={styles.artifactDecorationText}>✧</Text>
+              <Text style={styles.artifactDecorationText}>◈</Text>
+              <Text style={styles.artifactDecorationText}>✦</Text>
+            </View>
+          </View>
         </View>
       </View>
-
-      {/* RIGHT: GENERATED ARTEFACTS */}
-      <View style={styles.sidePanel}>
-        <View style={styles.artifactCanvas}>
-          <Feather
-            name="layers"
-            size={27}
-            color="#776B59"
-          />
-          <Text style={styles.emptyText}>
-            Creation artefacts
-          </Text>
-          <Text style={styles.emptySubtext}>
-            Your ideas, plans and outcomes will appear here.
-          </Text>
-        </View>
-      </View>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-container: {
-  width: "100%",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 10,
-  marginTop: 40,
-  marginBottom: 12,
-},
-
-sidePanel: {
-  width: 205,
-  height: 180,
-  flexGrow: 0,
-  flexShrink: 0,
-  padding: 13,
-  borderRadius: 11,
-  borderWidth: 1,
-  borderColor: BORDER,
-  backgroundColor: "transparent",
-  justifyContent: "center",
-  
-},
-
-middlePanel: {
-  flex: 1,
-  height: 180,
-  minWidth: 0,
-  padding: 13,
-  borderRadius: 11,
-  borderWidth: 1,
-  borderColor: "rgba(201,173,112,0.35)",
-  backgroundColor: "transparent",
-  justifyContent: "flex-start",
-},
-
-narrow: {
-  flexDirection: "column",
-},
-  title: {
-    color: "#EEE5D7",
-    fontSize: 16,
-    fontWeight: "500",
-    paddingVertical: 8,
+  container: {
+    width: "100%",
+    alignSelf: "stretch",
+    gap: 1,
+    marginTop: 2,
+    marginBottom: 20,
   },
-  description: {
-    color: "#D8D0C4",
-    fontSize: 12,
-    lineHeight: 18,
-    minHeight: 55,
-    paddingTop: 8,
-  },
-  stages: {
+
+  contentRow: {
+    width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 2,
+    alignItems: "stretch",
+    gap: 12,
   },
-  stage: {
-    flex: 1,
-    alignItems: "center",
-    gap: 5,
+
+  contentNarrow: {
+    flexDirection: "column",
   },
-  circle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+
+  middlePanel: {
+    flex: 1.65,
+    minWidth: 0,
+    minHeight: 220,
+    padding: 13,
+    borderRadius: 11,
     borderWidth: 1,
-    borderColor: "#625B52",
-    backgroundColor: "#20201E",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "rgba(201,173,112,0.35)",
+    backgroundColor: "rgba(16,16,24,0.35)",
   },
-  activeCircle: {
-    borderColor: GOLD,
-    backgroundColor: "#3A3022",
+
+  journeyContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+    minHeight: 190,
   },
-  stageLabel: {
-    color: "#81796E",
-    fontSize: 8,
+
+  stageScroll: {
+    flex: 1,
+    minWidth: 0,
   },
-  activeLabel: {
-    color: "#E4C58B",
-    fontWeight: "700",
+
+  stageScrollContent: {
+    paddingBottom: 12,
   },
+
+  stageWorkspace: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 12,
+    paddingLeft: 14,
+    borderLeftWidth: 1,
+    borderLeftColor: BORDER,
+  },
+
   selected: {
-    marginTop: 15,
-    paddingTop: 11,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
+
   selectedTitle: {
     color: "#E4C58B",
     fontSize: 14,
     fontWeight: "600",
   },
-  prompt: {
-    color: "#D8D0C4",
-    fontSize: 11,
-    marginTop: 6,
+
+  sidePanel: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 220,
+    padding: 15,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: "rgba(18,16,23,0.55)",
   },
+
+  sidePanelNarrow: {
+    width: "100%",
+    flex: 0,
+  },
+
+  artifactHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  artifactTitle: {
+    color: "#D8C9AE",
+    fontSize: 9,
+    letterSpacing: 1.7,
+    fontWeight: "600",
+  },
+
+  artifactSymbol: {
+    color: "#C9AD70",
+    fontSize: 20,
+  },
+
   artifactCanvas: {
     flex: 1,
-    alignItems: "center",
+    minHeight: 150,
     justifyContent: "center",
-    gap: 8,
+    alignItems: "center",
+    gap: 10,
   },
-  emptyText: {
-    color: "#D8C9AE",
-    fontSize: 11,
+
+  artifactMessage: {
+    color: "#E4C58B",
+    fontSize: 13,
+    fontWeight: "500",
   },
+
   emptySubtext: {
     color: MUTED,
     fontSize: 10,
-    lineHeight: 15,
+    lineHeight: 16,
     textAlign: "center",
+    maxWidth: 230,
+  },
+
+  artifactDecoration: {
+    flexDirection: "row",
+    gap: 22,
+    marginTop: 8,
+  },
+
+  artifactDecorationText: {
+    color: "#776B59",
+    fontSize: 22,
   },
 });

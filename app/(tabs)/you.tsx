@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
+  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -115,7 +116,15 @@ const INITIAL_CHILDHOOD_SIGNALS = {
   boundaries_respected: 0,
 };
 
-export default function You() {
+type YouProps = {
+  visible?: boolean;
+  onClose?: () => void;
+};
+
+export default function You({
+  visible = true,
+  onClose,
+}: YouProps) {
 
   //
   // 🌿 STATE
@@ -330,9 +339,11 @@ setEarthRegions(
 );
     }
 
-    loadProfile();
+    if (visible) {
+      loadProfile();
+    }
 
-  }, []);
+  }, [visible]);
 
   //
   // 🖼 PICK IMAGE
@@ -543,11 +554,10 @@ const batchId =
     // ☁️ UPLOAD AVATAR
     //
 
-    if (
-      avatar?.startsWith(
-        "file://"
-      )
-    ) {
+if (
+  avatar?.startsWith("file://") ||
+  avatar?.startsWith("blob:")
+) {
 
       //console.log(  "☁️ Uploading avatar...");
 
@@ -954,25 +964,70 @@ setOriginalProfile(
   //
 
   return (
-
-    <View
-      style={{
-        flex: 1,
-backgroundColor:
-  Colors.background,
-      }}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
     >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.82)",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 820,
+            height: "88%",
+            maxHeight: 900,
+            backgroundColor: Colors.background,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: "rgba(201,173,112,0.3)",
+            overflow: "hidden",
+          }}
+        >
+          <TouchableOpacity
+            onPress={onClose}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 16,
+              zIndex: 100,
+              padding: 8,
+            }}
+          >
+            <Text
+              style={{
+                color: Colors.mutedText,
+                fontSize: 24,
+              }}
+            >
+              ×
+            </Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableOpacity
         activeOpacity={1}
 onPress={(event) => {
   if (event.target === event.currentTarget) {
     Keyboard.dismiss();
   }
 }}
-        style={{
-          flex: 1,
-        }}
+style={{
+  width: "100%",
+}}
       >
 
         {/* HEADER */}
@@ -1660,8 +1715,10 @@ onPress={() => {
 
 )}
 
-      </TouchableOpacity>
-
-    </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }

@@ -224,7 +224,16 @@ const handleEnter = async () => {
   );
 
   return (
+
+    
     <View style={styles.container}>
+
+      <Pressable
+  onPress={() => router.replace("/livingSpace")}
+  style={styles.backButton}
+>
+  <Text style={styles.backText}>← Living Space</Text>
+</Pressable>
 
       {/* 🌊 FREQUENCY RINGS */}
       {renderPulse(pulse1, 0.35)}
@@ -355,4 +364,19 @@ opacity: 0.82
     fontSize: 11,
     opacity: 0.5
   },
+
+  backButton: {
+  position: "absolute",
+  top: 28,
+  left: 28,
+  zIndex: 30,
+  paddingVertical: 10,
+  paddingHorizontal: 14,
+},
+
+backText: {
+  color: "#C9AD70",
+  fontSize: 12,
+  letterSpacing: 1,
+},
 });

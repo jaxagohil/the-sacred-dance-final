@@ -9,13 +9,11 @@ import {
   Animated,
   Easing,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import {
-  Fonts,
-  Radius,
+  Fonts
 } from "../../constants/theme";
 
 import {
@@ -30,27 +28,9 @@ import {
  */
 
 const guides = [
-
-  {
-    id: "1",
-
-    type:
-      GUIDE_TYPES.HEART,
-  },
-
-  {
-    id: "2",
-
-    type:
-      GUIDE_TYPES.STRUCTURE,
-  },
-
-  {
-    id: "3",
-
-    type:
-      GUIDE_TYPES.COSMIC,
-  },
+  { id: "1", type: GUIDE_TYPES.COSMIC },
+  { id: "2", type: GUIDE_TYPES.HEART },
+  { id: "3", type: GUIDE_TYPES.STRUCTURE },
 ];
 
 /*
@@ -77,17 +57,15 @@ export default function GuideSelector({
     <View
       style={{
 
-        flexDirection: "row",
-
-        justifyContent: "center",
-
-        alignItems: "center",
-
-        gap: 10,
-
-        marginTop: 5,
-
-        marginBottom: 5,
+flexDirection: "column",
+alignItems: "flex-start",
+paddingLeft: 18,
+justifyContent: "center",
+gap: 0,
+paddingTop: 10,
+paddingBottom: 0,
+marginTop: 0,
+marginBottom: 0,
       }}
     >
 
@@ -319,11 +297,7 @@ function GuidePill({
    * --------------------------------------------------------
    */
 
-const opacity =
-
-  isFieldActive
-    ? 1
-    : 0.62;
+const opacity = 1;
 
   /*
    * --------------------------------------------------------
@@ -355,120 +329,40 @@ isFieldActive
 
   return (
 
-    <TouchableOpacity
-      activeOpacity={0.86}
+<View>
 
-      onPress={onPress}
-    >
-
-      <Animated.View
-        style={{
-
-          paddingHorizontal: 12,
-
-          paddingVertical: 6,
-
-          borderRadius:
-            Radius.pill,
-
-          overflow: "hidden",
-
-          backgroundColor:
-
-isFieldActive
-
-  ? "rgba(255,255,255,0.05)"
-
-  : "rgba(255,255,255,0.008)",
-
-borderWidth:
-
-  isFieldActive
-    ? 1
-    : isActive
-      ? 0.8
-      : 0.5,
-
-          borderColor:
-
-isFieldActive
-
-  ? `${config.fontColor}52`
-
-  : isActive
-
-    ? "rgba(255,255,255,0.18)"
-
-    : "rgba(255,255,255,0.04)",
-
-          opacity:
-            opacity,
-
-          transform: [
-            {
-              scale,
-            },
-          ],
-        }}
-      >
+<Animated.View
+  style={{
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 2,
+    opacity: 1,
+  }}
+>
 
         {/* -------------------------------------------- */}
         {/* 🌌 FIELD RESONANCE */}
         {/* -------------------------------------------- */}
 
-        {
-
-          isFieldActive && (
-
-            <Animated.View
-              style={{
-
-                position: "absolute",
-
-                width: "170%",
-                height: "240%",
-
-                borderRadius: 999,
-
-                alignSelf: "center",
-
-                backgroundColor:
-                  `${config.fontColor}08`,
-
-                opacity:
-
-                  breathing.interpolate({
-
-                    inputRange: [0, 1],
-
-                    outputRange:
-                       [0.16, 0.32],
-                  }),
-
-                transform: [
-
-                  {
-
-                    scale:
-
-                      breathing.interpolate({
-
-                        inputRange: [0, 1],
-
-                        outputRange:
-                          [0.94, 1.08],
-                      }),
-                  },
-                ],
-              }}
-            />
-
-          )
-        }
 
         {/* -------------------------------------------- */}
         {/* 🌊 TEXT */}
         {/* -------------------------------------------- */}
+
+<Text
+  style={{
+    color: config.fontColor,
+    fontSize: 14,
+    marginRight: 2,
+  }}
+>
+  {guideType === GUIDE_TYPES.COSMIC
+    ? "✧"
+    : guideType === GUIDE_TYPES.HEART
+    ? "♡"
+    : "◈"}
+</Text>
 
         <Text
           style={{
@@ -515,7 +409,6 @@ textShadowRadius:
         </Text>
 
       </Animated.View>
-
-    </TouchableOpacity>
+    </View>
   );
 }
