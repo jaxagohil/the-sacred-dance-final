@@ -379,7 +379,7 @@ isFieldActive
 fontFamily:
   Fonts.light,
 
-            fontSize: 10,
+            fontSize: 8,
 
             textAlign: "center",
 

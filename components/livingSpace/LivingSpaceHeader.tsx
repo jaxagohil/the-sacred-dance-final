@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import { Fonts } from "../../constants/theme";
 import { useMirrorStore } from "../../stores/mirrorStore";
 
 import { orchestrationAgent } from "../../lib/ai/agents/orchestrationAgent";
@@ -17,8 +18,9 @@ import { transmissionAgent } from "../../lib/ai/agents/transmissionAgent";
 import { buildAlignmentOSContext } from "../../lib/alignment/buildAlignmentOSContext";
 
 import GuideSelector from "../guidance/GuideSelector";
-import GuideTransmission from "../guidance/GuideTransmission";
-import ReflectionPortal from "../guidance/ReflectionPortal";
+import FloatingWhispers from "./FloatingWhispers";
+import GuideTransmission from "./GuideTransmission";
+import ReflectionPortal from "./ReflectionPortal";
 
 const VALID_GUIDES = ["heart", "structure", "cosmic"];
 
@@ -30,9 +32,16 @@ type Message = {
   createdAt: string;
 };
 
-export default function LivingSpaceHeader({ onFieldChange }: any) {
+export default function LivingSpaceHeader({
+  onFieldChange,
+  portalFrame,
+}: any) {
   const contextVersion = useMirrorStore((state) => state.contextVersion);
   const ready = useMirrorStore((state) => state.ready);
+
+  const preloadedWhispers = useMirrorStore(
+  (state) => state.preloadedWhispers
+);
 
   const alignmentContext = useMemo(
     () => buildAlignmentOSContext(),
@@ -188,7 +197,6 @@ export default function LivingSpaceHeader({ onFieldChange }: any) {
         setTransmissions((previous) => [...previous, ...guideMessages]);
       }
 
-      setPortalVisible(false);
     } catch (error) {
       console.error("TRANSMISSION AGENT ERROR", error);
     } finally {
@@ -218,7 +226,7 @@ export default function LivingSpaceHeader({ onFieldChange }: any) {
       words.forEach((word: string) => {
         const candidate = chunk ? `${chunk} ${word}` : word;
 
-        if (candidate.length > 105 && chunk) {
+        if (candidate.length > 160 && chunk) {
           chunks.push(chunk);
           chunk = word;
         } else {
@@ -273,9 +281,11 @@ const displayFragment = currentFragment
       : "#F2EEE8"; // Cosmic — white
 
 
-  return (
-    <View style={styles.container}>
-      {/* LEFT — GUIDE NAMES. Keep this selector and its placement intact. */}
+return (
+  <View style={styles.container}>
+    <FloatingWhispers whispers={preloadedWhispers} />
+
+    {/* LEFT — GUIDE NAMES. Keep this selector and its placement intact. */}
       <View style={styles.guidesColumn}>
         <GuideSelector
           activeGuide={selectedGuide}
@@ -285,69 +295,43 @@ const displayFragment = currentFragment
         />
       </View>
 
-      {/* CENTRE — ORCHESTRATION ABOVE THE ENERGY BALL */}
-      <View style={styles.orchestrationColumn}>
-        {currentFragment ? (
-          <Text
-            key={`${currentFragment.guide}_${currentFragmentIndex}`}
-style={[
-  styles.orchestrationText,
-  {
-    color: guideColor,
-    textShadowColor: guideColor,
-  },
-]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
-          >
-            {displayFragment}
-          </Text>
-        ) : orchestrationLoading ? (
-          <View style={styles.orchestrationLoading}>
-            <ActivityIndicator color="#C8B4E8" size="small" />
-          </View>
-        ) : null}
-      </View>
-
-{/* RIGHT — LATEST TRANSMISSION + ASK BUTTON */}
-<View style={styles.transmissionColumn}>
-  <View style={styles.transmissionDisplay}>
-
-    <ScrollView
-      style={styles.transmissionScroll}
-      contentContainerStyle={styles.transmissionContent}
-      showsVerticalScrollIndicator={false}
+{/* CENTRE — DIVINE ORCHESTRATION */}
+<View style={styles.orchestrationColumn}>
+  {currentFragment ? (
+    <View
+      style={[
+        styles.orchestrationAura,
+        { shadowColor: guideColor },
+      ]}
     >
-      {transmissions.length > 0 ? (
-        <GuideTransmission
-          key={transmissions[transmissions.length - 1].id}
-          role={transmissions[transmissions.length - 1].role}
-          guide={transmissions[transmissions.length - 1].guide}
-          guideName={
-            guideProfiles[
-              transmissions[transmissions.length - 1].guide as keyof typeof guideProfiles
-            ]?.name || "Guide"
-          }
-          text={transmissions[transmissions.length - 1].text}
-          isThinking={false}
-        />
-      ) : (
-        <Text style={styles.transmissionPlaceholder}>
-          Your transmissions will appear here…
-        </Text>
-      )}
+      <Text style={styles.orchestrationOrnament}>✧</Text>
 
-      {thinking ? (
-        <View style={styles.loadingRow}>
-          <ActivityIndicator color="#C8B4E8" size="small" />
-          <Text style={styles.loadingText}>
-            The conversation is unfolding…
-          </Text>
-        </View>
-      ) : null}
-    </ScrollView>
-  </View>
+      <Text
+        key={`${currentFragment.guide}_${currentFragmentIndex}`}
+        style={[
+          styles.orchestrationText,
+          {
+            color: guideColor,
+            textShadowColor: guideColor,
+          },
+        ]}
+        numberOfLines={3}
+        ellipsizeMode="tail"
+      >
+        {displayFragment}
+      </Text>
 
+<Text style={styles.orchestrationOrnamentRight}>✧</Text>
+    </View>
+  ) : orchestrationLoading ? (
+    <View style={styles.orchestrationLoading}>
+      <ActivityIndicator color="#C8B4E8" size="small" />
+    </View>
+  ) : null}
+</View>
+
+{/* RIGHT — ASK BUTTON */}
+<View style={styles.transmissionColumn}>
   <Pressable
     style={styles.askButton}
     onPress={() => setPortalVisible(true)}
@@ -364,10 +348,22 @@ style={[
         animationType="fade"
         onRequestClose={() => setPortalVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+<View style={styles.modalBackdrop}>
+  <View
+    style={[
+      styles.modalCard,
+      portalFrame
+        ? {
+            position: "absolute",
+            left: portalFrame.x,
+            top: portalFrame.y + portalFrame.height / 2 - 110,
+            width: portalFrame.width,
+            minHeight: 220,
+          }
+        : null,
+    ]}
+  >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>A moment for reflection</Text>
               <Pressable
                 onPress={() => setPortalVisible(false)}
                 accessibilityRole="button"
@@ -377,9 +373,38 @@ style={[
               </Pressable>
             </View>
 
-            <Text style={styles.modalSubtitle}>
-              Ask a question. Share what’s on your mind.
-            </Text>
+          <ScrollView
+  style={styles.conversationHistory}
+  contentContainerStyle={styles.conversationHistoryContent}
+  showsVerticalScrollIndicator={false}
+>
+  {transmissions.map((message) => {
+    if (message.role === "user") {
+      return (
+        <View key={message.id} style={styles.userMessage}>
+          <Text style={styles.userMessageText}>
+            {message.text}
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <GuideTransmission
+        key={message.id}
+        role="guide"
+        guide={message.guide}
+        guideName={
+          guideProfiles[
+            message.guide as keyof typeof guideProfiles
+          ]?.name || "Guide"
+        }
+        text={message.text}
+        isThinking={false}
+      />
+    );
+  })}
+</ScrollView>  
 
             <ReflectionPortal
               isTyping={thinking}
@@ -417,47 +442,112 @@ container: {
     alignItems: "flex-start",
   },
 
-  orchestrationColumn: {
-    flex: 1.05,
-    minWidth: 0,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingLeft: 10,
-    overflow: "visible",
-  },
+orchestrationColumn: {
+  flex: 1,
+  minWidth: 0,
+  height: "100%",
+  justifyContent: "center",
+  alignItems: "stretch",
+  paddingLeft: 10,
+  overflow: "visible",
+},
 
 orchestrationText: {
-  width: 450,
-  maxWidth: 450,
-  marginLeft: 20,
-  alignSelf: "flex-start",
+  width: "100%",
   textAlign: "center",
   fontSize: 14,
-  lineHeight: 20,
-  fontWeight: "400",
-  letterSpacing: 0.2,
+  lineHeight: 27,
+  fontFamily: Fonts.orchestration,
+  letterSpacing: 0.4,
   textShadowOffset: {
     width: 0,
     height: 0,
   },
-  textShadowRadius: 14,
+  textShadowRadius: 12,
 },
 
-  orchestrationLoading: {
-    width: 320,
-    alignItems: "center",
-    justifyContent: "center",
+orchestrationOrnament: {
+  position: "absolute",
+  top: "50%",
+  marginTop: -7,
+  left: 8,
+  color: "#C9AD70",
+  fontSize: 12,
+  opacity: 0.7,
+},
+
+orchestrationOrnamentRight: {
+  position: "absolute",
+  top: "50%",
+  marginTop: -7,
+  right: 8,
+  color: "#C9AD70",
+  fontSize: 12,
+  opacity: 0.7,
+},
+
+orchestrationLoading: {
+  width: 320,
+  alignItems: "center",
+  justifyContent: "center",
+  transform: [{ translateX: 35 }],
+},
+
+orchestrationAura: {
+  width: "100%",
+  maxWidth: undefined,
+  alignSelf: "stretch",
+  position: "relative",
+  paddingHorizontal: 24,
+  paddingVertical: 10,
+  borderTopWidth: 1,
+  borderBottomWidth: 1,
+  borderColor: "rgba(201,173,112,0.30)",
+  backgroundColor: "rgba(201,173,112,0.025)",
+  justifyContent: "center",
+  alignItems: "center",
+  shadowOffset: {
+    width: 0,
+    height: 0,
   },
+  shadowOpacity: 0,
+  shadowRadius: 0,
+},
+
+conversationHistory: {
+  width: "100%",
+  maxHeight: 90,
+  marginBottom: 12,
+},
+
+conversationHistoryContent: {
+  gap: 12,
+  paddingVertical: 6,
+},
+
+userMessage: {
+  alignSelf: "flex-end",
+  maxWidth: "85%",
+  backgroundColor: "#25202B",
+  borderRadius: 12,
+  padding: 10,
+},
+
+userMessageText: {
+  color: "#E8E0EA",
+  fontSize: 12,
+  lineHeight: 18,
+},
 
 transmissionColumn: {
-  flex: 1.15,
-  minWidth: 0,
+  flex: 0,
+  width: 50,
+  minWidth: 50,
   height: "100%",
   flexDirection: "row",
   alignItems: "center",
-  gap: 12,
-  overflow: "hidden",
+  justifyContent: "flex-end",
+  overflow: "visible",
 },
 
 transmissionDisplay: {
@@ -521,22 +611,23 @@ marginLeft: 8,
     fontSize: 11,
   },
 
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.82)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 22,
-  },
+modalBackdrop: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.78)",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: 22,
+},
 
   modalCard: {
     width: "100%",
     maxWidth: 520,
+    maxHeight: 380,
     backgroundColor: "#111014",
     borderRadius: 22,
     borderWidth: 1,
     borderColor: "#42364E",
-    padding: 20,
+    padding: 16,
     overflow: "hidden",
   },
 
@@ -558,12 +649,12 @@ marginLeft: 8,
     padding: 6,
   },
 
-  modalSubtitle: {
-    color: "#A99BB6",
-    fontSize: 13,
-    marginTop: 10,
-    marginBottom: 18,
-  },
+modalSubtitle: {
+  color: "#C9B8D9",
+  fontSize: 13,
+  flex: 1,
+  marginRight: 12,
+},
 
   processing: {
     color: "#C8B4E8",

@@ -1,19 +1,19 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    useWindowDimensions,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
 } from "react-native";
 
 import {
-    discoverConsciousDesire,
-    getCreationContext,
+  discoverConsciousDesire,
+  getCreationContext,
 } from "../../../../lib/consciousCreating";
 
 import { getUserId } from "../../../../lib/user";
@@ -267,9 +267,6 @@ console.log(
 
         <View style={styles.desireColumn}>
           <View style={styles.questionRow}>
-            <Text style={styles.question}>
-              What is the deeper desire taking shape through this creation?
-            </Text>
 
             <Pressable
               onPress={() => void refreshConsciousDesire()}

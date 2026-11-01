@@ -5,6 +5,8 @@ import React, {
 } from "react";
 
 import {
+  ActivityIndicator,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -27,6 +29,8 @@ import {
 import {
   useMirrorStore,
 } from "../../stores/mirrorStore";
+
+import OrnateMirror from "../livingSpace/OrnateMirror";
 
 // --------------------------------------------------
 // 🧠 TYPES
@@ -68,6 +72,8 @@ export default function Lenses({
   ] = useState<
   "people" | "places" | "things" | null
 >(null);
+
+const [showLensResponse, setShowLensResponse] = useState(false);
 
 const [hovered, setHovered] = useState<
   "people" | "places" | "things" | null
@@ -166,16 +172,11 @@ const hasThings = true;
   // 🚀 HANDLE PRESS
   // --------------------------------------------------
 
-  const handlePress = async (
-
-    lens:
-      | "people"
-      | "places"
-      | "things"
-
-  ) => {
-
-    setSelected(lens);
+const handlePress = async (
+  lens: "people" | "places" | "things"
+) => {
+  setSelected(lens);
+  setShowLensResponse(true);
 
     // --------------------------------------------------
     // 🧠 EXISTING
@@ -426,8 +427,7 @@ awarenessChakra:
     );
   };
 
-
-const lensLabels = {
+  const lensLabels = {
   people: "People",
   places: "Places",
   things: "Things",
@@ -443,36 +443,14 @@ const renderIcon = (
   };
 
   return (
-    <Pressable
+    <OrnateMirror
       key={lens}
-      accessibilityRole="button"
-      accessibilityLabel={lensLabels[lens]}
-      onPress={() => {
-        setHovered((current) =>
-          current === lens ? null : lens
-        );
-        handlePress(lens);
-      }}
-      onHoverIn={() => {
-        setHovered(lens);
-        handlePress(lens);
-      }}
-      onHoverOut={() => setHovered(null)}
-      style={[
-        styles.iconButton,
-        selected === lens && styles.iconActive,
-      ]}
-    >
-      <Text style={styles.iconSymbol}>
-        {icons[lens]}
-      </Text>
-
-      {hovered === lens && (
-        <Text style={styles.hoverLabel}>
-          {lensLabels[lens]}
-        </Text>
-      )}
-    </Pressable>
+      symbol={icons[lens]}
+      selected={selected === lens}
+      onPress={() => handlePress(lens)}
+      width={56}
+      height={116}
+    />
   );
 };
 
@@ -542,6 +520,30 @@ const renderIcon = (
   </View>
 )}
 
+<Modal
+  visible={showLensResponse}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowLensResponse(false)}
+>
+  <Pressable
+    style={styles.lensResponseBackdrop}
+    onPress={() => setShowLensResponse(false)}
+  >
+    <View
+      style={styles.lensResponseFrame}
+      onStartShouldSetResponder={() => true}
+    >
+      {loading ? (
+        <ActivityIndicator color="#D9BD80" size="small" />
+      ) : selected ? (
+        <Text style={styles.lensResponseText}>
+          {responses[selected] || ""}
+        </Text>
+      ) : null}
+    </View>
+  </Pressable>
+</Modal>
 
     </View>
   );
@@ -557,8 +559,8 @@ const styles =
 container: {
   width: "100%",
   alignItems: "center",
-  marginTop: -10,
-  paddingBottom: 24,
+  marginTop: 5,
+  paddingBottom: 10,
   position: "relative",
   zIndex: 20,
 },
@@ -573,7 +575,7 @@ container: {
 
       gap: 12,
 
-      marginBottom: 14,
+      marginBottom: 10,
     },
 
     button: {
@@ -636,13 +638,39 @@ container: {
       textAlign:
         "center",
 
-      marginTop: 6,
+      marginTop: 2,
 
       opacity: 0.72,
 
       letterSpacing: 0.4,
     },
 
+lensResponseBackdrop: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.35)",
+  alignItems: "flex-start",
+  justifyContent: "flex-start",
+  paddingTop: 225,
+  paddingLeft: "47%",
+},
+
+lensResponseFrame: {
+  width: 300,
+  maxWidth: "90%",
+  paddingVertical: 16,
+  paddingHorizontal: 2,
+  backgroundColor: "rgba(22,22,29,0.96)",
+  borderWidth: 1,
+  borderColor: "rgba(201,173,112,0.4)",
+  borderRadius: 12,
+},
+
+lensResponseText: {
+  color: "#E8E0D5",
+  fontSize: 10,
+  lineHeight: 18,
+  textAlign: "center",
+},
 responseBox: {
   position: "absolute",
   top: 10,
@@ -691,31 +719,12 @@ responsePrompt: {
       opacity: 0.72,
     },
 
-    iconRow: {
-  gap: 0,
-  marginBottom: 14,
-  alignItems: "center",
-},
-
-iconButton: {
-  width: 76,
-  minHeight: 64,
-  alignItems: "center",
+iconRow: {
+  flexDirection: "row",
   justifyContent: "center",
-  backgroundColor: "transparent",
-  borderWidth: 0,
-  position: "relative",
-},
-
-iconActive: {
-  backgroundColor: "rgba(201,173,112,0.06)",
-  borderRadius: 12,
-},
-
-iconSymbol: {
-  color: "#C9AD70",
-  fontSize: 25,
-  fontWeight: "300",
+  alignItems: "center",
+  gap: 18,
+  marginBottom: 14,
 },
 
 hoverLabel: {

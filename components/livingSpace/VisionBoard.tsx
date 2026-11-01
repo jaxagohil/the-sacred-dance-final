@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
-    Image,
-    PanResponder,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Image,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { Colors, Fonts } from "../../constants/theme";
@@ -33,20 +33,16 @@ type LifeEntry = {
 };
 
 export default function VisionBoard() {
-  const [entries, setEntries] = useState<LifeEntry[]>([
-    {
-      id: "life-1",
-      text: "A simple, conscious life with love, peace, joy and enough space to create.",
-      itemType: "text",
-      x: 10,
-      y: 10,
-      width: 180,
-      height: 120,
-      rotation: -1,
-    },
-  ]);
+  const [entries, setEntries] = useState<LifeEntry[]>([]);
   const [entryIds, setEntryIds] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
+
+  const [boardSize, setBoardSize] = useState({
+  width: 0,
+  height: 0,
+});
+
+const [scrollOffset, setScrollOffset] = useState(0);
 
   useEffect(() => {
     const loadLifePictures = async () => {
@@ -163,20 +159,78 @@ export default function VisionBoard() {
     }
   };
 
-  const addText = () => {
-    const index = entries.length;
-    const entry: LifeEntry = {
-      id: `life-${Date.now()}`,
-      text: "",
-      itemType: "text",
-      x: (index % 2) * 135 + 10,
-      y: Math.floor(index / 2) * 150 + 10,
-      width: 180,
-      height: 120,
-      rotation: index % 2 === 0 ? -1 : 1,
-    };
-    setEntries((current) => [...current, entry]);
+const deleteEntry = async (entry: LifeEntry) => {
+  try {
+    const savedId = entryIds[entry.id];
+
+    console.log("DELETE DEBUG:", {
+  entryId: entry.id,
+  savedId,
+  entryIds,
+});
+
+    // Delete from Supabase first, if this entry has been saved
+    if (savedId) {
+      const userId = await getUserId();
+
+      if (!userId) {
+        console.error("❌ DELETE FAILED: USER NOT FOUND");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("sovereign_life_pictures")
+        .delete()
+        .eq("id", savedId)
+        .eq("user_id", userId)
+        .select("id");
+
+      if (error) {
+        console.error("❌ LIFE ENTRY DELETE ERROR:", error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.error("❌ DELETE FAILED: NO DATABASE ROW WAS DELETED");
+        return;
+      }
+    }
+
+    // Remove from the board only after successful database deletion
+    setEntries((current) =>
+      current.filter((item) => item.id !== entry.id)
+    );
+
+    setEntryIds((current) => {
+      const next = { ...current };
+      delete next[entry.id];
+      if (savedId) delete next[savedId];
+      return next;
+    });
+
+  } catch (error) {
+    console.error("❌ LIFE ENTRY DELETE ERROR:", error);
+  }
+}; 
+
+const addText = async () => {
+  const index = entries.length;
+
+  const entry: LifeEntry = {
+    id: `life-${Date.now()}`,
+    text: "What Matters..",
+    itemType: "text",
+    x: (index % 2) * 135 + 10,
+    y: Math.floor(index / 2) * 150 + 10,
+    width: 180,
+    height: 120,
+    rotation: 0,
   };
+
+  setEntries((current) => [...current, entry]);
+
+  await saveEntry(entry);
+};
 
   const addImage = async () => {
     try {
@@ -221,66 +275,86 @@ export default function VisionBoard() {
     return (
     <View style={styles.container}>
       {/* SQUARE VIEWPORT */}
-      <View style={styles.boardViewport}>
+<View
+  style={styles.boardViewport}
+  onLayout={(event) => {
+    const { width, height } = event.nativeEvent.layout;
+    setBoardSize({ width, height });
+  }}
+>
 
         {/* SCROLLABLE CONTENT */}
-        <ScrollView
-          style={styles.boardScroll}
-          contentContainerStyle={styles.boardContent}
-          showsVerticalScrollIndicator={true}
-          nestedScrollEnabled
-          directionalLockEnabled
-        >
+<ScrollView
+  style={styles.boardScroll}
+  onScroll={(event) =>
+    setScrollOffset(event.nativeEvent.contentOffset.y)
+  }
+  scrollEventThrottle={16}
+  contentContainerStyle={styles.boardContent}
+  showsVerticalScrollIndicator={true}
+  nestedScrollEnabled
+  directionalLockEnabled
+>
           <View style={styles.board}>
             {entries.map((entry) => {
               const panResponder = PanResponder.create({
                 // Let vertical gestures scroll the board.
                 // Horizontal gestures can still move entries.
-                onStartShouldSetPanResponder: () => false,
-                onMoveShouldSetPanResponder: (_, gesture) =>
-                  Math.abs(gesture.dx) > Math.abs(gesture.dy) &&
-                  Math.abs(gesture.dx) > 5,
+onStartShouldSetPanResponder: () => false,
 
-                onPanResponderMove: (_, gesture) => {
-                  setEntries((current) =>
-                    current.map((item) =>
-                      item.id === entry.id
-                        ? {
-                            ...item,
-                            x: entry.x + gesture.dx,
-                          }
-                        : item
-                    )
-                  );
-                },
+onMoveShouldSetPanResponder: (_, gesture) =>
+  Math.abs(gesture.dx) > 5 ||
+  Math.abs(gesture.dy) > 5,
 
-                onPanResponderRelease: (_, gesture) => {
-                  void saveEntry({
-                    ...entry,
-                    x: entry.x + gesture.dx,
-                  });
-                },
+onPanResponderMove: (_, gesture) => {
+  setEntries((current) =>
+    current.map((item) =>
+      item.id === entry.id
+        ? {
+            ...item,
+            x: entry.x + gesture.dx,
+            y: entry.y + gesture.dy,
+          }
+        : item
+    )
+  );
+},
+
+onPanResponderRelease: (_, gesture) => {
+  const finalX = entry.x + gesture.dx;
+  const finalY = entry.y + gesture.dy;
+
+  void saveEntry({
+    ...entry,
+    x: finalX,
+    y: finalY,
+  });
+},
               });
 
-              return (
-                <View
-                  key={entry.id}
-                  {...panResponder.panHandlers}
-                  style={[
-                    entry.itemType === "quote"
-                      ? styles.quoteEntry
-                      : styles.entry,
-                    {
-                      left: entry.x,
-                      top: entry.y,
-                      width: entry.width,
-                      height: entry.height,
-                      transform: [
-                        { rotate: `${entry.rotation}deg` },
-                      ],
-                    },
-                  ]}
-                >
+return (
+  <View
+   {...panResponder.panHandlers}
+
+    key={entry.id}
+    style={[
+
+      entry.itemType === "quote"
+        ? styles.quoteEntry
+        : styles.entry,
+      {
+        left: entry.x,
+        top: entry.y,
+        width: entry.width,
+        height: entry.height,
+        transform: [
+          { rotate: `${entry.rotation}deg` },
+        ],
+      },
+    ]}
+  >
+
+
                   {entry.itemType === "image" && entry.uri ? (
                     <Image
                       source={{ uri: entry.uri }}
@@ -350,7 +424,20 @@ export default function VisionBoard() {
                       placeholderTextColor="#77746F"
                       style={styles.entryText}
                     />
-                  )}
+                     )}
+
+                <Pressable
+onPress={() => {
+  console.log("DELETE BUTTON CLICKED", entry.id);
+  void deleteEntry(entry);
+}}
+                  style={styles.entryDelete}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete artefact"
+                >
+                  <Text style={styles.entryDeleteText}>×</Text>
+                </Pressable>
+
                 </View>
               );
             })}
@@ -363,8 +450,17 @@ export default function VisionBoard() {
     onPress={() => void addImage()}
     style={styles.toolButton}
   >
-    <Text style={styles.toolIcon}>▧</Text>
+<Text style={styles.toolIcon}>📷</Text>
   </Pressable>
+
+  <Pressable
+  onPress={addText}
+  style={styles.toolButton}
+  accessibilityRole="button"
+  accessibilityLabel="Add text"
+>
+<Text style={styles.toolIcon}>▤</Text>
+</Pressable>
 
   <Pressable
     style={styles.toolButton}
@@ -395,17 +491,11 @@ export default function VisionBoard() {
   </Pressable>
 </View>
 
+
         {/* FIXED FOOTER */}
         <Text style={styles.boardTitle}>
           WHAT MATTERS TO ME
         </Text>
-
-<Pressable
-  onPress={addText}
-  style={styles.addButton}
->
-  <Text style={styles.addButtonText}>+</Text>
-</Pressable>
 
       </View>
     </View>
@@ -417,10 +507,11 @@ const styles = StyleSheet.create({
 
   boardViewport: {
   width: "100%",
-  maxWidth: 360,
+  maxWidth: 340,
+    maxHeight: 335,
   aspectRatio: 1,
   alignSelf: "flex-end",
-  marginRight: 15,
+  marginRight: 25,
   position: "relative",
   overflow: "hidden",
   backgroundColor: "rgba(255,255,255,0.018)",
@@ -440,6 +531,7 @@ const styles = StyleSheet.create({
 
 boardScroll: {
   ...StyleSheet.absoluteFillObject,
+  zIndex: 0,
 },
 
 boardContent: {
@@ -453,7 +545,7 @@ board: {
 },
 boardTitle: {
   position: "absolute",
-  bottom: 12,
+  bottom: 315,
   left: 12,
   color: "#77747F",
   fontSize: 9,
@@ -468,6 +560,24 @@ boardTitle: {
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.07)",
   },
+
+  entryDelete: {
+  position: "absolute",
+  top: 3,
+  right: 5,
+  zIndex: 20,
+  width: 24,
+  height: 24,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+entryDeleteText: {
+  color: "#88838E",
+  fontSize: 19,
+  lineHeight: 22,
+},
+
   entryImage: { width: "100%", height: "100%", borderRadius: 6 },
   entryText: {
     flex: 1,
@@ -478,6 +588,25 @@ boardTitle: {
     padding: 0,
     textAlignVertical: "top",
   },
+
+  dragHandle: {
+  position: "absolute",
+  top: 3,
+  right: 4,
+  zIndex: 5,
+  width: 24,
+  height: 22,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 6,
+  backgroundColor: "rgba(255,255,255,0.07)",
+},
+
+dragHandleIcon: {
+  color: "#B9AE9A",
+  fontSize: 17,
+},
+
   quoteCard: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
   quoteMark: { color: Colors.mutedText, fontFamily: Fonts.light, fontSize: 28, lineHeight: 28 },
   quoteEntry: { position: "absolute", padding: 0, backgroundColor: "transparent", borderWidth: 0 },
@@ -496,7 +625,7 @@ boardTitle: {
 controls: {
   position: "absolute",
   right: 10,
-  bottom: 44,
+  bottom: 12,
   alignItems: "center",
   gap: 8,
   zIndex: 10,
@@ -525,6 +654,8 @@ addButton: {
   height: 28,
   alignItems: "center",
   justifyContent: "center",
+  zIndex: 30,
+  elevation: 30,
 },
 
 addButtonText: {

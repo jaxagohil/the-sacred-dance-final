@@ -1,119 +1,205 @@
-
+import { Audio } from "expo-av";
 import React, { useState } from "react";
 import {
-    Alert,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
-import { Colors, Fonts } from "../../constants/theme";
+import { EMOTION_EMOJIS } from "../../constants/emotionEmojis";
+import { Fonts } from "../../constants/theme";
 
-type ReflectionNote = {
-  id: string;
-  text: string;
-};
-
-const EMOJIS = ["✨", "❤️", "🌿", "🌙", "☀️", "🦋"];
+import { processJournalReflection } from "../../db/processJournalReflection";
+import { buildReflectionPacket } from "../../lib/buildReflectionsPacket";
+import { getLanguage } from "../../lib/i18n/t";
+import { pickImageForVision } from "../../lib/pickImageForVision";
+import { getUserId } from "../../lib/user";
 
 export default function ReflectionPad() {
-  const [notes, setNotes] = useState<ReflectionNote[]>([
-    { id: "1", text: "" },
-    { id: "2", text: "" },
-    { id: "3", text: "" },
-  ]);
+  const [text, setText] = useState("");
+  const [isActive, setIsActive] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [emojiIndex, setEmojiIndex] = useState(0);
-
-  const activeNote = notes[activeIndex];
-
-  function updateNote(text: string) {
-    setNotes((current) =>
-      current.map((note, index) =>
-        index === activeIndex ? { ...note, text } : note
-      )
+  function toggleEmotion(id: string) {
+    setSelectedEmotions((current) =>
+      current.includes(id)
+        ? current.filter((emotion) => emotion !== id)
+        : [...current, id]
     );
+
+    setShowEmojis(false);
   }
 
-  function addNote() {
-    const newNote = {
-      id: Date.now().toString(),
-      text: "",
-    };
-
-    setNotes((current) => [...current, newNote]);
-    setActiveIndex(notes.length);
+  async function handleImage() {
+    try {
+      const image = await pickImageForVision();
+      if (image) {
+        setImageBase64(image);
+      }
+    } catch (error) {
+      console.error("❌ REFLECTION IMAGE ERROR", error);
+      Alert.alert("Image", "Unable to add this image.");
+    }
   }
 
-  function addEmoji() {
-    const emoji = EMOJIS[emojiIndex % EMOJIS.length];
-    updateNote((activeNote?.text || "") + emoji);
-    setEmojiIndex((current) => current + 1);
+  async function handleVoice() {
+    try {
+      // Start recording
+      if (!recording) {
+        const permission = await Audio.requestPermissionsAsync();
+
+        if (!permission.granted) {
+          Alert.alert(
+            "Microphone access",
+            "Please allow microphone access to record a reflection."
+          );
+          return;
+        }
+
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+
+        const result = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+
+        setRecording(result.recording);
+        return;
+      }
+
+      // Stop recording and keep its temporary URI for processing
+      await recording.stopAndUnloadAsync();
+
+      const uri = recording.getURI();
+
+      setAudioUri(uri || null);
+      setRecording(null);
+    } catch (error) {
+      console.error("❌ REFLECTION AUDIO ERROR", error);
+      setRecording(null);
+      Alert.alert("Voice reflection", "Unable to record this reflection.");
+    }
   }
 
-  function previousNote() {
-    setActiveIndex((current) => Math.max(0, current - 1));
-  }
+  async function handleSaveReflection() {
+    if (saving) return;
 
-  function nextNote() {
-    setActiveIndex((current) =>
-      Math.min(notes.length - 1, current + 1)
-    );
+    if (recording) {
+      Alert.alert(
+        "Voice reflection",
+        "Please stop the recording before saving your reflection."
+      );
+      return;
+    }
+
+    if (
+      !text.trim() &&
+      selectedEmotions.length === 0 &&
+      !imageBase64 &&
+      !audioUri
+    ) {
+      Alert.alert(
+        "A moment with yourself",
+        "Write, select an emotion, add an image or record your voice first."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const userId = await getUserId();
+
+      const packet = await buildReflectionPacket({
+        text,
+        emotions: selectedEmotions,
+        imageBase64,
+        audioUri,
+      });
+
+      await processJournalReflection({
+        userId,
+        language: getLanguage(),
+        text: packet.text,
+        emotions: packet.emotions,
+        imageBase64,
+        audioUri,
+        observableScenes: packet.observableScenes,
+        bodyResponses: packet.bodyResponses,
+        copingStrategies: packet.copingStrategies,
+        manifestations: packet.manifestations,
+        nervousSystem: packet.nervousSystem,
+      });
+
+      // Clear the reflection and temporary media references,
+      // ready for the next reflection.
+      setText("");
+      setSelectedEmotions([]);
+      setImageBase64(null);
+      setAudioUri(null);
+      setShowEmojis(false);
+      setIsActive(false);
+    } catch (error) {
+      console.error("❌ REFLECTION PAD ERROR", error);
+
+      Alert.alert(
+        "Reflection",
+        "Something went wrong while processing your reflection."
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.pad}>
-
+      <View style={[styles.pad, isActive && styles.padActive]}>
         {/* LAYERED PAPER */}
         <View style={styles.paperStack}>
           <View style={styles.backPaperThree} />
           <View style={styles.backPaperTwo} />
           <View style={styles.backPaperOne} />
 
-          {/* ACTIVE IVORY PAGE */}
-          <View style={styles.activePaper}>
-
+          {/* SINGLE IVORY PAGE */}
+          <View
+            style={[
+              styles.activePaper,
+              !isActive && styles.paperMuted,
+              isActive && styles.paperActive,
+            ]}
+          >
             <View style={styles.pageHeader}>
               <Text style={styles.pageEyebrow}>A MOMENT WITH MYSELF</Text>
 
-              <View style={styles.pageNavigation}>
-                <Pressable
-                  onPress={previousNote}
-                  disabled={activeIndex === 0}
-                  style={styles.pageArrow}
-                >
-                  <Text style={[
-                    styles.arrowText,
-                    activeIndex === 0 && styles.faded,
-                  ]}>‹</Text>
-                </Pressable>
-
-                <Text style={styles.pageNumber}>
-                  {String(activeIndex + 1).padStart(2, "0")}
+              <Pressable
+                onPress={handleSaveReflection}
+                disabled={saving}
+                style={styles.saveButton}
+                accessibilityRole="button"
+                accessibilityLabel="Save reflection"
+              >
+                <Text style={styles.saveButtonText}>
+                  {saving ? "…" : "✓"}
                 </Text>
-
-                <Pressable
-                  onPress={nextNote}
-                  disabled={activeIndex === notes.length - 1}
-                  style={styles.pageArrow}
-                >
-                  <Text style={[
-                    styles.arrowText,
-                    activeIndex === notes.length - 1 && styles.faded,
-                  ]}>›</Text>
-                </Pressable>
-              </View>
+              </Pressable>
             </View>
 
             <View style={styles.writingArea}>
               <TextInput
-                key={activeNote?.id}
-                value={activeNote?.text || ""}
-                onChangeText={updateNote}
+                value={text}
+                onChangeText={setText}
+                onFocus={() => setIsActive(true)}
+                onBlur={() => setIsActive(false)}
                 placeholder="What do you.. FEEL.THINK.SAY.DO?"
                 placeholderTextColor="#A69B89"
                 multiline
@@ -122,7 +208,9 @@ export default function ReflectionPad() {
               />
             </View>
 
-            <Text style={styles.paperFooter}>A THOUGHT · A FEELING · A MOMENT</Text>
+            <Text style={styles.paperFooter}>
+              REFLECTIONS
+            </Text>
           </View>
         </View>
 
@@ -130,40 +218,64 @@ export default function ReflectionPad() {
         <View style={styles.controls}>
           <Pressable
             style={styles.toolButton}
-            onPress={() =>
-              Alert.alert("Add an image", "We'll connect image selection next.")
-            }
+            onPress={handleImage}
+            disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel="Add image"
           >
-            <Text style={styles.toolIcon}>▧</Text>
+            <Text style={styles.toolIcon}>
+              {imageBase64 ? "📷" : "📷"}
+            </Text>
           </Pressable>
 
           <Pressable
             style={styles.toolButton}
-            onPress={() =>
-              Alert.alert("Voice reflection", "We'll connect voice recording next.")
-            }
+            onPress={handleVoice}
+            disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel={recording ? "Stop recording" : "Record voice reflection"}
           >
-            <Text style={styles.toolIcon}>♩</Text>
+            <Text style={[styles.toolIcon, recording && styles.recordingIcon]}>
+              {recording ? "⏺" : audioUri ? "🎧" : "🎤"}
+            </Text>
           </Pressable>
 
           <Pressable
             style={styles.toolButton}
-            onPress={addEmoji}
+            onPress={() => setShowEmojis((current) => !current)}
+            accessibilityRole="button"
+            accessibilityLabel="Choose an emotion"
           >
-            <Text style={styles.toolIcon}>☺</Text>
+            <Text style={styles.toolIcon}>
+              {selectedEmotions.length > 0 ? "✨" : "😊"}
+            </Text>
           </Pressable>
         </View>
 
-        {/* ADD PAGE */}
-        <Pressable
-          style={styles.addButton}
-          onPress={addNote}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </Pressable>
+        {/* EMOTION PICKER */}
+        {showEmojis && (
+          <View style={styles.emojiPicker}>
+            {EMOTION_EMOJIS.map((emotion) => {
+              const isSelected = selectedEmotions.includes(emotion.id);
 
-        {/* FOOTER */}
-        <Text style={styles.label}>REFLECTIONS</Text>
+              return (
+                <Pressable
+                  key={emotion.id}
+                  onPress={() => toggleEmotion(emotion.id)}
+                  style={[
+                    styles.emojiOption,
+                    isSelected && styles.emojiOptionSelected,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${emotion.id}`}
+                >
+                  <Text style={styles.emojiText}>{emotion.icon}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
       </View>
     </View>
   );
@@ -172,18 +284,23 @@ export default function ReflectionPad() {
 const styles = StyleSheet.create({
   container: {
     width: 300,
-    height: 360,
+    height: 340,
   },
 
   pad: {
     width: "100%",
-    height: 360,
+    height: 340,
     position: "relative",
     overflow: "hidden",
-  backgroundColor: "rgba(255,255,255,0.018)",
+    backgroundColor: "rgba(255,255,255,0.018)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(201,173,112,0.12)",
+  },
+
+  padActive: {
+    borderColor: "rgba(201,173,112,0.32)",
+    backgroundColor: "rgba(255,255,255,0.035)",
   },
 
   paperStack: {
@@ -191,7 +308,7 @@ const styles = StyleSheet.create({
     left: 35,
     top: 20,
     width: 205,
-    height: 290,
+    height: 305,
   },
 
   backPaperThree: {
@@ -226,10 +343,26 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
+  paperMuted: {
+    backgroundColor: "#DCD5CB",
+    borderColor: "#D4CBBE",
+    shadowOpacity: 0.08,
+    elevation: 1,
+  },
+
+  paperActive: {
+    backgroundColor: "#F4EFE8",
+    borderColor: "rgba(201,173,112,0.65)",
+    shadowColor: "#C9AD70",
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+
   activePaper: {
     flex: 1,
     padding: 15,
-    backgroundColor: "#f4efe8",
+    backgroundColor: "#F4EFE8",
     borderRadius: 3,
     borderWidth: 1,
     borderColor: "#E4D8C5",
@@ -255,31 +388,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1.3,
   },
 
-  pageNavigation: {
-    flexDirection: "row",
+  saveButton: {
+    width: 24,
+    height: 24,
     alignItems: "center",
-    gap: 5,
+    justifyContent: "center",
   },
 
-  pageArrow: {
-    width: 16,
-    alignItems: "center",
-  },
-
-  arrowText: {
-    color: "#88765C",
-    fontSize: 19,
-    lineHeight: 20,
-  },
-
-  pageNumber: {
-    color: "#88765C",
-    fontSize: 8,
+  saveButtonText: {
+    color: "#A88B50",
+    fontSize: 17,
     fontFamily: Fonts.light,
-  },
-
-  faded: {
-    opacity: 0.2,
+    opacity: 0.9,
   },
 
   writingArea: {
@@ -325,21 +445,40 @@ const styles = StyleSheet.create({
     fontSize: 19,
   },
 
-  addButton: {
-    position: "absolute",
-    right: 12,
-    bottom: 7,
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
+  recordingIcon: {
+    color: "#D87979",
   },
 
-  addButtonText: {
-    color: Colors.mutedText,
-    fontFamily: Fonts.light,
-    fontSize: 22,
-    lineHeight: 22,
+  emojiPicker: {
+    position: "absolute",
+    right: 38,
+    top: 190,
+    width: 150,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    backgroundColor: "#17151D",
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.35)",
+    borderRadius: 12,
+    padding: 8,
+    zIndex: 20,
+  },
+
+  emojiOption: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
+  },
+
+  emojiOptionSelected: {
+    backgroundColor: "rgba(201,173,112,0.2)",
+  },
+
+  emojiText: {
+    fontSize: 23,
   },
 
   label: {

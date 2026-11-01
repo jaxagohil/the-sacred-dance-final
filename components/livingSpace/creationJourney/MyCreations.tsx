@@ -60,9 +60,6 @@ const confirmDelete = () => {
       <View style={styles.heading}>
         <Text style={styles.eyebrow}>MY CREATIONS</Text>
 
-        <Pressable onPress={onCreate} hitSlop={10}>
-          <Feather name="plus" size={17} color={GOLD} />
-        </Pressable>
       </View>
 
       <ScrollView
@@ -116,7 +113,6 @@ onPress={() => setDeleteTarget(item)}
             </View>
           );
         })}
-
         <Pressable onPress={onCreate} style={styles.addNote}>
           <Feather name="plus" size={17} color={GOLD} />
         </Pressable>
@@ -174,30 +170,30 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  notesWindow: {
-    width: 550,
-    height: 82,
-    flexGrow: 0,
-    flexShrink: 0,
-  },
+notesWindow: {
+  width: 550,
+  height: 72,
+  flexGrow: 0,
+  flexShrink: 0,
+},
 
   notes: {
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     paddingVertical: 2,
     paddingRight: 8,
   },
 
-  note: {
-    width: 75,
-    height: 65,
-    padding: 9,
-    paddingTop: 5,
-    borderRadius: 3,
-    justifyContent: "center",
-    transform: [{ rotate: "-1deg" }],
-    elevation: 2,
-  },
+note: {
+  width: 66,
+  height: 56,
+  padding: 7,
+  paddingTop: 5,
+  borderRadius: 3,
+  justifyContent: "center",
+  transform: [{ rotate: "-1deg" }],
+  elevation: 2,
+},
 
   noteSelected: {
     borderWidth: 2,
@@ -286,9 +282,9 @@ deleteText: {
   },
 
   addNote: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+width: 32,
+height: 32,
+borderRadius: 16,
     borderWidth: 1,
     borderColor: "rgba(201,173,112,0.4)",
     alignItems: "center",

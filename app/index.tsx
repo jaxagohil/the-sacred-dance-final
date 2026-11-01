@@ -28,6 +28,8 @@ import { processLandingReflection } from "../db/processLandingReflection";
 import { getDailyPrompt } from "../db/prompts";
 import { getUserId, initUser } from "../lib/user";
 
+import { EMOTION_EMOJIS } from "../constants/emotionEmojis";
+
 import {
   Audio,
 } from "expo-av";
@@ -264,18 +266,6 @@ setLoading(false);
 
     init();
   }, []);
-
-  // EMOJIS
-  const emoji_emotions = [
-    { id: "calm", icon: "😌" },
-    { id: "open", icon: "✨" },
-    { id: "grateful", icon: "💛" },
-    { id: "loving", icon: "❤️" },
-    { id: "happy", icon: "😊" },
-    { id: "hopeful", icon: "🌿" },
-    { id: "tired", icon: "😴" },
-    { id: "sad", icon: "😔" },
-  ];
 
   const toggleEmotion = (id: string) => {
     setSelected((prev) =>
@@ -640,8 +630,8 @@ setAudioUri(null);
                 zIndex: 10,
             }}
           >
-            {emoji_emotions.map((e) => (
-              <TouchableOpacity
+{EMOTION_EMOJIS.map((e) => (
+                <TouchableOpacity
                 key={e.id}
                 onPress={() => toggleEmotion(e.id)}
               >

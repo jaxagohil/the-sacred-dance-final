@@ -195,7 +195,12 @@ export default function CreationJourney() {
 
       {/* JOURNEY + ARTEFACTS */}
       <View style={[styles.contentRow, !wide && styles.contentNarrow]}>
-        <View style={styles.middlePanel}>
+<View
+  style={[
+    styles.middlePanel,
+    !wide && styles.middlePanelNarrow,
+  ]}
+>
           <View style={styles.journeyContent}>
             <JourneyStages
               activeStage={activeStage}
@@ -207,11 +212,15 @@ export default function CreationJourney() {
               contentContainerStyle={styles.stageScrollContent}
               showsVerticalScrollIndicator
             >
-              <View style={styles.selected}>
-                <Text style={styles.selectedTitle}>
-                  {selected.label}
-                </Text>
-              </View>
+<View style={styles.selected}>
+  <Text style={styles.selectedTitle}>
+    {selected.label}
+  </Text>
+
+  <Text style={styles.selectedPrompt} numberOfLines={1}>
+    {selected.prompt}
+  </Text>
+</View>
 
               {!loading && selectedId && activeStage === "dream" && (
                 <StageDream intentionId={selectedId} />
@@ -265,27 +274,39 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  contentNarrow: {
-    flexDirection: "column",
-  },
+contentNarrow: {
+  flexDirection: "column",
+  gap: 12,
+},
 
-  middlePanel: {
-    flex: 1.65,
-    minWidth: 0,
-    minHeight: 220,
-    padding: 13,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: "rgba(201,173,112,0.35)",
-    backgroundColor: "rgba(16,16,24,0.35)",
-  },
+middlePanelNarrow: {
+  flex: 0,
+},
+
+middlePanel: {
+flex: 2.72,
+  minWidth: 0,
+  minHeight: 145,
+  padding: 10,
+  borderRadius: 11,
+  borderWidth: 1,
+  borderColor: "rgba(201,173,112,0.35)",
+  backgroundColor: "rgba(16,16,24,0.35)",
+},
 
   journeyContent: {
     flex: 1,
     flexDirection: "row",
     alignItems: "stretch",
-    minHeight: 190,
+    minHeight: 120,
   },
+
+  selectedPrompt: {
+  color: MUTED,
+  fontSize: 10,
+  lineHeight: 14,
+  marginTop: 2,
+},
 
   stageScroll: {
     flex: 1,
@@ -316,16 +337,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  sidePanel: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 220,
-    padding: 15,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: "rgba(18,16,23,0.55)",
-  },
+sidePanel: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 145,
+  padding: 12,
+  borderRadius: 11,
+  borderWidth: 1,
+  borderColor: BORDER,
+  backgroundColor: "rgba(18,16,23,0.55)",
+},
 
   sidePanelNarrow: {
     width: "100%",
@@ -352,7 +373,7 @@ const styles = StyleSheet.create({
 
   artifactCanvas: {
     flex: 1,
-    minHeight: 150,
+    minHeight: 90,
     justifyContent: "center",
     alignItems: "center",
     gap: 10,

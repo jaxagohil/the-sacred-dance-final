@@ -1045,12 +1045,16 @@ panelContent: {
 
 cardStage: {
   width: "100%",
+  height: 140,
+  minHeight: 140,
+  flexShrink: 0,
   position: "relative",
 },
 
 cardsRow: {
   width: "100%",
-  height: 96,
+  height: 140,
+  flexShrink: 0,
   flexDirection: "row",
   gap: 8,
 },
@@ -1058,7 +1062,7 @@ cardsRow: {
 miniCard: {
   flex: 1,
   minWidth: 0,
-  height: 96,
+height: "100%",
   borderWidth: 1,
   borderColor: "#C9AD70",
   borderRadius: 12,
@@ -1081,7 +1085,7 @@ cardSymbol: {
 
 revealedCard: {
   flex: 1,
-  height: 96,
+height: "100%",
   minWidth: 0,
   borderWidth: 1,
   borderRadius: 12,

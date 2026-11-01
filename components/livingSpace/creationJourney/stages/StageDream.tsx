@@ -1,10 +1,7 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  StyleSheet
 } from "react-native";
 
 import { supabase } from "../../../../services/supabase";
@@ -100,22 +97,7 @@ export default function StageDream({ intentionId }: Props) {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.prompt}>What is the Dream?</Text>
-
-      <TextInput
-        value={value}
-        onChangeText={setValue}
-        onBlur={saveDream}
-        multiline
-        textAlignVertical="top"
-        placeholder="What do you see, feel or imagine? This is your space. Dream away."
-        placeholderTextColor="#77746F"
-        style={styles.input}
-      />
-    </View>
-  );
+  return
 }
 
 const styles = StyleSheet.create({

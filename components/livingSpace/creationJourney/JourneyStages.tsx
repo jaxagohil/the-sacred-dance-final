@@ -2,9 +2,9 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
-    Pressable,
-    StyleSheet,
-    View,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 const GOLD = "#C9AD70";
@@ -95,24 +95,24 @@ export default function JourneyStages({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    paddingVertical: 0,
-  },
+container: {
+  width: 34,
+  alignItems: "center",
+  justifyContent: "flex-start",
+  gap: 2,
+  paddingTop: 4,
+},
 
-  stage: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "transparent",
-    backgroundColor: "transparent",
-  },
+stage: {
+  width: 20,
+  height: 20,
+  borderRadius: 10,
+  alignItems: "center",
+  justifyContent: "center",
+  borderWidth: 1,
+  borderColor: "transparent",
+  backgroundColor: "transparent",
+},
 
   activeStage: {
     borderColor: GOLD,

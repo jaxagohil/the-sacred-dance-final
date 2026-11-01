@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   Pressable,
@@ -24,6 +24,7 @@ import CosmicTiles from "../../components/mirror/CosmicTiles";
 import Lenses from "../../components/mirror/Lenses";
 import ReadingContainer from "../../components/mirror/ReadingContainer";
 import { initialiseAlignmentOSContext } from "../../lib/context/initialiseAlignmentOSContext";
+import { buildOrchestrationWhispers } from "../../lib/livingSpace/buildOrchestrationWhispers";
 import { useMirrorStore } from "../../stores/mirrorStore";
 
 const GOLD = "#C9AD70";
@@ -61,6 +62,21 @@ export default function LivingSpace() {
   const { width } = useWindowDimensions();
   const wide = width >= 1050;
 
+  const cardAreaRef = useRef<View>(null);
+
+const [portalFrame, setPortalFrame] = useState<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} | null>(null);
+
+const measureCardArea = () => {
+  cardAreaRef.current?.measureInWindow((x, y, width, height) => {
+    setPortalFrame({ x, y, width, height });
+  });
+};
+
   const [showDivineReading, setShowDivineReading] =
   useState(false);
 
@@ -76,15 +92,38 @@ const {
   languageContext,
   userContext,
   mirrorContext,
+  setPreloadedWhispers,
 } = useMirrorStore();
 
 useEffect(() => {
-  initialiseAlignmentOSContext();
+  async function initialise() {
+    await initialiseAlignmentOSContext();
+
+    const state = useMirrorStore.getState();
+
+    const whispers = buildOrchestrationWhispers({
+      activePatterns:
+        state.userContext?.enrichedPatterns || [],
+
+      activeChakras:
+        state.userContext?.energy?.activeChakras || [],
+
+      manifestations:
+        state.userContext?.manifestations || [],
+
+      cosmicContext:
+        state.cosmic,
+    });
+
+    state.setPreloadedWhispers(whispers);
+  }
+
+  initialise();
 }, []);
 
 
-console.log("LIVING SPACE COSMIC:", cosmic);
-console.log("LIVING SPACE DAILY FIELD:", dailyField);
+//console.log("LIVING SPACE COSMIC:", cosmic);
+//console.log("LIVING SPACE DAILY FIELD:", dailyField);
 
 useEffect(() => {
   async function loadAvatar() {
@@ -111,7 +150,10 @@ useEffect(() => {
 
   return (
     <View style={styles.screen}>
-<LivingSpaceHeader onFieldChange={setOrchestrationField} />
+<LivingSpaceHeader
+  onFieldChange={setOrchestrationField}
+  portalFrame={portalFrame}
+/>
 
 <Pressable
   accessibilityRole="button"
@@ -213,6 +255,8 @@ onPress={() => router.push("/connections")}
 </View>
 
 <Pressable
+  ref={cardAreaRef}
+  onLayout={measureCardArea}
   accessibilityRole="button"
   accessibilityLabel="Reveal Divine Reading"
   onPress={() => setShowDivineReading(true)}
@@ -360,7 +404,7 @@ readingSection: {
 },
 
 signals: {
-  width: 96,
+  width: 140,
   flexShrink: 0,
   alignItems: "center",
   justifyContent: "center",
@@ -449,7 +493,7 @@ cardRow: {
 },
 miniCard: {
   flex: 1,
-  height: 100,
+  height: 140,
   borderWidth: 1,
   borderColor: GOLD,
   borderRadius: 12,
