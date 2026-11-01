@@ -27,7 +27,7 @@ export const STAGES: Stage[] = [
     id: "discover",
     label: "Discover",
     icon: "compass",
-    prompt: "What do you truly desire?",
+    prompt: "What is your conscious desire?",
   },
   {
     id: "build",

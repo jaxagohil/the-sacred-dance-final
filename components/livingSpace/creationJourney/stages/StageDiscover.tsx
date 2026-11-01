@@ -11,6 +11,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 
+import { Feather } from "@expo/vector-icons";
+
 import {
   discoverConsciousDesire,
   getCreationContext,
@@ -266,21 +268,27 @@ console.log(
         {/* LEFT: CONSCIOUS DESIRE */}
 
         <View style={styles.desireColumn}>
-          <View style={styles.questionRow}>
+<View style={styles.questionRow}>
+  <View>
+    <Text style={styles.stageHeading}>Discover</Text>
+    <Text style={styles.stagePrompt}>
+      What do you truly desire?
+    </Text>
+  </View>
 
-            <Pressable
-              onPress={() => void refreshConsciousDesire()}
-              disabled={isRefreshing}
-              style={styles.refreshButton}
-              accessibilityLabel="Refresh conscious desire"
-            >
-              {isRefreshing ? (
-                <ActivityIndicator size="small" color={GOLD} />
-              ) : (
-                <Text style={styles.refreshText}>↻ Refresh</Text>
-              )}
-            </Pressable>
-          </View>
+  <Pressable
+    onPress={() => void refreshConsciousDesire()}
+    disabled={isRefreshing}
+    style={styles.refreshButton}
+    accessibilityLabel="Refresh conscious desire"
+  >
+    {isRefreshing ? (
+      <ActivityIndicator size="small" color={GOLD} />
+    ) : (
+      <Feather name="refresh-cw" size={13} color={GOLD} />
+    )}
+  </Pressable>
+</View>
 
           <TextInput
             value={consciousDesire}
@@ -300,8 +308,8 @@ console.log(
         {/* RIGHT: PATTERNS AND REFLECTION */}
 
         <View style={styles.patternColumn}>
-          {creationPatterns.map((pattern) => {
-            const position = Math.max(
+{creationPatterns.slice(0, 3).map((pattern) => {
+              const position = Math.max(
               0,
               Math.min(1, pattern.position)
             );
@@ -372,11 +380,11 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
 
-  questionRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
+questionRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
 
   question: {
     flex: 1,
@@ -405,6 +413,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlignVertical: "top",
   },
+
+  stageHeading: {
+  color: "#E4C58B",
+  fontSize: 13,
+  fontWeight: "600",
+},
+
+stagePrompt: {
+  color: MUTED,
+  fontSize: 10,
+  marginTop: 2,
+},
 
   saveStatus: {
     color: MUTED,

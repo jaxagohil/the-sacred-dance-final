@@ -19,8 +19,12 @@ import JourneyStages, {
   STAGES,
 } from "./creationJourney/JourneyStages";
 
+import BuildStage from "./creationJourney/stages/StageBuild";
 import StageDiscover from "./creationJourney/stages/StageDiscover";
 import StageDream from "./creationJourney/stages/StageDream";
+import StageGrow from "./creationJourney/stages/StageGrow";
+import StageRenew from "./creationJourney/stages/StageRenew";
+import StageScale from "./creationJourney/stages/StageScale";
 
 const MUTED = "#AAA2B6";
 const BORDER = "rgba(201,173,112,0.22)";
@@ -212,15 +216,37 @@ export default function CreationJourney() {
               contentContainerStyle={styles.stageScrollContent}
               showsVerticalScrollIndicator
             >
-<View style={styles.selected}>
-  <Text style={styles.selectedTitle}>
-    {selected.label}
-  </Text>
+{activeStage !== "discover" && (
+  <View style={styles.selected}>
+    <Text style={styles.selectedTitle}>
+      {selected.label}
+    </Text>
 
-  <Text style={styles.selectedPrompt} numberOfLines={1}>
-    {selected.prompt}
-  </Text>
-</View>
+    <Text style={styles.selectedPrompt} numberOfLines={1}>
+      {selected.prompt}
+    </Text>
+  </View>
+)}
+
+{!loading && selectedId && activeStage === "build" && (
+  <BuildStage
+    intentionId={selectedId}
+    onOptionsChange={() => {}}
+    onCreationCreated={() => {}}
+  />
+)}
+
+{!loading && selectedId && activeStage === "grow" && (
+  <StageGrow intentionId={selectedId} />
+)}
+
+{!loading && selectedId && activeStage === "scale" && (
+  <StageScale intentionId={selectedId} />
+)}
+
+{!loading && selectedId && activeStage === "renew" && (
+  <StageRenew intentionId={selectedId} />
+)}
 
               {!loading && selectedId && activeStage === "dream" && (
                 <StageDream intentionId={selectedId} />
@@ -284,9 +310,11 @@ middlePanelNarrow: {
 },
 
 middlePanel: {
-flex: 2.72,
+  flex: 2.72,
+  height: 162,
+  minHeight: 162,
+  maxHeight: 162,
   minWidth: 0,
-  minHeight: 145,
   padding: 10,
   borderRadius: 11,
   borderWidth: 1,
@@ -339,8 +367,10 @@ flex: 2.72,
 
 sidePanel: {
   flex: 1,
+  height: 162,
+  minHeight: 162,
+  maxHeight: 162,
   minWidth: 0,
-  minHeight: 145,
   padding: 12,
   borderRadius: 11,
   borderWidth: 1,
