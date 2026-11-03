@@ -1,6 +1,5 @@
 
 import React, { useEffect, useRef, useState } from "react";
-
 import {
     Pressable,
     ScrollView,
@@ -11,85 +10,56 @@ import {
 } from "react-native";
 
 import { Colors, Fonts } from "../../../../constants/theme";
+import { mirrorBuild } from "../../../../lib/consciousCreating/agents/mirror/mirrorBuild";
 import { getUserId } from "../../../../lib/user";
 import { supabase } from "../../../../services/supabase";
-
-import { chooseNextMove } from "../../../../lib/consciousCreating/agents/mirror/chooseNextMove";
-import type { NextMove } from "../../../../lib/consciousCreating/agents/mirror/generateNextMoves";
-import { mirrorBuild } from "../../../../lib/consciousCreating/agents/mirror/mirrorBuild";
 
 type ConversationMessage = {
   role: "user" | "mirror";
   content: string;
 };
 
-type BuildStageProps = {
+type Props = {
   intentionId: string | null;
-  onOptionsChange: (options: NextMove[]) => void;
-  onCreationCreated: () => void;
 };
 
-export default function BuildStage({
-  intentionId,
-  onOptionsChange,
-  onCreationCreated,
-}: BuildStageProps) {
+export default function BuildStage({ intentionId }: Props) {
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [message, setMessage] = useState("");
-  const [nextMoves, setNextMoves] = useState<NextMove[]>([]);
-  const [selectedNextMove, setSelectedNextMove] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const [isChoosing, setIsChoosing] = useState(false);
 
-  const conversationScrollRef = useRef<ScrollView>(null);
-
-  // --------------------------------------------------
-  // LOAD EXISTING BUILD CONVERSATION
-  // --------------------------------------------------
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    const loadBuildStep = async () => {
+    let active = true;
+
+    const loadConversation = async () => {
       if (!intentionId) {
         setConversation([]);
-        setNextMoves([]);
-        onOptionsChange([]);
-        setSelectedNextMove(null);
         setMessage("");
         return;
       }
 
+      setConversation([]);
+      setMessage("");
+
       try {
         const { data, error } = await supabase
           .from("sovereign_intention_steps")
-          .select("response, ai_response")
+          .select("response")
           .eq("intention_id", intentionId)
           .eq("step", "build")
           .maybeSingle();
 
-        if (error) {
-          console.error("❌ SOVEREIGN BUILD LOAD ERROR:", error);
-          return;
-        }
-
-        if (!data) {
-          setConversation([]);
-          setNextMoves([]);
-          onOptionsChange([]);
-          setSelectedNextMove(null);
-          return;
-        }
+        if (!active) return;
+        if (error) throw error;
 
         const response =
-          typeof data.response === "object" && data.response !== null
+          typeof data?.response === "object" && data.response !== null
             ? (data.response as Record<string, unknown>)
             : {};
 
-        const aiResponse =
-          typeof data.ai_response === "object" && data.ai_response !== null
-            ? (data.ai_response as Record<string, unknown>)
-            : {};
-
-        const loadedConversation = Array.isArray(response.conversation)
+        const loaded = Array.isArray(response.conversation)
           ? response.conversation.filter(
               (item): item is ConversationMessage =>
                 typeof item === "object" &&
@@ -100,53 +70,33 @@ export default function BuildStage({
             )
           : [];
 
-        const loadedNextMoves = Array.isArray(aiResponse.nextMoves)
-          ? (aiResponse.nextMoves as NextMove[])
-          : [];
-
-        setConversation(loadedConversation);
-        setNextMoves(loadedNextMoves);
-        onOptionsChange(loadedNextMoves);
-        setSelectedNextMove(null);
+        setConversation(loaded);
       } catch (error) {
-        console.error("❌ SOVEREIGN BUILD LOAD ERROR:", error);
-
-        setConversation([]);
-        setNextMoves([]);
-        onOptionsChange([]);
-        setSelectedNextMove(null);
+        console.error("BUILD LOAD ERROR:", error);
       }
     };
 
-    void loadBuildStep();
-  }, [intentionId, onOptionsChange]);
+    void loadConversation();
 
-  // --------------------------------------------------
-  // SEND MESSAGE TO MIRROR
-  // --------------------------------------------------
+    return () => {
+      active = false;
+    };
+  }, [intentionId]);
 
   const sendMessage = async () => {
     const trimmed = message.trim();
 
-    if (!intentionId || !trimmed || isSending) {
-      return;
-    }
+    if (!intentionId || !trimmed || isSending) return;
 
     try {
       setIsSending(true);
 
       const userId = await getUserId();
+      if (!userId) return;
 
-      if (!userId) {
-        return;
-      }
-
-      const nextConversation = [
+      const nextConversation: ConversationMessage[] = [
         ...conversation,
-        {
-          role: "user" as const,
-          content: trimmed,
-        },
+        { role: "user", content: trimmed },
       ];
 
       setConversation(nextConversation);
@@ -158,384 +108,218 @@ export default function BuildStage({
         message: trimmed,
       });
 
-      const mirrorConversation = [
+      setConversation([
         ...nextConversation,
-        {
-          role: "mirror" as const,
-          content: result.message,
-        },
-      ];
-
-      setConversation(mirrorConversation);
-
-      const generatedMoves = result.nextMoves || [];
-
-      setNextMoves(generatedMoves);
-      onOptionsChange(generatedMoves);
-
-      setSelectedNextMove(null);
+        { role: "mirror", content: result.message },
+      ]);
     } catch (error) {
-      console.error("❌ SOVEREIGN MIRROR BUILD ERROR:", error);
+      console.error("MIRROR BUILD ERROR:", error);
     } finally {
       setIsSending(false);
     }
   };
 
-  // --------------------------------------------------
-  // CHOOSE ONE NEXT MOVE
-  // --------------------------------------------------
-
-  const handleNextMove = async (move: NextMove) => {
-    if (!intentionId || isChoosing) {
-      return;
-    }
-
-    try {
-      setIsChoosing(true);
-      setSelectedNextMove(move.title);
-
-      console.log("🔎 CHOOSE NEXT MOVE INPUT:", {
-        intentionId,
-        move,
-      });
-
-      const result = await chooseNextMove({
-        intentionId,
-        move,
-      });
-
-      console.log("✨ CREATION CREATED:", result);
-
-      onCreationCreated();
-    } catch (error) {
-      console.error("❌ CHOOSE NEXT MOVE ERROR:", error);
-      setSelectedNextMove(null);
-    } finally {
-      setIsChoosing(false);
-    }
-  };
-
-  // --------------------------------------------------
-  // PAUSE
-  // --------------------------------------------------
-
-  const handlePause = () => {
-    setSelectedNextMove("DO NOTHING FOR NOW");
-  };
-
-  // --------------------------------------------------
-  // UI
-  // --------------------------------------------------
-
   return (
-    <View style={styles.buildWorkspace}>
+    <View style={styles.workspace}>
 
-      {/* MIRROR CONVERSATION */}
-
-      <ScrollView
-        ref={conversationScrollRef}
-        style={styles.buildConversation}
-        onContentSizeChange={() => {
-          requestAnimationFrame(() => {
-            conversationScrollRef.current?.scrollToEnd({
-              animated: true,
-            });
-          });
-        }}
-      >
-        {conversation.map((item, index) => {
-          const isUser = item.role === "user";
-
-          return (
-            <View
-              key={`${item.role}-${index}`}
-              style={[
-                styles.chatRow,
-                isUser ? styles.chatRowUser : styles.chatRowMirror,
-              ]}
-            >
-              <View
-                style={[
-                  styles.chatBubble,
-                  isUser ? styles.chatBubbleUser : styles.chatBubbleMirror,
-                ]}
-              >
-                <Text
-                  style={
-                    isUser ? styles.chatTextUser : styles.chatTextMirror
-                  }
-                >
-                  {item.content}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-
-        {isSending && (
-          <View style={[styles.chatRow, styles.chatRowMirror]}>
-            <View style={[styles.chatBubble, styles.chatBubbleMirror]}>
-              <Text style={styles.chatSender}>MIRROR</Text>
-              <Text style={styles.chatTextMirror}>...</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* MESSAGE INPUT */}
-
-      <View style={styles.buildInputRow}>
+      {/* LEFT — USER INPUT */}
+      <View style={styles.inputPanel}>
         <TextInput
           value={message}
           onChangeText={setMessage}
           multiline
-          placeholder="Talk to me about this creation..."
+          placeholder="What would you like to create?"
           placeholderTextColor="#77746F"
-          style={styles.buildMessageInput}
+          style={styles.input}
           editable={!isSending}
-          onSubmitEditing={() => {
-            void sendMessage();
-          }}
+          textAlignVertical="top"
         />
 
         <Pressable
-          onPress={() => {
-            void sendMessage();
-          }}
+          onPress={() => void sendMessage()}
           disabled={!message.trim() || isSending}
           style={[
-            styles.buildSendButton,
-            (!message.trim() || isSending) &&
-              styles.buildSendButtonDisabled,
+            styles.sendButton,
+            (!message.trim() || isSending) && styles.disabled,
           ]}
         >
-          <Text style={styles.buildSendButtonText}>
+          <Text style={styles.sendText}>
             {isSending ? "…" : "↑"}
           </Text>
         </Pressable>
       </View>
 
-      {/* DYNAMIC NEXT MOVES */}
+      {/* RIGHT — MIRROR CONVERSATION */}
+      <View style={styles.conversationPanel}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.conversation}
+          contentContainerStyle={styles.conversationContent}
+          showsVerticalScrollIndicator
+          onContentSizeChange={() => {
+            requestAnimationFrame(() => {
+              scrollRef.current?.scrollToEnd({ animated: true });
+            });
+          }}
+        >
+          {conversation.length === 0 && !isSending && (
+            <Text style={styles.welcome}>
+              Your conversation will appear here.
+            </Text>
+          )}
 
-      {nextMoves.length > 0 && (
-        <View style={styles.nextMovesSection}>
-          <View style={styles.nextMovesList}>
-            {nextMoves.map((move, index) => {
-              const selected = selectedNextMove === move.title;
-
-              return (
-                <Pressable
-                  key={`${move.title}-${index}`}
-                  onPress={() => {
-                    void handleNextMove(move);
-                  }}
-                  disabled={isChoosing}
-                  style={[
-                    styles.nextMoveButton,
-                    selected && styles.nextMoveButtonSelected,
-                  ]}
-                >
-                  <Text style={styles.nextMoveTitle}>
-                    {move.title}
-                  </Text>
-                </Pressable>
-              );
-            })}
-
-            {/* DO NOTHING IS ALWAYS A HUMAN CHOICE */}
-
-            <Pressable
-              onPress={handlePause}
+          {conversation.map((item, index) => (
+            <View
+              key={`${item.role}-${index}`}
               style={[
-                styles.pauseMoveButton,
-                selectedNextMove === "DO NOTHING FOR NOW" &&
-                  styles.nextMoveButtonSelected,
+                styles.messageRow,
+                item.role === "user" && styles.userRow,
               ]}
             >
-              <Text style={styles.pauseMoveTitle}>
-                DO NOTHING FOR NOW
+              <Text
+                style={
+                  item.role === "user"
+                    ? styles.userText
+                    : styles.mirrorText
+                }
+              >
+                {item.content}
               </Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+            </View>
+          ))}
+
+          {isSending && (
+            <Text style={styles.typing}>
+              Mirror is reflecting...
+            </Text>
+          )}
+        </ScrollView>
+      </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  buildWorkspace: {
-    width: "100%",
-    flex: 1,
+workspace: {
+  width: "100%",
+  height: 90,
+  minHeight: 90,
+  maxHeight: 90,
+  flexGrow: 0,
+  flexShrink: 0,
+  flexDirection: "row",
+  gap: 12,
+},
+
+inputPanel: {
+  flex: 0.85,
+  height: "100%",
+    minWidth: 0,
     minHeight: 0,
-    gap: 12,
-  },
-
-  mirrorWelcomeText: {
-    color: Colors.mutedText,
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 19,
-  },
-
-  buildConversation: {
-    flex: 1,
-    minHeight: 80,
-    width: "100%",
-  },
-
-  chatRow: {
-    width: "100%",
     flexDirection: "row",
-  },
-
-  chatRowUser: {
-    justifyContent: "flex-end",
-    paddingRight: 14,
-  },
-
-  chatRowMirror: {
-    justifyContent: "flex-start",
-  },
-
-  chatBubble: {
-    maxWidth: "82%",
+    alignItems: "center",
+    paddingHorizontal: 10,
     paddingVertical: 7,
-    paddingHorizontal: 11,
-    borderRadius: 11,
-  },
-
-  chatBubbleMirror: {
-    backgroundColor: "transparent",
-    borderWidth: 0,
-  },
-
-  chatBubbleUser: {
-    backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(201,173,112,0.24)",
+    borderRadius: 9,
+    backgroundColor: "rgba(255,255,255,0.018)",
+    gap: 6,
   },
 
-  chatSender: {
-    color: Colors.subtleText,
-    fontFamily: Fonts.light,
-    fontSize: 7,
-    letterSpacing: 1.3,
-    marginBottom: 5,
-  },
-
-  chatTextMirror: {
-    color: Colors.mutedText,
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 17,
-  },
-
-  chatTextUser: {
-    color: Colors.white,
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 17,
-  },
-
-  buildInputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-  },
-
-  buildMessageInput: {
+  input: {
     flex: 1,
-    minHeight: 38,
-    maxHeight: 60,
-    paddingVertical: 0,
-    paddingHorizontal: 13,
-    borderRadius: 13,
-    backgroundColor: "#EEECE6",
-    color: "#2A2927",
+    minWidth: 0,
+    minHeight: 40,
+    maxHeight: 100,
+    padding: 2,
+    color: "#EEECE6",
     fontFamily: Fonts.light,
     fontSize: 11,
     lineHeight: 17,
-    textAlignVertical: "top",
   },
 
-  buildSendButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  sendButton: {
+    width: 29,
+    height: 29,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(201,173,112,0.35)",
+    backgroundColor: "rgba(201,173,112,0.08)",
   },
 
-  buildSendButtonDisabled: {
+  sendText: {
+    color: "#C9AD70",
+    fontSize: 17,
+  },
+
+  disabled: {
     opacity: 0.35,
   },
 
-  buildSendButtonText: {
-    color: Colors.white,
-    fontFamily: Fonts.light,
-    fontSize: 16,
-  },
-
-  nextMovesSection: {
-    paddingTop: 20,
-  },
-
-  nextMovesList: {
-    flexDirection: "row",
-    gap: 7,
-    width: "100%",
-  },
-
-  nextMoveButton: {
-    flex: 1,
+conversationPanel: {
+  flex: 1.5,
+  height: "100%",
     minWidth: 0,
-    minHeight: 58,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.035)",
+    minHeight: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderWidth: 1,
-    borderColor: "rgba(201,168,78,0.14)",
+    borderColor: "rgba(201,173,112,0.18)",
+    borderRadius: 9,
+    backgroundColor: "rgba(255,255,255,0.012)",
   },
 
-  nextMoveButtonSelected: {
-    backgroundColor: "rgba(95,158,114,0.15)",
-    borderColor: "rgba(95,158,114,0.42)",
+  conversation: {
+    flex: 1,
+    minHeight: 0,
   },
 
-  nextMoveTitle: {
+  conversationContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+
+  welcome: {
+    color: Colors.mutedText,
+    fontFamily: Fonts.light,
+    fontSize: 10,
+    lineHeight: 16,
+  },
+
+  messageRow: {
+    alignSelf: "flex-start",
+    maxWidth: "95%",
+  },
+
+  userRow: {
+    alignSelf: "flex-end",
+    padding: 6,
+    borderRadius: 7,
+    backgroundColor: "rgba(201,173,112,0.07)",
+  },
+
+  userText: {
     color: Colors.white,
     fontFamily: Fonts.light,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  mirrorText: {
+    color: "#D8D2C8",
+    fontFamily: Fonts.light,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  typing: {
+    color: Colors.mutedText,
     fontSize: 9,
-    lineHeight: 13,
-    textAlign: "center",
-  },
-
-  pauseMoveButton: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 58,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    backgroundColor: "transparent",
-  },
-
-  pauseMoveTitle: {
-    color: Colors.subtleText,
-    fontFamily: Fonts.light,
-    fontSize: 8,
-    letterSpacing: 1,
-    textAlign: "center",
+    fontStyle: "italic",
   },
 });

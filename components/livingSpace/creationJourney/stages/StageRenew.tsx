@@ -395,32 +395,31 @@ renewGrid: {
 renewBlock: {
   flex: 1,
   minWidth: 0,
-  minHeight: 90,
-  padding: 5,
+  height: 76,
+  padding: 6,
   borderRadius: 10,
   borderWidth: 1,
   borderColor: "rgba(201,173,112,0.22)",
   backgroundColor: "rgba(255,255,255,0.025)",
 },
 
-  renewLabel: {
-    color: "#C9AD70",
-    fontFamily: Fonts.light,
-    fontSize: 9,
-    letterSpacing: 1.8,
-    marginBottom: 9,
-  },
+renewLabel: {
+  color: "#C9AD70",
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  letterSpacing: 1.5,
+  marginBottom: 5,
+},
 
-  renewInput: {
-    minHeight: 55,
-    color: "#EEECE6",
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 17,
-    padding: 0,
-    textAlignVertical: "top",
-    //outlineStyle: "none" as const,
-  },
+renewInput: {
+  minHeight: 38,
+  color: "#EEECE6",
+  fontFamily: Fonts.light,
+  fontSize: 10,
+  lineHeight: 15,
+  padding: 0,
+  textAlignVertical: "top",
+},
 
   reflection: {
     marginTop: 16,

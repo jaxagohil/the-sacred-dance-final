@@ -503,15 +503,16 @@ onPress={() => {
 }
 
 const styles = StyleSheet.create({
-  container: { width: "100%" },
+  container: { width: "100%"},
 
-  boardViewport: {
+boardViewport: {
   width: "100%",
-  maxWidth: 340,
-    maxHeight: 335,
-  aspectRatio: 1,
+  maxWidth: 350,
+  height: 265,
+  maxHeight: 265,
   alignSelf: "flex-end",
   marginRight: 25,
+  paddingLeft: 10,
   position: "relative",
   overflow: "hidden",
   backgroundColor: "rgba(255,255,255,0.018)",
@@ -531,6 +532,7 @@ const styles = StyleSheet.create({
 
 boardScroll: {
   ...StyleSheet.absoluteFillObject,
+  top: 30,
   zIndex: 0,
 },
 
@@ -545,13 +547,15 @@ board: {
 },
 boardTitle: {
   position: "absolute",
-  bottom: 315,
+  top: 10,
   left: 12,
-  color: "#77747F",
+  zIndex: 5,
+  color: "#AAA2B6",
   fontSize: 9,
   letterSpacing: 1.8,
   fontWeight: "400",
 },
+
   entry: {
     position: "absolute",
     padding: 14,
@@ -614,7 +618,7 @@ dragHandleIcon: {
     width: "100%",
     color: Colors.white,
     fontFamily: Fonts.light,
-    fontSize: 16,
+    fontSize: 13,
     lineHeight: 24,
     fontStyle: "italic",
     textAlign: "center",

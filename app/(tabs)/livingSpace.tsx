@@ -84,6 +84,7 @@ const measureCardArea = () => {
 const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [orchestrationField, setOrchestrationField] = useState<any>(null);
+  const [chakraContent, setChakraContent] = useState<any>(null);
 
 const {
   cosmic,
@@ -94,6 +95,11 @@ const {
   mirrorContext,
   setPreloadedWhispers,
 } = useMirrorStore();
+
+
+// --------------------------------------------------
+// 🌌 INITIALISE LIVING SPACE
+// --------------------------------------------------
 
 useEffect(() => {
   async function initialise() {
@@ -120,6 +126,39 @@ useEffect(() => {
 
   initialise();
 }, []);
+
+// --------------------------------------------------
+// 🧘 CHAKRA CONTENT
+// --------------------------------------------------
+
+useEffect(() => {
+  async function loadChakras() {
+    if (!language) return;
+
+    const { data: chakraRows, error } = await supabase
+      .from("chakras")
+      .select("*")
+      .eq("language", language);
+
+    if (error) {
+      console.error("❌ CHAKRA CONTENT ERROR:", error);
+      return;
+    }
+
+    const map: any = {};
+
+    chakraRows?.forEach((c) => {
+      map[c.id] = {
+        name: c.name,
+        affirmation: c.affirmation,
+      };
+    });
+
+    setChakraContent(map);
+  }
+
+  loadChakras();
+}, [language]);
 
 
 //console.log("LIVING SPACE COSMIC:", cosmic);
@@ -227,11 +266,12 @@ onPress={() => router.push("/connections")}
                 initialWhispers={[]}
               />
 
-              <EnergyField
-                userContext={userContext}
-                language={language ?? "en"}
-                languageContext={languageContext}
-              />
+<EnergyField
+  userContext={userContext}
+  chakraContent={chakraContent}
+  language={language ?? "en"}
+  languageContext={languageContext}
+/>
             </View>
             </View>
 
@@ -307,7 +347,7 @@ onPress={() => router.push("/connections")}
         </View>
 
 {/* CREATION JOURNEY */}
-<View style={{ marginTop: -95 }}>
+<View style={{ marginTop: -110 }}>
   <CreationJourney />
 </View>
       </ScrollView>
@@ -341,6 +381,7 @@ worldBoards: {
   flexDirection: "row",
   alignItems: "flex-start",
   gap: 12,
+  marginTop: -41
 },
 
 reflectionColumn: {
@@ -385,7 +426,7 @@ mainLayoutWide: {
 energyColumn: {
   flexDirection: "row",
   alignItems: "stretch",
-  gap: 4,
+  gap: 2,
 },
 energyColumnWide: {
   width: "43%",
@@ -443,14 +484,14 @@ energyArea: {
   alignItems: "center",
   overflow: "visible",
   paddingLeft: 0,
-  transform: [{ translateX: -35 }],
-  marginTop: -380,
+transform: [{ translateX: -15 }, { translateY: 10 }],
+marginTop: -380,
 },
-  world: {
-    flex: 1,
-    minWidth: 0,
-    gap: 16,
-  },
+world: {
+  flex: 1,
+  minWidth: 0,
+  gap: 10, // was 16
+},
 topRow: {
   flexDirection: "row",
   alignItems: "flex-start",
@@ -463,6 +504,7 @@ topRow: {
     flex: 1,
     minWidth: 190,
     gap: 12,
+    transform: [{ translateY: -25 }],
   },
   lensRow: {
     flexDirection: "row",
@@ -475,6 +517,7 @@ divineRead: {
   backgroundColor: "transparent",
   alignItems: "stretch",
   justifyContent: "center",
+  transform: [{ translateY: -24 }],
 },
 
 oracleLogo: {

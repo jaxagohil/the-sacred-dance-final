@@ -45,106 +45,131 @@ export default function MyCreations({
   onDelete,
   onUpdateTitle,
 }: Props) {
+  const [deleteTarget, setDeleteTarget] =
+    useState<CreationItem | null>(null);
 
-const [deleteTarget, setDeleteTarget] = useState<CreationItem | null>(null);
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
 
-const confirmDelete = () => {
-  if (!deleteTarget) return;
-
-  onDelete(deleteTarget.id);
-  setDeleteTarget(null);
-};
+    onDelete(deleteTarget.id);
+    setDeleteTarget(null);
+  };
 
   return (
     <View style={styles.container}>
+      {/* HEADING + ADD BUTTON */}
       <View style={styles.heading}>
-        <Text style={styles.eyebrow}>MY CREATIONS</Text>
+        <View style={styles.headingLeft}>
+          <Text style={styles.eyebrow}>MY CREATIONS</Text>
 
+          <Pressable
+            onPress={onCreate}
+            style={styles.addNote}
+            accessibilityRole="button"
+            accessibilityLabel="Create new intention"
+          >
+            <Feather name="plus" size={15} color={GOLD} />
+          </Pressable>
+        </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.notes}
-        style={styles.notesWindow}
-      >
-        {creations.map((item, index) => {
-          const selected = item.id === selectedId;
-          const noteColour =
-            NOTE_COLOURS[index % NOTE_COLOURS.length];
+      {/* SCROLLABLE POST-ITS */}
+      <View style={styles.notesColumn}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.notes}
+          style={styles.notesWindow}
+        >
+          {creations.map((item, index) => {
+            const selected = item.id === selectedId;
+            const noteColour =
+              NOTE_COLOURS[index % NOTE_COLOURS.length];
 
-          return (
-            <View
-              key={item.id}
-              style={[
-                styles.note,
-                { backgroundColor: noteColour },
-                selected && styles.noteSelected,
-              ]}
-            >
-              <Pressable
-                style={styles.deleteButton}
-onPress={() => setDeleteTarget(item)}
-                hitSlop={8}
+            return (
+              <View
+                key={item.id}
+                style={[
+                  styles.note,
+                  { backgroundColor: noteColour },
+                  selected && styles.noteSelected,
+                ]}
               >
-                <Feather name="x" size={12} color="#62584D" />
+                <Pressable
+                  style={styles.deleteButton}
+                  onPress={() => setDeleteTarget(item)}
+                  hitSlop={8}
+                >
+                  <Feather
+                    name="x"
+                    size={12}
+                    color="#62584D"
+                  />
+                </Pressable>
+
+                <Pressable
+                  style={styles.noteContent}
+                  onPress={() => onSelect(item.id)}
+                >
+                  {selected ? (
+                    <TextInput
+                      value={item.title}
+                      onChangeText={onUpdateTitle}
+                      placeholder="Your idea..."
+                      placeholderTextColor="#81796E"
+                      style={styles.noteInput}
+                      multiline
+                      accessibilityLabel="Creation title"
+                    />
+                  ) : (
+                    <Text
+                      style={styles.noteText}
+                      numberOfLines={4}
+                    >
+                      {item.title || "Untitled"}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        <View style={styles.notesUnderline} />
+      </View>
+
+      {/* DELETE CONFIRMATION */}
+      <Modal
+        transparent
+        visible={!!deleteTarget}
+        animationType="fade"
+        onRequestClose={() => setDeleteTarget(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>
+              Delete creation?
+            </Text>
+
+            <Text style={styles.confirmText}>
+              "{deleteTarget?.title || "Untitled"}" and its related
+              journey data and artefacts will be deleted.
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <Pressable
+                onPress={() => setDeleteTarget(null)}
+              >
+                <Text style={styles.cancelText}>Keep it</Text>
               </Pressable>
 
-              <Pressable
-                style={styles.noteContent}
-                onPress={() => onSelect(item.id)}
-              >
-                {selected ? (
-                  <TextInput
-                    value={item.title}
-                    onChangeText={onUpdateTitle}
-                    placeholder="Your idea..."
-                    placeholderTextColor="#81796E"
-                    style={styles.noteInput}
-                    multiline
-                    accessibilityLabel="Creation title"
-                  />
-                ) : (
-                  <Text style={styles.noteText} numberOfLines={4}>
-                    {item.title || "Untitled"}
-                  </Text>
-                )}
+              <Pressable onPress={confirmDelete}>
+                <Text style={styles.deleteText}>Delete</Text>
               </Pressable>
             </View>
-          );
-        })}
-        <Pressable onPress={onCreate} style={styles.addNote}>
-          <Feather name="plus" size={17} color={GOLD} />
-        </Pressable>
-      </ScrollView>
-
-      <Modal
-  transparent
-  visible={!!deleteTarget}
-  animationType="fade"
-  onRequestClose={() => setDeleteTarget(null)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.confirmBox}>
-      <Text style={styles.confirmTitle}>Delete creation?</Text>
-
-      <Text style={styles.confirmText}>
-        "{deleteTarget?.title || "Untitled"}" and its related journey
-        data and artefacts will be deleted.
-      </Text>
-
-      <View style={styles.confirmActions}>
-        <Pressable onPress={() => setDeleteTarget(null)}>
-          <Text style={styles.cancelText}>Keep it</Text>
-        </Pressable>
-
-        <Pressable onPress={confirmDelete}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </Pressable>
-      </View>
-    </View>
-  </View>
-</Modal>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -159,8 +184,13 @@ const styles = StyleSheet.create({
   heading: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 2,
+  },
+
+  headingLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
 
   eyebrow: {
@@ -170,30 +200,50 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-notesWindow: {
-  width: 550,
-  height: 72,
-  flexGrow: 0,
-  flexShrink: 0,
-},
+  addNote: {
+    width: 15,
+    height: 15,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  notesColumn: {
+    width: 214,
+    gap: 3,
+  },
+
+  notesWindow: {
+    width: "100%",
+    height: 72,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
 
   notes: {
     alignItems: "center",
     gap: 8,
     paddingVertical: 2,
-    paddingRight: 8,
   },
 
-note: {
-  width: 66,
-  height: 56,
-  padding: 7,
-  paddingTop: 5,
-  borderRadius: 3,
-  justifyContent: "center",
-  transform: [{ rotate: "-1deg" }],
-  elevation: 2,
-},
+  notesUnderline: {
+    width: "100%",
+    height: 0.5,
+    backgroundColor: "rgba(201,173,112,0.35)",
+  },
+
+  note: {
+    width: 66,
+    height: 50,
+    padding: 5,
+    paddingTop: 1,
+    borderRadius: 3,
+    justifyContent: "center",
+    transform: [{ rotate: "-1deg" }],
+    elevation: 2,
+  },
 
   noteSelected: {
     borderWidth: 2,
@@ -205,56 +255,6 @@ note: {
     flex: 1,
     justifyContent: "center",
   },
-
-  modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.7)",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: 24,
-},
-
-confirmBox: {
-  width: "100%",
-  maxWidth: 320,
-  backgroundColor: "#20201E",
-  borderWidth: 1,
-  borderColor: "rgba(201,173,112,0.5)",
-  borderRadius: 10,
-  padding: 22,
-  gap: 14,
-},
-
-confirmTitle: {
-  color: GOLD,
-  fontSize: 15,
-  fontWeight: "600",
-},
-
-confirmText: {
-  color: "#E8E2D8",
-  fontSize: 12,
-  lineHeight: 18,
-},
-
-confirmActions: {
-  flexDirection: "row",
-  justifyContent: "flex-end",
-  alignItems: "center",
-  gap: 24,
-  marginTop: 8,
-},
-
-cancelText: {
-  color: "#B9B1A5",
-  fontSize: 12,
-},
-
-deleteText: {
-  color: "#E59B91",
-  fontSize: 12,
-  fontWeight: "600",
-},
 
   deleteButton: {
     position: "absolute",
@@ -281,13 +281,53 @@ deleteText: {
     textAlignVertical: "center",
   },
 
-  addNote: {
-width: 32,
-height: 32,
-borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(201,173,112,0.4)",
-    alignItems: "center",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+
+  confirmBox: {
+    width: "100%",
+    maxWidth: 320,
+    backgroundColor: "#20201E",
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.5)",
+    borderRadius: 10,
+    padding: 22,
+    gap: 14,
+  },
+
+  confirmTitle: {
+    color: GOLD,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  confirmText: {
+    color: "#E8E2D8",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 24,
+    marginTop: 8,
+  },
+
+  cancelText: {
+    color: "#B9B1A5",
+    fontSize: 12,
+  },
+
+  deleteText: {
+    color: "#E59B91",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

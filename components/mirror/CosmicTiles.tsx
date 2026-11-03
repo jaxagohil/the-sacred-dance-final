@@ -164,7 +164,7 @@ style={[
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 2,
     paddingBottom: 12,
       marginLeft: -100,
   },
@@ -207,7 +207,7 @@ verticalTile: {
   width: 96,
   minHeight: 54,
   paddingVertical: 3,
-      paddingTop: 25,
+      paddingTop: 0,
 },
 
   icon: {

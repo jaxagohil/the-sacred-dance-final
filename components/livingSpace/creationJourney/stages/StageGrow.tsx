@@ -300,8 +300,8 @@ export default function StageGrow({ intentionId }: Props) {
   const renderSlider = (item: (typeof GROW_VALUES)[number]) => {
     const value = sliders[item.id] ?? 0.5;
 
-    const lineHeight = 50;
-    const thumbSize = 9;
+    const lineHeight = 45;
+    const thumbSize = 8;
 
     const updateFromY = (y: number) => {
       const position = Math.max(
@@ -371,7 +371,7 @@ export default function StageGrow({ intentionId }: Props) {
               height: thumbSize,
               borderRadius: thumbSize / 2,
               backgroundColor: CHAKRA_COLORS[item.chakra],
-              borderWidth: 2,
+              borderWidth: 1,
               borderColor: "#EEECE6",
             }}
           />
@@ -379,31 +379,16 @@ export default function StageGrow({ intentionId }: Props) {
 
         {/* LABEL */}
         <Text
-          style={{
-            marginTop: 12,
-            color: "#B8B4AC",
-            fontFamily: Fonts.light,
-            fontSize: 11,
-            lineHeight: 15,
-            textAlign: "center",
-          }}
+style={{
+  marginTop: 4,
+  color: "#B8B4AC",
+  fontFamily: Fonts.light,
+  fontSize: 8,
+  lineHeight: 10,
+  textAlign: "center",
+}}
         >
           {item.label}
-        </Text>
-
-        {/* INVITATION */}
-        <Text
-          style={{
-            marginTop: 4,
-            color: "rgba(255,255,255,0.58)",
-            fontFamily: Fonts.light,
-            fontSize: 6,
-            lineHeight: 12,
-            textAlign: "center",
-            maxWidth: 62,
-          }}
-        >
-          {item.invitation}
         </Text>
       </View>
     );
@@ -423,43 +408,45 @@ export default function StageGrow({ intentionId }: Props) {
           width: "100%",
           marginTop: 1,
           paddingHorizontal: 2,
-          minHeight: 105,
+          minHeight: 52,
         }}
       >
         {GROW_VALUES.map(renderSlider)}
       </View>
 
-      {/* OPTIONAL ADDITION */}
-      <View style={{ marginTop: 10 }}>
-        <View
-          style={{
-            width: "100%",
-            minHeight: 70,
-            padding: 14,
-            borderRadius: 11,
-            backgroundColor: "#EEECE6",
-          }}
-        >
-          <TextInput
-            value={additionalText}
-            onChangeText={updateAdditionalText}
-            onBlur={() => void saveAdditionalText()}
-            multiline
-            placeholder="Anything else you want to notice..."
-            placeholderTextColor="#77746F"
-            style={{
-              minHeight: 40,
-              color: "#2A2927",
-              fontFamily: Fonts.light,
-              fontSize: 12,
-              lineHeight: 18,
-              padding: 0,
-              //outlineStyle: "none",
-              textAlignVertical: "top",
-            }}
-          />
-        </View>
-      </View>
+ {/* REFLECTION */}
+<View style={{ marginTop: 1 }}>
+  <View
+    style={{
+      width: "100%",
+      height: 38,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: "rgba(201,173,112,0.22)",
+      backgroundColor: "#08090A",
+    }}
+  >
+    <TextInput
+      value={additionalText}
+      onChangeText={updateAdditionalText}
+      onBlur={() => void saveAdditionalText()}
+      multiline
+      placeholder="Anything else you want to notice..."
+      placeholderTextColor="#77746F"
+      style={{
+        flex: 1,
+        color: "#EEECE6",
+        fontFamily: Fonts.light,
+        fontSize: 10,
+        lineHeight: 14,
+        padding: 0,
+        textAlignVertical: "top",
+      }}
+    />
+  </View>
+</View>
     </View>
   );
 }

@@ -9,32 +9,26 @@ import {
 } from "react-native";
 
 import { Fonts } from "../../../../constants/theme";
-import { getUserId } from "../../../../lib/user";
 import { supabase } from "../../../../services/supabase";
-
-import {
-    generateScalePossibilities,
-} from "../../../../lib/consciousCreating/agents/scale/generateScalePossibilities";
 
 const MUTED = "#AAA2B6";
 const GOLD = "#C9AD70";
-const CREAM = "#EEECE6";
 
 const SCALE_PORTALS = [
   {
     id: "people",
-    label: "PEOPLE",
-    question: "Who wants to be part of this creation?",
+    label: "People",
+    placeholder: "Who would you like alongside you?",
   },
   {
     id: "places",
-    label: "PLACES",
-    question: "Where does this creation want to live?",
+    label: "Places",
+    placeholder: "Where would you like this creation to happen?",
   },
   {
     id: "things",
-    label: "THINGS",
-    question: "What does this creation want to bring into the world?",
+    label: "Things",
+    placeholder: "What would help bring this creation to life?",
   },
 ] as const;
 
@@ -67,18 +61,7 @@ export default function StageScale({ intentionId }: Props) {
   const [scaleState, setScaleState] =
     useState<ScaleState>(createEmptyState);
 
-  const [possibilities, setPossibilities] = useState<
-    Record<PortalId, string[]>
-  >({
-    people: [],
-    places: [],
-    things: [],
-  });
-
-  const [isGenerating, setIsGenerating] = useState(false);
-
   // LOAD SAVED SCALE RESPONSES
-
   useEffect(() => {
     let active = true;
 
@@ -87,6 +70,8 @@ export default function StageScale({ intentionId }: Props) {
         setScaleState(createEmptyState());
         return;
       }
+
+      setScaleState(createEmptyState());
 
       try {
         const { data, error } = await supabase
@@ -111,12 +96,13 @@ export default function StageScale({ intentionId }: Props) {
 
         const loaded = parsed?.portals || {};
 
-        const validPortal: PortalId =
-          ["people", "places", "things"].includes(
-            parsed?.activePortal
-          )
-            ? parsed.activePortal
-            : "people";
+        const validPortal: PortalId = [
+          "people",
+          "places",
+          "things",
+        ].includes(parsed?.activePortal)
+          ? parsed.activePortal
+          : "people";
 
         const getPortal = (id: PortalId): PortalResponse => ({
           selectedOptions: Array.isArray(
@@ -150,55 +136,7 @@ export default function StageScale({ intentionId }: Props) {
     };
   }, [intentionId]);
 
-  // GENERATE AI POSSIBILITIES
-
-  useEffect(() => {
-    let active = true;
-
-    const loadPossibilities = async () => {
-      if (!intentionId) {
-        setPossibilities({
-          people: [],
-          places: [],
-          things: [],
-        });
-        return;
-      }
-
-      try {
-        setIsGenerating(true);
-
-        const userId = await getUserId();
-        if (!userId) return;
-
-        const result = await generateScalePossibilities({
-          userId,
-          intentionId,
-        });
-
-        if (!active) return;
-
-        setPossibilities({
-          people: result.people.map((item) => item.text),
-          places: result.places.map((item) => item.text),
-          things: result.things.map((item) => item.text),
-        });
-      } catch (error) {
-        console.error("SCALE POSSIBILITIES ERROR:", error);
-      } finally {
-        if (active) setIsGenerating(false);
-      }
-    };
-
-    void loadPossibilities();
-
-    return () => {
-      active = false;
-    };
-  }, [intentionId]);
-
-  // SAVE SCALE
-
+  // SAVE SCALE RESPONSES
   const saveScale = async (nextState: ScaleState) => {
     if (!intentionId) return;
 
@@ -241,10 +179,9 @@ export default function StageScale({ intentionId }: Props) {
     }
   };
 
-  // SELECT PORTAL
-
+  // SELECT PEOPLE / PLACES / THINGS
   const selectPortal = (portalId: PortalId) => {
-    const nextState = {
+    const nextState: ScaleState = {
       ...scaleState,
       activePortal: portalId,
     };
@@ -253,34 +190,7 @@ export default function StageScale({ intentionId }: Props) {
     void saveScale(nextState);
   };
 
-  // SELECT / DESELECT POSSIBILITY
-
-  const toggleOption = (option: string) => {
-    const current = scaleState.portals[scaleState.activePortal];
-
-    const selected = current.selectedOptions.includes(option);
-
-    const selectedOptions = selected
-      ? current.selectedOptions.filter((item) => item !== option)
-      : [...current.selectedOptions, option];
-
-    const nextState: ScaleState = {
-      ...scaleState,
-      portals: {
-        ...scaleState.portals,
-        [scaleState.activePortal]: {
-          ...current,
-          selectedOptions,
-        },
-      },
-    };
-
-    setScaleState(nextState);
-    void saveScale(nextState);
-  };
-
-  // UPDATE HUMAN REFLECTION
-
+  // UPDATE TEXT
   const updateText = (text: string) => {
     setScaleState((current) => ({
       ...current,
@@ -294,36 +204,42 @@ export default function StageScale({ intentionId }: Props) {
     }));
   };
 
+  // SAVE TEXT WHEN LEAVING THE INPUT
   const saveText = () => {
     void saveScale(scaleState);
   };
 
-  const activePortal =
-    SCALE_PORTALS.find(
-      (portal) => portal.id === scaleState.activePortal
-    ) || SCALE_PORTALS[0];
-
   const activeResponse =
     scaleState.portals[scaleState.activePortal];
 
-  const activePossibilities =
-    possibilities[scaleState.activePortal];
+  const activePortal = SCALE_PORTALS.find(
+    (portal) => portal.id === scaleState.activePortal
+  ) ?? SCALE_PORTALS[0];
 
   return (
-    <View style={styles.container}>
+    <View style={styles.scaleLayout}>
+      {/* WRITING AREA */}
+      <View style={styles.textBox}>
+        <TextInput
+          value={activeResponse.text}
+          onChangeText={updateText}
+          onBlur={saveText}
+          multiline
+          placeholder={activePortal.placeholder}
+          placeholderTextColor="#77746F"
+          style={styles.textInput}
+        />
+      </View>
 
-      {/* THREE PORTALS */}
-
+      {/* PEOPLE / PLACES / THINGS */}
       <View style={styles.portals}>
         {SCALE_PORTALS.map((portal) => {
           const selected =
             scaleState.activePortal === portal.id;
 
-          const response = scaleState.portals[portal.id];
-
           const hasResponse =
-            response.selectedOptions.length > 0 ||
-            response.text.trim().length > 0;
+            scaleState.portals[portal.id].text.trim().length > 0 ||
+            scaleState.portals[portal.id].selectedOptions.length > 0;
 
           return (
             <Pressable
@@ -337,12 +253,9 @@ export default function StageScale({ intentionId }: Props) {
                   selected && styles.portalCircleActive,
                 ]}
               >
-                <View
-                  style={[
-                    styles.portalInner,
-                    selected && styles.portalInnerActive,
-                  ]}
-                />
+                {hasResponse && (
+                  <View style={styles.responseDot} />
+                )}
               </View>
 
               <Text
@@ -353,223 +266,88 @@ export default function StageScale({ intentionId }: Props) {
               >
                 {portal.label}
               </Text>
-
-              {hasResponse && (
-                <View style={styles.responseDot} />
-              )}
             </Pressable>
           );
         })}
-      </View>
-
-      {/* ACTIVE PORTAL */}
-
-      <View style={styles.expanded}>
-        <Text style={styles.question}>
-          {activePortal.question}
-        </Text>
-
-        {/* AI POSSIBILITIES */}
-
-        <View style={styles.options}>
-          {activePossibilities.map((option) => {
-            const selected =
-              activeResponse.selectedOptions.includes(option);
-
-            return (
-              <Pressable
-                key={option}
-                onPress={() => toggleOption(option)}
-                style={[
-                  styles.option,
-                  selected && styles.optionSelected,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    selected && styles.optionTextSelected,
-                  ]}
-                >
-                  {option}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* HUMAN REFLECTION */}
-
-        <View style={styles.textBox}>
-          <TextInput
-            value={activeResponse.text}
-            onChangeText={updateText}
-            onBlur={saveText}
-            multiline
-            placeholder="Add, change, reject, or describe what you see..."
-            placeholderTextColor="#77746F"
-            style={styles.textInput}
-          />
-        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scaleLayout: {
     width: "100%",
+    height: 90,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 12,
   },
 
-  prompt: {
-    color: MUTED,
+  textBox: {
+    flex: 1,
+    minWidth: 0,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.22)",
+    backgroundColor: "#08090A",
+    padding: 11,
+  },
+
+  textInput: {
+    flex: 1,
+    color: "#EEECE6",
     fontFamily: Fonts.light,
     fontSize: 11,
     lineHeight: 17,
-    maxWidth: 430,
+    padding: 0,
+    textAlignVertical: "top",
   },
 
   portals: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-
-  portal: {
-    flex: 1,
+    width: 76,
+    justifyContent: "space-around",
     alignItems: "center",
   },
 
+  portal: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   portalCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 17,
+    height: 17,
+    borderRadius: 9,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
-    backgroundColor: "rgba(255,255,255,0.025)",
+    borderColor: "rgba(201,173,112,0.45)",
+    backgroundColor: "rgba(201,173,112,0.06)",
     alignItems: "center",
     justifyContent: "center",
   },
 
   portalCircleActive: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    borderColor: CREAM,
-    backgroundColor: "rgba(238,236,230,0.08)",
-  },
-
-  portalInner: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-
-  portalInnerActive: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderColor: "rgba(238,236,230,0.55)",
-  },
-
-  portalLabel: {
-    marginTop: 10,
-    color: "rgba(255,255,255,0.52)",
-    fontFamily: Fonts.light,
-    fontSize: 10,
-    letterSpacing: 1.2,
-  },
-
-  portalLabelActive: {
-    color: CREAM,
+    width: 23,
+    height: 23,
+    borderRadius: 12,
+    borderColor: GOLD,
+    backgroundColor: "rgba(201,173,112,0.18)",
   },
 
   responseDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: CREAM,
-    marginTop: 7,
+    backgroundColor: GOLD,
   },
 
-  expanded: {
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
-    paddingTop: 14,
-  },
-
-  question: {
-    color: CREAM,
-    fontFamily: Fonts.light,
-    fontSize: 12,
-    lineHeight: 20,
-  },
-
-  loading: {
+  portalLabel: {
+    marginTop: 3,
     color: MUTED,
-    fontSize: 10,
-    marginTop: 12,
-  },
-
-  options: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    marginTop: 12,
-  },
-
-  option: {
-    flexGrow: 1,
-    flexBasis: "28%",
-    minWidth: 0,
-    minHeight: 42,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.035)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.07)",
-  },
-
-  optionSelected: {
-    backgroundColor: CREAM,
-    borderColor: CREAM,
-  },
-
-  optionText: {
-    color: "rgba(255,255,255,0.62)",
     fontFamily: Fonts.light,
-    fontSize: 9,
-    lineHeight: 12,
-    textAlign: "center",
+    fontSize: 7,
   },
 
-  optionTextSelected: {
-    color: "#2A2927",
-  },
-
-  textBox: {
-    marginTop: 14,
-    minHeight: 58,
-    padding: 11,
-    borderRadius: 10,
-    backgroundColor: CREAM,
-  },
-
-  textInput: {
-    minHeight: 38,
-    color: "#2A2927",
-    fontFamily: Fonts.light,
-    fontSize: 11,
-    lineHeight: 17,
-    padding: 0,
-   // outlineStyle: "none" as const,
-    textAlignVertical: "top" as const,
+  portalLabelActive: {
+    color: GOLD,
   },
 });

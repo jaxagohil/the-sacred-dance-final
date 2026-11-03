@@ -1,10 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -19,6 +17,8 @@ import JourneyStages, {
   STAGES,
 } from "./creationJourney/JourneyStages";
 
+import JourneyToSovereignI from "./JourneyToSovereignI";
+
 import BuildStage from "./creationJourney/stages/StageBuild";
 import StageDiscover from "./creationJourney/stages/StageDiscover";
 import StageDream from "./creationJourney/stages/StageDream";
@@ -30,8 +30,6 @@ const MUTED = "#AAA2B6";
 const BORDER = "rgba(201,173,112,0.22)";
 
 export default function CreationJourney() {
-  const { width } = useWindowDimensions();
-  const wide = width >= 1050;
 
   const [activeStage, setActiveStage] = useState("dream");
   const [creations, setCreations] = useState<CreationItem[]>([]);
@@ -197,89 +195,70 @@ export default function CreationJourney() {
         }
       />
 
-      {/* JOURNEY + ARTEFACTS */}
-      <View style={[styles.contentRow, !wide && styles.contentNarrow]}>
-<View
-  style={[
-    styles.middlePanel,
-    !wide && styles.middlePanelNarrow,
-  ]}
->
+
+
+      {/* CREATION JOURNEY — FULL WIDTH */}
+      <View style={styles.contentRow}>
+        <View style={styles.middlePanel}>
           <View style={styles.journeyContent}>
-            <JourneyStages
-              activeStage={activeStage}
-              onSelect={setActiveStage}
-            />
+            <View style={styles.journeyStagesOffset}>
+              <JourneyStages
+                activeStage={activeStage}
+                onSelect={setActiveStage}
+              />
+            </View>
 
-            <ScrollView
-              style={styles.stageScroll}
-              contentContainerStyle={styles.stageScrollContent}
-              showsVerticalScrollIndicator
-            >
-{activeStage !== "discover" && (
-  <View style={styles.selected}>
-    <Text style={styles.selectedTitle}>
-      {selected.label}
-    </Text>
+ 
+<View style={styles.stageArea}>
+<View style={styles.selected}>
+  <Text style={styles.selectedTitle}>
+    {selected.label}
+  </Text>
+  <Text
+    style={styles.selectedPrompt}
+    numberOfLines={1}
+  >
+    {selected.prompt}
+  </Text>
+</View>
 
-    <Text style={styles.selectedPrompt} numberOfLines={1}>
-      {selected.prompt}
-    </Text>
+  {!loading && selectedId && activeStage === "build" && (
+    <BuildStage intentionId={selectedId} />
+  )}
+
+  {!loading && selectedId && activeStage === "grow" && (
+    <StageGrow intentionId={selectedId} />
+  )}
+
+  {!loading && selectedId && activeStage === "scale" && (
+    <StageScale intentionId={selectedId} />
+  )}
+
+  {!loading && selectedId && activeStage === "renew" && (
+    <StageRenew intentionId={selectedId} />
+  )}
+
+  {!loading && selectedId && activeStage === "dream" && (
+    <StageDream intentionId={selectedId} />
+  )}
+
+{!loading && selectedId && activeStage === "discover" && (
+  <View style={styles.discoverFullWidth}>
+    <StageDiscover intentionId={selectedId} />
   </View>
 )}
+</View>
 
-{!loading && selectedId && activeStage === "build" && (
-  <BuildStage
-    intentionId={selectedId}
-    onOptionsChange={() => {}}
-    onCreationCreated={() => {}}
-  />
-)}
-
-{!loading && selectedId && activeStage === "grow" && (
-  <StageGrow intentionId={selectedId} />
-)}
-
-{!loading && selectedId && activeStage === "scale" && (
-  <StageScale intentionId={selectedId} />
-)}
-
-{!loading && selectedId && activeStage === "renew" && (
-  <StageRenew intentionId={selectedId} />
-)}
-
-              {!loading && selectedId && activeStage === "dream" && (
-                <StageDream intentionId={selectedId} />
-              )}
-
-              {!loading && selectedId && activeStage === "discover" && (
-                <StageDiscover intentionId={selectedId} />
-              )}
-            </ScrollView>
-          </View>
-        </View>
-
-        <View style={[styles.sidePanel, !wide && styles.sidePanelNarrow]}>
-          <View style={styles.artifactHeader}>
-            <Text style={styles.artifactTitle}>CREATION ARTEFACTS</Text>
-            <Text style={styles.artifactSymbol}>✧</Text>
-          </View>
-
-          <View style={styles.artifactCanvas}>
-            <Text style={styles.artifactMessage}>
-              Your ideas are taking shape.
-            </Text>
-            <Text style={styles.emptySubtext}>
-              Plans, experiments, images and outcomes will gather here.
-            </Text>
-            <View style={styles.artifactDecoration}>
-              <Text style={styles.artifactDecorationText}>✧</Text>
-              <Text style={styles.artifactDecorationText}>◈</Text>
-              <Text style={styles.artifactDecorationText}>✦</Text>
-            </View>
           </View>
         </View>
       </View>
+
+      {/* SOVEREIGN I — SEPARATE FULL-WIDTH WORKSPACE */}
+      <View style={styles.sovereignPanel}>
+        <JourneyToSovereignI />
+      </View>
+
+
     </View>
   );
 }
@@ -289,57 +268,64 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "stretch",
     gap: 1,
-    marginTop: 2,
+    marginTop: 0,
     marginBottom: 20,
   },
 
-  contentRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 12,
-  },
 
-contentNarrow: {
-  flexDirection: "column",
-  gap: 12,
-},
-
-middlePanelNarrow: {
-  flex: 0,
+contentRow: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "stretch",
 },
 
 middlePanel: {
-  flex: 2.72,
-  height: 162,
-  minHeight: 162,
-  maxHeight: 162,
+  flex: 1,
+  width: "100%",
+  height: 130,
   minWidth: 0,
+  minHeight: 130,
+  maxHeight: 130,
   padding: 10,
-  borderRadius: 11,
-  borderWidth: 1,
-  borderColor: "rgba(201,173,112,0.35)",
-  backgroundColor: "rgba(16,16,24,0.35)",
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderRadius: 0,
 },
 
-  journeyContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-    minHeight: 120,
-  },
-
-  selectedPrompt: {
-  color: MUTED,
-  fontSize: 10,
-  lineHeight: 14,
-  marginTop: 2,
+discoverFullWidth: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  marginLeft: 0,
+  marginRight: -10,
 },
 
-  stageScroll: {
-    flex: 1,
-    minWidth: 0,
-  },
+sovereignPanel: {
+  width: "100%",
+  minWidth: 0,
+  minHeight: 175,
+  marginTop: 12,
+  paddingTop: 10,
+  backgroundColor: "transparent",
+},
+
+
+journeyStagesOffset: {
+  transform: [{ translateX: -12 }],
+},
+
+journeyContent: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "stretch",
+  minHeight: 0,
+},
+
+stageArea: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+},
 
   stageScrollContent: {
     paddingBottom: 12,
@@ -354,65 +340,43 @@ middlePanel: {
     borderLeftColor: BORDER,
   },
 
-  selected: {
-    paddingTop: 4,
-    paddingBottom: 8,
-  },
+selected: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  paddingTop: 4,
+  paddingBottom: 8,
+},
 
-  selectedTitle: {
-    color: "#E4C58B",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+selectedTitle: {
+  color: "#E4C58B",
+  fontSize: 14,
+  fontWeight: "600",
+},
+
+selectedPrompt: {
+  color: MUTED,
+  fontSize: 10,
+  lineHeight: 14,
+  marginTop: 0,
+  flexShrink: 1,
+},
 
 sidePanel: {
   flex: 1,
-  height: 162,
-  minHeight: 162,
-  maxHeight: 162,
+  height: 190,
+  minHeight: 190,
+  maxHeight: 190,
   minWidth: 0,
-  padding: 12,
-  borderRadius: 11,
-  borderWidth: 1,
-  borderColor: BORDER,
-  backgroundColor: "rgba(18,16,23,0.55)",
+  padding: 0,
+  borderWidth: 0,
+  borderRadius: 0,
+  backgroundColor: "transparent",
 },
 
   sidePanelNarrow: {
     width: "100%",
     flex: 0,
-  },
-
-  artifactHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  artifactTitle: {
-    color: "#D8C9AE",
-    fontSize: 9,
-    letterSpacing: 1.7,
-    fontWeight: "600",
-  },
-
-  artifactSymbol: {
-    color: "#C9AD70",
-    fontSize: 20,
-  },
-
-  artifactCanvas: {
-    flex: 1,
-    minHeight: 90,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  artifactMessage: {
-    color: "#E4C58B",
-    fontSize: 13,
-    fontWeight: "500",
   },
 
   emptySubtext: {

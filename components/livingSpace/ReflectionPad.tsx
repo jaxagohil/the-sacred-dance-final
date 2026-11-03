@@ -282,14 +282,14 @@ export default function ReflectionPad() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: 300,
-    height: 340,
-  },
+container: {
+  width: 400,
+  height: 280,
+},
 
   pad: {
-    width: "100%",
-    height: 340,
+    width: 380,
+    height: 280,
     position: "relative",
     overflow: "hidden",
     backgroundColor: "rgba(255,255,255,0.018)",
@@ -307,8 +307,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 35,
     top: 20,
-    width: 205,
-    height: 305,
+    width: 300,
+    height: 250,
   },
 
   backPaperThree: {
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   controls: {
     position: "absolute",
     right: 9,
-    top: 210,
+    top: 175,
     alignItems: "center",
     gap: 10,
   },

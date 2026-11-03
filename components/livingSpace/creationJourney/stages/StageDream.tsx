@@ -1,9 +1,12 @@
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  StyleSheet
+  StyleSheet,
+  TextInput,
+  View
 } from "react-native";
 
+import { Fonts } from "../../../../constants/theme";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
@@ -13,7 +16,7 @@ type Props = {
 export default function StageDream({ intentionId }: Props) {
   const [value, setValue] = useState("");
 
-  // Load the saved dream whenever the selected creation changes.
+  // LOAD SAVED DREAM
   useEffect(() => {
     let active = true;
 
@@ -51,7 +54,7 @@ export default function StageDream({ intentionId }: Props) {
     };
   }, [intentionId]);
 
-  // Save when the user leaves the text field.
+  // SAVE DREAM
   const saveDream = async () => {
     if (!intentionId) return;
 
@@ -97,26 +100,55 @@ export default function StageDream({ intentionId }: Props) {
     }
   };
 
-  return
+  return (
+    <View style={styles.container}>
+
+      <View style={styles.textBox}>
+        <TextInput
+          value={value}
+          onChangeText={setValue}
+          onBlur={() => void saveDream()}
+          multiline
+          placeholder="What do you see..."
+          placeholderTextColor="#77746F"
+          style={styles.input}
+          textAlignVertical="top"
+        />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: "100%",
-  },
-  prompt: {
-    color: "#E4C58B",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  input: {
     flex: 1,
-    minHeight: 100,
-    color: "#EEE5D7",
-    fontSize: 13,
-    lineHeight: 21,
+  },
+
+  label: {
+    color: "#C9AD70",
+    fontFamily: Fonts.light,
+    fontSize: 9,
+    letterSpacing: 1.8,
+    marginBottom: 8,
+  },
+textBox: {
+  width: "100%",
+  minHeight: 85,
+  padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.22)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+  },
+
+input: {
+  width: "100%",
+  minHeight: 65,
+    color: "#EEECE6",
+    fontFamily: Fonts.light,
+    fontSize: 12,
+    lineHeight: 19,
     padding: 0,
   },
 });

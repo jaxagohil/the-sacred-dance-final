@@ -8,7 +8,6 @@ import {
   Text,
   TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
 
 import { Feather } from "@expo/vector-icons";
@@ -42,9 +41,6 @@ const GOLD = "#C9AD70";
 const MUTED = "#AAA2B6";
 
 export default function StageDiscover({ intentionId }: Props) {
-  const { width } = useWindowDimensions();
-  const wide = width >= 650;
-
   const [consciousDesire, setConsciousDesire] = useState("");
   const [patternReflection, setPatternReflection] = useState("");
   const [creationPatterns, setCreationPatterns] =
@@ -54,7 +50,7 @@ export default function StageDiscover({ intentionId }: Props) {
   const [isSaving, setIsSaving] = useState(false);
 
   // --------------------------------------------------
-  // REFRESH CONSCIOUS DESIRE
+  // REFRESH
   // --------------------------------------------------
 
   const refreshConsciousDesire = useCallback(async () => {
@@ -71,24 +67,15 @@ export default function StageDiscover({ intentionId }: Props) {
         intentionId,
       });
 
-      console.log("DISCOVER CONTEXT:", context);
-console.log("LIVING FIELD:", context.livingField);
-console.log(
-  "CREATION PATTERNS:",
-  context.livingField?.creationPatterns
-);
-
       const proposal = await discoverConsciousDesire({
         context,
       }) as DiscoverProposal | null;
 
       if (!proposal) return;
 
-      // Show the new proposal in the editor.
       setConsciousDesire(proposal.desire || "");
       setPatternReflection(proposal.patternReflection || "");
 
-      // Preserve the user's confirmed response separately.
       const { data: existing, error: findError } =
         await supabase
           .from("sovereign_intention_steps")
@@ -119,12 +106,6 @@ console.log(
         if (error) throw error;
       }
 
-      console.log(
-  "REFRESH PATTERNS:",
-  context.livingField?.creationPatterns
-);
-
-      // Refresh the patterns from the same context.
       setCreationPatterns(
         Array.isArray(context.livingField?.creationPatterns)
           ? context.livingField.creationPatterns as CreationPattern[]
@@ -138,7 +119,7 @@ console.log(
   }, [intentionId, isRefreshing]);
 
   // --------------------------------------------------
-  // LOAD DISCOVER
+  // LOAD
   // --------------------------------------------------
 
   const loadDiscover = useCallback(async () => {
@@ -153,14 +134,12 @@ console.log(
       if (error) throw error;
 
       const response =
-        data?.response &&
-        typeof data.response === "object"
+        data?.response && typeof data.response === "object"
           ? data.response as { consciousDesire?: string }
           : {};
 
       const aiResponse =
-        data?.ai_response &&
-        typeof data.ai_response === "object"
+        data?.ai_response && typeof data.ai_response === "object"
           ? data.ai_response as DiscoverProposal
           : {};
 
@@ -195,7 +174,7 @@ console.log(
   }, [intentionId, refreshConsciousDesire]);
 
   // --------------------------------------------------
-  // SAVE CONFIRMED CONSCIOUS DESIRE
+  // SAVE
   // --------------------------------------------------
 
   const saveConsciousDesire = async () => {
@@ -241,6 +220,10 @@ console.log(
     }
   };
 
+  // --------------------------------------------------
+  // INITIALISE
+  // --------------------------------------------------
+
   useEffect(() => {
     setConsciousDesire("");
     setPatternReflection("");
@@ -254,99 +237,131 @@ console.log(
   // --------------------------------------------------
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={[
-        styles.columns,
-        !wide && styles.stacked,
-      ]}>
+    <View style={styles.container}>
 
-        {/* LEFT: CONSCIOUS DESIRE */}
+      {/* LEFT GROUP: DESIRE + PATTERNS */}
 
-        <View style={styles.desireColumn}>
-<View style={styles.questionRow}>
-  <View>
-    <Text style={styles.stageHeading}>Discover</Text>
-    <Text style={styles.stagePrompt}>
-      What do you truly desire?
-    </Text>
-  </View>
+      <View style={styles.portalGroup}>
+        <View style={styles.portalColumns}>
 
-  <Pressable
-    onPress={() => void refreshConsciousDesire()}
-    disabled={isRefreshing}
-    style={styles.refreshButton}
-    accessibilityLabel="Refresh conscious desire"
-  >
-    {isRefreshing ? (
-      <ActivityIndicator size="small" color={GOLD} />
-    ) : (
-      <Feather name="refresh-cw" size={13} color={GOLD} />
-    )}
-  </Pressable>
-</View>
+          {/* CONSCIOUS DESIRE */}
 
-          <TextInput
-            value={consciousDesire}
-            onChangeText={setConsciousDesire}
-            onBlur={() => void saveConsciousDesire()}
-            multiline
-            placeholder="Your conscious desire..."
-            placeholderTextColor="#77746F"
-            style={styles.input}
-          />
+          <View style={styles.desireColumn}>
+            <View style={styles.desireBox}>
 
-          {isSaving && (
-            <Text style={styles.saveStatus}>Saving...</Text>
+              <View style={styles.desireHeader}>
+
+                <Pressable
+                  onPress={() => void refreshConsciousDesire()}
+                  disabled={isRefreshing}
+                  style={styles.refreshButton}
+                  accessibilityLabel="Refresh conscious desire"
+                >
+                  {isRefreshing ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={GOLD}
+                    />
+                  ) : (
+                    <Feather
+                      name="refresh-cw"
+                      size={13}
+                      color={GOLD}
+                    />
+                  )}
+                </Pressable>
+              </View>
+
+              <TextInput
+                value={consciousDesire}
+                onChangeText={setConsciousDesire}
+                onBlur={() => void saveConsciousDesire()}
+                multiline
+                scrollEnabled
+                placeholder="Your conscious desire..."
+                placeholderTextColor="#77746F"
+                style={styles.input}
+              />
+
+              {isSaving && (
+                <Text style={styles.saveStatus}>
+                  Saving...
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* CREATION PATTERNS */}
+
+          <View style={styles.patternColumn}>
+            <View style={styles.patternBox}>
+              {creationPatterns.slice(0, 3).map((pattern) => {
+                const position = Math.max(
+                  0,
+                  Math.min(1, pattern.position)
+                );
+
+                return (
+                  <View
+                    key={pattern.id}
+                    style={styles.pattern}
+                  >
+                    <View style={styles.poles}>
+                      <Text
+                        style={styles.poleLabel}
+                        numberOfLines={1}
+                      >
+                        {pattern.leftPole}
+                      </Text>
+
+                      <Text
+                        style={styles.poleLabel}
+                        numberOfLines={1}
+                      >
+                        {pattern.rightPole}
+                      </Text>
+                    </View>
+
+                    <View style={styles.track}>
+                      <View
+                        style={[
+                          styles.dot,
+                          { left: `${position * 100}%` },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+
+        </View>
+      </View>
+
+      {/* AI REFLECTION */}
+
+      <View style={styles.reflectionColumn}>
+        <View style={styles.reflectionBox}>
+          {patternReflection ? (
+            <ScrollView
+              style={styles.reflectionScroll}
+              contentContainerStyle={styles.reflectionContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={styles.reflection}>
+                {patternReflection}
+              </Text>
+            </ScrollView>
+          ) : (
+            <Text style={styles.reflectionPlaceholder}>
+              Your AI reflection will appear here.
+            </Text>
           )}
         </View>
-
-        {/* RIGHT: PATTERNS AND REFLECTION */}
-
-        <View style={styles.patternColumn}>
-{creationPatterns.slice(0, 3).map((pattern) => {
-              const position = Math.max(
-              0,
-              Math.min(1, pattern.position)
-            );
-
-            return (
-              <View key={pattern.id} style={styles.pattern}>
-                <View style={styles.poles}>
-                  <Text style={styles.poleLabel}>
-                    {pattern.leftPole}
-                  </Text>
-
-                  <Text style={styles.poleLabel}>
-                    {pattern.rightPole}
-                  </Text>
-                </View>
-
-                <View style={styles.track}>
-                  <View
-                    style={[
-                      styles.dot,
-                      { left: `${position * 100}%` },
-                    ]}
-                  />
-                </View>
-              </View>
-            );
-          })}
-
-          {patternReflection ? (
-            <Text style={styles.reflection}>
-              {patternReflection}
-            </Text>
-          ) : null}
-        </View>
-
       </View>
-    </ScrollView>
+
+    </View>
   );
 }
 
@@ -358,99 +373,118 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: "100%",
-  },
-
-  content: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-
-  columns: {
-    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
     flexDirection: "row",
-    gap: 22,
+    gap: 6,
   },
 
-  stacked: {
-    flexDirection: "column",
+  // LEFT GROUP — 2.2 parts
+
+  portalGroup: {
+    flex: 2.2,
+    minWidth: 0,
+    minHeight: 0,
   },
 
-  desireColumn: {
+  portalColumns: {
     flex: 1,
     minWidth: 0,
+    minHeight: 0,
+    flexDirection: "row",
+    gap: 0,
   },
 
-questionRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
+  // CONSCIOUS DESIRE — wider part
+
+desireColumn: {
+  flex: 2.15,
+  minWidth: 0,
+  minHeight: 0,
 },
 
-  question: {
-    flex: 1,
-    color: "#E4C58B",
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 19,
+desireBox: {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  padding: 10,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: "rgba(201,173,112,0.22)",
+  backgroundColor: "#08090A",
+},
+
+  desireHeader: {
+    height: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+
+  boxLabel: {
+    color: "#81796E",
+    fontSize: 8,
+    letterSpacing: 1.2,
   },
 
   refreshButton: {
-    paddingVertical: 3,
-    paddingHorizontal: 2,
-  },
-
-  refreshText: {
-    color: GOLD,
-    fontSize: 10,
+    width: 22,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   input: {
-    color: "#EEE5D7",
-    fontSize: 12,
-    lineHeight: 20,
-    minHeight: 100,
+    flex: 1,
+    minHeight: 0,
+    color: "#EEECE6",
+    fontSize: 11,
+    lineHeight: 17,
     padding: 0,
-    marginTop: 12,
+    margin: 0,
     textAlignVertical: "top",
   },
-
-  stageHeading: {
-  color: "#E4C58B",
-  fontSize: 13,
-  fontWeight: "600",
-},
-
-stagePrompt: {
-  color: MUTED,
-  fontSize: 10,
-  marginTop: 2,
-},
 
   saveStatus: {
     color: MUTED,
     fontSize: 9,
-    marginTop: 4,
+    marginTop: 3,
   },
 
-  patternColumn: {
+  // PATTERNS — narrower part
+
+patternColumn: {
+  flex: 0.7,
+  minWidth: 0,
+  minHeight: 0,
+},
+
+  patternBox: {
     flex: 1,
     minWidth: 0,
-    gap: 15,
+    minHeight: 0,
+    paddingHorizontal: 7,
+    paddingVertical: 9,
+    borderColor: "rgba(201,173,112,0.16)",
+    backgroundColor: "#08090A",
+    justifyContent: "space-evenly",
+    gap: 7,
   },
 
   pattern: {
-    gap: 5,
+    gap: 6,
   },
 
   poles: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 8,
+    gap: 3,
   },
 
   poleLabel: {
     color: MUTED,
-    fontSize: 9,
+    fontSize: 8,
     flexShrink: 1,
   },
 
@@ -469,10 +503,43 @@ stagePrompt: {
     marginLeft: -3,
   },
 
+  // AI REFLECTION — wider and shifted left
+
+  reflectionColumn: {
+    flex: 1.3,
+    minWidth: 0,
+    minHeight: 0,
+  },
+
+  reflectionBox: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.22)",
+    backgroundColor: "#08090A",
+  },
+
+  reflectionScroll: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  reflectionContent: {
+    flexGrow: 1,
+  },
+
   reflection: {
-    color: "#81796E",
+    color: MUTED,
     fontSize: 10,
-    lineHeight: 16,
-    marginTop: 3,
+    lineHeight: 15,
+  },
+
+  reflectionPlaceholder: {
+    color: "#77746F",
+    fontSize: 10,
+    lineHeight: 15,
   },
 });
