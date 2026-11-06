@@ -75,13 +75,10 @@ console.log("MIRROR CONTEXT:", !!userContext?.context);
           userContext?.enrichedPatterns || [],
 
         activeChakras:
-          userContext?.energy?.activeChakras || [],
+          Object.keys(userContext?.energy?.chakras || {}),
 
         manifestations:
-          userContext?.manifestations || [],
-
-        emergenceMemory:
-          userContext?.emergenceMemory || {},
+          userContext?.recurringManifestations || [],
 
         resolvedContent: {
           whispers: [],

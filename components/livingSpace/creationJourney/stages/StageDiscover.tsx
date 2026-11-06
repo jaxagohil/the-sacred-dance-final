@@ -7,10 +7,16 @@ import {
   View,
 } from "react-native";
 
+import { processCreationDiscover } from "../../../../db/processCreationDiscover";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
   intentionId: string;
+};
+
+type Pattern = {
+  id?: string;
+  name?: string;
 };
 
 const GOLD = "#C9AD70";
@@ -19,13 +25,16 @@ const MUTED = "#AAA2B6";
 export default function StageDiscover({ intentionId }: Props) {
   const [consciousDesire, setConsciousDesire] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [patterns, setPatterns] = useState<Pattern[]>([]);
 
-  // LOAD SAVED CONSCIOUS DESIRE
+  // LOAD SAVED CONSCIOUS DESIRE AND PROCESSED PATTERNS
   useEffect(() => {
     let active = true;
 
     const loadDiscover = async () => {
       setConsciousDesire("");
+      setPatterns([]);
 
       try {
         const { data, error } = await supabase
@@ -41,7 +50,10 @@ export default function StageDiscover({ intentionId }: Props) {
         const response =
           data?.response &&
           typeof data.response === "object"
-            ? data.response as { consciousDesire?: string }
+            ? data.response as {
+                consciousDesire?: string;
+                patterns?: Pattern[];
+              }
             : {};
 
         setConsciousDesire(
@@ -49,6 +61,10 @@ export default function StageDiscover({ intentionId }: Props) {
             ? response.consciousDesire
             : ""
         );
+
+        if (Array.isArray(response.patterns)) {
+          setPatterns(response.patterns);
+        }
       } catch (error) {
         console.error("DISCOVER LOAD ERROR:", error);
       }
@@ -65,6 +81,8 @@ export default function StageDiscover({ intentionId }: Props) {
   const saveConsciousDesire = async () => {
     if (!intentionId) return;
 
+    const trimmedDesire = consciousDesire.trim();
+
     setIsSaving(true);
 
     try {
@@ -79,7 +97,7 @@ export default function StageDiscover({ intentionId }: Props) {
       if (findError) throw findError;
 
       const response = {
-        consciousDesire: consciousDesire.trim(),
+        consciousDesire: trimmedDesire,
       };
 
       if (existing) {
@@ -89,7 +107,7 @@ export default function StageDiscover({ intentionId }: Props) {
           .eq("id", existing.id);
 
         if (error) throw error;
-      } else if (response.consciousDesire) {
+      } else if (trimmedDesire) {
         const { error } = await supabase
           .from("sovereign_intention_steps")
           .insert({
@@ -100,10 +118,51 @@ export default function StageDiscover({ intentionId }: Props) {
 
         if (error) throw error;
       }
+
+      // PROCESS THE DESIRE THROUGH THE EXISTING PIPELINE
+      if (!trimmedDesire) {
+        setPatterns([]);
+        return;
+      }
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) throw userError;
+      if (!user) throw new Error("User not authenticated.");
+
+      setIsProcessing(true);
+
+      const result = await processCreationDiscover({
+        userId: user.id,
+        intentionId,
+        consciousDesire: trimmedDesire,
+      });
+
+      if (result) {
+        setPatterns(result.patterns || []);
+
+        // Keep the processed patterns alongside the human response.
+        const { error: updateError } = await supabase
+          .from("sovereign_intention_steps")
+          .update({
+            response: {
+              consciousDesire: trimmedDesire,
+              patterns: result.patterns || [],
+            },
+          })
+          .eq("intention_id", intentionId)
+          .eq("step", "discover");
+
+        if (updateError) throw updateError;
+      }
     } catch (error) {
-      console.error("DISCOVER SAVE ERROR:", error);
+      console.error("DISCOVER SAVE / PROCESS ERROR:", error);
     } finally {
       setIsSaving(false);
+      setIsProcessing(false);
     }
   };
 
@@ -130,6 +189,7 @@ export default function StageDiscover({ intentionId }: Props) {
               Saving...
             </Text>
           )}
+
         </View>
       </View>
 
@@ -137,9 +197,25 @@ export default function StageDiscover({ intentionId }: Props) {
       <View style={styles.patternColumn}>
         <View style={styles.patternBox}>
 
-          <Text style={styles.placeholder}>
-            Patterns from your Living Field will appear here.
-          </Text>
+          {isProcessing ? (
+            <Text style={styles.placeholder}>
+              Exploring your Living Field...
+            </Text>
+          ) : patterns.length > 0 ? (
+            patterns.map((pattern, index) => (
+              <Text
+                key={pattern.id || index}
+                style={styles.patternText}
+              >
+                {pattern.name || pattern.id}
+              </Text>
+            ))
+          ) : (
+            <Text style={styles.placeholder}>
+              Patterns from your Living Field will appear here.
+            </Text>
+          )}
+
         </View>
       </View>
 
@@ -226,6 +302,13 @@ const styles = StyleSheet.create({
     color: "#77746F",
     fontSize: 9,
     lineHeight: 14,
+  },
+
+  patternText: {
+    color: GOLD,
+    fontSize: 9,
+    lineHeight: 14,
+    marginBottom: 5,
   },
 
   reflectionColumn: {

@@ -27,6 +27,15 @@ import StageGrow from "./creationJourney/stages/StageGrow";
 import StageRenew from "./creationJourney/stages/StageRenew";
 import StageScale from "./creationJourney/stages/StageScale";
 
+import {
+  CreationNextStepPortal,
+  processCreationNextStep,
+} from "../../db/processCreationNextStep";
+
+import {
+  initialiseAlignmentOSContext,
+} from "../../lib/context/initialiseAlignmentOSContext";
+
 const MUTED = "#AAA2B6";
 const BORDER = "rgba(201,173,112,0.22)";
 
@@ -36,6 +45,66 @@ export default function CreationJourney() {
   const [creations, setCreations] = useState<CreationItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+    const handleSelectNextStep = async (glimmer: {
+    id: string;
+    title: string;
+    detail: string;
+    reality: string;
+    portal?: string;
+  }) => {
+    try {
+      if (!selectedId) {
+        throw new Error("No creation selected.");
+      }
+
+      const userId = await getUserId();
+
+      if (!userId) {
+        throw new Error("No authenticated user found.");
+      }
+
+      const portalMap: Record<string, CreationNextStepPortal> = {
+        "CAN CHANGE": "can",
+        "CAN'T CHANGE": "cant",
+        "WON'T CHANGE": "wont",
+      };
+
+      const portal = portalMap[glimmer.portal || ""];
+
+      if (!portal) {
+        throw new Error("Invalid Next Step portal.");
+      }
+
+      // 1. Create the new signal
+      const result = await processCreationNextStep({
+        userId,
+        intentionId: selectedId,
+        portal,
+        glimmerId: glimmer.id,
+        glimmerTitle: glimmer.title,
+        glimmerDetail: glimmer.detail,
+        reality: glimmer.reality,
+      });
+
+      if (!result) {
+        throw new Error("Next Step processing returned no result.");
+      }
+
+      // 2. Refresh the shared Living Field
+      await initialiseAlignmentOSContext();
+
+      console.log(
+        "NEXT STEP PROCESSED:",
+        glimmer.id,
+        "SIGNALS:",
+        result.signals.length
+      );
+
+    } catch (error) {
+      console.error("NEXT STEP PROCESSING ERROR:", error);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -259,9 +328,11 @@ export default function CreationJourney() {
       </View>
 
       {/* SOVEREIGN I — SEPARATE FULL-WIDTH WORKSPACE */}
-      <View style={styles.sovereignPanel}>
-        <JourneyToSovereignI />
-      </View>
+<View style={styles.sovereignPanel}>
+  <JourneyToSovereignI
+    onSelectNextStep={handleSelectNextStep}
+  />
+</View>
 
 
     </View>

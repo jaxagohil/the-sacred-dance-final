@@ -15,17 +15,13 @@ import { generateAIResponse } from "../../../ai/generateAIResponse";
 
 import { getSovereignContext } from "../context/getSovereignIContext";
 
-import { captureExpression } from "../../consciousCreating/captureExpression";
+import { captureExpression } from "./captureExpression";
 
-import { interpretExpression } from "../../consciousCreating/interpretExpression";
+import { interpretExpression } from "./interpretExpression";
 
 import { SOVEREIGN_I_INSTRUCTIONS } from "./sovereignI.instructions";
 
 import { mirrorCapability } from "../capabilities/mirror/mirrorCapability";
-
-import {
-  loadBuildConversation,
-} from "../../consciousCreating/agents/mirror/persistBuildConversation";
 
 import type {
   CreationStage,
@@ -43,7 +39,20 @@ import type {
 export interface SovereignIInput {
   userId: string;
   intentionId: string;
-  currentMessage: string;
+
+  // Human expression pathway
+  currentMessage?: string;
+
+  // How Sovereign I was activated
+  mode?: "expression" | "event_reassessment";
+
+  // Transient interaction context.
+  // This is NOT a persisted Living Field signal.
+  eventContext?: {
+    type: string;
+    [key: string]: unknown;
+  };
+
   activeStage?: CreationStage;
   conversation?: SovereignIConversation;
 }
@@ -60,7 +69,7 @@ const MAX_CAPABILITY_INVOCATIONS = 1;
 
 const safeJson = (value: unknown): string => {
   try {
-    return JSON.stringify(value, null, 2);
+    return JSON.stringify(value ?? {}, null, 2) ?? "{}";
   } catch {
     return "{}";
   }
@@ -180,6 +189,8 @@ function buildOrchestrationPrompt({
   conversation,
   currentMessage,
   activeStage,
+  triggerType,
+  eventContext,
   capabilityResults,
   canInvokeCapability,
 }: {
@@ -187,9 +198,13 @@ function buildOrchestrationPrompt({
   conversation: SovereignIConversation;
   currentMessage: string;
   activeStage?: CreationStage;
+  triggerType: "expression" | "event_reassessment";
+  eventContext?: Record<string, unknown>;
   capabilityResults: SovereignICapabilityResult[];
   canInvokeCapability: boolean;
 }): string {
+  const livingField = context.livingField;
+
   return `
 ${SOVEREIGN_I_INSTRUCTIONS}
 
@@ -217,10 +232,54 @@ ACTIVE CREATION STAGE
 ${activeStage || "Not specified"}
 
 ----------------------------------------
+TRIGGER TYPE
+----------------------------------------
+
+${triggerType}
+
+----------------------------------------
+TRANSIENT INTERACTION EVENT
+----------------------------------------
+
+${safeJson(eventContext || {})}
+
+IMPORTANT:
+
+An event_reassessment is a UI interaction or navigation
+event. It is not automatically a new human expression.
+
+Do not treat a portal selection or Glimmer selection
+as a persisted Living Field signal.
+
+Do not assume that the person has completed an action
+merely because they selected a Glimmer.
+
+----------------------------------------
 CREATION CONTEXT
 ----------------------------------------
 
 ${safeJson(context)}
+
+----------------------------------------
+REALITY LAYERS
+----------------------------------------
+
+${safeJson(livingField?.realityLayers)}
+
+----------------------------------------
+ENERGY FIELD
+----------------------------------------
+
+${safeJson(livingField?.energy)}
+
+These are derived from the existing Living Field.
+The Energy Field may contain interactive points such as
+chakras, distortion dots and other mapped relationships.
+Use only the structures and details actually supplied.
+
+Do not invent values, scores, meanings or changes.
+Do not assume that interacting with a point changes the
+underlying Reality Layers or Energy Field.
 
 ----------------------------------------
 CONVERSATION
@@ -229,7 +288,7 @@ CONVERSATION
 ${safeJson(conversation.messages)}
 
 ----------------------------------------
-CURRENT HUMAN MESSAGE
+CURRENT TRIGGER MESSAGE
 ----------------------------------------
 
 ${currentMessage}
@@ -244,8 +303,26 @@ ${safeJson(capabilityResults)}
 YOUR DECISION
 ----------------------------------------
 
-Consider the whole context, the current human message,
-the conversation and any previous capability results.
+Consider the whole context:
+
+- The person's existing Living Field
+- The four Reality Layers and any selected layer indicator
+- The Energy Field, including any selected chakra,
+  distortion dot, interaction point or connection
+- The creation and its current stage
+- The current interaction or human expression
+- The conversation
+- Previous capability results
+
+For expression mode, consider the new human expression
+alongside the existing context.
+
+For event_reassessment mode, consider the transient
+interaction alongside the existing context.
+
+Do not confuse an interaction event with a new signal.
+
+Do not assume that every interaction requires a response.
 
 If a capability has already been invoked, consider
 what it contributed before deciding what happens next.
@@ -266,6 +343,8 @@ ${canInvokeCapability
 Do not invoke a capability automatically.
 
 Do not interpret the person's inner truth as fact.
+
+Do not impose meaning, positivity or a next step.
 
 Return ONLY valid JSON.
 
@@ -309,6 +388,8 @@ async function requestDecision({
   conversation,
   currentMessage,
   activeStage,
+  triggerType,
+  eventContext,
   capabilityResults,
   canInvokeCapability,
 }: {
@@ -316,6 +397,8 @@ async function requestDecision({
   conversation: SovereignIConversation;
   currentMessage: string;
   activeStage?: CreationStage;
+  triggerType: "expression" | "event_reassessment";
+  eventContext?: Record<string, unknown>;
   capabilityResults: SovereignICapabilityResult[];
   canInvokeCapability: boolean;
 }): Promise<SovereignIDecision> {
@@ -325,6 +408,8 @@ async function requestDecision({
     conversation,
     currentMessage,
     activeStage,
+    triggerType,
+    eventContext,
     capabilityResults,
     canInvokeCapability,
   });
@@ -404,11 +489,38 @@ export async function sovereignIOrchestrator(
     );
   }
 
-  if (!input.currentMessage?.trim()) {
+  const mode = input.mode || "expression";
+
+  // ----------------------------------------------
+  // VALIDATE TRIGGER
+  // ----------------------------------------------
+
+  if (
+    mode === "expression" &&
+    !input.currentMessage?.trim()
+  ) {
     throw new Error(
-      "Sovereign I requires a current message."
+      "Sovereign I requires a current message in expression mode."
     );
   }
+
+  if (
+    mode === "event_reassessment" &&
+    !input.eventContext
+  ) {
+    throw new Error(
+      "Sovereign I requires event context for reassessment."
+    );
+  }
+
+  // This message is used by the existing capability
+  // interface. In event mode it describes the event;
+  // it is NOT captured as a human expression.
+
+  const currentMessage =
+    mode === "expression"
+      ? input.currentMessage!.trim()
+      : `A UI exploration event (not a new human expression) occurred:\n${safeJson(input.eventContext)}`;
 
   // ----------------------------------------------
   // 1. LOAD COMPLETE CREATION CONTEXT
@@ -421,64 +533,64 @@ export async function sovereignIOrchestrator(
   });
 
   // ----------------------------------------------
-  // 2. CAPTURE THE HUMAN EXPRESSION
+  // 2. CAPTURE AND INTERPRET HUMAN EXPRESSION
   // ----------------------------------------------
 
-  const expression = await captureExpression({
-    userId: input.userId,
-    intentionId: input.intentionId,
-    content: input.currentMessage,
-    sourceType: "text",
-  });
+  if (mode === "expression") {
+
+    const expression = await captureExpression({
+      userId: input.userId,
+      intentionId: input.intentionId,
+      content: currentMessage,
+      sourceType: "text",
+    });
+
+    await interpretExpression({
+      userId: input.userId,
+      intentionId: input.intentionId,
+      expressionId: expression.id,
+      expression: currentMessage,
+      context: {
+        creationContext: context,
+      },
+    });
+  }
 
   // ----------------------------------------------
-  // 3. INTERPRET THE EXPRESSION
+  // 3. REFRESH CREATION CONTEXT WHEN NEEDED
   // ----------------------------------------------
 
-  await interpretExpression({
-    userId: input.userId,
-    intentionId: input.intentionId,
-    expressionId: expression.id,
-    expression: input.currentMessage,
-    context: {
-      creationContext: context,
-    },
-  });
+  // A new human expression may have changed persisted
+  // Living Field data through the existing expression
+  // pipeline, so rebuild the context after interpretation.
+  //
+  // Event reassessment does not create an expression or
+  // signal. It therefore uses the context loaded above.
+
+  if (mode === "expression") {
+    context = await getSovereignContext({
+      userId: input.userId,
+      intentionId: input.intentionId,
+      activeStage: input.activeStage,
+    });
+  }
 
   // ----------------------------------------------
-  // 4. REFRESH CONTEXT
+  // 4. PREPARE CONVERSATION
   // ----------------------------------------------
 
-  context = await getSovereignContext({
-    userId: input.userId,
-    intentionId: input.intentionId,
-    activeStage: input.activeStage,
-  });
-
-  // ----------------------------------------------
-  // 5. PREPARE CONVERSATION
-  // ----------------------------------------------
-
-  const existingBuild =
-    await loadBuildConversation(input.intentionId);
+  // Conversation history is supplied by the caller.
+  // The orchestrator does not assume a separate Build
+  // conversation persistence mechanism exists.
 
   const conversation: SovereignIConversation = {
     messages: [
-      ...existingBuild.conversation.map((message) => ({
-        role:
-          message.role === "mirror"
-            ? "assistant" as const
-            : message.role === "assistant"
-              ? "assistant" as const
-              : "user" as const,
-        content: message.content,
-      })),
       ...(input.conversation?.messages || []),
     ],
   };
 
   // ----------------------------------------------
-  // 6. PREPARE CAPABILITY RESULTS
+  // 5. PREPARE CAPABILITY RESULTS
   // ----------------------------------------------
 
   const capabilityResults: SovereignICapabilityResult[] = [];
@@ -486,7 +598,7 @@ export async function sovereignIOrchestrator(
   let decision: SovereignIDecision;
 
   // ----------------------------------------------
-  // 7. ORCHESTRATION LOOP
+  // 6. ORCHESTRATION LOOP
   // ----------------------------------------------
 
   for (
@@ -505,8 +617,10 @@ export async function sovereignIOrchestrator(
     decision = await requestDecision({
       context,
       conversation,
-      currentMessage: input.currentMessage,
+      currentMessage,
       activeStage: input.activeStage,
+      triggerType: mode,
+      eventContext: input.eventContext,
       capabilityResults,
       canInvokeCapability,
     });
@@ -537,7 +651,7 @@ export async function sovereignIOrchestrator(
       decision,
       context,
       conversation,
-      currentMessage: input.currentMessage,
+      currentMessage,
     });
 
     capabilityResults.push(result);
@@ -547,7 +661,7 @@ export async function sovereignIOrchestrator(
   }
 
   // ----------------------------------------------
-  // 8. SAFETY FALLBACK
+  // 7. SAFETY FALLBACK
   // ----------------------------------------------
 
   const lastResult =

@@ -4,10 +4,11 @@ import {
   PanResponder,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 
 import { Fonts } from "../../../../constants/theme";
+import { processCreationGrow } from "../../../../db/processCreationGrow";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
@@ -48,6 +49,29 @@ export default function StageGrow({ intentionId }: Props) {
     createDefaultSliders
   );
   const [additionalText, setAdditionalText] = useState("");
+
+  const processGrow = async () => {
+  if (!intentionId) return;
+
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error("User not authenticated.");
+
+    await processCreationGrow({
+      userId: user.id,
+      intentionId,
+      sliders,
+      additionalText,
+    });
+  } catch (error) {
+    console.error("GROW PROCESSING ERROR:", error);
+  }
+};
 
   // LOAD SAVED GROW RESPONSES
   useEffect(() => {
