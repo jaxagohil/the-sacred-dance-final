@@ -4,7 +4,10 @@ import { supabase } from "../../../../services/supabase";
 // TYPES
 // --------------------------------------------------
 
-export type BuildConversationRole = "user" | "mirror";
+export type BuildConversationRole =
+  | "user"
+  | "mirror"
+  | "assistant";
 
 export interface BuildConversationMessage {
   role: BuildConversationRole;
@@ -118,17 +121,18 @@ export async function loadBuildConversation(
 // SAVE
 // --------------------------------------------------
 
+
 export async function persistBuildConversation(
   input: PersistBuildConversationInput
 ): Promise<void> {
-const {
-  intentionId,
-  conversation,
-  options = [],
-  selectedNextStep = null,
-  readiness,
-  nextMoves = [],
-} = input;
+  const {
+    intentionId,
+    conversation,
+    options = [],
+    selectedNextStep = null,
+    readiness,
+    nextMoves,
+  } = input;
 
   if (!intentionId) {
     throw new Error(
@@ -136,24 +140,21 @@ const {
     );
   }
 
-const response = {
-  conversation,
-  options,
-  selected_next_step: selectedNextStep,
-};
+  const response = {
+    conversation,
+    options,
+    selected_next_step: selectedNextStep,
+  };
 
-const aiResponse = {
-  ...(readiness ? { readiness } : {}),
-  nextMoves,
-};
-
-  const { data: existing, error: findError } =
-    await supabase
-      .from("sovereign_intention_steps")
-      .select("id")
-      .eq("intention_id", intentionId)
-      .eq("step", "build")
-      .maybeSingle();
+  const {
+    data: existing,
+    error: findError,
+  } = await supabase
+    .from("sovereign_intention_steps")
+    .select("id, ai_response")
+    .eq("intention_id", intentionId)
+    .eq("step", "build")
+    .maybeSingle();
 
   if (findError) {
     console.error(
@@ -163,13 +164,26 @@ const aiResponse = {
     throw findError;
   }
 
+  const existingAIResponse =
+    existing?.ai_response &&
+    typeof existing.ai_response === "object" &&
+    !Array.isArray(existing.ai_response)
+      ? existing.ai_response
+      : {};
+
+  const aiResponse = {
+    ...existingAIResponse,
+    ...(readiness !== undefined ? { readiness } : {}),
+    ...(nextMoves !== undefined ? { nextMoves } : {}),
+  };
+
   if (existing) {
     const { error } = await supabase
       .from("sovereign_intention_steps")
-.update({
-  response,
-  ai_response: aiResponse,
-})
+      .update({
+        response,
+        ai_response: aiResponse,
+      })
       .eq("id", existing.id);
 
     if (error) {
@@ -185,12 +199,12 @@ const aiResponse = {
 
   const { error } = await supabase
     .from("sovereign_intention_steps")
-.insert({
-  intention_id: intentionId,
-  step: "build",
-  response,
-  ai_response: aiResponse,
-});
+    .insert({
+      intention_id: intentionId,
+      step: "build",
+      response,
+      ai_response: aiResponse,
+    });
 
   if (error) {
     console.error(

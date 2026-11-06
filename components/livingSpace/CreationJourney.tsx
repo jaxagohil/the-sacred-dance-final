@@ -13,7 +13,8 @@ import MyCreations, {
   CreationItem,
 } from "./creationJourney/MyCreations";
 
-import JourneyStages, {
+import CreationSpiral from "./creationJourney/CreationSpiral";
+import {
   STAGES,
 } from "./creationJourney/JourneyStages";
 
@@ -201,12 +202,16 @@ export default function CreationJourney() {
       <View style={styles.contentRow}>
         <View style={styles.middlePanel}>
           <View style={styles.journeyContent}>
-            <View style={styles.journeyStagesOffset}>
-              <JourneyStages
-                activeStage={activeStage}
-                onSelect={setActiveStage}
-              />
-            </View>
+ <View style={styles.journeyStagesOffset}>
+
+
+  <View style={styles.spiralPreview}>
+    <CreationSpiral
+      activeStage={activeStage}
+      onSelect={setActiveStage}
+    />
+  </View>
+</View>
 
  
 <View style={styles.stageArea}>
@@ -298,6 +303,20 @@ discoverFullWidth: {
   minHeight: 0,
   marginLeft: 0,
   marginRight: -10,
+},
+
+journeyStagesOffset: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  gap: 8,
+  transform: [{ translateX: -12 }],
+},
+
+spiralPreview: {
+  width: 118,
+  height: 130,
+  overflow: "visible",
+    transform: [{ translateY: -0 }],
 },
 
 sovereignPanel: {

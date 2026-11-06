@@ -1,75 +1,122 @@
- 
+
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 const GOLD = "#C9AD70";
+const INACTIVE = "#C9AD70";
+const ACTIVE = "#FFE2A3";
 
-const STAGES = [
-  { id: "dream", icon: "star", x: "25%", y: "83%" },
-  { id: "discover", icon: "compass", x: "37%", y: "68%" },
-  { id: "build", icon: "tool", x: "50%", y: "48%" },
-  { id: "grow", icon: "trending-up", x: "17%", y: "48%" },
-  { id: "scale", icon: "maximize-2", x: "83%", y: "43%" },
-  { id: "renew", icon: "refresh-cw", x: "57%", y: "15%" },
-] as const;
+const WIDTH = 100;
+const HEIGHT = 110;
+const BUTTON_SIZE = 20;
+const ICON_SIZE = 15;
 
 type Props = {
   activeStage: string;
-  onSelectStage: (stage: string) => void;
+  onSelect: (stageId: string) => void;
 };
+
+type SpiralStage = {
+  id: string;
+  icon: keyof typeof Feather.glyphMap;
+  offsetX: number;
+  offsetY: number;
+};
+
+const STAGES: SpiralStage[] = [
+  { id: "dream", icon: "star", offsetX: 0, offsetY: 0 },
+  { id: "discover", icon: "compass", offsetX: 0, offsetY: 0 },
+  { id: "grow", icon: "trending-up", offsetX: -12, offsetY: 2 },
+  { id: "build", icon: "tool", offsetX: 20, offsetY: 10 },
+  { id: "scale", icon: "maximize-2", offsetX: -17, offsetY: 2 },
+  { id: "renew", icon: "refresh-cw", offsetX: 10, offsetY: 0 },
+];
+
+const CX = 50;
+const BOTTOM = 119;
+const TOP = 11;
+const TURNS = 6;
+const MAX_RADIUS = 47;
+const MIN_RADIUS = 5;
+const DEPTH = 4.5;
+
+function getSpiralPoint(t: number) {
+  const angle = t * TURNS * Math.PI * 2;
+  const radius =
+    MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * (1 - t);
+
+  return {
+    x: CX + radius * Math.cos(angle),
+    y:
+      BOTTOM -
+      (BOTTOM - TOP) * t +
+      DEPTH * Math.sin(angle),
+  };
+}
+
+function createSpiralPath() {
+  const steps = 360;
+
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const point = getSpiralPoint(i / steps);
+    return `${i === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+  }).join(" ");
+}
 
 export default function CreationSpiral({
   activeStage,
-  onSelectStage,
+  onSelect,
 }: Props) {
+  const spiralPath = createSpiralPath();
+
   return (
     <View style={styles.container}>
       <Svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 300 260"
-        preserveAspectRatio="xMidYMid meet"
+        width={WIDTH}
+        height={HEIGHT}
+        viewBox="0 0 118 130"
+        style={StyleSheet.absoluteFill}
       >
         <Path
-          d="
-            M 65 225
-            C 25 205, 45 160, 95 165
-            C 145 170, 145 225, 100 225
-            C 45 225, 35 165, 75 125
-            C 115 85, 190 100, 205 145
-            C 220 190, 270 165, 265 110
-            C 260 55, 205 25, 145 35
-            C 105 42, 95 75, 125 90
-            C 150 102, 170 85, 160 70
-            C 150 58, 130 62, 130 75
-          "
+          d={spiralPath}
           fill="none"
           stroke={GOLD}
-          strokeWidth={1.4}
+          strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </Svg>
 
-      {STAGES.map((stage) => {
+      {STAGES.map((stage, index) => {
         const active = activeStage === stage.id;
+        const point = getSpiralPoint(index / (STAGES.length - 1));
 
         return (
           <Pressable
             key={stage.id}
-            onPress={() => onSelectStage(stage.id)}
+            onPress={() => onSelect(stage.id)}
+            accessibilityRole="button"
+            accessibilityLabel={stage.id}
+            accessibilityState={{ selected: active }}
             style={[
-              styles.marker,
-              { left: stage.x, top: stage.y },
-              active && styles.activeMarker,
+styles.stageButton,
+active && styles.stageButtonActive,
+{
+  left: point.x * (WIDTH / 118) + stage.offsetX - BUTTON_SIZE / 2,
+  top: point.y * (HEIGHT / 130) + stage.offsetY - BUTTON_SIZE / 2,
+},
             ]}
           >
             <Feather
               name={stage.icon}
-              size={active ? 14 : 12}
-              color={active ? "#F1D49A" : "#81796E"}
+              size={ICON_SIZE}
+              color={active ? ACTIVE : INACTIVE}
             />
           </Pressable>
         );
@@ -80,25 +127,30 @@ export default function CreationSpiral({
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    maxWidth: 230,
-    aspectRatio: 1.15,
-    alignSelf: "center",
+    width: WIDTH,
+    height: HEIGHT,
     position: "relative",
   },
-  marker: {
-    position: "absolute",
-    width: 24,
-    height: 24,
-    marginLeft: -12,
-    marginTop: -12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  activeMarker: {
-    borderWidth: 1,
-    borderColor: GOLD,
-    borderRadius: 15,
-    backgroundColor: "#292116",
-  },
+stageButton: {
+  position: "absolute",
+  width: BUTTON_SIZE,
+  height: BUTTON_SIZE,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: BUTTON_SIZE / 2,
+  backgroundColor: "#111116",
+  borderWidth: 1,
+  borderColor: "rgba(201,173,112,0.45)",
+},
+
+stageButtonActive: {
+  backgroundColor: "#211B12",
+  borderColor: "#F1D49A",
+  borderWidth: 1.3,
+  shadowColor: "#F1D49A",
+  shadowOpacity: 0.45,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 0 },
+  elevation: 4,
+},
 });
