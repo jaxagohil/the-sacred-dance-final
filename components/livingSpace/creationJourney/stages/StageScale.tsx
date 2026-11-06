@@ -1,11 +1,11 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { Fonts } from "../../../../constants/theme";
@@ -61,17 +61,21 @@ export default function StageScale({ intentionId }: Props) {
   const [scaleState, setScaleState] =
     useState<ScaleState>(createEmptyState);
 
-  // LOAD SAVED SCALE RESPONSES
+  const stateRef = useRef(scaleState);
+
+  useEffect(() => {
+    stateRef.current = scaleState;
+  }, [scaleState]);
+
   useEffect(() => {
     let active = true;
 
     const loadScale = async () => {
-      if (!intentionId) {
-        setScaleState(createEmptyState());
-        return;
-      }
+      const emptyState = createEmptyState();
+      stateRef.current = emptyState;
+      setScaleState(emptyState);
 
-      setScaleState(createEmptyState());
+      if (!intentionId) return;
 
       try {
         const { data, error } = await supabase
@@ -84,10 +88,7 @@ export default function StageScale({ intentionId }: Props) {
         if (error) throw error;
         if (!active) return;
 
-        if (!data?.response) {
-          setScaleState(createEmptyState());
-          return;
-        }
+        if (!data?.response) return;
 
         const parsed =
           typeof data.response === "string"
@@ -116,14 +117,17 @@ export default function StageScale({ intentionId }: Props) {
               : "",
         });
 
-        setScaleState({
+        const nextState: ScaleState = {
           activePortal: validPortal,
           portals: {
             people: getPortal("people"),
             places: getPortal("places"),
             things: getPortal("things"),
           },
-        });
+        };
+
+        stateRef.current = nextState;
+        setScaleState(nextState);
       } catch (error) {
         console.error("SCALE LOAD ERROR:", error);
       }
@@ -136,7 +140,6 @@ export default function StageScale({ intentionId }: Props) {
     };
   }, [intentionId]);
 
-  // SAVE SCALE RESPONSES
   const saveScale = async (nextState: ScaleState) => {
     if (!intentionId) return;
 
@@ -179,20 +182,21 @@ export default function StageScale({ intentionId }: Props) {
     }
   };
 
-  // SELECT PEOPLE / PLACES / THINGS
   const selectPortal = (portalId: PortalId) => {
     const nextState: ScaleState = {
-      ...scaleState,
+      ...stateRef.current,
       activePortal: portalId,
     };
 
+    stateRef.current = nextState;
     setScaleState(nextState);
     void saveScale(nextState);
   };
 
-  // UPDATE TEXT
   const updateText = (text: string) => {
-    setScaleState((current) => ({
+    const current = stateRef.current;
+
+    const nextState: ScaleState = {
       ...current,
       portals: {
         ...current.portals,
@@ -201,12 +205,14 @@ export default function StageScale({ intentionId }: Props) {
           text,
         },
       },
-    }));
+    };
+
+    stateRef.current = nextState;
+    setScaleState(nextState);
   };
 
-  // SAVE TEXT WHEN LEAVING THE INPUT
   const saveText = () => {
-    void saveScale(scaleState);
+    void saveScale(stateRef.current);
   };
 
   const activeResponse =
@@ -218,7 +224,6 @@ export default function StageScale({ intentionId }: Props) {
 
   return (
     <View style={styles.scaleLayout}>
-      {/* WRITING AREA */}
       <View style={styles.textBox}>
         <TextInput
           value={activeResponse.text}
@@ -231,7 +236,6 @@ export default function StageScale({ intentionId }: Props) {
         />
       </View>
 
-      {/* PEOPLE / PLACES / THINGS */}
       <View style={styles.portals}>
         {SCALE_PORTALS.map((portal) => {
           const selected =

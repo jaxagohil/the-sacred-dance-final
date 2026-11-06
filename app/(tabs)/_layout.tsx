@@ -1,13 +1,7 @@
+
 import { Tabs } from "expo-router";
 
-import {
-  BookOpen,
-  CircleUserRound,
-  Compass,
-  Gem,
-  Orbit,
-  Sparkles,
-} from "lucide-react-native";
+import { Gem } from "lucide-react-native";
 
 import {
   Colors,
@@ -15,233 +9,84 @@ import {
 } from "../../constants/theme";
 
 export default function TabLayout() {
-
   return (
-
     <Tabs
-
       screenOptions={{
-
         headerShown: false,
 
-        tabBarStyle: {
-
-          backgroundColor:
-            Colors.background,
-
-          borderTopColor:
-            "rgba(255,255,255,0.04)",
-
-          height: 82,
-
-          paddingBottom: 18,
-
-          paddingTop: 3,
-        },
+tabBarStyle: {
+  display: "none",
+},
 
         tabBarItemStyle: {
-
           paddingTop: 4,
         },
 
-        tabBarActiveTintColor:
-          Colors.gold,
-
-        tabBarInactiveTintColor:
-          Colors.mutedText,
+        tabBarActiveTintColor: Colors.gold,
+        tabBarInactiveTintColor: Colors.mutedText,
 
         tabBarLabelStyle: {
-
           fontSize: 10,
-
-          fontFamily:
-            Fonts.light,
-
+          fontFamily: Fonts.light,
           marginTop: 4,
         },
       }}
     >
-
-      {/* ✦ SOVEREIGN I */}
-
-<Tabs.Screen
-
-  name="sovereign"
-
-  options={{
-
-    title: "Sovereign I",
-
-    tabBarIcon: ({
-      color,
-    }) => (
-
-      <Gem
-
-        size={19}
-
-        color={color}
-
-        strokeWidth={
-          1.8
-        }
-      />
-    ),
-  }}
-/>
-
-      {/* ✨ MIRROR */}
-
+      {/* MAIN EXPERIENCE */}
       <Tabs.Screen
-
-        name="mirror"
-
+        name="livingSpace"
         options={{
-
-          title: "Mirror",
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <Sparkles
-
+          title: "Living Space",
+          tabBarIcon: ({ color }) => (
+            <Gem
               size={19}
-
               color={color}
-
-              strokeWidth={
-                1.8
-              }
+              strokeWidth={1.8}
             />
           ),
         }}
       />
 
-      {/* 🧭 GUIDANCE */}
-
+      {/* CIRCLES — opened from Living Space */}
       <Tabs.Screen
-
-        name="guidance"
-
-        options={{
-
-          title: "Guidance",
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <Compass
-
-              size={19}
-
-              color={color}
-
-              strokeWidth={
-                1.8
-              }
-            />
-          ),
-        }}
-      />
-
-      {/* 🌌 CONNECTIONS .. NOW ALIGNMENT */}
-
-      <Tabs.Screen
-
         name="connections"
-
         options={{
-
           title: "Circles",
-
-              href: null,
-    tabBarStyle: { display: "none" },
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <Orbit
-
-              size={19}
-
-              color={color}
-
-              strokeWidth={
-                1.8
-              }
-            />
-          ),
+          href: null,
+          tabBarStyle: { display: "none" },
         }}
       />
 
-      {/* 📖 REFLECTIONS */}
-
+      {/* YOU — profile overlay is opened from Living Space */}
       <Tabs.Screen
-
-        name="journal"
-
-        options={{
-
-          title: "Reflections",
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <BookOpen
-
-              size={19}
-
-              color={color}
-
-              strokeWidth={
-                1.8
-              }
-            />
-          ),
-        }}
-      />      
-
-      {/* 👤 YOU */}
-
-      <Tabs.Screen
-
         name="you"
-
         options={{
-
           title: "You",
-
-          tabBarIcon: ({
-            color,
-          }) => (
-
-            <CircleUserRound
-
-              size={19}
-
-              color={color}
-
-              strokeWidth={
-                1.8
-              }
-            />
-          ),
+          href: null,
+          tabBarStyle: { display: "none" },
         }}
       />
 
+      {/* HIDDEN / RETIRED NAVIGATION ROUTES */}
       <Tabs.Screen
-  name="livingSpace"
-  options={{
-    title: "Living Space",
-    href: null,
-    tabBarStyle: { display: "none" },
-  }}
-/>
+        name="sovereign"
+        options={{ href: null }}
+      />
 
+      <Tabs.Screen
+        name="mirror"
+        options={{ href: null }}
+      />
+
+      <Tabs.Screen
+        name="guidance"
+        options={{ href: null }}
+      />
+
+      <Tabs.Screen
+        name="journal"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }

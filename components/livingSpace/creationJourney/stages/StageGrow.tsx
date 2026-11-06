@@ -1,15 +1,13 @@
 
 import React, { useEffect, useState } from "react";
 import {
-    PanResponder,
-    Text,
-    TextInput,
-    View,
+  PanResponder,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { Fonts } from "../../../../constants/theme";
-import { getCreationContext } from "../../../../lib/consciousCreating";
-import { getUserId } from "../../../../lib/user";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
@@ -17,61 +15,16 @@ type Props = {
 };
 
 const GROW_VALUES = [
-  {
-    id: "oneness",
-    label: "Oneness",
-    invitation: "Be with nature",
-    chakra: "earth_star",
-  },
-  {
-    id: "abundance",
-    label: "Abundance",
-    invitation: "Trust and receive",
-    chakra: "root",
-  },
-  {
-    id: "aliveness",
-    label: "Aliveness",
-    invitation: "Everyday moments",
-    chakra: "sacral",
-  },
-  {
-    id: "presence",
-    label: "Presence",
-    invitation: "Just be",
-    chakra: "solar_plexus",
-  },
-  {
-    id: "wellbeing",
-    label: "Wellbeing",
-    invitation: "Love yourself",
-    chakra: "heart",
-  },
-  {
-    id: "freedom",
-    label: "Freedom",
-    invitation: "Express yourself",
-    chakra: "throat",
-  },
-  {
-    id: "possibility",
-    label: "Possibility",
-    invitation: "See the magic",
-    chakra: "third_eye",
-  },
-  {
-    id: "clarity",
-    label: "Clarity",
-    invitation: "Keep it simple",
-    chakra: "crown",
-  },
-  {
-    id: "connection",
-    label: "Connection",
-    invitation: "The bigger picture",
-    chakra: "soul_star",
-  },
-];
+  { id: "oneness", label: "Oneness", invitation: "Be with nature", chakra: "earth_star" },
+  { id: "abundance", label: "Abundance", invitation: "Trust and receive", chakra: "root" },
+  { id: "aliveness", label: "Aliveness", invitation: "Everyday moments", chakra: "sacral" },
+  { id: "presence", label: "Presence", invitation: "Just be", chakra: "solar_plexus" },
+  { id: "wellbeing", label: "Wellbeing", invitation: "Love yourself", chakra: "heart" },
+  { id: "freedom", label: "Freedom", invitation: "Express yourself", chakra: "throat" },
+  { id: "possibility", label: "Possibility", invitation: "See the magic", chakra: "third_eye" },
+  { id: "clarity", label: "Clarity", invitation: "Keep it simple", chakra: "crown" },
+  { id: "connection", label: "Connection", invitation: "The bigger picture", chakra: "soul_star" },
+] as const;
 
 const CHAKRA_COLORS: Record<string, string> = {
   earth_star: "#6B4F3A",
@@ -85,25 +38,26 @@ const CHAKRA_COLORS: Record<string, string> = {
   soul_star: "#D8C7A2",
 };
 
+const createDefaultSliders = (): Record<string, number> =>
+  Object.fromEntries(
+    GROW_VALUES.map((item) => [item.id, 0.5])
+  );
+
 export default function StageGrow({ intentionId }: Props) {
-  const [sliders, setSliders] = useState<Record<string, number>>({});
+  const [sliders, setSliders] = useState<Record<string, number>>(
+    createDefaultSliders
+  );
   const [additionalText, setAdditionalText] = useState("");
 
-  // --------------------------------------------------
-  // LOAD GROW
-  // Existing saved values take priority.
-  // New creations seed from Living Field chakra scores.
-  // --------------------------------------------------
-
+  // LOAD SAVED GROW RESPONSES
   useEffect(() => {
     let active = true;
 
     const loadGrowStep = async () => {
-      if (!intentionId) {
-        setSliders({});
-        setAdditionalText("");
-        return;
-      }
+      setSliders(createDefaultSliders());
+      setAdditionalText("");
+
+      if (!intentionId) return;
 
       try {
         const { data, error } = await supabase
@@ -113,92 +67,30 @@ export default function StageGrow({ intentionId }: Props) {
           .eq("step", "grow")
           .maybeSingle();
 
-        if (error) {
-          console.error("❌ SOVEREIGN GROW LOAD ERROR:", error);
-          return;
-        }
-
+        if (error) throw error;
         if (!active) return;
 
-        // EXISTING GROW
-        if (data?.response) {
-          const parsed =
-            typeof data.response === "string"
-              ? JSON.parse(data.response)
-              : data.response;
+        if (!data?.response) return;
 
-          setSliders(
-            parsed?.sliders &&
-              typeof parsed.sliders === "object"
-              ? parsed.sliders
-              : {}
-          );
+        const parsed =
+          typeof data.response === "string"
+            ? JSON.parse(data.response)
+            : data.response;
 
-          setAdditionalText(
-            typeof parsed?.additionalText === "string"
-              ? parsed.additionalText
-              : ""
-          );
+        setSliders(
+          parsed?.sliders &&
+          typeof parsed.sliders === "object"
+            ? { ...createDefaultSliders(), ...parsed.sliders }
+            : createDefaultSliders()
+        );
 
-          return;
-        }
-
-        // NEW GROW: SEED FROM LIVING FIELD
-
-        const userId = await getUserId();
-
-        if (!userId) {
-          setSliders({});
-          return;
-        }
-
-        const context = await getCreationContext({
-          userId,
-          intentionId,
-          activeStage: "grow",
-        });
-
-        if (!active) return;
-
-        const chakraScores =
-          context?.livingField?.chakraState?.scores || {};
-
-        const seededSliders: Record<string, number> = {};
-
-        GROW_VALUES.forEach((value) => {
-          const chakraScore = Number(chakraScores?.[value.chakra]);
-
-          /*
-           * Chakra polarity:
-           * -1 = contracted
-           *  0 = neutral
-           * +1 = expansive
-           *
-           * Slider:
-           *  0 = low
-           *  0.5 = neutral
-           *  1 = high
-           */
-
-          if (Number.isFinite(chakraScore)) {
-            seededSliders[value.id] = Math.max(
-              0,
-              Math.min(1, (chakraScore + 1) / 2)
-            );
-          } else {
-            seededSliders[value.id] = 0.5;
-          }
-        });
-
-        setSliders(seededSliders);
-        setAdditionalText("");
+        setAdditionalText(
+          typeof parsed?.additionalText === "string"
+            ? parsed.additionalText
+            : ""
+        );
       } catch (error) {
-        console.error("❌ SOVEREIGN GROW LOAD ERROR:", error);
-
-        if (active) {
-          setSliders({});
-          setAdditionalText("");
-        }
+        console.error("GROW LOAD ERROR:", error);
       }
     };
 
@@ -209,10 +101,7 @@ export default function StageGrow({ intentionId }: Props) {
     };
   }, [intentionId]);
 
-  // --------------------------------------------------
-  // SAVE GROW
-  // --------------------------------------------------
-
+  // SAVE GROW RESPONSES
   const saveGrow = async (
     nextSliders: Record<string, number>,
     nextAdditionalText: string
@@ -232,10 +121,7 @@ export default function StageGrow({ intentionId }: Props) {
         .eq("step", "grow")
         .maybeSingle();
 
-      if (findError) {
-        console.error("❌ SOVEREIGN GROW FIND ERROR:", findError);
-        return;
-      }
+      if (findError) throw findError;
 
       if (existing) {
         const { error } = await supabase
@@ -243,9 +129,7 @@ export default function StageGrow({ intentionId }: Props) {
           .update({ response })
           .eq("id", existing.id);
 
-        if (error) {
-          console.error("❌ SOVEREIGN GROW UPDATE ERROR:", error);
-        }
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from("sovereign_intention_steps")
@@ -255,19 +139,14 @@ export default function StageGrow({ intentionId }: Props) {
             response,
           });
 
-        if (error) {
-          console.error("❌ SOVEREIGN GROW SAVE ERROR:", error);
-        }
+        if (error) throw error;
       }
     } catch (error) {
-      console.error("❌ SOVEREIGN GROW SAVE ERROR:", error);
+      console.error("GROW SAVE ERROR:", error);
     }
   };
 
-  // --------------------------------------------------
-  // SLIDER UPDATE
-  // --------------------------------------------------
-
+  // UPDATE SLIDER
   const updateSlider = (id: string, value: number) => {
     const nextValue = Math.max(0, Math.min(1, value));
 
@@ -277,26 +156,19 @@ export default function StageGrow({ intentionId }: Props) {
     };
 
     setSliders(nextSliders);
-
     void saveGrow(nextSliders, additionalText);
   };
 
-  // --------------------------------------------------
-  // ADDITIONAL TEXT
-  // --------------------------------------------------
-
+  // UPDATE ADDITIONAL TEXT
   const updateAdditionalText = (value: string) => {
     setAdditionalText(value);
   };
 
-  const saveAdditionalText = async () => {
-    await saveGrow(sliders, additionalText);
+  const saveAdditionalText = () => {
+    void saveGrow(sliders, additionalText);
   };
 
-  // --------------------------------------------------
-  // VERTICAL SLIDERS
-  // --------------------------------------------------
-
+  // RENDER VERTICAL SLIDERS
   const renderSlider = (item: (typeof GROW_VALUES)[number]) => {
     const value = sliders[item.id] ?? 0.5;
 
@@ -304,12 +176,7 @@ export default function StageGrow({ intentionId }: Props) {
     const thumbSize = 8;
 
     const updateFromY = (y: number) => {
-      const position = Math.max(
-        0,
-        Math.min(lineHeight, y)
-      );
-
-      // Top = 1, bottom = 0
+      const position = Math.max(0, Math.min(lineHeight, y));
       const nextValue = 1 - position / lineHeight;
 
       updateSlider(item.id, nextValue);
@@ -349,7 +216,6 @@ export default function StageGrow({ intentionId }: Props) {
             justifyContent: "flex-start",
           }}
         >
-          {/* TRACK */}
           <View
             style={{
               position: "absolute",
@@ -362,7 +228,6 @@ export default function StageGrow({ intentionId }: Props) {
             }}
           />
 
-          {/* THUMB */}
           <View
             style={{
               position: "absolute",
@@ -377,16 +242,15 @@ export default function StageGrow({ intentionId }: Props) {
           />
         </View>
 
-        {/* LABEL */}
         <Text
-style={{
-  marginTop: 4,
-  color: "#B8B4AC",
-  fontFamily: Fonts.light,
-  fontSize: 8,
-  lineHeight: 10,
-  textAlign: "center",
-}}
+          style={{
+            marginTop: 4,
+            color: "#B8B4AC",
+            fontFamily: Fonts.light,
+            fontSize: 8,
+            lineHeight: 10,
+            textAlign: "center",
+          }}
         >
           {item.label}
         </Text>
@@ -394,14 +258,8 @@ style={{
     );
   };
 
-  // --------------------------------------------------
-  // UI
-  // --------------------------------------------------
-
   return (
     <View style={{ width: "100%" }}>
-
-      {/* NINE CHAKRA SLIDERS */}
       <View
         style={{
           flexDirection: "row",
@@ -414,39 +272,38 @@ style={{
         {GROW_VALUES.map(renderSlider)}
       </View>
 
- {/* REFLECTION */}
-<View style={{ marginTop: 1 }}>
-  <View
-    style={{
-      width: "100%",
-      height: 38,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 9,
-      borderWidth: 1,
-      borderColor: "rgba(201,173,112,0.22)",
-      backgroundColor: "#08090A",
-    }}
-  >
-    <TextInput
-      value={additionalText}
-      onChangeText={updateAdditionalText}
-      onBlur={() => void saveAdditionalText()}
-      multiline
-      placeholder="Anything else you want to notice..."
-      placeholderTextColor="#77746F"
-      style={{
-        flex: 1,
-        color: "#EEECE6",
-        fontFamily: Fonts.light,
-        fontSize: 10,
-        lineHeight: 14,
-        padding: 0,
-        textAlignVertical: "top",
-      }}
-    />
-  </View>
-</View>
+      <View style={{ marginTop: 1 }}>
+        <View
+          style={{
+            width: "100%",
+            height: 38,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            borderRadius: 9,
+            borderWidth: 1,
+            borderColor: "rgba(201,173,112,0.22)",
+            backgroundColor: "#08090A",
+          }}
+        >
+          <TextInput
+            value={additionalText}
+            onChangeText={updateAdditionalText}
+            onBlur={saveAdditionalText}
+            multiline
+            placeholder="Anything else you want to notice..."
+            placeholderTextColor="#77746F"
+            style={{
+              flex: 1,
+              color: "#EEECE6",
+              fontFamily: Fonts.light,
+              fontSize: 10,
+              lineHeight: 14,
+              padding: 0,
+              textAlignVertical: "top",
+            }}
+          />
+        </View>
+      </View>
     </View>
   );
 }

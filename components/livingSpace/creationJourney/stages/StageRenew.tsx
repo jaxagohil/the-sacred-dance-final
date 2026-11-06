@@ -1,19 +1,14 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { Fonts } from "../../../../constants/theme";
-import { getUserId } from "../../../../lib/user";
 import { supabase } from "../../../../services/supabase";
-
-import {
-    generateRenewReflection,
-} from "../../../../lib/consciousCreating/agents/renew/generateRenewReflection";
 
 type RenewState = {
   feel: string;
@@ -35,27 +30,28 @@ const createEmptyState = (): RenewState => ({
   reflection: "",
 });
 
-export default function StageRenew({
-  intentionId,
-}: Props) {
+export default function StageRenew({ intentionId }: Props) {
   const [renewState, setRenewState] =
     useState<RenewState>(createEmptyState);
 
   const [loaded, setLoaded] = useState(false);
 
-  const [isReflecting, setIsReflecting] =
-    useState(false);
+  const stateRef = useRef(renewState);
 
-  // --------------------------------------------------
+  useEffect(() => {
+    stateRef.current = renewState;
+  }, [renewState]);
+
   // LOAD RENEW
-  // --------------------------------------------------
-
   useEffect(() => {
     let active = true;
 
     const loadRenew = async () => {
+      const emptyState = createEmptyState();
+      stateRef.current = emptyState;
+      setRenewState(emptyState);
+
       if (!intentionId) {
-        setRenewState(createEmptyState());
         setLoaded(true);
         return;
       }
@@ -74,7 +70,8 @@ export default function StageRenew({
         if (!active) return;
 
         if (!data?.response) {
-          setRenewState(createEmptyState());
+          stateRef.current = emptyState;
+          setRenewState(emptyState);
           return;
         }
 
@@ -83,7 +80,7 @@ export default function StageRenew({
             ? JSON.parse(data.response)
             : data.response;
 
-        setRenewState({
+        const nextState: RenewState = {
           feel:
             typeof response?.feel === "string"
               ? response.feel
@@ -104,11 +101,16 @@ export default function StageRenew({
             typeof response?.reflection === "string"
               ? response.reflection
               : "",
-        });
+        };
+
+        stateRef.current = nextState;
+        setRenewState(nextState);
       } catch (error) {
         console.error("RENEW LOAD ERROR:", error);
+
         if (active) {
-          setRenewState(createEmptyState());
+          stateRef.current = emptyState;
+          setRenewState(emptyState);
         }
       } finally {
         if (active) setLoaded(true);
@@ -122,10 +124,7 @@ export default function StageRenew({
     };
   }, [intentionId]);
 
-  // --------------------------------------------------
   // SAVE RENEW
-  // --------------------------------------------------
-
   const saveRenew = async (nextState: RenewState) => {
     if (!intentionId) return;
 
@@ -171,112 +170,25 @@ export default function StageRenew({
     }
   };
 
-  // --------------------------------------------------
   // UPDATE FIELD
-  // --------------------------------------------------
-
   const updateField = (
-    field: keyof RenewState,
+    field: keyof Pick<RenewState, "feel" | "think" | "say" | "do">,
     value: string
   ) => {
-    setRenewState((current) => ({
-      ...current,
+    const nextState: RenewState = {
+      ...stateRef.current,
       [field]: value,
-      reflection: "",
-    }));
+    };
+
+    stateRef.current = nextState;
+    setRenewState(nextState);
   };
 
-  // --------------------------------------------------
   // SAVE FIELD
-  // --------------------------------------------------
-
   const saveField = () => {
-    void saveRenew(renewState);
+    if (!loaded) return;
+    void saveRenew(stateRef.current);
   };
-
-  // --------------------------------------------------
-  // GENERATE AI REFLECTION
-  // --------------------------------------------------
-
-  const generateReflection = async () => {
-    if (!intentionId || isReflecting) return;
-
-    const hasInput =
-      renewState.feel.trim() ||
-      renewState.think.trim() ||
-      renewState.say.trim() ||
-      renewState.do.trim();
-
-    if (!hasInput) return;
-
-    try {
-      setIsReflecting(true);
-
-      const userId = await getUserId();
-      if (!userId) return;
-
-      const result = await generateRenewReflection({
-        userId,
-        intentionId,
-        inputs: {
-          feel: renewState.feel,
-          think: renewState.think,
-          say: renewState.say,
-          do: renewState.do,
-        },
-      });
-
-      const nextState = {
-        ...renewState,
-        reflection: result.reflection,
-      };
-
-      setRenewState(nextState);
-
-      await saveRenew(nextState);
-    } catch (error) {
-      console.error("RENEW REFLECTION ERROR:", error);
-    } finally {
-      setIsReflecting(false);
-    }
-  };
-
-  // --------------------------------------------------
-  // AUTO REFLECTION
-  // All four fields + 3 seconds of stillness
-  // --------------------------------------------------
-
-  useEffect(() => {
-    if (!loaded || isReflecting || renewState.reflection.trim()) {
-      return;
-    }
-
-    const hasAllInputs =
-      renewState.feel.trim() &&
-      renewState.think.trim() &&
-      renewState.say.trim() &&
-      renewState.do.trim();
-
-    if (!hasAllInputs) return;
-
-    const timer = setTimeout(() => {
-      void generateReflection();
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [
-    loaded,
-    renewState.feel,
-    renewState.think,
-    renewState.say,
-    renewState.do,
-    renewState.reflection,
-    isReflecting,
-  ]);
-
-  // --------------------------------------------------
-  // LOADING
-  // --------------------------------------------------
 
   if (!loaded) {
     return (
@@ -286,21 +198,14 @@ export default function StageRenew({
     );
   }
 
-  // --------------------------------------------------
-  // UI
-  // --------------------------------------------------
-
   return (
     <View style={styles.container}>
-
       <View style={styles.renewGrid}>
         <View style={styles.renewBlock}>
           <Text style={styles.renewLabel}>FEEL</Text>
           <TextInput
             value={renewState.feel}
-            onChangeText={(value) =>
-              updateField("feel", value)
-            }
+            onChangeText={(value) => updateField("feel", value)}
             onBlur={saveField}
             multiline
             placeholder="What am I feeling?"
@@ -313,9 +218,7 @@ export default function StageRenew({
           <Text style={styles.renewLabel}>THINK</Text>
           <TextInput
             value={renewState.think}
-            onChangeText={(value) =>
-              updateField("think", value)
-            }
+            onChangeText={(value) => updateField("think", value)}
             onBlur={saveField}
             multiline
             placeholder="What am I thinking?"
@@ -328,9 +231,7 @@ export default function StageRenew({
           <Text style={styles.renewLabel}>SAY</Text>
           <TextInput
             value={renewState.say}
-            onChangeText={(value) =>
-              updateField("say", value)
-            }
+            onChangeText={(value) => updateField("say", value)}
             onBlur={saveField}
             multiline
             placeholder="What am I saying?"
@@ -343,9 +244,7 @@ export default function StageRenew({
           <Text style={styles.renewLabel}>DO</Text>
           <TextInput
             value={renewState.do}
-            onChangeText={(value) =>
-              updateField("do", value)
-            }
+            onChangeText={(value) => updateField("do", value)}
             onBlur={saveField}
             multiline
             placeholder="What am I doing?"
@@ -354,12 +253,6 @@ export default function StageRenew({
           />
         </View>
       </View>
-
-      {isReflecting && (
-        <Text style={styles.muted}>
-          Reflecting...
-        </Text>
-      )}
 
       {!!renewState.reflection && (
         <View style={styles.reflection}>
@@ -377,49 +270,41 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  prompt: {
-    color: "#AAA2B6",
-    fontFamily: Fonts.light,
-    fontSize: 12,
-    lineHeight: 19,
-    marginBottom: 18,
+  renewGrid: {
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 5,
+    width: "100%",
   },
 
-renewGrid: {
-  flexDirection: "row",
-  flexWrap: "nowrap",
-  gap: 5,
-  width: "100%",
-},
+  renewBlock: {
+    flex: 1,
+    minWidth: 0,
+    height: 76,
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(201,173,112,0.22)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+  },
 
-renewBlock: {
-  flex: 1,
-  minWidth: 0,
-  height: 76,
-  padding: 6,
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: "rgba(201,173,112,0.22)",
-  backgroundColor: "rgba(255,255,255,0.025)",
-},
+  renewLabel: {
+    color: "#C9AD70",
+    fontFamily: Fonts.light,
+    fontSize: 8,
+    letterSpacing: 1.5,
+    marginBottom: 5,
+  },
 
-renewLabel: {
-  color: "#C9AD70",
-  fontFamily: Fonts.light,
-  fontSize: 8,
-  letterSpacing: 1.5,
-  marginBottom: 5,
-},
-
-renewInput: {
-  minHeight: 38,
-  color: "#EEECE6",
-  fontFamily: Fonts.light,
-  fontSize: 10,
-  lineHeight: 15,
-  padding: 0,
-  textAlignVertical: "top",
-},
+  renewInput: {
+    minHeight: 38,
+    color: "#EEECE6",
+    fontFamily: Fonts.light,
+    fontSize: 10,
+    lineHeight: 15,
+    padding: 0,
+    textAlignVertical: "top",
+  },
 
   reflection: {
     marginTop: 16,

@@ -13,8 +13,8 @@ import {
 import { Colors, Fonts } from "../../constants/theme";
 import { processSovereignLifePicture } from "../../db/processSovereignLifePicture";
 import { saveSovereignLifePicture } from "../../db/saveSovereignLifePicture";
-import { pickSovereignImage } from "../../lib/sovereignI/uploads/pickSovereignImage";
-import { uploadSovereignImage } from "../../lib/sovereignI/uploads/uploadSovereignImage";
+import { pickSovereignImage } from "../../lib/livingSpace/sovereignI/uploads/pickSovereignImage";
+import { uploadSovereignImage } from "../../lib/livingSpace/sovereignI/uploads/uploadSovereignImage";
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 

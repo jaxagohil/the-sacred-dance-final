@@ -17,8 +17,8 @@ import { orchestrationAgent } from "../../lib/ai/agents/orchestrationAgent";
 import { transmissionAgent } from "../../lib/ai/agents/transmissionAgent";
 import { buildAlignmentOSContext } from "../../lib/alignment/buildAlignmentOSContext";
 
-import GuideSelector from "../guidance/GuideSelector";
 import FloatingWhispers from "./FloatingWhispers";
+import GuideSelector from "./GuideSelector";
 import GuideTransmission from "./GuideTransmission";
 import ReflectionPortal from "./ReflectionPortal";
 

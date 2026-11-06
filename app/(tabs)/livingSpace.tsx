@@ -15,14 +15,14 @@ import { supabase } from "../../services/supabase";
 import You from "./you";
 
 import EnergyField from "../../components/energy/EnergyField";
-import DivineOrchestrationOverlay from "../../components/guidance/DivineOrchestrationOverlay";
+import CosmicTiles from "../../components/livingSpace/CosmicTiles";
 import CreationJourney from "../../components/livingSpace/CreationJourney";
+import DivineOrchestrationOverlay from "../../components/livingSpace/DivineOrchestrationOverlay";
+import Lenses from "../../components/livingSpace/Lenses";
 import LivingSpaceHeader from "../../components/livingSpace/LivingSpaceHeader";
+import ReadingContainer from "../../components/livingSpace/ReadingContainer";
 import ReflectionPad from "../../components/livingSpace/ReflectionPad";
 import VisionBoard from "../../components/livingSpace/VisionBoard";
-import CosmicTiles from "../../components/mirror/CosmicTiles";
-import Lenses from "../../components/mirror/Lenses";
-import ReadingContainer from "../../components/mirror/ReadingContainer";
 import { initialiseAlignmentOSContext } from "../../lib/context/initialiseAlignmentOSContext";
 import { buildOrchestrationWhispers } from "../../lib/livingSpace/buildOrchestrationWhispers";
 import { useMirrorStore } from "../../stores/mirrorStore";

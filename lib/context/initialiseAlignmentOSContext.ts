@@ -1,6 +1,6 @@
 
 import { useMirrorStore } from "../../stores/mirrorStore";
-import { buildGuidanceWhispers } from "../guidance/orchestration/buildGuidanceWhispers";
+import { buildGuidanceWhispers } from "../livingSpace/buildGuidanceWhispers";
 import { getUserId } from "../user";
 import { buildUserContext } from "./buildUserContext";
 

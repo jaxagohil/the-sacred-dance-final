@@ -14,7 +14,7 @@ import {
 
 import {
   GUIDE_TYPES,
-} from "../../../components/guidance/guideConfig";
+} from "../../../components/livingSpace/guideConfig";
 
 /*
  * --------------------------------------------------------

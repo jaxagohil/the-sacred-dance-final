@@ -1,17 +1,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { Colors, Fonts } from "../../../../constants/theme";
-import { mirrorBuild } from "../../../../lib/consciousCreating/agents/mirror/mirrorBuild";
-import { getUserId } from "../../../../lib/user";
 import { supabase } from "../../../../services/supabase";
 
 type ConversationMessage = {
@@ -26,7 +24,7 @@ type Props = {
 export default function BuildStage({ intentionId }: Props) {
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [message, setMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -34,14 +32,10 @@ export default function BuildStage({ intentionId }: Props) {
     let active = true;
 
     const loadConversation = async () => {
-      if (!intentionId) {
-        setConversation([]);
-        setMessage("");
-        return;
-      }
-
       setConversation([]);
       setMessage("");
+
+      if (!intentionId) return;
 
       try {
         const { data, error } = await supabase
@@ -51,8 +45,8 @@ export default function BuildStage({ intentionId }: Props) {
           .eq("step", "build")
           .maybeSingle();
 
-        if (!active) return;
         if (error) throw error;
+        if (!active) return;
 
         const response =
           typeof data?.response === "object" && data.response !== null
@@ -86,70 +80,85 @@ export default function BuildStage({ intentionId }: Props) {
   const sendMessage = async () => {
     const trimmed = message.trim();
 
-    if (!intentionId || !trimmed || isSending) return;
+    if (!intentionId || !trimmed || isSaving) return;
+
+    setIsSaving(true);
 
     try {
-      setIsSending(true);
-
-      const userId = await getUserId();
-      if (!userId) return;
-
       const nextConversation: ConversationMessage[] = [
         ...conversation,
         { role: "user", content: trimmed },
       ];
 
+      const { data: existing, error: findError } = await supabase
+        .from("sovereign_intention_steps")
+        .select("id")
+        .eq("intention_id", intentionId)
+        .eq("step", "build")
+        .maybeSingle();
+
+      if (findError) throw findError;
+
+      const response = { conversation: nextConversation };
+
+      if (existing) {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .update({ response })
+          .eq("id", existing.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("sovereign_intention_steps")
+          .insert({
+            intention_id: intentionId,
+            step: "build",
+            response,
+          });
+
+        if (error) throw error;
+      }
+
       setConversation(nextConversation);
       setMessage("");
-
-      const result = await mirrorBuild({
-        userId,
-        intentionId,
-        message: trimmed,
-      });
-
-      setConversation([
-        ...nextConversation,
-        { role: "mirror", content: result.message },
-      ]);
     } catch (error) {
-      console.error("MIRROR BUILD ERROR:", error);
+      console.error("BUILD SAVE ERROR:", error);
     } finally {
-      setIsSending(false);
+      setIsSaving(false);
     }
   };
 
   return (
     <View style={styles.workspace}>
-
-      {/* LEFT — USER INPUT */}
+      {/* LEFT — IDEATION INPUT */}
       <View style={styles.inputPanel}>
         <TextInput
           value={message}
           onChangeText={setMessage}
           multiline
-          placeholder="What would you like to create?"
+          placeholder="Let's ideate..."
           placeholderTextColor="#77746F"
           style={styles.input}
-          editable={!isSending}
+          editable={!isSaving}
           textAlignVertical="top"
         />
 
         <Pressable
           onPress={() => void sendMessage()}
-          disabled={!message.trim() || isSending}
+          disabled={!message.trim() || isSaving}
           style={[
             styles.sendButton,
-            (!message.trim() || isSending) && styles.disabled,
+            (!message.trim() || isSaving) && styles.disabled,
           ]}
         >
           <Text style={styles.sendText}>
-            {isSending ? "…" : "↑"}
+            {isSaving ? "…" : "↑"}
           </Text>
         </Pressable>
       </View>
 
-      {/* RIGHT — MIRROR CONVERSATION */}
+      {/* RIGHT — IDEATION CONVERSATION */}
       <View style={styles.conversationPanel}>
         <ScrollView
           ref={scrollRef}
@@ -162,10 +171,9 @@ export default function BuildStage({ intentionId }: Props) {
             });
           }}
         >
-          {conversation.length === 0 && !isSending && (
-            <Text style={styles.welcome}>
-              Your conversation will appear here.
-            </Text>
+          {conversation.length === 0 && (
+            <View style={styles.welcomeContainer}>
+            </View>
           )}
 
           {conversation.map((item, index) => (
@@ -180,7 +188,7 @@ export default function BuildStage({ intentionId }: Props) {
                 style={
                   item.role === "user"
                     ? styles.userText
-                    : styles.mirrorText
+                    : styles.responseText
                 }
               >
                 {item.content}
@@ -188,33 +196,30 @@ export default function BuildStage({ intentionId }: Props) {
             </View>
           ))}
 
-          {isSending && (
-            <Text style={styles.typing}>
-              Mirror is reflecting...
-            </Text>
+          {isSaving && (
+            <Text style={styles.typing}>Saving...</Text>
           )}
         </ScrollView>
       </View>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-workspace: {
-  width: "100%",
-  height: 90,
-  minHeight: 90,
-  maxHeight: 90,
-  flexGrow: 0,
-  flexShrink: 0,
-  flexDirection: "row",
-  gap: 12,
-},
+  workspace: {
+    width: "100%",
+    height: 90,
+    minHeight: 90,
+    maxHeight: 90,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexDirection: "row",
+    gap: 12,
+  },
 
-inputPanel: {
-  flex: 0.85,
-  height: "100%",
+  inputPanel: {
+    flex: 0.85,
+    height: "100%",
     minWidth: 0,
     minHeight: 0,
     flexDirection: "row",
@@ -260,9 +265,9 @@ inputPanel: {
     opacity: 0.35,
   },
 
-conversationPanel: {
-  flex: 1.5,
-  height: "100%",
+  conversationPanel: {
+    flex: 1.5,
+    height: "100%",
     minWidth: 0,
     minHeight: 0,
     paddingHorizontal: 10,
@@ -284,11 +289,29 @@ conversationPanel: {
     gap: 8,
   },
 
+  welcomeContainer: {
+    gap: 5,
+  },
+
+  welcomeTitle: {
+    color: "#C9AD70",
+    fontFamily: Fonts.light,
+    fontSize: 9,
+    letterSpacing: 1.5,
+  },
+
   welcome: {
     color: Colors.mutedText,
     fontFamily: Fonts.light,
     fontSize: 10,
     lineHeight: 16,
+  },
+
+  welcomePrompt: {
+    color: "#C9AD70",
+    fontFamily: Fonts.light,
+    fontSize: 9,
+    fontStyle: "italic",
   },
 
   messageRow: {
@@ -310,7 +333,7 @@ conversationPanel: {
     lineHeight: 15,
   },
 
-  mirrorText: {
+  responseText: {
     color: "#D8D2C8",
     fontFamily: Fonts.light,
     fontSize: 10,
