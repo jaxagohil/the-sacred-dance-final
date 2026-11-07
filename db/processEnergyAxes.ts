@@ -1,3 +1,4 @@
+
 // --------------------------------------------------
 // ⚡ PROCESS ENERGY AXES
 // --------------------------------------------------
@@ -9,21 +10,14 @@ import { supabase } from "../services/supabase";
 // --------------------------------------------------
 
 type ProcessEnergyAxesInput = {
-
   userId: string;
-
   language?: string;
-
   source?: string;
-
-    batchId?: string;
+  batchId?: string;
 
   energyAxes: {
-
     givingReceiving: number;
-
     structureFlow: number;
-
     lackAbundance: number;
   };
 };
@@ -32,10 +26,7 @@ type ProcessEnergyAxesInput = {
 // 🧠 HELPERS
 // --------------------------------------------------
 
-const clamp = (
-  value: number
-) =>
-
+const clamp = (value: number) =>
   Math.max(
     -1,
     Math.min(1, value)
@@ -46,15 +37,9 @@ const clamp = (
 // --------------------------------------------------
 
 const AXIS_PATTERN_MAP = {
-
-  giving_receiving:
-    "reciprocity",
-
-  structure_flow:
-    "flow",
-
-  lack_abundance:
-    "abundance",
+  giving_receiving: "reciprocity",
+  structure_flow: "flow",
+  lack_abundance: "abundance",
 };
 
 // --------------------------------------------------
@@ -62,18 +47,12 @@ const AXIS_PATTERN_MAP = {
 // --------------------------------------------------
 
 export async function processEnergyAxes({
-
   userId,
-
   language = "en",
-
   source = "baseline",
-
   batchId,
-
   energyAxes,
-
-}: ProcessEnergyAxesInput) {
+}: ProcessEnergyAxesInput): Promise<boolean> {
 
   try {
 
@@ -82,38 +61,17 @@ export async function processEnergyAxes({
     // --------------------------------------------------
 
     const axes = [
-
       {
-        id:
-          "giving_receiving",
-
-        value:
-          clamp(
-            energyAxes
-              .givingReceiving
-          ),
+        id: "giving_receiving",
+        value: clamp(energyAxes.givingReceiving),
       },
-
       {
-        id:
-          "structure_flow",
-
-        value:
-          clamp(
-            energyAxes
-              .structureFlow
-          ),
+        id: "structure_flow",
+        value: clamp(energyAxes.structureFlow),
       },
-
       {
-        id:
-          "lack_abundance",
-
-        value:
-          clamp(
-            energyAxes
-              .lackAbundance
-          ),
+        id: "lack_abundance",
+        value: clamp(energyAxes.lackAbundance),
       },
     ];
 
@@ -123,16 +81,13 @@ export async function processEnergyAxes({
 
     for (const axis of axes) {
 
-      const value =
-        axis.value;
+      const value = axis.value;
 
       // --------------------------------------------------
       // ⚖️ SKIP BALANCED
       // --------------------------------------------------
 
-      if (
-        Math.abs(value) < 0.2
-      ) {
+      if (Math.abs(value) < 0.2) {
 
         console.log(
           `⚖️ Skipping balanced axis: ${axis.id}`
@@ -145,28 +100,19 @@ export async function processEnergyAxes({
       // ⚡ INTENSITY
       // --------------------------------------------------
 
-      const intensity =
-        Math.abs(value);
+      const intensity = Math.abs(value);
 
       // --------------------------------------------------
       // 🪞 REFLECTION TEXT
       // --------------------------------------------------
 
-      let reflectionText =
-        "";
+      let reflectionText = "";
 
       // --------------------------------------------------
       // ❤️ GIVING / RECEIVING
       // --------------------------------------------------
 
-      if (
-        axis.id ===
-        "giving_receiving"
-      ) {
-
-        // ----------------------------------------------
-        // LEFT POLE
-        // ----------------------------------------------
+      if (axis.id === "giving_receiving") {
 
         if (value < 0) {
 
@@ -194,11 +140,8 @@ during emotional closeness,
 vulnerability,
 or relational imbalance.
 `;
-        }
 
-        // ----------------------------------------------
-        // RIGHT POLE
-        // ----------------------------------------------
+        }
 
         if (value > 0) {
 
@@ -231,14 +174,7 @@ or relational tension.
       // 🌊 STRUCTURE / FLOW
       // --------------------------------------------------
 
-      if (
-        axis.id ===
-        "structure_flow"
-      ) {
-
-        // ----------------------------------------------
-        // LEFT POLE
-        // ----------------------------------------------
+      if (axis.id === "structure_flow") {
 
         if (value < 0) {
 
@@ -262,11 +198,8 @@ during unpredictability,
 change,
 or emotional overwhelm.
 `;
-        }
 
-        // ----------------------------------------------
-        // RIGHT POLE
-        // ----------------------------------------------
+        }
 
         if (value > 0) {
 
@@ -299,14 +232,7 @@ or overstimulation.
       // 💰 LACK / ABUNDANCE
       // --------------------------------------------------
 
-      if (
-        axis.id ===
-        "lack_abundance"
-      ) {
-
-        // ----------------------------------------------
-        // LEFT POLE
-        // ----------------------------------------------
+      if (axis.id === "lack_abundance") {
 
         if (value < 0) {
 
@@ -331,11 +257,8 @@ during uncertainty,
 receiving,
 or emotional dependency.
 `;
-        }
 
-        // ----------------------------------------------
-        // RIGHT POLE
-        // ----------------------------------------------
+        }
 
         if (value > 0) {
 
@@ -367,7 +290,6 @@ or periods of expansion.
       // --------------------------------------------------
 
       const mappedPattern =
-
         AXIS_PATTERN_MAP[
           axis.id as keyof typeof AXIS_PATTERN_MAP
         ];
@@ -377,82 +299,54 @@ or periods of expansion.
       // --------------------------------------------------
 
       const { data, error } =
+        await supabase.functions.invoke(
+          "process-reflection",
+          {
+            body: {
 
-  await supabase.functions.invoke(
-    "process-reflection",
-    {
-      body: {
+              userId,
+              language,
+              source,
 
-        userId,
+              baselineType: "energy_axes",
+              signalDepth: 1.5 * intensity,
+              text: reflectionText,
+              pattern: mappedPattern,
 
-        language,
+              energyAxes: {
+                axis: axis.id,
+                value,
+              },
 
-        source,
+              metadata: {
 
-        baselineType:
-          "energy_axes",
+                axis: axis.id,
+                raw_value: value,
+                axis_intensity: intensity,
+                mapped_pattern: mappedPattern,
+                processing_layer: "you.energy_axes",
+                batch_id: batchId,
+                generated_from: "energy_axes",
+                generated_at: new Date().toISOString(),
+              },
+            },
+          }
+        );
 
-        signalDepth:
-          1.5 * intensity,
+      if (error) {
 
-        text:
-          reflectionText,
+        console.error(
+          "❌ Energy axis processing error",
+          error
+        );
 
-        pattern:
-          mappedPattern,
+        return false;
+      }
 
-        energyAxes: {
-
-          axis:
-            axis.id,
-
-          value,
-        },
-
-        metadata: {
-
-          axis:
-            axis.id,
-
-          raw_value:
-            value,
-
-          axis_intensity:
-            intensity,
-
-          mapped_pattern:
-            mappedPattern,
-
-          processing_layer:
-            "you.energy_axes",
-
-          batch_id:
-            batchId,
-
-          generated_from:
-            "energy_axes",
-
-          generated_at:
-            new Date().toISOString(),
-        },
-      },
-    }
-  );
-
-if (error) {
-
-  console.error(
-    "❌ Energy axis processing error",
-    error
-  );
-
-} else {
-
-  console.log(
-    "✅ Energy axis processed",
-    data
-  );
-}
+      console.log(
+        "✅ Energy axis processed",
+        data
+      );
     }
 
     // --------------------------------------------------
@@ -463,11 +357,15 @@ if (error) {
       "⚡ Energy axes processed successfully"
     );
 
+    return true;
+
   } catch (error) {
 
     console.log(
       "❌ processEnergyAxes error",
       error
     );
+
+    return false;
   }
 }

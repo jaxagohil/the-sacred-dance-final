@@ -9,6 +9,7 @@ import {
 
 import { Fonts } from "../../../../constants/theme";
 import { processCreationGrow } from "../../../../db/processCreationGrow";
+import { sovereignI } from "../../../../lib/sovereignIOrchestrator/core/sovereignI";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
@@ -50,7 +51,10 @@ export default function StageGrow({ intentionId }: Props) {
   );
   const [additionalText, setAdditionalText] = useState("");
 
-  const processGrow = async () => {
+const processGrow = async (
+  nextSliders: Record<string, number>,
+  nextAdditionalText: string
+) => {
   if (!intentionId) return;
 
   try {
@@ -62,12 +66,32 @@ export default function StageGrow({ intentionId }: Props) {
     if (userError) throw userError;
     if (!user) throw new Error("User not authenticated.");
 
-    await processCreationGrow({
+    const result = await processCreationGrow({
       userId: user.id,
       intentionId,
-      sliders,
-      additionalText,
+      sliders: nextSliders,
+      additionalText: nextAdditionalText,
     });
+
+    if (!result) return;
+
+    try {
+      await sovereignI({
+        eventId: `creation-grow-${Date.now()}`,
+        eventType: "creation.updated",
+        category: "domain",
+        source: "creation_journey",
+        occurredAt: new Date().toISOString(),
+        payload: {
+          intentionId,
+          stage: "grow",
+        },
+        persistence: "persistent",
+        contextImpact: ["user", "livingField", "creation"],
+      });
+    } catch (error) {
+      console.error("SOVEREIGN I GROW EVENT ERROR:", error);
+    }
   } catch (error) {
     console.error("GROW PROCESSING ERROR:", error);
   }
@@ -126,12 +150,11 @@ export default function StageGrow({ intentionId }: Props) {
   }, [intentionId]);
 
   // SAVE GROW RESPONSES
-  const saveGrow = async (
-    nextSliders: Record<string, number>,
-    nextAdditionalText: string
-  ) => {
-    if (!intentionId) return;
-
+const saveGrow = async (
+  nextSliders: Record<string, number>,
+  nextAdditionalText: string
+): Promise<boolean> => {
+if (!intentionId) return false;
     try {
       const response = {
         sliders: nextSliders,
@@ -167,8 +190,27 @@ export default function StageGrow({ intentionId }: Props) {
       }
     } catch (error) {
       console.error("GROW SAVE ERROR:", error);
+      return false;
     }
+      return true;
   };
+
+  const saveAndProcessGrow = async (
+  nextSliders: Record<string, number>,
+  nextAdditionalText: string
+) => {
+  const saved = await saveGrow(
+    nextSliders,
+    nextAdditionalText
+  );
+
+  if (!saved) return;
+
+  await processGrow(
+    nextSliders,
+    nextAdditionalText
+  );
+};
 
   // UPDATE SLIDER
   const updateSlider = (id: string, value: number) => {
@@ -180,7 +222,6 @@ export default function StageGrow({ intentionId }: Props) {
     };
 
     setSliders(nextSliders);
-    void saveGrow(nextSliders, additionalText);
   };
 
   // UPDATE ADDITIONAL TEXT
@@ -188,9 +229,9 @@ export default function StageGrow({ intentionId }: Props) {
     setAdditionalText(value);
   };
 
-  const saveAdditionalText = () => {
-    void saveGrow(sliders, additionalText);
-  };
+const saveAdditionalText = () => {
+  void saveAndProcessGrow(sliders, additionalText);
+};
 
   // RENDER VERTICAL SLIDERS
   const renderSlider = (item: (typeof GROW_VALUES)[number]) => {
@@ -206,18 +247,22 @@ export default function StageGrow({ intentionId }: Props) {
       updateSlider(item.id, nextValue);
     };
 
-    const panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+const panResponder = PanResponder.create({
+  onStartShouldSetPanResponder: () => true,
+  onMoveShouldSetPanResponder: () => true,
 
-      onPanResponderGrant: (event) => {
-        updateFromY(event.nativeEvent.locationY);
-      },
+  onPanResponderGrant: (event) => {
+    updateFromY(event.nativeEvent.locationY);
+  },
 
-      onPanResponderMove: (event) => {
-        updateFromY(event.nativeEvent.locationY);
-      },
-    });
+  onPanResponderMove: (event) => {
+    updateFromY(event.nativeEvent.locationY);
+  },
+
+  onPanResponderRelease: () => {
+    void saveAndProcessGrow(sliders, additionalText);
+  },
+});
 
     const thumbTop =
       (1 - value) * lineHeight - thumbSize / 2;

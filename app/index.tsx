@@ -827,7 +827,6 @@ placeholder={t("landing.placeholder")}
     paddingHorizontal:
       Spacing.md,
 
-    outlineStyle: "none",  
   }}
 />
 

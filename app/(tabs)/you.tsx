@@ -119,11 +119,13 @@ const INITIAL_CHILDHOOD_SIGNALS = {
 type YouProps = {
   visible?: boolean;
   onClose?: () => void;
+  onBaselineUpdated?: () => void;
 };
 
 export default function You({
   visible = true,
   onClose,
+  onBaselineUpdated,
 }: YouProps) {
 
   //
@@ -412,53 +414,77 @@ setEarthRegions(
     );
   };
 
-      // --------------------------------------------------
-// 🧹 CLEAR BASELINE LAYER
-// --------------------------------------------------
 
-const clearBaselineLayer =
-  async (
+  // --------------------------------------------------
+  // 🧹 CLEAR BASELINE LAYER
+  // --------------------------------------------------
+
+  const clearBaselineLayer = async (
     userId: string,
     baselineType: string
-  ) => {
+  ): Promise<boolean> => {
 
-    await supabase
+    try {
 
-      .from("signals")
-      .delete()
+      // --------------------------------------------------
+      // 🧹 CLEAR SIGNALS
+      // --------------------------------------------------
 
-      .eq("user_id", userId)
+      const { error: signalsError } = await supabase
+        .from("signals")
+        .delete()
+        .eq("user_id", userId)
+        .eq("sourcetype", "baseline")
+        .eq("baseline_type", baselineType);
 
-      .eq(
-        "sourcetype",
-        "baseline"
-      )
+      if (signalsError) {
+        console.error(
+          "❌ Baseline signals deletion error",
+          signalsError
+        );
 
-      .eq(
-        "baseline_type",
-        baselineType
+        return false;
+      }
+
+      // --------------------------------------------------
+      // 🧹 CLEAR REFLECTIONS
+      // --------------------------------------------------
+
+      const { error: reflectionsError } = await supabase
+        .from("reflections")
+        .delete()
+        .eq("user_id", userId)
+        .eq("source", "baseline")
+        .contains("metadata", {
+          baseline_type: baselineType,
+        });
+
+      if (reflectionsError) {
+        console.error(
+          "❌ Baseline reflections deletion error",
+          reflectionsError
+        );
+
+        return false;
+      }
+
+      console.log(
+        `🧹 Baseline layer cleared: ${baselineType}`
       );
 
-    await supabase
+      return true;
 
-      .from("reflections")
-      .delete()
+    } catch (error) {
 
-      .eq("user_id", userId)
-
-      .eq(
-        "source",
-        "baseline"
-      )
-
-      .contains(
-        "metadata",
-        {
-          baseline_type:
-            baselineType,
-        }
+      console.error(
+        "❌ clearBaselineLayer error",
+        error
       );
+
+      return false;
+    }
   };
+
 
     //
   // 🎨 HAS CHANGES
@@ -703,248 +729,206 @@ hemisphere,
 
     //console.log(  "✅ PROFILE SAVED:",  data);
 
- // --------------------------------------------------
-// ✨ PROCESS REFLECTIONS IN PARALLEL
+
+// --------------------------------------------------
+// ✨ PROCESS BASELINE UPDATES
 // --------------------------------------------------
 
-const processingTasks: Promise<void>[] = [];
+const processingTasks: Promise<boolean>[] = [];
+
+let baselineChanged = false;
 
 // --------------------------------------------------
 // 🔁 REPEATS
 // --------------------------------------------------
 
 if (
-  repeats !==
-  (originalProfile?.what_repeats || "")
+  repeats !== (originalProfile?.what_repeats || "")
 ) {
+  baselineChanged = true;
 
   processingTasks.push(
-    (async () => {
+    (async (): Promise<boolean> => {
 
-      await clearBaselineLayer(
+      const cleared = await clearBaselineLayer(
         userId,
         "repeats"
       );
 
+      if (!cleared) return false;
+
       if (!repeats.trim()) {
-
-        console.log(
-          "🧹 Repeats layer cleared"
-        );
-
-      } else {
-
-        await processRepeatsField({
-
-          userId,
-
-          language,
-
-          source: "baseline",
-
-          batchId,
-
-          repeats,
-        });
-
+        console.log("🧹 Repeats layer cleared");
+        return true;
       }
 
+      return await processRepeatsField({
+        userId,
+        language,
+        source: "baseline",
+        batchId,
+        repeats,
+      });
     })()
   );
 }
-
 
 // --------------------------------------------------
 // 🧠 CORE BELIEF
 // --------------------------------------------------
 
 if (
-  line !==
-  (
-    originalProfile?.line_that_feels_like_you ||
-    ""
-  )
+  line !== (originalProfile?.line_that_feels_like_you || "")
 ) {
+  baselineChanged = true;
 
   processingTasks.push(
-    (async () => {
+    (async (): Promise<boolean> => {
 
-      await clearBaselineLayer(
+      const cleared = await clearBaselineLayer(
         userId,
         "core_belief"
       );
 
+      if (!cleared) return false;
+
       if (!line.trim()) {
-
-        console.log(
-          "🧹 Core belief cleared"
-        );
-
-      } else {
-
-        await processCoreBeliefField({
-
-          userId,
-
-          language,
-
-          source: "baseline",
-
-          batchId,
-
-          coreBelief: line,
-        });
-
+        console.log("🧹 Core belief cleared");
+        return true;
       }
 
+      return await processCoreBeliefField({
+        userId,
+        language,
+        source: "baseline",
+        batchId,
+        coreBelief: line,
+      });
     })()
   );
 }
-
 
 // --------------------------------------------------
 // ⚖️ ENERGY AXES
 // --------------------------------------------------
 
 if (
-
   sliders.givingreceiving !==
-    (
-      originalProfile?.givingreceiving ??
-      0
-    ) ||
+    (originalProfile?.givingreceiving ?? 0) ||
 
   sliders.flowstructure !==
-    (
-      originalProfile?.flowstructure ??
-      0
-    ) ||
+    (originalProfile?.flowstructure ?? 0) ||
 
   sliders.abundancelack !==
-    (
-      originalProfile?.lackabundance ??
-      0
-    )
-
+    (originalProfile?.lackabundance ?? 0)
 ) {
+  baselineChanged = true;
 
   processingTasks.push(
-    (async () => {
+    (async (): Promise<boolean> => {
 
-      await clearBaselineLayer(
+      const cleared = await clearBaselineLayer(
         userId,
         "energy_axes"
       );
 
-      await processEnergyAxes({
+      if (!cleared) return false;
 
+      return await processEnergyAxes({
         userId,
-
         language,
-
         source: "baseline",
-
         batchId,
-
         energyAxes: {
-
-          givingReceiving:
-            sliders.givingreceiving,
-
-          structureFlow:
-            sliders.flowstructure,
-
-          lackAbundance:
-            sliders.abundancelack,
+          givingReceiving: sliders.givingreceiving,
+          structureFlow: sliders.flowstructure,
+          lackAbundance: sliders.abundancelack,
         },
       });
-
     })()
   );
 }
-
 
 // --------------------------------------------------
 // 🧒 CHILDHOOD
 // --------------------------------------------------
 
 if (
-
-  JSON.stringify(
-    childhoodSignals
-  ) !==
-
+  JSON.stringify(childhoodSignals) !==
   JSON.stringify(
     originalProfile?.childhood_signals ||
     INITIAL_CHILDHOOD_SIGNALS
   )
-
 ) {
+  baselineChanged = true;
 
   processingTasks.push(
-    (async () => {
+    (async (): Promise<boolean> => {
 
-      await clearBaselineLayer(
+      const cleared = await clearBaselineLayer(
         userId,
         "childhood"
       );
 
-      const hasSignals =
-        Object.values(
-          childhoodSignals
-        ).some(
-          (v) => v === 1
-        );
+      if (!cleared) return false;
+
+      const hasSignals = Object.values(
+        childhoodSignals
+      ).some((value) => value === 1);
 
       if (!hasSignals) {
-
-        console.log(
-          "🧹 Childhood layer cleared"
-        );
-
-      } else {
-
-        await processChildhoodField({
-
-          userId,
-
-          language,
-
-          source: "baseline",
-
-          batchId,
-
-          childhoodSignals,
-
-          repeats,
-        });
-
+        console.log("🧹 Childhood layer cleared");
+        return true;
       }
 
+      return await processChildhoodField({
+        userId,
+        language,
+        source: "baseline",
+        batchId,
+        childhoodSignals,
+        repeats,
+      });
     })()
   );
 }
 
-
 // --------------------------------------------------
-// ⏳ WAIT FOR ALL LAYERS
+// ⏳ WAIT FOR ALL BASELINE UPDATES
 // --------------------------------------------------
 
-await Promise.all(
+const processingResults = await Promise.all(
   processingTasks
 );
-    //
-    // ✨ UPDATE STATE
-    //
 
-    setAvatar(
-      safeAvatar ||
-      null
-    );
+const processingSuccessful =
+  processingResults.every((result) => result === true);
 
-setOriginalProfile(
-  data?.[0] || null
-);
+if (!processingSuccessful) {
+
+  console.error(
+    "❌ One or more baseline updates failed. Context refresh is pending."
+  );
+
+  return;
+}
+
+// --------------------------------------------------
+// ✨ UPDATE STATE
+// --------------------------------------------------
+
+setAvatar(safeAvatar || null);
+
+setOriginalProfile(data?.[0] || null);
+
+// --------------------------------------------------
+// 🪞 NOTIFY LIVING SPACE
+// --------------------------------------------------
+
+if (baselineChanged) {
+  onBaselineUpdated?.();
+}
+
 
   } catch (error) {
 
@@ -959,6 +943,11 @@ setOriginalProfile(
   }
 };
 
+
+const handleClose = () => {
+  if (saving) return;
+  onClose?.();
+};
   //
   // 🎨 UI
   //
@@ -968,7 +957,7 @@ setOriginalProfile(
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+onRequestClose={handleClose}
     >
       <View
         style={{
@@ -993,7 +982,7 @@ setOriginalProfile(
           }}
         >
           <TouchableOpacity
-            onPress={onClose}
+onPress={handleClose}
             style={{
               position: "absolute",
               top: 12,
@@ -1124,8 +1113,6 @@ color: "#2A2927",
 
               backgroundColor: "#EEECE6",
               borderRadius: 18,  
-
-              outlineStyle: "none",
             }}
           />
 
@@ -1234,8 +1221,6 @@ borderRadius: 18,
 paddingHorizontal: 12,
 
 paddingVertical: 10,
-
-outlineStyle: "none",
             }}
           />
 
@@ -1258,7 +1243,6 @@ borderRadius: 18,
 paddingHorizontal: 12,
 
 paddingVertical: 10,
-outlineStyle: "none",
             }}
           />
 

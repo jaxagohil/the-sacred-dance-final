@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Image,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,11 +11,16 @@ import {
   View,
 } from "react-native";
 
+import { Audio } from "expo-av";
+
 import { Colors, Fonts } from "../../constants/theme";
 import { processSovereignLifePicture } from "../../db/processSovereignLifePicture";
 import { saveSovereignLifePicture } from "../../db/saveSovereignLifePicture";
+import { buildReflectionPacket } from "../../lib/buildReflectionsPacket";
 import { pickSovereignImage } from "../../lib/livingSpace/sovereignI/uploads/pickSovereignImage";
 import { uploadSovereignImage } from "../../lib/livingSpace/sovereignI/uploads/uploadSovereignImage";
+import { uploadSovereignVoice } from "../../lib/livingSpace/sovereignI/uploads/uploadSovereignVoice";
+import { sovereignI } from "../../lib/sovereignIOrchestrator/core/sovereignI";
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 
@@ -24,6 +30,7 @@ type LifeEntry = {
   itemType: "text" | "image" | "quote" | "voice" | "link" | "attachment";
   mimeType?: string;
   uri?: string;
+  imageBase64?: string;
   title?: string;
   x: number;
   y: number;
@@ -36,6 +43,9 @@ export default function VisionBoard() {
   const [entries, setEntries] = useState<LifeEntry[]>([]);
   const [entryIds, setEntryIds] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [voiceSound, setVoiceSound] = useState<Audio.Sound | null>(null);
+const [playingVoice, setPlayingVoice] = useState<string | null>(null);
 
   const [boardSize, setBoardSize] = useState({
   width: 0,
@@ -100,7 +110,10 @@ const [scrollOffset, setScrollOffset] = useState(0);
     void loadLifePictures();
   }, []);
 
-  const saveEntry = async (entry: LifeEntry) => {
+const saveEntry = async (
+  entry: LifeEntry,
+  processContent = true
+) => {
     if (!loaded) return;
 
     const rawText = entry.text.trim();
@@ -110,15 +123,37 @@ const [scrollOffset, setScrollOffset] = useState(0);
       const userId = await getUserId();
       if (!userId) return;
 
-      let storedUri: string | null = entry.uri ?? null;
-      if (entry.itemType === "image" && entry.uri) {
-        storedUri = await uploadSovereignImage({
-          uri: entry.uri,
-          userId,
-          mimeType: entry.mimeType,
-        });
-        if (!storedUri) return;
-      }
+
+let storedUri: string | null = entry.uri ?? null;
+
+if (
+  entry.itemType === "image" &&
+  entry.uri &&
+  !entry.uri.startsWith("http")
+) {
+  storedUri = await uploadSovereignImage({
+    uri: entry.uri,
+    userId,
+    mimeType: entry.mimeType,
+  });
+
+  if (!storedUri) return;
+}
+
+if (
+  entry.itemType === "voice" &&
+  entry.uri &&
+  !entry.uri.startsWith("http")
+) {
+  storedUri = await uploadSovereignVoice({
+    uri: entry.uri,
+    userId,
+    mimeType: entry.mimeType,
+  });
+
+  if (!storedUri) return;
+}
+
 
       const saved = await saveSovereignLifePicture({
         userId,
@@ -146,6 +181,16 @@ const [scrollOffset, setScrollOffset] = useState(0);
         console.error("❌ LIFE ENTRY LAYOUT SAVE ERROR:", layoutError);
       }
 
+      if (storedUri && storedUri !== entry.uri) {
+  setEntries((current) =>
+    current.map((item) =>
+      item.id === entry.id
+        ? { ...item, uri: storedUri }
+        : item
+    )
+  );
+}
+
       if (!entryIds[entry.id]) {
         setEntryIds((current) => ({ ...current, [entry.id]: saved.id, [saved.id]: saved.id }));
         setEntries((current) => current.map((item) =>
@@ -153,7 +198,91 @@ const [scrollOffset, setScrollOffset] = useState(0);
         ));
       }
 
-      await processSovereignLifePicture({ userId, text: rawText });
+
+
+if (processContent) {
+  let processingSucceeded = false;
+
+  if (
+    !entryIds[entry.id] &&
+    entry.itemType === "image" &&
+    entry.imageBase64
+  ) {
+    const packet = await buildReflectionPacket({
+      text: rawText,
+      imageBase64: entry.imageBase64,
+    });
+
+    const processed = await processSovereignLifePicture({
+      userId,
+      text: packet.text,
+      imageBase64: entry.imageBase64,
+    });
+
+    processingSucceeded = Boolean(processed);
+
+if (processingSucceeded) {
+  setEntries((current) =>
+    current.map((item) =>
+      item.id === entry.id
+        ? { ...item, imageBase64: undefined }
+        : item
+    )
+  );
+}
+
+  } else if (
+    !entryIds[entry.id] &&
+    entry.itemType === "voice" &&
+    entry.uri &&
+    !entry.uri.startsWith("http")
+  ) {
+    const packet = await buildReflectionPacket({
+      text: rawText,
+      audioUri: entry.uri,
+    });
+
+    const processed = await processSovereignLifePicture({
+      userId,
+      text: packet.text,
+    });
+
+    processingSucceeded = Boolean(processed);
+
+  } else {
+    const processed = await processSovereignLifePicture({
+      userId,
+      text: rawText,
+    });
+
+    processingSucceeded = Boolean(processed);
+  }
+
+  // Notify Sovereign I only after successful processing.
+  if (processingSucceeded) {
+    try {
+      await sovereignI({
+        eventId: `vision-board-${Date.now()}`,
+        eventType: "expression.processed",
+        category: "domain",
+        source: "vision_board",
+        occurredAt: new Date().toISOString(),
+        payload: {
+          source: "vision_board",
+          itemType: entry.itemType,
+        },
+        persistence: "persistent",
+contextImpact: ["user", "livingField", "creation"],
+      });
+    } catch (error) {
+      console.error(
+        "SOVEREIGN I VISION BOARD EVENT ERROR:",
+        error
+      );
+    }
+  }
+}
+
     } catch (error) {
       console.error("❌ SOVEREIGN LIFE PICTURE SAVE ERROR:", error);
     }
@@ -213,6 +342,94 @@ const deleteEntry = async (entry: LifeEntry) => {
   }
 }; 
 
+const handleVoice = async () => {
+  try {
+    if (!recording) {
+      const permission = await Audio.requestPermissionsAsync();
+
+      if (!permission.granted) return;
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(recording);
+      return;
+    }
+
+    await recording.stopAndUnloadAsync();
+
+    const uri = recording.getURI();
+    setRecording(null);
+
+    if (!uri) return;
+
+    const index = entries.length;
+
+    const entry: LifeEntry = {
+      id: `life-${Date.now()}`,
+      text: "",
+      itemType: "voice",
+      uri,
+      mimeType: Platform.OS === "web" ? "audio/webm" : "audio/m4a",
+      x: (index % 2) * 135 + 10,
+      y: Math.floor(index / 2) * 150 + 10,
+      width: 180,
+      height: 120,
+      rotation: 0,
+    };
+
+    setEntries((current) => [...current, entry]);
+    void saveEntry(entry);
+
+  } catch (error) {
+    console.error("🎤 SOVEREIGN VOICE ERROR:", error);
+    setRecording(null);
+  }
+};
+
+
+const playVoice = async (entry: LifeEntry) => {
+  if (!entry.uri) return;
+
+  try {
+    // Stop and unload any previous recording.
+    if (voiceSound) {
+      await voiceSound.stopAsync();
+      await voiceSound.unloadAsync();
+      setVoiceSound(null);
+      setPlayingVoice(null);
+    }
+
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: entry.uri },
+      { shouldPlay: true }
+    );
+
+    setVoiceSound(sound);
+    setPlayingVoice(entry.id);
+
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        setPlayingVoice(null);
+        setVoiceSound(null);
+        void sound.unloadAsync();
+      }
+    });
+
+  } catch (error) {
+    console.error("🎤 VOICE PLAYBACK ERROR:", error);
+    setPlayingVoice(null);
+    setVoiceSound(null);
+  }
+};
+
+
 const addText = async () => {
   const index = entries.length;
 
@@ -242,6 +459,7 @@ const addText = async () => {
         text: "",
         itemType: "image",
         uri: image.originalUri,
+        imageBase64: image.base64,
         mimeType: image.mimeType,
         x: (index % 2) * 135 + 10,
         y: Math.floor(index / 2) * 150 + 10,
@@ -324,11 +542,14 @@ onPanResponderRelease: (_, gesture) => {
   const finalX = entry.x + gesture.dx;
   const finalY = entry.y + gesture.dy;
 
-  void saveEntry({
+void saveEntry(
+  {
     ...entry,
     x: finalX,
     y: finalY,
-  });
+  },
+  false
+);
 },
               });
 
@@ -354,14 +575,31 @@ return (
     ]}
   >
 
-
-                  {entry.itemType === "image" && entry.uri ? (
-                    <Image
-                      source={{ uri: entry.uri }}
-                      style={styles.entryImage}
-                      resizeMode="cover"
-                    />
-                  ) : entry.itemType === "quote" ? (
+{entry.itemType === "image" && entry.uri ? (
+  <Image
+    source={{ uri: entry.uri }}
+    style={styles.entryImage}
+    resizeMode="cover"
+  />
+) : entry.itemType === "voice" && entry.uri ? (
+  <Pressable
+    onPress={() => void playVoice(entry)}
+    style={{
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(201,173,112,0.08)",
+      borderRadius: 8,
+    }}
+  >
+    <Text style={{ color: "#C9AD70", fontSize: 22 }}>
+      {playingVoice === entry.id ? "♫" : "▶"}
+    </Text>
+    <Text style={{ color: "#AAA2B6", fontSize: 10, marginTop: 6 }}>
+      {playingVoice === entry.id ? "PLAYING..." : "VOICE NOTE"}
+    </Text>
+  </Pressable>
+) : entry.itemType === "quote" ? (
                     <View style={styles.quoteCard}>
                       <Text style={styles.quoteMark}>“</Text>
                       <TextInput
@@ -462,12 +700,19 @@ onPress={() => {
 <Text style={styles.toolIcon}>▤</Text>
 </Pressable>
 
-  <Pressable
-    style={styles.toolButton}
-    disabled
+<Pressable
+  onPress={() => void handleVoice()}
+  style={styles.toolButton}
+>
+  <Text
+    style={[
+      styles.toolIcon,
+      recording ? { color: "#C9AD70" } : null,
+    ]}
   >
-    <Text style={[styles.toolIcon, styles.disabled]}>♫</Text>
-  </Pressable>
+    {recording ? "■" : "♫"}
+  </Text>
+</Pressable>
 
   <Pressable
     onPress={addQuote}
@@ -682,6 +927,5 @@ menu: {
   zIndex: 20,
 },
   menuItem: { paddingVertical: 8, paddingHorizontal: 10 },
-  disabled: { opacity: 0.28 },
   menuText: { color: Colors.mutedText, fontFamily: Fonts.light, fontSize: 8, letterSpacing: 1.2 },
 });

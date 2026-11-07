@@ -1,22 +1,22 @@
 
 import { Eye, Sun, Waves } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
+
+import type { Glimmer as EngineGlimmer } from "@/lib/livingSpace/sovereignI/capabilities/glimmer/glimmer.types";
+import { sovereignI } from "@/lib/sovereignIOrchestrator/core/sovereignI";
 
 type PortalId = "can" | "cant" | "wont";
 
-type Glimmer = {
-  id: string;
-  title: string;
+type Glimmer = EngineGlimmer & {
   detail: string;
   reality: string;
-  portal?: string;
 };
 
 type Portal = {
@@ -24,7 +24,6 @@ type Portal = {
   title: string;
   question: string;
   icon: React.ComponentType<any>;
-  glimmers: Glimmer[];
 };
 
 type Props = {
@@ -45,79 +44,19 @@ const PORTALS: Portal[] = [
     id: "can",
     title: "CAN CHANGE",
     icon: Sun,
-    question: "What can i  create in my reality?",
-    glimmers: [
-      {
-        id: "c1",
-        title: "Choose your health without waiting for motivation.",
-        detail: "One small action today can support the life you want to create.",
-        reality: "Physical",
-      },
-      {
-        id: "c2",
-        title: "What is one habit you are ready to change?",
-        detail: "Focus on a choice you can make today.",
-        reality: "Physical",
-      },
-      {
-        id: "c3",
-        title: "Where can you take ownership of your choices?",
-        detail: "Notice where your actions can create a different experience.",
-        reality: "Emotional",
-      },
-    ],
+    question: "What can I create in my reality?",
   },
   {
     id: "cant",
     title: "CAN'T CHANGE",
     icon: Waves,
     question: "Where am I giving away my power?",
-    glimmers: [
-      {
-        id: "cc1",
-        title: "Can you stop attaching your peace to someone else's decisions?",
-        detail: "Separate what belongs to you from what belongs to others.",
-        reality: "Emotional",
-      },
-      {
-        id: "cc2",
-        title: "Can you trust the process without demanding immediate results?",
-        detail: "Explore acceptance without abandoning your agency.",
-        reality: "Energetic",
-      },
-      {
-        id: "cc3",
-        title: "What are you trying to control that isn't yours to control?",
-        detail: "Notice where your energy is being spent.",
-        reality: "Physical",
-      },
-    ],
   },
   {
     id: "wont",
     title: "WON'T CHANGE",
     icon: Eye,
     question: "What am I unwilling to question?",
-    glimmers: [
-      {
-        id: "w1",
-        title: "Am I protecting an old story about myself?",
-        detail: "Question whether a familiar belief still serves your creation.",
-        reality: "Emotional",
-      },
-      {
-        id: "w2",
-        title: "What have I accepted without questioning?",
-        detail: "Look again at inherited ideas and familiar expectations.",
-        reality: "Energetic",
-      },
-      {
-        id: "w3",
-        title: "Is this a conscious boundary or a fear-based attachment?",
-        detail: "Distinguish what you value from what you may be protecting.",
-        reality: "Physical",
-      },
-    ],
   },
 ];
 
@@ -131,37 +70,105 @@ const REALITY = [
 export default function JourneyToSovereignI({
   onSelectNextStep,
 }: Props) {
-  const [selectedPortal, setSelectedPortal] =
+    const [selectedPortal, setSelectedPortal] =
     useState<PortalId | null>(null);
 
-  const [selectedGlimmerId, setSelectedGlimmerId] =
-    useState("c1");
+  const [glimmers, setGlimmers] = useState<Glimmer[]>([]);
+const [selectedGlimmerIds, setSelectedGlimmerIds] =
+  useState<string[]>([]);
 
-  const allGlimmers = useMemo(
-    () =>
-      PORTALS.flatMap((portal) =>
-        portal.glimmers.map((glimmer) => ({
-          ...glimmer,
-          portal: portal.title,
-        }))
-      ),
-    []
-  );
+const [finalGlimmerId, setFinalGlimmerId] =
+  useState<string | null>(null);
 
-  const selectedGlimmer =
-    allGlimmers.find(
-      (glimmer) => glimmer.id === selectedGlimmerId
-    ) ?? allGlimmers[0];
+  const [glimmerStatus, setGlimmerStatus] =
+    useState<"idle" | "loading" | "ready" | "empty" | "error">("idle");
+
+  const glimmersRequested = useRef(false);
 
   const activePortal = PORTALS.find(
     (portal) => portal.id === selectedPortal
   );
 
-  const chooseGlimmer = (glimmer: Glimmer) => {
-    setSelectedGlimmerId(glimmer.id);
-    onSelectNextStep?.(glimmer);
-    setSelectedPortal(null);
-  };
+  const portalGlimmers = glimmers.filter(
+    (glimmer) => glimmer.portal === selectedPortal
+  );
+
+
+const openPortal = async (portalId: PortalId) => {
+  setSelectedPortal(portalId);
+
+  if (glimmersRequested.current) return;
+
+  glimmersRequested.current = true;
+  setGlimmerStatus("loading");
+
+  try {
+    const outcome = await sovereignI({
+      eventId: `responsibility-glimmer-${Date.now()}`,
+      eventType: "responsibility.glimmer.requested",
+      category: "domain",
+      source: "responsibility_awareness",
+      occurredAt: new Date().toISOString(),
+      payload: {
+        requestedBy: "user",
+        source: "responsibility_awareness",
+      },
+      persistence: "transient",
+      contextImpact: ["user", "creation"],
+    });
+
+    const result = outcome.capabilityResult?.output;
+
+    if (
+      outcome.routing.route !== "invoke_capability" ||
+      outcome.routing.capabilityId !== "glimmer" ||
+      !result ||
+      typeof result !== "object" ||
+      !("collection" in result)
+    ) {
+      setGlimmerStatus("empty");
+      return;
+    }
+
+    const collection = (
+      result as { collection: { glimmers: EngineGlimmer[] } }
+    ).collection;
+
+    const generated = collection.glimmers.map((glimmer) => ({
+      ...glimmer,
+      detail: glimmer.possibility,
+      reality: glimmer.pattern,
+    }));
+
+    setGlimmers(generated);
+    setGlimmerStatus(generated.length ? "ready" : "empty");
+  } catch (error) {
+    console.error("Glimmer request failed:", error);
+    setGlimmerStatus("error");
+  }
+};
+
+ const selectedGlimmers = glimmers.filter((glimmer) =>
+  selectedGlimmerIds.includes(glimmer.id)
+);
+
+const finalGlimmer = selectedGlimmers.find(
+  (glimmer) => glimmer.id === finalGlimmerId
+);
+
+const chooseGlimmer = (glimmer: Glimmer) => {
+  setSelectedGlimmerIds((current) =>
+    current.includes(glimmer.id)
+      ? current.filter((id) => id !== glimmer.id)
+      : [...current, glimmer.id]
+  );
+};
+
+const commitNextStep = () => {
+  if (!finalGlimmer) return;
+
+  onSelectNextStep?.(finalGlimmer);
+};
 
   return (
     <View style={styles.container}>
@@ -193,20 +200,28 @@ export default function JourneyToSovereignI({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.glimmerChoices}
               >
-                {activePortal.glimmers.map((glimmer) => (
-                  <Pressable
-                    key={glimmer.id}
-                    onPress={() => chooseGlimmer(glimmer)}
-                    style={styles.glimmerChoice}
-                  >
-                    <Text
-                      style={styles.glimmerChoiceText}
-                      numberOfLines={3}
-                    >
-                      {glimmer.title}
-                    </Text>
-                  </Pressable>
-                ))}
+{portalGlimmers.map((glimmer) => {
+  const isSelected = selectedGlimmerIds.includes(glimmer.id);
+
+  return (
+    <Pressable
+      key={glimmer.id}
+      onPress={() => chooseGlimmer(glimmer)}
+      style={[
+        styles.glimmerChoice,
+        isSelected && styles.glimmerSelected,
+      ]}
+    >
+      <Text style={styles.glimmerChoiceText}>
+        {isSelected ? "☑" : "□"} {glimmer.title}
+      </Text>
+
+      <Text style={styles.glimmerChoiceText}>
+        {glimmer.possibility}
+      </Text>
+    </Pressable>
+  );
+})}
               </ScrollView>
             </View>
           ) : (
@@ -217,7 +232,7 @@ export default function JourneyToSovereignI({
                 return (
                   <Pressable
                     key={portal.id}
-                    onPress={() => setSelectedPortal(portal.id)}
+onPress={() => openPortal(portal.id)}
                     style={styles.portalButton}
                   >
                     <PortalIcon
@@ -240,49 +255,55 @@ export default function JourneyToSovereignI({
           )}
         </View>
 
-        {/* MY 1 NEXT STEP */}
-        <View style={styles.nextStep}>
-          <Text style={styles.sectionTitle}>
-            MY 1 NEXT STEP
+{/* MY 1 NEXT STEP */}
+<View style={styles.nextStep}>
+  <Text style={styles.sectionTitle}>
+    MY 1 NEXT STEP
+  </Text>
+
+  <View style={styles.nextStepDivider} />
+
+  {selectedGlimmers.length === 0 ? (
+    <Text style={styles.nextStepTitle}>
+      Select Glimmers from any portal to explore your possibilities.
+    </Text>
+  ) : (
+    <>
+      {selectedGlimmers.map((glimmer) => (
+        <Pressable
+          key={glimmer.id}
+          onPress={() => setFinalGlimmerId(glimmer.id)}
+          style={[
+            styles.selectedGlimmer,
+            finalGlimmerId === glimmer.id &&
+              styles.glimmerSelected,
+          ]}
+        >
+          <Text style={styles.nextStepTitle}>
+            {finalGlimmerId === glimmer.id ? "◉ " : "○ "}
+            {glimmer.title}
           </Text>
-
-          <View style={styles.nextStepDivider} />
-
-          <Text
-            style={styles.nextStepTitle}
-            numberOfLines={4}
-          >
-            {selectedGlimmer.title}
-          </Text>
-
           <Text style={styles.nextStepReality}>
-            {selectedGlimmer.reality}
+            {glimmer.pattern} · {glimmer.portal.toUpperCase()}
           </Text>
-        </View>
-      </View>
+        </Pressable>
+      ))}
 
-      {/* FOUR REALITY LAYERS — TEN EQUAL BLOCKS */}
-      <View style={styles.realitySection}>
-        <Text style={styles.sectionTitle}>
-          MY REALITY
+      <Pressable
+        onPress={commitNextStep}
+        disabled={!finalGlimmer}
+        style={[
+          styles.commitButton,
+          !finalGlimmer && styles.commitButtonDisabled,
+        ]}
+      >
+        <Text style={styles.commitButtonText}>
+          MAKE THIS MY NEXT STEP
         </Text>
-
-        {/* LAYER LABELS */}
-        <View style={styles.realityLabels}>
-          {REALITY.map((group) => (
-            <View
-              key={group.label}
-              style={[
-                styles.realityLabelGroup,
-                { flex: group.total },
-              ]}
-            >
-              <Text style={styles.realityLabel}>
-                {group.label}
-              </Text>
-            </View>
-          ))}
-        </View>
+      </Pressable>
+    </>
+  )}
+</View>
 
         {/* TEN EQUAL-SIZED INDICATORS */}
         <View style={styles.realityBlocks}>
@@ -335,6 +356,37 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
+
+  glimmerSelected: {
+  borderColor: COLORS.gold,
+  backgroundColor: "rgba(201,173,112,0.10)",
+},
+
+selectedGlimmer: {
+  padding: 6,
+  borderWidth: 1,
+  borderColor: COLORS.border,
+  borderRadius: 5,
+  gap: 4,
+},
+
+commitButton: {
+  padding: 9,
+  backgroundColor: COLORS.gold,
+  borderRadius: 5,
+  alignItems: "center",
+},
+
+commitButtonDisabled: {
+  opacity: 0.4,
+},
+
+commitButtonText: {
+  color: "#101018",
+  fontSize: 8,
+  fontWeight: "700",
+  letterSpacing: 0.8,
+},
 
   /* PORTALS */
 

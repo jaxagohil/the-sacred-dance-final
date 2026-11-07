@@ -25,6 +25,7 @@ import ReflectionPad from "../../components/livingSpace/ReflectionPad";
 import VisionBoard from "../../components/livingSpace/VisionBoard";
 import { initialiseAlignmentOSContext } from "../../lib/context/initialiseAlignmentOSContext";
 import { buildOrchestrationWhispers } from "../../lib/livingSpace/buildOrchestrationWhispers";
+import { sovereignI } from "../../lib/sovereignIOrchestrator/core/sovereignI";
 import { useMirrorStore } from "../../stores/mirrorStore";
 
 const GOLD = "#C9AD70";
@@ -81,6 +82,7 @@ const measureCardArea = () => {
   useState(false);
 
   const [profileVisible, setProfileVisible] = useState(false);
+  const [baselineRefreshPending, setBaselineRefreshPending] = useState(false);
 const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [orchestrationField, setOrchestrationField] = useState<any>(null);
@@ -186,6 +188,44 @@ useEffect(() => {
 
   loadAvatar();
 }, [profileVisible]);
+
+const handleYouClose = async () => {
+  setProfileVisible(false);
+
+  if (!baselineRefreshPending) return;
+
+  try {
+    await sovereignI({
+      eventId: `baseline-${Date.now()}`,
+      eventType: "user.baseline.updated",
+      category: "domain",
+      source: "you",
+      occurredAt: new Date().toISOString(),
+      payload: {
+        source: "you",
+      },
+      persistence: "persistent",
+      contextImpact: ["user", "livingField"],
+    });
+
+    setBaselineRefreshPending(false);
+
+    // Refresh the guidance whispers using the updated context.
+    const state = useMirrorStore.getState();
+
+    const whispers = buildOrchestrationWhispers({
+      activePatterns: state.userContext?.enrichedPatterns || [],
+      activeChakras: state.userContext?.energy?.activeChakras || [],
+      manifestations: state.userContext?.manifestations || [],
+      cosmicContext: state.cosmic,
+    });
+
+    state.setPreloadedWhispers(whispers);
+
+  } catch (error) {
+    console.error("SOVEREIGN I BASELINE UPDATE ERROR:", error);
+  }
+};
 
   return (
     <View style={styles.screen}>
@@ -352,10 +392,11 @@ onPress={() => router.push("/connections")}
 </View>
       </ScrollView>
 
-      <You
-        visible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-      />
+<You
+  visible={profileVisible}
+  onClose={handleYouClose}
+  onBaselineUpdated={() => setBaselineRefreshPending(true)}
+/>
     </View>
   );
 }

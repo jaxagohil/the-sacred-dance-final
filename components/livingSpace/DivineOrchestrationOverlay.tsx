@@ -962,24 +962,9 @@ const duration =
           }}
         >
 
-          <FloatingWhispers
-
-whispers={
-  activeWhispers
-}
-
-            intensity={
-              fieldIntensity
-            }
-
-            guide={
-              foregroundGuide
-            }
-
-            nervousSystem={
-              nervousSystem
-            }
-          />
+<FloatingWhispers
+  whispers={activeWhispers}
+/>
 
         </View>
       )}

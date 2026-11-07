@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { processCreationDiscover } from "../../../../db/processCreationDiscover";
+import { sovereignI } from "../../../../lib/sovereignIOrchestrator/core/sovereignI";
 import { supabase } from "../../../../services/supabase";
 
 type Props = {
@@ -157,6 +158,25 @@ export default function StageDiscover({ intentionId }: Props) {
           .eq("step", "discover");
 
         if (updateError) throw updateError;
+
+        // Notify Sovereign I after successful processing and persistence.
+        try {
+          await sovereignI({
+            eventId: `creation-discover-${Date.now()}`,
+            eventType: "creation.updated",
+            category: "domain",
+            source: "creation_journey",
+            occurredAt: new Date().toISOString(),
+            payload: {
+              intentionId,
+              stage: "discover",
+            },
+            persistence: "persistent",
+            contextImpact: ["user", "livingField", "creation"],
+          });
+        } catch (error) {
+          console.error("SOVEREIGN I DISCOVER EVENT ERROR:", error);
+        }
       }
     } catch (error) {
       console.error("DISCOVER SAVE / PROCESS ERROR:", error);

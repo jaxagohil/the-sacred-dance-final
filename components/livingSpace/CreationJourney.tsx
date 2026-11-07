@@ -9,6 +9,8 @@ import {
 import { getUserId } from "../../lib/user";
 import { supabase } from "../../services/supabase";
 
+import { sovereignI } from "../../lib/sovereignIOrchestrator/core/sovereignI";
+
 import MyCreations, {
   CreationItem,
 } from "./creationJourney/MyCreations";
@@ -31,10 +33,6 @@ import {
   CreationNextStepPortal,
   processCreationNextStep,
 } from "../../db/processCreationNextStep";
-
-import {
-  initialiseAlignmentOSContext,
-} from "../../lib/context/initialiseAlignmentOSContext";
 
 const MUTED = "#AAA2B6";
 const BORDER = "rgba(201,173,112,0.22)";
@@ -91,8 +89,22 @@ export default function CreationJourney() {
         throw new Error("Next Step processing returned no result.");
       }
 
-      // 2. Refresh the shared Living Field
-      await initialiseAlignmentOSContext();
+      // 2. Notify Sovereign I after successful processing
+      await sovereignI({
+        eventId: `creation-next-step-${Date.now()}`,
+        eventType: "creation.updated",
+        category: "domain",
+        source: "creation_journey",
+        occurredAt: new Date().toISOString(),
+        payload: {
+          intentionId: selectedId,
+          stage: "next_step",
+          glimmerId: glimmer.id,
+          portal,
+        },
+        persistence: "persistent",
+        contextImpact: ["user", "livingField", "creation"],
+      });
 
       console.log(
         "NEXT STEP PROCESSED:",
@@ -397,11 +409,6 @@ sovereignPanel: {
   marginTop: 12,
   paddingTop: 10,
   backgroundColor: "transparent",
-},
-
-
-journeyStagesOffset: {
-  transform: [{ translateX: -12 }],
 },
 
 journeyContent: {

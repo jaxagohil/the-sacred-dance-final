@@ -9,6 +9,7 @@ export type AIType =
   | "cosmic"
   | "sovereign_i_engine"
   | "artifacts"
+  | "glimmer"
   | "mirror";
 
 export interface CompleteGuideContext {

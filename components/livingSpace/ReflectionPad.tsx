@@ -16,6 +16,7 @@ import { processJournalReflection } from "../../db/processJournalReflection";
 import { buildReflectionPacket } from "../../lib/buildReflectionsPacket";
 import { getLanguage } from "../../lib/i18n/t";
 import { pickImageForVision } from "../../lib/pickImageForVision";
+import { sovereignI } from "../../lib/sovereignIOrchestrator/core/sovereignI";
 import { getUserId } from "../../lib/user";
 
 export default function ReflectionPad() {
@@ -127,19 +128,44 @@ export default function ReflectionPad() {
         audioUri,
       });
 
-      await processJournalReflection({
-        userId,
-        language: getLanguage(),
-        text: packet.text,
-        emotions: packet.emotions,
-        imageBase64,
-        audioUri,
-        observableScenes: packet.observableScenes,
-        bodyResponses: packet.bodyResponses,
-        copingStrategies: packet.copingStrategies,
-        manifestations: packet.manifestations,
-        nervousSystem: packet.nervousSystem,
-      });
+const processed = await processJournalReflection({
+  userId,
+  language: getLanguage(),
+  text: packet.text,
+  emotions: packet.emotions,
+  imageBase64,
+  audioUri,
+  observableScenes: packet.observableScenes,
+  bodyResponses: packet.bodyResponses,
+  copingStrategies: packet.copingStrategies,
+  manifestations: packet.manifestations,
+  nervousSystem: packet.nervousSystem,
+});
+
+if (!processed) {
+  throw new Error("Journal reflection processing was unsuccessful.");
+}
+
+// --------------------------------------------------
+// 🌊 NOTIFY SOVEREIGN I
+// --------------------------------------------------
+
+try {
+  await sovereignI({
+    eventId: `journal-${Date.now()}`,
+    eventType: "expression.processed",
+    category: "domain",
+    source: "journal",
+    occurredAt: new Date().toISOString(),
+    payload: {
+      source: "journal",
+    },
+    persistence: "persistent",
+    contextImpact: ["user", "livingField"],
+  });
+} catch (error) {
+  console.error("SOVEREIGN I JOURNAL EVENT ERROR:", error);
+}
 
       // Clear the reflection and temporary media references,
       // ready for the next reflection.

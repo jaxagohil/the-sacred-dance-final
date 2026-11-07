@@ -1,3 +1,4 @@
+
 // --------------------------------------------------
 // 🔁 PROCESS REPEATS FIELD
 // --------------------------------------------------
@@ -9,15 +10,10 @@ import { supabase } from "../services/supabase";
 // --------------------------------------------------
 
 type ProcessRepeatsFieldInput = {
-
   userId: string;
-
   language?: string;
-
   source?: string;
-
   batchId?: string;
-
   repeats: string;
 };
 
@@ -26,18 +22,12 @@ type ProcessRepeatsFieldInput = {
 // --------------------------------------------------
 
 export async function processRepeatsField({
-
   userId,
-
   language = "en",
-
   source = "baseline",
-
   batchId,
-
   repeats,
-
-}: ProcessRepeatsFieldInput) {
+}: ProcessRepeatsFieldInput): Promise<boolean> {
 
   try {
 
@@ -45,15 +35,13 @@ export async function processRepeatsField({
     // 🚫 EMPTY
     // --------------------------------------------------
 
-    if (
-      !repeats?.trim()
-    ) {
+    if (!repeats?.trim()) {
 
       console.log(
         "🔁 No repeats provided"
       );
 
-      return;
+      return true;
     }
 
     // --------------------------------------------------
@@ -96,69 +84,52 @@ or embodiment.
     // 🚀 PROCESS
     // --------------------------------------------------
 
-   const { data, error } =
+    const { data, error } =
+      await supabase.functions.invoke(
+        "process-reflection",
+        {
+          body: {
+            userId,
+            language,
+            source,
+            baselineType: "repeats",
+            signalDepth: 1.5,
+            text: reflectionText,
+            metadata: {
+              repeats,
+              batch_id: batchId,
+              processing_layer: "you.repeats",
+              generated_from: "repeats_field",
+              generated_at: new Date().toISOString(),
+            },
+          },
+        }
+      );
 
-  await supabase.functions.invoke(
-    "process-reflection",
-    {
-      body: {
+    if (error) {
 
-        userId,
+      console.error(
+        "❌ Repeats processing error",
+        error
+      );
 
-        language,
-
-        source,
-
-        baselineType:
-          "repeats",
-
-        signalDepth:
-          1.5,
-
-        text:
-          reflectionText,
-
-        metadata: {
-
-          repeats,
-
-          batch_id:
-            batchId,
-
-          processing_layer:
-            "you.repeats",
-
-          generated_from:
-            "repeats_field",
-
-          generated_at:
-            new Date().toISOString(),
-        },
-      },
+      return false;
     }
-  );
 
-if (error) {
-
-  console.error(
-    "❌ Repeats processing error",
-    error
-  );
-
-} else {
-
-  console.log(
-    "✅ Repeats processed",
-    data
-  );
-}
     // --------------------------------------------------
-    // ✅ DONE
+    // ✅ SUCCESS
     // --------------------------------------------------
+
+    console.log(
+      "✅ Repeats processed",
+      data
+    );
 
     console.log(
       "🔁 Repeats field processed"
     );
+
+    return true;
 
   } catch (error) {
 
@@ -166,5 +137,7 @@ if (error) {
       "❌ processRepeatsField error",
       error
     );
+
+    return false;
   }
 }

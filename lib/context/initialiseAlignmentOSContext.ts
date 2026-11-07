@@ -9,9 +9,10 @@ import { buildUserContext } from "./buildUserContext";
 // --------------------------------------------------
 
 export async function initialiseAlignmentOSContext() {
-  const store = useMirrorStore.getState();
+const store = useMirrorStore.getState();
+const activeLens = store.activeLens || "general";
 
-  store.setReady(false);
+store.setReady(false);
 
   try {
     // 1. AUTHENTICATED USER
@@ -26,16 +27,16 @@ export async function initialiseAlignmentOSContext() {
     // which already calls buildLensContext().
     // Do NOT call either again here.
 
-    const userContext = await buildUserContext({
-      userId,
-      source: "livingSpace",
-      activeLens: "general",
-    });
+const userContext = await buildUserContext({
+  userId,
+  source: "livingSpace",
+  activeLens,
+});
 
-    console.log("USER CONTEXT READY:", userContext?.ready);
-console.log("SIGNALS:", userContext?.signals?.length);
-console.log("ENERGY:", userContext?.energy);
-console.log("MIRROR CONTEXT:", !!userContext?.context);
+//    console.log("USER CONTEXT READY:", userContext?.ready);
+//console.log("SIGNALS:", userContext?.signals?.length);
+//console.log("ENERGY:", userContext?.energy);
+//console.log("MIRROR CONTEXT:", !!userContext?.context);
 
     const mirrorContext = userContext?.context ?? null;
 
@@ -56,7 +57,7 @@ console.log("MIRROR CONTEXT:", !!userContext?.context);
       userContext?.spiralScores || null
     );
 
-    store.setActiveLens("general");
+store.setActiveLens(activeLens);
 
     // 4. PRELOAD GUIDANCE WHISPERS
     const currentState = useMirrorStore.getState();

@@ -1,3 +1,4 @@
+
 // --------------------------------------------------
 // 🪞 PROCESS CORE BELIEF FIELD
 // --------------------------------------------------
@@ -9,15 +10,10 @@ import { supabase } from "../services/supabase";
 // --------------------------------------------------
 
 type ProcessCoreBeliefFieldInput = {
-
   userId: string;
-
   language?: string;
-
   source?: string;
-
   batchId?: string;
-
   coreBelief: string;
 };
 
@@ -26,18 +22,12 @@ type ProcessCoreBeliefFieldInput = {
 // --------------------------------------------------
 
 export async function processCoreBeliefField({
-
   userId,
-
   language = "en",
-
   source = "baseline",
-
   batchId,
-
   coreBelief,
-
-}: ProcessCoreBeliefFieldInput) {
+}: ProcessCoreBeliefFieldInput): Promise<boolean> {
 
   try {
 
@@ -45,15 +35,13 @@ export async function processCoreBeliefField({
     // 🚫 EMPTY
     // --------------------------------------------------
 
-    if (
-      !coreBelief?.trim()
-    ) {
+    if (!coreBelief?.trim()) {
 
       console.log(
         "🪞 No core belief provided"
       );
 
-      return;
+      return true;
     }
 
     // --------------------------------------------------
@@ -108,70 +96,55 @@ are interpreted or anticipated.
     // --------------------------------------------------
 
     const { data, error } =
+      await supabase.functions.invoke(
+        "process-reflection",
+        {
+          body: {
 
-  await supabase.functions.invoke(
-    "process-reflection",
-    {
-      body: {
+            userId,
+            language,
+            source,
 
-        userId,
+            baselineType: "core_belief",
+            signalDepth: 2,
+            text: reflectionText,
 
-        language,
+            metadata: {
 
-        source,
+              core_belief: coreBelief,
+              batch_id: batchId,
+              processing_layer: "you.core_belief",
+              generated_from: "core_belief_field",
+              generated_at: new Date().toISOString(),
+            },
+          },
+        }
+      );
 
-        baselineType:
-          "core_belief",
+    if (error) {
 
-        signalDepth:
-          2,
+      console.error(
+        "❌ Core belief processing error",
+        error
+      );
 
-        text:
-          reflectionText,
-
-        metadata: {
-
-          core_belief:
-            coreBelief,
-
-          batch_id:
-            batchId,
-
-          processing_layer:
-            "you.core_belief",
-
-          generated_from:
-            "core_belief_field",
-
-          generated_at:
-            new Date().toISOString(),
-        },
-      },
+      return false;
     }
-  );
-
-if (error) {
-
-  console.error(
-    "❌ Core belief processing error",
-    error
-  );
-
-} else {
-
-  console.log(
-    "✅ Core belief processed",
-    data
-  );
-}
 
     // --------------------------------------------------
-    // ✅ DONE
+    // ✅ SUCCESS
     // --------------------------------------------------
+
+    console.log(
+      "✅ Core belief processed",
+      data
+    );
 
     console.log(
       "🪞 Core belief field processed"
     );
+
+    return true;
 
   } catch (error) {
 
@@ -179,5 +152,7 @@ if (error) {
       "❌ processCoreBeliefField error",
       error
     );
+
+    return false;
   }
 }

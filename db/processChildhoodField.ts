@@ -1,3 +1,4 @@
+
 // --------------------------------------------------
 // 🧒 PROCESS CHILDHOOD FIELD
 // --------------------------------------------------
@@ -9,18 +10,11 @@ import { supabase } from "../services/supabase";
 // --------------------------------------------------
 
 type ProcessChildhoodFieldInput = {
-
   userId: string;
-
   language?: string;
-
   source?: string;
-
   batchId?: string;
-
-  childhoodSignals:
-    Record<string, number>;
-
+  childhoodSignals: Record<string, number>;
   repeats?: string;
 };
 
@@ -140,18 +134,13 @@ and closeness are navigated now.
 export async function processChildhoodField({
 
   userId,
-
   language = "en",
-
   source = "baseline",
-
   batchId,
-
   childhoodSignals,
-
   repeats,
 
-}: ProcessChildhoodFieldInput) {
+}: ProcessChildhoodFieldInput): Promise<boolean> {
 
   try {
 
@@ -159,30 +148,24 @@ export async function processChildhoodField({
     // 🌱 ACTIVE SIGNALS
     // --------------------------------------------------
 
-    const activeSignals =
-
-      Object.entries(
-        childhoodSignals
-      )
-
-.filter(
-  ([_, value]) =>
-    value === 0 || value === 1
-);
+    const activeSignals = Object.entries(
+      childhoodSignals
+    ).filter(
+      ([_, value]) =>
+        value === 0 || value === 1
+    );
 
     // --------------------------------------------------
     // 🚫 NOTHING ACTIVE
     // --------------------------------------------------
 
-    if (
-      !activeSignals.length
-    ) {
+    if (!activeSignals.length) {
 
       console.log(
         "🧒 No childhood signals active"
       );
 
-      return;
+      return true;
     }
 
     // --------------------------------------------------
@@ -195,12 +178,12 @@ export async function processChildhoodField({
         `🧒 Processing childhood signal: ${key}`
       );
 
-const state =
-  value === 1
-    ? "experienced"
-    : "unmet";
+      const state =
+        value === 1
+          ? "experienced"
+          : "unmet";
 
-const reflectionText = `
+      const reflectionText = `
 
 A childhood experience has been identified
 as ${state}.
@@ -230,66 +213,50 @@ ${state}.
       // 🚀 PROCESS REFLECTION
       // --------------------------------------------------
 
-const { data, error } =
+      const { data, error } =
+        await supabase.functions.invoke(
+          "process-reflection",
+          {
+            body: {
 
-  await supabase.functions.invoke(
-    "process-reflection",
-    {
-      body: {
+              userId,
+              language,
+              source,
 
-        userId,
+              baselineType: "childhood",
+              signalDepth: 1.5,
+              text: reflectionText,
 
-        language,
+              childhoodSignals: {
+                [key]: value,
+              },
 
-        source,
+              metadata: {
 
-        baselineType:
-          "childhood",
+                childhood_signal: key,
+                processing_layer: "you.childhood",
+                batch_id: batchId,
+                generated_from: "childhood_field",
+                generated_at: new Date().toISOString(),
+              },
+            },
+          }
+        );
 
-        signalDepth: 1.5,
+      if (error) {
 
-        text:
-          reflectionText,
+        console.error(
+          "❌ Childhood processing error",
+          error
+        );
 
-        childhoodSignals: {
-          [key]: value,
-        },
+        return false;
+      }
 
-        metadata: {
-
-          childhood_signal:
-            key,
-
-          processing_layer:
-            "you.childhood",
-
-          batch_id:
-            batchId,
-
-          generated_from:
-            "childhood_field",
-
-          generated_at:
-            new Date().toISOString(),
-        },
-      },
-    }
-  );
-
-if (error) {
-
-  console.error(
-    "❌ Childhood processing error",
-    error
-  );
-
-} else {
-
-  console.log(
-    "✅ Childhood processed",
-    data
-  );
-}
+      console.log(
+        "✅ Childhood processed",
+        data
+      );
     }
 
     // --------------------------------------------------
@@ -300,11 +267,15 @@ if (error) {
       `🧒 Childhood field processed (${activeSignals.length} signals)`
     );
 
+    return true;
+
   } catch (error) {
 
     console.log(
       "❌ processChildhoodField error",
       error
     );
+
+    return false;
   }
 }
