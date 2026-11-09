@@ -8,13 +8,24 @@ import { buildUserContext } from "./buildUserContext";
 // 🌌 INITIALISE SHARED ALIGNMENT OS CONTEXT
 // --------------------------------------------------
 
+let initialisationPromise:
+  Promise<ReturnType<typeof useMirrorStore.getState>> | null = null;
+
 export async function initialiseAlignmentOSContext() {
-const store = useMirrorStore.getState();
-const activeLens = store.activeLens || "general";
 
-store.setReady(false);
+  // Prevent overlapping initialisation requests.
+  if (initialisationPromise) {
+    return initialisationPromise;
+  }
 
-  try {
+  const run = (async () => {
+
+    const store = useMirrorStore.getState();
+    const activeLens = store.activeLens || "general";
+
+    store.setReady(false);
+
+    try {
     // 1. AUTHENTICATED USER
     const userId = await getUserId();
 
@@ -99,14 +110,25 @@ store.setActiveLens(activeLens);
 
     return useMirrorStore.getState();
 
-  } catch (error) {
-    console.error(
-      "ALIGNMENT OS INITIALISATION ERROR:",
-      error
-    );
+     } catch (error) {
+      console.error(
+        "ALIGNMENT OS INITIALISATION ERROR:",
+        error
+      );
 
-    store.setReady(false);
+      store.setReady(false);
 
-    throw error;
+      throw error;
+    }
+  })();
+
+  initialisationPromise = run;
+
+  try {
+    return await run;
+  } finally {
+    if (initialisationPromise === run) {
+      initialisationPromise = null;
+    }
   }
 }

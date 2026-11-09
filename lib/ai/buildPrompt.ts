@@ -25,6 +25,10 @@ import {
   buildTarotPrompt,
 } from "./prompts/buildTarotPrompt";
 
+import {
+  buildGlimmerPrompt,
+} from "./prompts/glimmer/buildGlimmerPrompt";
+
 export async function buildPrompt({
 
   type,
@@ -183,11 +187,24 @@ case "transmission":
         data: enrichedData,
       });
 
+      /*
+ * -------------------------------------------------------
+ * GLIMMER
+ * -------------------------------------------------------
+ */
+
+case "glimmer":
+
+  return buildGlimmerPrompt({
+    context,
+    data: enrichedData,
+  });
+
     /*
      * -------------------------------------------------------
      * DEFAULT
      * -------------------------------------------------------
-     */
+     */ 
 
 default:
 

@@ -66,27 +66,6 @@ tabBarStyle: {
           tabBarStyle: { display: "none" },
         }}
       />
-
-      {/* HIDDEN / RETIRED NAVIGATION ROUTES */}
-      <Tabs.Screen
-        name="sovereign"
-        options={{ href: null }}
-      />
-
-      <Tabs.Screen
-        name="mirror"
-        options={{ href: null }}
-      />
-
-      <Tabs.Screen
-        name="guidance"
-        options={{ href: null }}
-      />
-
-      <Tabs.Screen
-        name="journal"
-        options={{ href: null }}
-      />
     </Tabs>
   );
 }

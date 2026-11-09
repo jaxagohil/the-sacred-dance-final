@@ -26,6 +26,7 @@ export interface GetSovereignContextInput {
   userId: string;
   intentionId: string;
   activeStage?: CreationStage;
+  userContext: any;
 }
 
 // --------------------------------------------------
@@ -36,6 +37,7 @@ export async function getSovereignContext({
   userId,
   intentionId,
   activeStage,
+  userContext,
 }: GetSovereignContextInput): Promise<SovereignIContext> {
   if (!userId) {
     throw new Error(
@@ -49,9 +51,10 @@ export async function getSovereignContext({
     );
   }
 
-  return getCreationContext({
-    userId,
-    intentionId,
-    activeStage,
-  });
+return getCreationContext({
+  userId,
+  intentionId,
+  activeStage,
+  userContext,
+});
 }

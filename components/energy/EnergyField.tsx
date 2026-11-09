@@ -1126,7 +1126,7 @@ overlay: {
 
     affirmationWrapper: {
 
-      marginTop: -12,
+      marginTop: -10,
 
       paddingHorizontal: 24,
 
@@ -1134,7 +1134,7 @@ overlay: {
 
       opacity: 0.85,
 
-      marginBottom: 50,
+      marginBottom: 10,
     },
 
     affirmationText: {

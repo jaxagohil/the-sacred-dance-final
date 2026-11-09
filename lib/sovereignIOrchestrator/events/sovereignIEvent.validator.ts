@@ -30,6 +30,7 @@ const VALID_CONTEXTS: SovereignIContextDomain[] = [
 const VALID_EVENT_TYPES: SovereignIEventType[] = [
   "expression.submitted",
   "expression.processed",
+  "livingSpace.entered",
   "creation.stage.changed",
   "creation.intention.saved",
 "responsibility.glimmer.requested",

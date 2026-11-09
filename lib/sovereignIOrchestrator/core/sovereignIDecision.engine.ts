@@ -20,13 +20,13 @@ import { getAvailableCapabilities } from "../capabilities/sovereignICapability.r
 import { sovereignIDecisionPrompt } from "./sovereignIDecision.prompt";
 
 import type {
-    SovereignIContextDomain,
-    SovereignIEvent,
+  SovereignIContextDomain,
+  SovereignIEvent,
 } from "../events/sovereignIEvent.types";
 
 import type {
-    SovereignIDecision,
-    SovereignIDecisionType,
+  SovereignIDecision,
+  SovereignIDecisionType,
 } from "./sovereignIDecision.types";
 
 const VALID_DECISIONS: SovereignIDecisionType[] = [
@@ -82,6 +82,25 @@ function validateDecision(
   result: any,
   event: SovereignIEvent
 ): SovereignIDecision {
+
+    // Normalise AI responses that arrive as JSON strings.
+  if (typeof result === "string") {
+    const cleaned = result
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/, "");
+
+    try {
+      result = JSON.parse(cleaned);
+    } catch {
+      console.error(
+        "SOVEREIGN I: Could not parse AI decision JSON:",
+        result
+      );
+
+      return createFallbackDecision(event);
+    }
+  }
 
   if (
     !result ||
@@ -157,12 +176,44 @@ export async function runSovereignIDecision(
   event: SovereignIEvent
 ): Promise<SovereignIDecision> {
 
+    // Living Space entry is an initialisation event,
+  // not a request for an AI-driven capability.
+
+  if (event.eventType === "livingSpace.entered") {
+    return {
+      decisionId: `${event.eventId}-entry`,
+      eventId: event.eventId,
+
+      assessment: {
+        significance: "low",
+        impact: "low",
+        relevance: "low",
+        reasoning: "Living Space entry triggers context initialisation only.",
+      },
+
+      decision: "observe",
+      reason: "Initialise User Context without invoking a capability.",
+      relevantContexts: [],
+      createdAt: new Date().toISOString(),
+    };
+  }
+
   try {
     // 1. ASSEMBLE RELEVANT CONTEXT
 
-    const context = await assembleSovereignIContext({
-      event,
-    });
+const context = await assembleSovereignIContext({
+  event,
+  purpose: "decision",
+});
+
+    console.log("SOVEREIGN I CONTEXT SIZES:", {
+  userContext: JSON.stringify(context.userContext || {}).length,
+  livingField: JSON.stringify(context.livingField || {}).length,
+  creationContext: JSON.stringify(context.creationContext || {}).length,
+  cosmicContext: JSON.stringify(context.cosmicContext || {}).length,
+  capabilityContext: JSON.stringify(context.capabilityContext || {}).length,
+  total: JSON.stringify(context).length,
+});
 
     // 2. PREPARE DECISION PROMPT
 
@@ -205,6 +256,12 @@ following the required output structure.
     });
 
     // 4. VALIDATE DECISION
+
+    console.log("SOVEREIGN I RAW AI DECISION:", result);
+
+const validatedDecision = validateDecision(result, event);
+
+console.log("SOVEREIGN I VALIDATED DECISION:", validatedDecision);
 
     return validateDecision(result, event);
 

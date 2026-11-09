@@ -1,16 +1,10 @@
 // /lib/context/buildConnectionsContext.ts
 
-import {
-  getUserId,
-} from "../user";
 
 import {
   supabase,
 } from "../../services/supabase";
 
-import {
-  buildUserContext,
-} from "./buildUserContext";
 
 type SpaceType =
   | "self"
@@ -39,47 +33,6 @@ buildConnectionsContext({
 
   try {
 
-    //
-    // 👤 USER
-    //
-
-    const userId =
-      await getUserId();
-
-    //
-    // 🌌 USER CONTEXT
-    //
-
-    const userContext =
-      await buildUserContext({
-
-        userId,
-
-        source:
-          "connections",
-
-        activeLens:
-          "people",
-      });
-
-    //
-    // 👤 PROFILE
-    //
-
-    const {
-      data: profile,
-    } = await supabase
-
-      .from("profiles")
-
-      .select("*")
-
-      .eq(
-        "user_id",
-        userId
-      )
-
-      .single();
 
     //
     // 🌊 RECENT SELF REFLECTIONS
@@ -263,8 +216,8 @@ buildConnectionsContext({
     // 🌙 STILLNESS
     //
 
-    const stillness =
-      profile?.is_quiet || false;
+    //const stillness =
+      //profile?.is_quiet || false;
 
     //
     // ✨ DOMINANT EMOTION
@@ -284,19 +237,9 @@ buildConnectionsContext({
         humanMessages || []
       );
 
-    //
-    // 🌌 DAILY FIELD
-    //
+    const dailyField = null;
 
-    const dailyField =
-      userContext?.dailyField || null;
-
-    //
-    // 🌌 COSMIC
-    //
-
-    const cosmic =
-      userContext?.cosmic || null;
+    const cosmic = null;
 
     //
     // ✨ RETURN
@@ -308,7 +251,7 @@ buildConnectionsContext({
 
       emotionalTone,
 
-      stillness,
+      //stillness,
 
       fieldState,
 
@@ -321,7 +264,7 @@ buildConnectionsContext({
 
       dominantEmotion,
 
-      profile,
+     // profile,
 
       connectionId,
 
@@ -339,14 +282,11 @@ buildConnectionsContext({
       // 🪞 USER CONTEXT
       //
 
-      mirror:
-        userContext?.mirror || null,
+      mirror: null,
 
-      energy:
-        userContext?.energy || null,
+      energy: null,
 
-      distortions:
-        userContext?.distortions || null,
+      distortions: null,
     };
 
   } catch (error) {

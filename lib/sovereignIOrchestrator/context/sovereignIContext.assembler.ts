@@ -35,6 +35,8 @@ export interface SovereignIContextAssemblyInput {
   liveUIContext?: unknown;
 
   creationId?: string;
+
+  purpose?: "decision" | "capability";
 }
 
 function createMetadata(
@@ -76,21 +78,40 @@ export async function assembleSovereignIContext(
     eventId: input.event?.eventId,
   };
 
-  // 1. USER CONTEXT
-  if (shouldInclude("user", input.event)) {
-    context.userContext = {
-      domain: "user",
-      data: state.userContext,
-      metadata: createMetadata(
-        "mirrorStore.userContext",
-        state.lastSignalTimestamp
-          ? new Date(state.lastSignalTimestamp).toISOString()
-          : assembledAt,
-        "persistent",
-        "calculated"
-      ),
-    };
-  }
+// 1. USER CONTEXT
+if (shouldInclude("user", input.event)) {
+  const fullUserContext = state.userContext ?? {};
+
+  const userData =
+    input.purpose === "decision"
+      ? {
+          contextVersion: state.contextVersion,
+          available: Object.keys(fullUserContext).length > 0,
+          sections: Object.keys(fullUserContext),
+          patterns: Array.isArray(fullUserContext.patterns)
+            ? fullUserContext.patterns.slice(0, 12)
+            : [],
+          energy: fullUserContext.energy
+            ? {
+                chakras: fullUserContext.energy.chakras,
+              }
+            : undefined,
+        }
+      : fullUserContext;
+
+  context.userContext = {
+    domain: "user",
+    data: userData,
+    metadata: createMetadata(
+      "mirrorStore.userContext",
+      state.lastSignalTimestamp
+        ? new Date(state.lastSignalTimestamp).toISOString()
+        : assembledAt,
+      "persistent",
+      "calculated"
+    ),
+  };
+}
 
   // 2. LIVING FIELD
   if (shouldInclude("livingField", input.event)) {
@@ -189,29 +210,57 @@ established: {
 
 if (lifePicturesError) throw lifePicturesError;
 
-      context.creationContext = {
-        domain: "creation",
-data: {
-  intentions: intentions || [],
-  steps,
-  lifePictures: (lifePictures || []).map((picture) => ({
-    id: picture.id,
-    text:
-      typeof picture.picture?.text === "string"
-        ? picture.picture.text
-        : "",
-    itemType: picture.item_type,
-    title: picture.title,
-    createdAt: picture.created_at,
-  })),
-},
-        metadata: createMetadata(
-"sovereign_intentions, sovereign_intention_steps and sovereign_life_pictures",
-          assembledAt,
-          "persistent",
-          "user-expressed"
-        ),
-      };
+context.creationContext = {
+  domain: "creation",
+  data:
+    input.purpose === "decision"
+      ? {
+          intentionCount: (intentions || []).length,
+          intentions: (intentions || []).slice(0, 8).map((intention) => ({
+            id: intention.id,
+            rawInput:
+              typeof intention.raw_input === "string"
+                ? intention.raw_input.slice(0, 300)
+                : "",
+            outcome:
+              typeof intention.outcome === "string"
+                ? intention.outcome.slice(0, 300)
+                : "",
+            status: intention.status,
+            spiralStage: intention.spiral_stage,
+          })),
+          stepCount: steps.length,
+          lifePictureCount: (lifePictures || []).length,
+          lifePictures: (lifePictures || []).slice(0, 8).map((picture) => ({
+            itemType: picture.item_type,
+            title: picture.title,
+            text:
+              typeof picture.picture?.text === "string"
+                ? picture.picture.text.slice(0, 200)
+                : "",
+          })),
+        }
+      : {
+          intentions: intentions || [],
+          steps,
+          lifePictures: (lifePictures || []).map((picture) => ({
+            id: picture.id,
+            text:
+              typeof picture.picture?.text === "string"
+                ? picture.picture.text
+                : "",
+            itemType: picture.item_type,
+            title: picture.title,
+            createdAt: picture.created_at,
+          })),
+        },
+  metadata: createMetadata(
+    "sovereign_intentions, sovereign_intention_steps and sovereign_life_pictures",
+    assembledAt,
+    "persistent",
+    "user-expressed"
+  ),
+};
     }
   }
 

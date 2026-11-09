@@ -25,9 +25,12 @@ export type SovereignIContextDomain =
   | "capability";
 
 export type SovereignIEventType =
-  // Expressions
-  | "expression.submitted"
-  | "expression.processed"
+// Expressions
+| "expression.submitted"
+| "expression.processed"
+
+// Living Space
+| "livingSpace.entered"
 
   // Creation Journey
   | "creation.stage.changed"

@@ -28,20 +28,46 @@ export async function generateAIResponse({
    * -------------------------------------------------------
    */
 
+const directPrompt =
+  context && "directPrompt" in context
+    ? context.directPrompt
+    : undefined;
+
 const prompt =
-
-  context?.directPrompt
-
-  ||
-
+  directPrompt ||
   await buildPrompt({
-
     type,
-
     context,
-
     data,
   });
+
+console.log("AI REQUEST PROMPT:", {
+  type,
+  length: prompt.length,
+  preview: prompt.slice(0, 500),
+});
+
+if (type === "glimmer") {
+  const userContextStart = prompt.indexOf("USER CONTEXT");
+  const creationContextStart = prompt.indexOf("CREATION CONTEXT");
+
+  const userContextText =
+    userContextStart !== -1
+      ? prompt.slice(
+          userContextStart,
+          creationContextStart !== -1
+            ? creationContextStart
+            : undefined
+        )
+      : "";
+
+  console.log(
+    "GLIMMER POLARITY DATA:",
+    userContextText.match(
+      /.{0,150}(?:polarities|sacredFeminine|sacredMasculine|core_energy|shadow_expression|integrated_expression|nervous_system_pattern|healing_path).{0,500}/gi
+    )
+  );
+}
 
   try {
 
@@ -203,24 +229,16 @@ if (
       "..."
     );
 
-  } catch (err: any) {
+} catch (err: any) {
+  console.error(
+    "❌ AI FETCH ERROR:",
+    err?.message || err
+  );
 
-    console.error(
-      "❌ AI FETCH ERROR:",
-      err?.message || err
-    );
-
-    /*
-     * -----------------------------------------------------
-     * ❌ FALLBACK
-     * -----------------------------------------------------
-     */
-
-    return (
-
-      data?.base ||
-
-      "..."
-    );
+  if (type === "sovereign_i_engine") {
+    throw err;
   }
+
+  return data?.base || "...";
+}
 }

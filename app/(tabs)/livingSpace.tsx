@@ -1,5 +1,5 @@
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Image,
   Pressable,
@@ -23,7 +23,6 @@ import LivingSpaceHeader from "../../components/livingSpace/LivingSpaceHeader";
 import ReadingContainer from "../../components/livingSpace/ReadingContainer";
 import ReflectionPad from "../../components/livingSpace/ReflectionPad";
 import VisionBoard from "../../components/livingSpace/VisionBoard";
-import { initialiseAlignmentOSContext } from "../../lib/context/initialiseAlignmentOSContext";
 import { buildOrchestrationWhispers } from "../../lib/livingSpace/buildOrchestrationWhispers";
 import { sovereignI } from "../../lib/sovereignIOrchestrator/core/sovereignI";
 import { useMirrorStore } from "../../stores/mirrorStore";
@@ -98,36 +97,36 @@ const {
   setPreloadedWhispers,
 } = useMirrorStore();
 
-
 // --------------------------------------------------
-// 🌌 INITIALISE LIVING SPACE
+// 🌱 INITIALISE USER CONTEXT ON LIVING SPACE FOCUS
 // --------------------------------------------------
 
-useEffect(() => {
-  async function initialise() {
-    await initialiseAlignmentOSContext();
+const hasEnteredRef = useRef(false);
 
-    const state = useMirrorStore.getState();
+useFocusEffect(
+  useCallback(() => {
+    if (hasEnteredRef.current) return;
 
-    const whispers = buildOrchestrationWhispers({
-      activePatterns:
-        state.userContext?.enrichedPatterns || [],
+    hasEnteredRef.current = true;
 
-      activeChakras:
-        state.userContext?.energy?.activeChakras || [],
-
-      manifestations:
-        state.userContext?.manifestations || [],
-
-      cosmicContext:
-        state.cosmic,
+    sovereignI({
+      eventId: `living-space-${Date.now()}`,
+      eventType: "livingSpace.entered",
+      category: "domain",
+      source: "livingSpace",
+      occurredAt: new Date().toISOString(),
+      payload: {
+        source: "livingSpace",
+      },
+      persistence: "transient",
+      contextImpact: ["user", "livingField"],
+    }).catch((error) => {
+      console.error("LIVING SPACE INITIALISATION ERROR:", error);
+      hasEnteredRef.current = false;
     });
 
-    state.setPreloadedWhispers(whispers);
-  }
-
-  initialise();
-}, []);
+  }, [])
+);
 
 // --------------------------------------------------
 // 🧘 CHAKRA CONTENT
@@ -525,7 +524,7 @@ energyArea: {
   alignItems: "center",
   overflow: "visible",
   paddingLeft: 0,
-transform: [{ translateX: -15 }, { translateY: 10 }],
+transform: [{ translateX: -15 }, { translateY: 20 }],
 marginTop: -380,
 },
 world: {

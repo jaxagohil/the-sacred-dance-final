@@ -922,12 +922,15 @@ setAvatar(safeAvatar || null);
 setOriginalProfile(data?.[0] || null);
 
 // --------------------------------------------------
-// 🪞 NOTIFY LIVING SPACE
+// ✨ NOTIFY LIVING SPACE
 // --------------------------------------------------
 
 if (baselineChanged) {
   onBaselineUpdated?.();
 }
+
+// Close after a successful save
+onClose?.();
 
 
   } catch (error) {
@@ -945,7 +948,6 @@ if (baselineChanged) {
 
 
 const handleClose = () => {
-  if (saving) return;
   onClose?.();
 };
   //

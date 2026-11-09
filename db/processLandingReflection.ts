@@ -264,32 +264,33 @@ ${nervousSystem || "unknown"}
   );
 
 if (error) {
-
   console.error(
     "❌ Landing reflection error",
     error
   );
+  throw error;
+}
 
-} else {
-
-  console.log(
-    "✅ Landing reflection processed",
-    data
+if (!data?.reflection || !Array.isArray(data?.signals)) {
+  throw new Error(
+    "Landing reflection processing returned an incomplete result."
   );
 }
-    // --------------------------------------------------
-    // ✅ DONE
-    // --------------------------------------------------
 
-    console.log(
-      "🌊 Landing reflection processed"
-    );
+console.log(
+  "✅ Landing reflection processed",
+  data
+);
 
-  } catch (error) {
+return data;
 
-    console.log(
-      "❌ processLandingReflection error",
-      error
-    );
-  }
+
+} catch (error) {
+  console.log(
+    "❌ processLandingReflection error",
+    error
+  );
+
+  throw error;
+}
 }

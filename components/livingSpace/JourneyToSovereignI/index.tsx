@@ -1,6 +1,7 @@
 
+import { useIsFocused } from "@react-navigation/native";
 import { Eye, Sun, Waves } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -8,6 +9,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+import { useMirrorStore } from "@/stores/mirrorStore";
 
 import type { Glimmer as EngineGlimmer } from "@/lib/livingSpace/sovereignI/capabilities/glimmer/glimmer.types";
 import { sovereignI } from "@/lib/sovereignIOrchestrator/core/sovereignI";
@@ -83,26 +86,33 @@ const [finalGlimmerId, setFinalGlimmerId] =
   const [glimmerStatus, setGlimmerStatus] =
     useState<"idle" | "loading" | "ready" | "empty" | "error">("idle");
 
-  const glimmersRequested = useRef(false);
+const isFocused = useIsFocused();
 
-  const activePortal = PORTALS.find(
-    (portal) => portal.id === selectedPortal
-  );
+const contextReady = useMirrorStore(
+  (state) => state.userContext?.ready === true
+);
 
-  const portalGlimmers = glimmers.filter(
-    (glimmer) => glimmer.portal === selectedPortal
-  );
+const contextVersion = useMirrorStore(
+  (state) => state.contextVersion
+);
 
+const glimmersRequestedVersion = useRef<number | null>(null);
 
-const openPortal = async (portalId: PortalId) => {
-  setSelectedPortal(portalId);
-
-  if (glimmersRequested.current) return;
-
-  glimmersRequested.current = true;
+const generateGlimmersForContext = async () => {
   setGlimmerStatus("loading");
 
   try {
+
+    console.log("SOVEREIGN I GLIMMER REQUEST STARTED");
+
+const eventId = `responsibility-glimmer-${Date.now()}`;
+
+console.log("GLIMMER EVENT SUBMITTED:", {
+  eventId,
+  contextVersion,
+  timestamp: new Date().toISOString(),
+});
+
     const outcome = await sovereignI({
       eventId: `responsibility-glimmer-${Date.now()}`,
       eventType: "responsibility.glimmer.requested",
@@ -110,12 +120,25 @@ const openPortal = async (portalId: PortalId) => {
       source: "responsibility_awareness",
       occurredAt: new Date().toISOString(),
       payload: {
-        requestedBy: "user",
+        requestedBy: "workspace",
         source: "responsibility_awareness",
       },
       persistence: "transient",
       contextImpact: ["user", "creation"],
     });
+
+
+    console.log("SOVEREIGN I GLIMMER OUTCOME:", outcome);
+
+    console.log(
+  "GLIMMER CAPABILITY OUTPUT:",
+  outcome.capabilityResult?.output
+);
+
+console.log(
+  "GLIMMER ROUTING:",
+  outcome.routing
+);
 
     const result = outcome.capabilityResult?.output;
 
@@ -148,6 +171,39 @@ const openPortal = async (portalId: PortalId) => {
   }
 };
 
+useEffect(() => {
+  console.log("GLIMMER TRIGGER CHECK:", {
+    isFocused,
+    contextReady,
+    contextVersion,
+    alreadyRequested: glimmersRequestedVersion.current,
+  });
+
+  // Only run inside active Living Space
+  if (!isFocused) return;
+
+  // Wait for actual User Context
+  if (!contextReady) return;
+
+  // Avoid duplicate requests for the same context version
+  if (glimmersRequestedVersion.current === contextVersion) return;
+
+  console.log("GLIMMER GENERATION STARTING:", contextVersion);
+
+  glimmersRequestedVersion.current = contextVersion;
+
+  setGlimmers([]);
+  setSelectedGlimmerIds([]);
+  setFinalGlimmerId(null);
+
+  void generateGlimmersForContext();
+
+}, [isFocused, contextReady, contextVersion]);
+
+const openPortal = (portalId: PortalId) => {
+  setSelectedPortal(portalId);
+};
+
  const selectedGlimmers = glimmers.filter((glimmer) =>
   selectedGlimmerIds.includes(glimmer.id)
 );
@@ -175,85 +231,118 @@ const commitNextStep = () => {
 
       {/* PORTALS + NEXT STEP */}
       <View style={styles.bottomRow}>
-        <View style={styles.portalArea}>
-          {activePortal ? (
-            <View style={styles.portalDetail}>
-              <View style={styles.portalHeader}>
-                <Text style={styles.sectionTitle}>
-                  {activePortal.title}
+
+<View style={styles.portalArea}>
+  <View style={styles.portalRow}>
+    {PORTALS.map((portal) => {
+      const PortalIcon = portal.icon;
+      const isActive = selectedPortal === portal.id;
+      const portalGlimmers = glimmers.filter(
+        (glimmer) => glimmer.portal === portal.id
+      );
+
+      return (
+        <View
+          key={portal.id}
+          style={[
+            styles.portalButton,
+            isActive && styles.portalButtonActive,
+          ]}
+        >
+          {!isActive && (
+            <>
+              <Pressable
+                onPress={() => openPortal(portal.id)}
+                style={styles.portalHeader}
+              >
+                <PortalIcon
+                  size={17}
+                  color={COLORS.gold}
+                  strokeWidth={1.3}
+                />
+
+                <Text style={styles.portalTitle}>
+                  {portal.title}
                 </Text>
 
-                <Pressable
-                  onPress={() => setSelectedPortal(null)}
-                  hitSlop={8}
-                >
-                  <Text style={styles.close}>✕</Text>
-                </Pressable>
-              </View>
+                <Text style={styles.portalCount}>
+                  {String(portalGlimmers.length).padStart(2, "0")}
+                </Text>
+              </Pressable>
 
-              <Text style={styles.portalQuestion}>
-                {activePortal.question}
+              <Text style={styles.portalQuestionSmall}>
+                {portal.question}
               </Text>
+            </>
+          )}
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.glimmerChoices}
-              >
-{portalGlimmers.map((glimmer) => {
-  const isSelected = selectedGlimmerIds.includes(glimmer.id);
+          {isActive && (
+            <Pressable
+              onPress={() => setSelectedPortal(null)}
+              style={styles.activePortalTitle}
+            >
+            </Pressable>
+          )}
 
-  return (
-    <Pressable
-      key={glimmer.id}
-      onPress={() => chooseGlimmer(glimmer)}
-      style={[
-        styles.glimmerChoice,
-        isSelected && styles.glimmerSelected,
-      ]}
-    >
-      <Text style={styles.glimmerChoiceText}>
-        {isSelected ? "☑" : "□"} {glimmer.title}
-      </Text>
+          {isActive ? (
+            <ScrollView
+              style={styles.portalGlimmerScroll}
+              contentContainerStyle={styles.glimmerChoices}
+              showsVerticalScrollIndicator
+              nestedScrollEnabled
+            >
+              {glimmerStatus === "loading" && (
+                <Text style={styles.glimmerChoiceText}>
+                  Discovering your Glimmers...
+                </Text>
+              )}
 
-      <Text style={styles.glimmerChoiceText}>
-        {glimmer.possibility}
-      </Text>
-    </Pressable>
-  );
-})}
-              </ScrollView>
-            </View>
-          ) : (
-            <View style={styles.portalRow}>
-              {PORTALS.map((portal) => {
-                const PortalIcon = portal.icon;
+              {glimmerStatus === "error" && (
+                <Text style={styles.glimmerChoiceText}>
+                  Glimmers could not be generated. Please try again later.
+                </Text>
+              )}
+
+              {glimmerStatus === "empty" && (
+                <Text style={styles.glimmerChoiceText}>
+                  No Glimmers were returned for this request.
+                </Text>
+              )}
+
+              {portalGlimmers.map((glimmer) => {
+                const isSelected =
+                  selectedGlimmerIds.includes(glimmer.id);
 
                 return (
                   <Pressable
-                    key={portal.id}
-onPress={() => openPortal(portal.id)}
-                    style={styles.portalButton}
+                    key={glimmer.id}
+                    onPress={() => chooseGlimmer(glimmer)}
+                    style={[
+                      styles.glimmerChoice,
+                      isSelected && styles.glimmerSelected,
+                    ]}
                   >
-                    <PortalIcon
-                      size={19}
-                      color={COLORS.gold}
-                      strokeWidth={1.3}
-                    />
-
-                    <Text style={styles.portalTitle}>
-                      {portal.title}
+                    <Text style={styles.glimmerChoiceText}>
+                      {isSelected ? "☑" : "□"} {glimmer.title}
                     </Text>
 
-                    <Text style={styles.portalQuestionSmall}>
-                      {portal.question}
+                    <Text style={styles.glimmerChoiceText}>
+                      {glimmer.possibility}
                     </Text>
                   </Pressable>
                 );
               })}
+            </ScrollView>
+          ) : (
+            <View style={styles.portalPrompt}>
             </View>
           )}
         </View>
+      );
+    })}
+  </View>
+</View>
+
 
 {/* MY 1 NEXT STEP */}
 <View style={styles.nextStep}>
@@ -304,6 +393,28 @@ onPress={() => openPortal(portal.id)}
     </>
   )}
 </View>
+
+      </View>
+
+      {/* REALITY LAYERS */}
+      <View style={styles.realitySection}>
+        <Text style={styles.sectionTitle}>MY REALITY</Text>
+
+        <View style={styles.realityLabels}>
+          {REALITY.map((group) => (
+            <View
+              key={group.label}
+              style={[
+                styles.realityLabelGroup,
+                { flex: group.total },
+              ]}
+            >
+              <Text style={styles.realityLabel}>
+                {group.label}
+              </Text>
+            </View>
+          ))}
+        </View>
 
         {/* TEN EQUAL-SIZED INDICATORS */}
         <View style={styles.realityBlocks}>
@@ -390,6 +501,46 @@ commitButtonText: {
 
   /* PORTALS */
 
+
+portalRow: {
+  flexDirection: "row",
+  alignItems: "stretch",
+  gap: 8,
+  minWidth: 0,
+},
+
+  activePortalTitle: {
+    width: "100%",
+    paddingBottom: 5,
+  },
+
+portalButton: {
+  flex: 1,
+  minWidth: 0,
+  height: 80,
+  borderWidth: 1,
+  borderColor: COLORS.border,
+  borderRadius: 8,
+  backgroundColor: "#101018",
+  justifyContent: "center",
+  alignItems: "flex-start",
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  gap: 5,
+},
+
+portalButtonActive: {
+  borderColor: COLORS.gold,
+},
+
+portalHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  width: "100%",
+  gap: 7,
+},
+
+
   bottomRow: {
     flexDirection: "row",
     alignItems: "stretch",
@@ -403,33 +554,21 @@ commitButtonText: {
     justifyContent: "center",
   },
 
-  portalRow: {
-    flexDirection: "row",
-    gap: 8,
-    minWidth: 0,
-  },
-
-  portalButton: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 80,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    backgroundColor: "#101018",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 7,
-  },
-
   portalTitle: {
     color: COLORS.text,
     fontSize: 9,
     fontWeight: "600",
     letterSpacing: 0.7,
   },
+
+portalCount: {
+  color: COLORS.gold,
+  fontSize: 25,
+  fontWeight: "600",
+  marginLeft: "auto",
+  fontVariant: ["tabular-nums"],
+  lineHeight: 28,
+},
 
   portalQuestionSmall: {
     color: COLORS.muted,
@@ -518,12 +657,6 @@ commitButtonText: {
     gap: 7,
   },
 
-  portalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
   close: {
     color: COLORS.muted,
     fontSize: 13,
@@ -534,18 +667,28 @@ commitButtonText: {
     fontSize: 9,
   },
 
+portalGlimmerScroll: {
+  flex: 1,
+  minHeight: 0,
+  width: "100%",
+},
+
+portalPrompt: {
+  flex: 1,
+  justifyContent: "center",
+},
+
+
   glimmerChoices: {
     gap: 6,
   },
 
-  glimmerChoice: {
-    width: 150,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 5,
-    justifyContent: "center",
-  },
+glimmerChoice: {
+  width: "100%",
+  paddingVertical: 5,
+  paddingHorizontal: 2,
+  gap: 4,
+},
 
   glimmerChoiceText: {
     color: COLORS.text,

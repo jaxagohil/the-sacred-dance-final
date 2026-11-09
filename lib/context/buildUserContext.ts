@@ -21,7 +21,7 @@ type BuildUserContextParams = {
 
   source?: string;
 
-  activeLens?: string;
+  activeLens?: "general" | "people" | "places" | "things";
 };
 
 type EnergyTotals = {
@@ -156,6 +156,7 @@ buildUserContext({
   const [
     { data: profile },
     { data: signals, error },
+    { data: polarityRows },
   ] = await Promise.all([
 
     supabase
@@ -182,70 +183,83 @@ buildUserContext({
       )
       .limit(30),
 
+    supabase
+      .from("polarities")
+      .select("*"),
+
   ]);
 
-  /*
-   * ------------------------------------------------
-   * ❌ EMPTY
-   * ------------------------------------------------
-   */
+/*
+ * --------------------------------------------------
+ * ❌ SIGNAL QUERY ERROR
+ * --------------------------------------------------
+ */
 
-  if (
-    error ||
-    !signals ||
-    signals.length === 0
-  ) {
+if (error) {
+  throw error;
+}
 
-    return {
+/*
+ * --------------------------------------------------
+ * 🌱 EMPTY STARTING CONTEXT
+ * --------------------------------------------------
+ */
 
-      ready: false,
+if (!signals || signals.length === 0) {
 
-      source,
+  return {
 
-      activeLens,
+    ready: true,
 
-      profile:
-        profile || null,
+    source,
 
-      language:
-        profile?.language ||
-        "en",
+    activeLens,
 
-      signals: [],
+    profile:
+      profile || null,
 
-      energy: null,
+    polarities: polarityRows || [],  
 
-      behaviours: [],
+    language:
+      profile?.language ||
+      "en",
 
-      enrichedBehaviours: [],
+    signals: [],
 
-      patterns: [],
+    energy: null,
 
-      enrichedPatterns: [],
+    behaviours: [],
 
-      patternField: {},
+    enrichedBehaviours: [],
 
-      distortions: {},
+    patterns: [],
 
-      observableScenes: [],
+    enrichedPatterns: [],
 
-      recurringManifestations: [],
+    patternField: {},
 
-      recurringCopingStrategies: [],
+    distortions: {},
 
-      recurringBodyResponses: [],
+    observableScenes: [],
 
-      recurringMirrorPrompts: [],
+    recurringManifestations: [],
 
-      chakraManifestations: {},
+    recurringCopingStrategies: [],
 
-      lensEntries: [],
+    recurringBodyResponses: [],
 
-      realityLayers: {},
+    recurringMirrorPrompts: [],
 
-      context: null,
-    };
-  }
+    chakraManifestations: {},
+
+    lensEntries: [],
+
+    realityLayers: {},
+
+    context: null,
+  };
+}
+
 
   /*
    * ------------------------------------------------
@@ -1088,99 +1102,27 @@ console.log(
         .filter(Boolean)
     );
 
-  /*
-   * ------------------------------------------------
-   * 🌈 CHAKRA MANIFESTATIONS
-   * ------------------------------------------------
-   */
+ const chakraManifestations: Record<string, any[]> = {};
 
-  const chakraManifestations:
-    Record<
-      string,
-      any[]
-    > = {};
+Object.keys(chakraPolarityMap).forEach((chakra) => {
+  const relatedManifestations = (chakraRows || [])
+    .filter(
+      (row: any) => row?.chakra_key === chakra
+    )
+    .sort(
+      (a: any, b: any) =>
+        Number(b?.weight || 0) - Number(a?.weight || 0)
+    );
 
-  Object.keys(
-    chakraPolarityMap
-  ).forEach((chakra) => {
+  chakraManifestations[chakra] = relatedManifestations.map(
+    (row: any) => ({
+      ...row,
 
-    const relatedManifestations =
-
-      (
-        chakraRows || []
-      )
-
-        .filter(
-          (row: any) =>
-
-            row?.chakra_key ===
-            chakra
-        )
-
-        .sort(
-          (a: any, b: any) =>
-
-            Number(
-              b?.weight || 0
-            ) -
-
-            Number(
-              a?.weight || 0
-            )
-        );
-
-    chakraManifestations[
-      chakra
-    ] =
-
-      relatedManifestations.map(
-        (row: any) => ({
-  pattern_key:
-    row?.pattern_key,
-
-  chakra_weight:
-    row?.weight || 0,
-
-  // existing
-  body_response:
-    row?.body_response || null,
-
-  manifestation:
-    row?.manifestation || null,
-
-  observable_scene:
-    row?.observable_scene || null,
-
-  integration:
-    row?.integration || null,
-
-  // NEW
-  wound_expression:
-    row?.wound_expression || null,
-
-  integration_path:
-    row?.integration_path || null,
-
-  reflective_prompt:
-    row?.reflective_prompt || null,
-
-  relational_expression:
-    row?.relational_expression || null,
-
-  feminine_manifestation:
-    row?.feminine_manifestation || null,
-
-  masculine_manifestation:
-    row?.masculine_manifestation || null,
-})
-      );
-  });
-
-  /*
-   * ------------------------------------------------
-   * 🌍 REALITY LAYERS
-   * ------------------------------------------------
-   */
+      // Keep the existing field name used by the Energy Ball.
+      chakra_weight: row?.weight || 0,
+    })
+  );
+});
 
   /*
  * ------------------------------------------------
@@ -1370,6 +1312,8 @@ const spiral =
     profile,
 
     language,
+
+    polarities: polarityRows || [],
 
     childhoodSignals:
 

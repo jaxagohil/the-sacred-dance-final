@@ -16,7 +16,6 @@ import {
   View,
 } from "react-native";
 
-
 import WelcomeOverlay from "../components/WelcomeOverlay";
 
 import {
@@ -472,38 +471,19 @@ if (!hasInput) {
 
        
 
-await processLandingReflection({
-
+const result = await processLandingReflection({
   userId,
-
   language,
-
   batchId,
-
-  text:
-    packet.text,
-
-  emotions:
-    packet.emotions,
-
+  text: packet.text,
+  emotions: packet.emotions,
   imageBase64,
-
   audioUri,
-
-  observableScenes:
-    packet.observableScenes,
-
-  bodyResponses:
-    packet.bodyResponses,
-
-  copingStrategies:
-    packet.copingStrategies,
-
-  manifestations:
-    packet.manifestations,
-
-  nervousSystem:
-    packet.nervousSystem,
+  observableScenes: packet.observableScenes,
+  bodyResponses: packet.bodyResponses,
+  copingStrategies: packet.copingStrategies,
+  manifestations: packet.manifestations,
+  nervousSystem: packet.nervousSystem,
 });
 
       setText("");

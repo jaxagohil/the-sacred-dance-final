@@ -26,10 +26,6 @@
 
 import { supabase } from "../../../../services/supabase";
 
-import {
-  buildUserContext,
-} from "../../../context/buildUserContext";
-
 // --------------------------------------------------
 // TYPES
 // --------------------------------------------------
@@ -201,10 +197,12 @@ export async function getCreationContext({
   userId,
   intentionId,
   activeStage,
+  userContext,
 }: {
   userId: string;
   intentionId: string;
   activeStage?: CreationJourneyStage;
+  userContext: any;
 }): Promise<CreationContext> {
 
   if (!userId) {
@@ -222,18 +220,15 @@ export async function getCreationContext({
   // --------------------------------------------------
   // 1. PERSON / LIVING FIELD
   // --------------------------------------------------
-  //
-  // Use the existing intelligence engine.
-  // Do NOT recreate signals, patterns, behaviours,
-  // energy or chakra calculations here.
-  // --------------------------------------------------
 
-  const userContext =
-    await buildUserContext({
-      userId,
-      source: "conscious_creating",
-      activeLens: "general",
-    });
+  // Consume the existing shared User Context.
+  // Never rebuild User Context inside Creation Context.
+
+  if (!userContext) {
+    throw new Error(
+      "getCreationContext: existing User Context is required."
+    );
+  }
 
   // --------------------------------------------------
   // 2. CREATION
@@ -472,8 +467,6 @@ export async function getCreationContext({
   // 8. RELEVANT CHAKRA KNOWLEDGE
   // --------------------------------------------------
   //
-  // buildUserContext already calculates the person's
-  // CURRENT chakra state.
   //
   // Here we retrieve the static ontology only for
   // chakras that are actually relevant to that state.

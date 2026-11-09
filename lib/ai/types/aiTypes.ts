@@ -63,11 +63,17 @@ export interface CompleteGuideContext {
   message?: string;
 }
 
-export interface AIInput {
+export interface GlimmerContext {
+  userContext: any;
+  creationContext: any;
+  contextVersion: number;
+  portal: "can" | "cant" | "wont";
+}
 
+export interface AIInput {
   type: AIType;
 
-  context?: CompleteGuideContext;
+  context?: CompleteGuideContext | GlimmerContext;
 
   data?: any;
 }

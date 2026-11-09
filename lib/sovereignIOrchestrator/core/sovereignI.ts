@@ -46,19 +46,37 @@ export async function sovereignI(
     );
   }
 
-  // 2. REFRESH CONTEXT WHEN BASELINE CHANGES
+// 2. PREPARE OR REFRESH CONTEXT
 
-  if (
-    event.eventType === "user.baseline.updated" ||
-    event.eventType === "expression.processed" ||
-    event.eventType === "creation.updated"
-  ) {
-    await initialiseAlignmentOSContext();
+const state = useMirrorStore.getState();
 
-    const state = useMirrorStore.getState();
+const contextNeedsInitialisation =
+  event.eventType === "livingSpace.entered" &&
+  state.userContext?.ready !== true;
 
-    state.setContextVersion(state.contextVersion + 1);
-  }
+const contextNeedsRefresh =
+  event.eventType === "user.baseline.updated" ||
+  event.eventType === "creation.updated";
+
+if (
+  contextNeedsInitialisation ||
+  contextNeedsRefresh
+) {
+
+  console.log("🔎 CONTEXT INITIALISATION TRIGGER:", {
+  eventType: event.eventType,
+  source: event.source,
+  eventId: event.eventId,
+});
+
+  await initialiseAlignmentOSContext();
+
+  const updatedState = useMirrorStore.getState();
+
+  updatedState.setContextVersion(
+    updatedState.contextVersion + 1
+  );
+}
 
   // 3. ASSESS AND DECIDE
 
@@ -97,7 +115,10 @@ export async function sovereignI(
 
   // 6. ASSEMBLE SOVEREIGN I CONTEXT
 
-  const context = await assembleSovereignIContext({ event });
+const context = await assembleSovereignIContext({
+  event,
+  purpose: "capability",
+});
 
   // 7. INVOKE THE AUTHORISED CAPABILITY
 
